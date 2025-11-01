@@ -1,0 +1,283 @@
+"use client"
+
+import { useState, useRef, useCallback, memo } from 'react'
+import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+
+interface UploadedImage {
+  id: string
+  file: File
+  preview: string
+  title: string
+}
+
+interface ImageUploadGalleryProps {
+  maxImages?: number
+  onImagesChange: (images: UploadedImage[]) => void
+  existingImages?: UploadedImage[]
+  disabled?: boolean
+  tier: 'free' | 'premium' | 'business'
+}
+
+// Tier limits based on A2Z_DATA_MODELS.md
+const TIER_LIMITS = {
+  free: 3,
+  premium: 12, // unlimited in practice, but we'll set a reasonable limit
+  business: 12 // unlimited in practice, but we'll set a reasonable limit
+}
+
+const TIER_FEATURES = {
+  free: {
+    name: 'Free',
+    limit: 3,
+    description: 'Basic gallery with up to 3 images'
+  },
+  premium: {
+    name: 'Premium',
+    limit: 12,
+    description: 'Gallery slider showcase with unlimited images'
+  },
+  business: {
+    name: 'Business',
+    description: 'Professional gallery with unlimited images'
+  }
+}
+
+// Memoized component for individual image items to prevent unnecessary re-renders
+const ImageItem = memo(({ image, onRemove, onTitleChange, disabled }: {
+  image: UploadedImage
+  onRemove: (id: string) => void
+  onTitleChange: (id: string, title: string) => void
+  disabled: boolean
+}) => {
+  const [localTitle, setLocalTitle] = useState(image.title)
+  const [isEditing, setIsEditing] = useState(false)
+
+  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value
+    setLocalTitle(newTitle)
+    onTitleChange(image.id, newTitle)
+  }, [image.id, onTitleChange])
+
+  const handleTitleSubmit = useCallback(() => {
+    setIsEditing(false)
+  }, [])
+
+  const handleFiles = useCallback((files: FileList | File[]) => {
+    setError(null)
+    const fileArray = Array.from(files)
+    
+    // Check if adding these files would exceed the limit
+    if (images.length + fileArray.length > tierLimit) {
+      setError(`You can only upload up to ${tierLimit} images with your ${tierInfo.name} plan`)
+      return
+    }
+
+    const newImages: UploadedImage[] = []
+    
+    fileArray.forEach((file) => {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please only upload image files')
+        return
+      }
+      
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Images must be less than 5MB')
+        return
+      }
+
+      const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      const preview = URL.createObjectURL(file)
+      const title = file.name.split('.')[0]
+
+      newImages.push({
+        id,
+        file,
+        preview,
+        title
+      })
+    })
+
+    if (newImages.length > 0) {
+      const updatedImages = [...images, ...newImages]
+      setImages(updatedImages)
+      onImagesChange(updatedImages)
+    }
+  }, [images, tierLimit, tierInfo.name, onImagesChange])
+
+  const handleDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true)
+    } else if (e.type === 'dragleave') {
+      setDragActive(false)
+    }
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    
+    if (disabled) return
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFiles(e.dataTransfer.files)
+    }
+  }, [disabled, handleFiles])
+
+  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFiles(e.target.files)
+    }
+  }, [handleFiles])
+
+  const removeImage = useCallback((id: string) => {
+    setImages(prevImages => {
+      const updatedImages = prevImages.filter(img => {
+        if (img.id === id) {
+          URL.revokeObjectURL(img.preview)
+          return false
+        }
+        return true
+      })
+      onImagesChange(updatedImages)
+      return updatedImages
+    })
+  }, [onImagesChange])
+
+  const updateImageTitle = useCallback((id: string, title: string) => {
+    setImages(prevImages => {
+      const updatedImages = prevImages.map(img => 
+        img.id === id ? { ...img, title } : img
+      )
+      onImagesChange(updatedImages)
+      return updatedImages
+    })
+  }, [onImagesChange])
+
+  const openFileDialog = () => {
+    if (!disabled && fileInputRef.current) {
+      fileInputRef.current.click()
+    }
+  }
+
+  const canAddMore = images.length < tierLimit && !disabled
+
+  return (
+    <div className="space-y-6">
+      {/* Tier Information */}
+      <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-200 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <ImageIcon className="w-5 h-5 text-emerald-600" />
+          <h3 className="font-semibold text-emerald-900">{tierInfo.name} Gallery</h3>
+          <span className="text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">
+            {images.length}/{tierLimit} images
+          </span>
+        </div>
+        <p className="text-sm text-emerald-700">{tierInfo.description}</p>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-red-500" />
+          <p className="text-red-700">{error}</p>
+        </div>
+      )}
+
+      {/* Upload Area */}
+      {canAddMore && (
+        <div
+          className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+            dragActive
+              ? 'border-emerald-400 bg-emerald-50'
+              : 'border-gray-300 hover:border-emerald-400 hover:bg-emerald-50'
+          } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+          onClick={openFileDialog}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleFileInput}
+            className="hidden"
+            disabled={disabled}
+          />
+          
+          <div className="space-y-4">
+            <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
+              <Upload className="w-8 h-8 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-lg font-medium text-gray-900">
+                Drop images here or click to upload
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                PNG, JPG, GIF up to 5MB each • {tierLimit - images.length} remaining
+              </p>
+            </div>
+            <Button 
+              type="button" 
+              className="bg-emerald-600 hover:bg-emerald-700"
+              disabled={disabled}
+            >
+              Choose Images
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Image Thumbnails Grid */}
+      {images.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="font-medium text-gray-900">Uploaded Images ({images.length})</h4>
+            <Button 
+              onClick={() => onImagesChange(images)}
+              className="bg-emerald-600 hover:bg-emerald-700"
+              disabled={disabled || images.length === 0}
+            >
+              Save Images
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {images.map((image) => (
+              <ImageItem
+                key={image.id}
+                image={image}
+                onRemove={removeImage}
+                onTitleChange={updateImageTitle}
+                disabled={disabled}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Upgrade Prompt for Free Tier */}
+      {tier === 'free' && images.length >= tierLimit && (
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <ImageIcon className="w-5 h-5 text-blue-600" />
+            <h4 className="font-semibold text-blue-900">Upgrade for More Images</h4>
+          </div>
+          <p className="text-sm text-blue-700 mb-3">
+            You've reached the limit for free accounts. Upgrade to Premium or Business for unlimited gallery images.
+          </p>
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            Upgrade Now
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}

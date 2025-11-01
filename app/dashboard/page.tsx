@@ -29,6 +29,7 @@ import { Button } from '@/components/ui/Button'
 import { UserProfileDropdown } from '@/components/UserProfileDropdown'
 import { ListingCardGrid } from '@/components/ListingCardGrid'
 import FreeAccountNotifications from '@/components/FreeAccountNotifications'
+import { GalleryTab } from '@/components/dashboard/GalleryTab'
 
 type SubscriptionTier = 'free' | 'premium' | 'business'
 type DashboardTab = 'profile' | 'gallery' | 'shop' | 'marketing'
@@ -216,17 +217,17 @@ export default function DashboardPage() {
     try {
       const [galleryResponse, productsResponse, listingsResponse, campaignsResponse] = await Promise.all([
         supabase
-          .from('business_gallery')
+          .from('profile_gallery')
           .select('*')
           .eq('profile_id', user.id)
           .order('created_at', { ascending: false }),
         supabase
-          .from('business_products')
+          .from('profile_products')
           .select('*')
           .eq('profile_id', user.id)
           .order('created_at', { ascending: false }),
         supabase
-          .from('business_listings')
+          .from('profile_listings')
           .select('*')
           .eq('profile_id', user.id)
           .order('created_at', { ascending: false }),
@@ -467,63 +468,13 @@ export default function DashboardPage() {
   )
 
   const renderGalleryTab = () => {
-    if (galleryLoading) return renderLoadingState('gallery')
-
-    if (!galleryItems.length) {
-      return renderEmptyState(
-        'No gallery items yet',
-        'Spotlight your services or portfolio. Upload high-impact visuals to convert visitors faster.',
-        ImageIcon,
-        { label: 'Upload media', href: '/dashboard/gallery/upload' }
-      )
-    }
-
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Gallery Showcase</h2>
-            <p className="text-sm text-gray-600">Your latest visuals powering your storefront and WhatsApp funnels.</p>
-          </div>
-          <Button onClick={() => router.push('/dashboard/gallery/upload')} className="flex items-center gap-2">
-            <UploadCloud className="w-4 h-4" />
-            Add Media
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {galleryItems.map((item) => (
-            <div key={item.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="aspect-video bg-gray-100">
-                {item.image_url || item.media_url ? (
-                  <img
-                    src={item.image_url || item.media_url || ''}
-                    alt={item.title ?? 'Gallery asset'}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-                    No media attached
-                  </div>
-                )}
-              </div>
-              <div className="p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-gray-900 line-clamp-1">{item.title ?? 'Untitled highlight'}</h3>
-                  <span className="text-xs text-gray-500">
-                    {item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Draft'}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600 line-clamp-2">{item.caption ?? 'Add a caption to boost conversions.'}</p>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  Ready for campaigns & storefront
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <GalleryTab
+        galleryItems={galleryItems}
+        galleryLoading={galleryLoading}
+        userTier={profile?.subscription_tier || 'free'}
+        onRefresh={fetchDashboardData}
+      />
     )
   }
 
