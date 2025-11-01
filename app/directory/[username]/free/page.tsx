@@ -13,7 +13,7 @@ import { DeleteConfirmModal } from '@/components/DeleteConfirmModal'
 import { MediaExpirationWarning } from '@/components/MediaExpirationWarning'
 import FreeAccountNotifications from '@/components/FreeAccountNotifications'
 import { ListingCardGrid } from '@/components/ListingCardGrid'
-import { GridBackground } from '@/components/ui/glowing-card'
+import { GlowingCard } from '@/components/ui/glowing-card'
 import { Grid, List } from 'lucide-react'
 
 export default function FreeBusinessProfilePage() {
@@ -1150,21 +1150,24 @@ export default function FreeBusinessProfilePage() {
                   {/* Stats Overview */}
                   {posts.length > 0 && (
                     <div className="grid grid-cols-3 gap-2 sm:gap-6 mb-6 sm:mb-8">
-                      <GridBackground
-                        title={posts.reduce((sum, post) => sum + post.views, 0).toString()}
-                        description="Total Views"
-                        showAvailability={false}
-                      />
-                      <GridBackground
-                        title={posts.reduce((sum, post) => sum + post.clicks, 0).toString()}
-                        description="Total Clicks"
-                        showAvailability={false}
-                      />
-                      <GridBackground
-                        title={posts.filter(post => post.is_active).length.toString()}
-                        description="Active Listings"
-                        showAvailability={false}
-                      />
+                      <GlowingCard className="p-4 text-center">
+                        <div className="text-2xl font-bold text-emerald-600">
+                          {posts.reduce((sum, post) => sum + post.views, 0).toString()}
+                        </div>
+                        <div className="text-sm text-gray-600">Total Views</div>
+                      </GlowingCard>
+                      <GlowingCard className="p-4 text-center">
+                        <div className="text-2xl font-bold text-emerald-600">
+                          {posts.reduce((sum, post) => sum + post.clicks, 0).toString()}
+                        </div>
+                        <div className="text-sm text-gray-600">Total Clicks</div>
+                      </GlowingCard>
+                      <GlowingCard className="p-4 text-center">
+                        <div className="text-2xl font-bold text-emerald-600">
+                          {posts.filter(post => post.is_active).length.toString()}
+                        </div>
+                        <div className="text-sm text-gray-600">Active Listings</div>
+                      </GlowingCard>
                     </div>
                   )}
 
@@ -1194,10 +1197,10 @@ export default function FreeBusinessProfilePage() {
                       <div className="hidden md:block">
                         {viewMode === 'grid' ? (
                           <ListingCardGrid
-                            posts={posts}
-                            onShare={(post) => setSharePost(post)}
-                            onPreview={(post) => setPreviewPost(post)}
-                            onDelete={(postId) => setDeletePostId(postId)}
+                            listings={posts}
+                            onShare={(post: any) => setSharePost(post)}
+                            onView={(post: any) => setPreviewPost(post)}
+                            onDelete={(post: any) => setDeletePostId(post.id)}
                           />
                         ) : (
                           <div className="space-y-6">
@@ -1232,7 +1235,7 @@ export default function FreeBusinessProfilePage() {
                                             {post.title}
                                           </h3>
                                           <span className="text-lg font-bold text-emerald-600">
-                                            {formatPrice(post.price_cents, post.currency)}
+                                            {formatPrice(post.price_cents || 0)}
                                           </span>
                                         </div>
                                         
@@ -1335,7 +1338,7 @@ export default function FreeBusinessProfilePage() {
                                           {post.title}
                                         </h3>
                                         <span className="text-lg font-bold text-emerald-600">
-                                          {formatPrice(post.price_cents, post.currency)}
+                                          {formatPrice(post.price_cents || 0)}
                                         </span>
                                       </div>
                                       
@@ -1416,8 +1419,11 @@ export default function FreeBusinessProfilePage() {
         <ShareModal
           isOpen={!!sharePost}
           onClose={() => setSharePost(null)}
-          post={sharePost}
-          username={username}
+          business={{
+            name: sharePost.title || 'Business Listing',
+            url: `${window.location.origin}/directory/${username}/free`,
+            description: sharePost.description
+          }}
         />
       )}
 
@@ -1426,14 +1432,14 @@ export default function FreeBusinessProfilePage() {
         <PreviewModal
           isOpen={!!previewPost}
           onClose={() => setPreviewPost(null)}
-          post={previewPost}
-          onShare={() => {
-            setSharePost(previewPost)
-            setPreviewPost(null)
-          }}
-          onDelete={() => {
-            setDeletePostId(previewPost.id)
-            setPreviewPost(null)
+          business={{
+            name: previewPost.title || 'Business Listing',
+            category: previewPost.category || 'General',
+            location: previewPost.location || 'South Africa',
+            description: previewPost.description,
+            phone: previewPost.phone,
+            website: previewPost.website,
+            images: previewPost.media_urls
           }}
         />
       )}

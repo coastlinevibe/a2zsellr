@@ -447,7 +447,6 @@ export default function AnimatedSignupPage() {
             type="password"
             value={password}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-            showPasswordToggle={true}
             required
           />
 
@@ -456,7 +455,6 @@ export default function AnimatedSignupPage() {
             type="password"
             value={confirmPassword}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
-            showPasswordToggle={true}
             required
           />
 
