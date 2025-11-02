@@ -419,6 +419,41 @@ CREATE POLICY "locations_select_all" ON public.locations FOR SELECT USING (true)
 CREATE POLICY "categories_select_all" ON public.categories FOR SELECT USING (true);
 ```
 
+## 🔗 **URL Structure & Sharing**
+
+### **Profile URLs**
+```
+https://www.a2zsellr.life/profile/{display_name}
+```
+- **Example**: `https://www.a2zsellr.life/profile/alf-burger`
+- **Purpose**: Direct link to business profile page
+- **Features**: Shows complete business information, gallery, shop, and contact details
+
+### **Product-Specific URLs**
+```
+https://www.a2zsellr.life/profile/{display_name}?product={product_slug}
+```
+- **Example**: `https://www.a2zsellr.life/profile/alf-burger?product=fridge`
+- **Purpose**: Direct link to specific product within business profile
+- **Features**: Auto-opens product detail modal on profile page
+- **Slug Generation**: Product name converted to URL-friendly format (lowercase, hyphens)
+
+### **Share Functionality**
+```typescript
+interface ShareContent {
+  profile_share: {
+    title: "{display_name} - A2Z Business Directory"
+    text: "Check out {display_name}'s business profile on A2Z Business Directory!"
+    url: "https://www.a2zsellr.life/profile/{display_name}"
+  }
+  product_share: {
+    title: "{product_name} - {display_name}"
+    text: "Check out \"{product_name}\" from {display_name} on A2Z Business Directory!"
+    url: "https://www.a2zsellr.life/profile/{display_name}?product={product_slug}"
+  }
+}
+```
+
 ## 📱 **API Endpoints**
 
 ### **Profile Management**

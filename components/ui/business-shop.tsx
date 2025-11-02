@@ -11,7 +11,8 @@ import {
   Package,
   Edit,
   Trash2,
-  X
+  X,
+  Share2
 } from 'lucide-react'
 
 interface Product {
@@ -119,6 +120,42 @@ export default function BusinessShop({
     } catch (error) {
       console.error('Error deleting product:', error)
       alert('Failed to delete product')
+    }
+  }
+
+  const handleShareProduct = async (product: Product) => {
+    // Get the business profile to get display_name
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', businessId)
+        .single()
+
+      const businessName = profile?.display_name || 'Business'
+      // Create URL with product parameter to open the product modal
+      const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+      const shareUrl = `https://www.a2zsellr.life/profile/${businessName}?product=${encodeURIComponent(productSlug)}`
+      const shareText = `Check out "${product.name}" from ${businessName} on A2Z Business Directory!`
+      
+      if (navigator.share) {
+        // Use native sharing if available (mobile)
+        navigator.share({
+          title: `${product.name} - ${businessName}`,
+          text: shareText,
+          url: shareUrl,
+        }).catch(console.error)
+      } else {
+        // Fallback: Copy to clipboard
+        navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
+          alert('Product link copied to clipboard!')
+        }).catch(() => {
+          // Fallback: Show share dialog with the link
+          prompt('Copy this link to share:', shareUrl)
+        })
+      }
+    } catch (error) {
+      console.error('Error sharing product:', error)
     }
   }
 
@@ -246,14 +283,23 @@ export default function BusinessShop({
                   {isOwner && (
                     <div className="flex gap-1 ml-2">
                       <button
+                        onClick={() => handleShareProduct(product)}
+                        className="p-1 text-gray-400 hover:text-emerald-600"
+                        title="Share product"
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </button>
+                      <button
                         onClick={() => handleEditProduct(product)}
                         className="p-1 text-gray-400 hover:text-blue-600"
+                        title="Edit product"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteProduct(product.id)}
                         className="p-1 text-gray-400 hover:text-red-600"
+                        title="Delete product"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

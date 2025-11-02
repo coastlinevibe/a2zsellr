@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
+import Head from 'next/head'
 import { supabase } from '@/lib/supabaseClient'
 import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Heart, Check, Truck, Shield, MessageCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -11,15 +12,15 @@ import Link from 'next/link'
 interface UserProfile {
   id: string
   display_name: string
+  email: string | null
+  avatar_url: string | null
   bio: string | null
   business_category: string | null
   business_location: string | null
-  business_hours: string | null
-  verified_seller: boolean
-  subscription_tier: 'free' | 'premium' | 'business'
-  avatar_url: string | null
   phone_number: string | null
   website_url: string | null
+  subscription_tier: 'free' | 'premium' | 'business'
+  verified_seller: boolean
   early_adopter: boolean
 }
 
@@ -35,20 +36,22 @@ interface Product {
   id: string
   name: string
   description: string | null
-  price_cents: number | null
   category: string | null
   image_url: string | null
+  price_cents: number | null
   is_active: boolean
 }
 
-export default function PublicProfilePage() {
+export default function ProfilePage() {
   const params = useParams()
-  const username = params?.username as string
+  const searchParams = useSearchParams()
+  const username = params.username as string
   
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState<string | null>(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [activeTab, setActiveTab] = useState('shop')
   const [todayHours, setTodayHours] = useState<string>('')
@@ -56,6 +59,172 @@ export default function PublicProfilePage() {
   const [productModalTab, setProductModalTab] = useState('description')
   const [quantity, setQuantity] = useState(1)
   const [isWishlisted, setIsWishlisted] = useState(false)
+  const [showContactOptions, setShowContactOptions] = useState(false)
+  const [metaTags, setMetaTags] = useState({
+    title: '',
+    description: '',
+    image: '',
+    url: ''
+  })
+
+  const updateMetaTags = (product?: Product) => {
+    if (typeof document === 'undefined') return // Skip on server-side
+    
+    let title: string = 'A2Z Business Directory'
+    let description: string = 'South Africa\'s premier business directory'
+    let image: string = 'https://www.a2zsellr.life/default-image.jpg'
+    let url: string = 'https://www.a2zsellr.life'
+    
+    if (product && profile) {
+      // Product-specific meta tags
+      const priceText = product.price_cents 
+        ? `R${(product.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : 'Contact for price'
+      
+      title = `${product.name} - ${profile.display_name} | A2Z Business Directory`
+      description = `${product.description || product.name} - ${priceText}. Available from ${profile.display_name} on A2Z Business Directory.`
+      image = product.image_url || 'https://www.a2zsellr.life/default-product-image.jpg'
+      url = `https://www.a2zsellr.life/profile/${profile.display_name}?product=${encodeURIComponent(product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''))}`
+    } else if (profile) {
+      // Profile-specific meta tags
+      title = `${profile.display_name} | A2Z Business Directory`
+      description = `${profile.bio || `Check out ${profile.display_name}'s business profile`} - ${profile.business_category || 'Business'} in ${profile.business_location || 'South Africa'}`
+      image = profile.avatar_url || 'https://www.a2zsellr.life/default-avatar.jpg'
+      url = `https://www.a2zsellr.life/profile/${profile.display_name}`
+    }
+    
+    // Update document title
+    document.title = title
+    
+    // Update or create meta tags
+    const updateMetaTag = (property: string, content: string) => {
+      let meta = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement
+      if (!meta) {
+        meta = document.createElement('meta')
+        meta.setAttribute('property', property)
+        document.head.appendChild(meta)
+      }
+      meta.setAttribute('content', content)
+    }
+    
+    const updateMetaName = (name: string, content: string) => {
+      let meta = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement
+      if (!meta) {
+        meta = document.createElement('meta')
+        meta.setAttribute('name', name)
+        document.head.appendChild(meta)
+      }
+      meta.setAttribute('content', content)
+    }
+    
+    // Update meta tags
+    updateMetaName('description', description)
+    
+    // Open Graph tags
+    updateMetaTag('og:type', 'website')
+    updateMetaTag('og:url', url)
+    updateMetaTag('og:title', title)
+    updateMetaTag('og:description', description)
+    updateMetaTag('og:image', image)
+    updateMetaTag('og:site_name', 'A2Z Business Directory')
+    
+    // Twitter tags
+    updateMetaTag('twitter:card', 'summary_large_image')
+    updateMetaTag('twitter:url', url)
+    updateMetaTag('twitter:title', title)
+    updateMetaTag('twitter:description', description)
+    updateMetaTag('twitter:image', image)
+    
+    setMetaTags({ title, description, image, url })
+  }
+
+  const handleShareProduct = (product: Product) => {
+    if (!profile) return
+    
+    // Create URL with product parameter to open the product modal
+    const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+    const shareUrl = `https://www.a2zsellr.life/profile/${profile.display_name}?product=${encodeURIComponent(productSlug)}`
+    const shareText = `Check out "${product.name}" from ${profile.display_name} on A2Z Business Directory!`
+    
+    if (navigator.share) {
+      // Use native sharing if available (mobile)
+      navigator.share({
+        title: `${product.name} - ${profile.display_name}`,
+        text: shareText,
+        url: shareUrl,
+      }).catch(console.error)
+    } else {
+      // Fallback: Copy to clipboard
+      navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
+        alert('Product link copied to clipboard!')
+      }).catch(() => {
+        // Fallback: Show share dialog with the link
+        prompt('Copy this link to share:', shareUrl)
+      })
+    }
+  }
+
+  const handleContactSeller = () => {
+    setShowContactOptions(!showContactOptions)
+  }
+
+  const handleWhatsAppContact = (product: Product) => {
+    if (!profile?.phone_number) {
+      alert('Phone number not available for this business.')
+      return
+    }
+
+    const phoneNumber = profile.phone_number.replace(/\D/g, '') // Remove non-digits
+    const priceText = product.price_cents 
+      ? `R${(product.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      : 'Contact for price'
+    
+    const message = `Hi ${profile.display_name}! 
+
+I'm interested in this product from your A2Z Business Directory profile:
+
+📦 Product: ${product.name}
+💰 Price: ${priceText}
+${product.description ? `📝 Description: ${product.description}` : ''}
+
+❓ I want this product - is it still available?
+
+Thank you!`
+
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+    window.open(whatsappUrl, '_blank')
+    setShowContactOptions(false)
+  }
+
+  const handleEmailContact = (product: Product) => {
+    if (!profile?.email) {
+      alert('Email not available for this business.')
+      return
+    }
+
+    const priceText = product.price_cents 
+      ? `R${(product.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      : 'Contact for price'
+
+    const subject = `Inquiry about ${product.name} - A2Z Business Directory`
+    const body = `Hi ${profile.display_name},
+
+I'm interested in this product from your A2Z Business Directory profile:
+
+Product: ${product.name}
+Price: ${priceText}
+${product.description ? `Description: ${product.description}` : ''}
+
+I want this product - is it still available?
+
+Thank you!
+
+Best regards`
+
+    const mailtoUrl = `mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    window.open(mailtoUrl, '_blank')
+    setShowContactOptions(false)
+  }
 
   useEffect(() => {
     if (username) {
@@ -116,6 +285,26 @@ export default function PublicProfilePage() {
 
       if (!productsError && productsData) {
         setProducts(productsData)
+        
+        // Check if there's a product parameter in the URL to auto-open
+        const productParam = searchParams.get('product')
+        if (productParam) {
+          // Find the product by matching the slug
+          const targetProduct = productsData.find(product => {
+            const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+            return productSlug === decodeURIComponent(productParam)
+          })
+          
+          if (targetProduct) {
+            setSelectedProduct(targetProduct)
+            setActiveTab('shop') // Make sure we're on the shop tab
+            updateMetaTags(targetProduct) // Update meta tags for the specific product
+          }
+        } else {
+          updateMetaTags() // Update meta tags for the profile
+        }
+      } else {
+        updateMetaTags() // Update meta tags for the profile even if no products
       }
 
     } catch (error) {
@@ -358,7 +547,32 @@ export default function PublicProfilePage() {
                     <Mail className="h-4 w-4 mr-2" />
                     Contact
                   </Button>
-                  <Button variant="outline" className="bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 px-8 py-3 rounded-[9px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 hover:bg-gray-50">
+                  <Button 
+                    variant="outline" 
+                    className="bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 px-8 py-3 rounded-[9px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 hover:bg-gray-50"
+                    onClick={() => {
+                      const shareUrl = `https://www.a2zsellr.life/profile/${profile.display_name}`
+                      const shareText = `Check out ${profile.display_name}'s business profile on A2Z Business Directory!`
+                      
+                      if (navigator.share) {
+                        // Use native sharing if available (mobile)
+                        navigator.share({
+                          title: `${profile.display_name} - A2Z Business Directory`,
+                          text: shareText,
+                          url: shareUrl,
+                        }).catch(console.error)
+                      } else {
+                        // Fallback: Copy to clipboard
+                        navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
+                          // Show success message (you can add a toast notification here)
+                          alert('Profile link copied to clipboard!')
+                        }).catch(() => {
+                          // Fallback: Show share dialog with the link
+                          prompt('Copy this link to share:', shareUrl)
+                        })
+                      }
+                    }}
+                  >
                     <Share2 className="h-4 w-4 mr-2" />
                     Share
                   </Button>
@@ -639,11 +853,39 @@ export default function PublicProfilePage() {
                     </div>
 
                     <div className="space-y-3">
-                      <button className="w-full bg-emerald-600 text-white py-3 px-6 rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">
-                        <ShoppingBag className="w-5 h-5" />
-                        Contact Seller
-                      </button>
-                      <button className="w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="relative">
+                        <button 
+                          onClick={handleContactSeller}
+                          className="w-full bg-emerald-600 text-white py-3 px-6 rounded-[9px] hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <ShoppingBag className="w-5 h-5" />
+                          Contact Seller
+                        </button>
+                        
+                        {showContactOptions && (
+                          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-[9px] shadow-lg z-10 overflow-hidden">
+                            <button
+                              onClick={() => handleWhatsAppContact(selectedProduct!)}
+                              className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 border-b border-gray-100"
+                            >
+                              <MessageCircle className="w-5 h-5 text-green-600" />
+                              <span className="text-gray-700">WhatsApp</span>
+                            </button>
+                            <button
+                              onClick={() => handleEmailContact(selectedProduct!)}
+                              className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
+                            >
+                              <Mail className="w-5 h-5 text-blue-600" />
+                              <span className="text-gray-700">Email</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <button 
+                        onClick={() => handleShareProduct(selectedProduct!)}
+                        className="w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-[9px] hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Share2 className="w-5 h-5" />
                         Share Product
                       </button>
                     </div>
