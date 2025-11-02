@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { ImageIcon, UploadCloud, Eye, Edit, Trash2, Settings } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { ImageGallery } from '@/components/ui/carousel-circular-image-gallery'
 import { ImageUploadGallery } from '@/components/ui/image-upload-gallery'
 import { supabase } from '@/lib/supabaseClient'

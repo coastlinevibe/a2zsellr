@@ -6,7 +6,7 @@ This document outlines the complete data model structure for the A2Z Business Di
 
 ### **Core Tables**
 
-#### 1. **Profiles Table** (Main Business Profiles)
+#### 1. **Profiles Table** (Main User Profiles)
 ```sql
 CREATE TABLE public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -46,7 +46,7 @@ CREATE TABLE public.locations (
 );
 ```
 
-#### 3. **Categories Table** (Business Categories)
+#### 3. **Categories Table** (Directory Categories)
 ```sql
 CREATE TABLE public.categories (
   id SERIAL PRIMARY KEY,
@@ -60,7 +60,7 @@ CREATE TABLE public.categories (
 );
 ```
 
-## 🏢 **Business Profile Model**
+## 🏢 **Profile Model**
 
 ### **TypeScript Interface**
 ```typescript
@@ -88,7 +88,7 @@ export interface UserProfile {
 }
 ```
 
-### **Business Tiers & Features**
+### **Profile Tiers & Features**
 
 #### **Free Tier (R0/month)**
 ```typescript
@@ -141,7 +141,7 @@ const BUSINESS_TIER_FEATURES = {
 }
 ```
 
-## 📍 **Location Model**
+## 📍 **Directory Location Model**
 
 ### **Supported South African Cities**
 ```typescript
@@ -173,7 +173,7 @@ const SUPPORTED_LOCATIONS = [
 
 ## 🏷️ **Category Model**
 
-### **Business Categories**
+### **Directory Categories**
 ```typescript
 export interface Category {
   id: number
@@ -184,7 +184,7 @@ export interface Category {
   is_active: boolean
 }
 
-const BUSINESS_CATEGORIES = [
+const CATEGORIES = [
   { name: 'All Categories', slug: 'all', icon: 'grid' },
   { name: 'Restaurants', slug: 'restaurants', icon: 'utensils' },
   { name: 'Retail', slug: 'retail', icon: 'shopping-bag' },
@@ -222,12 +222,6 @@ const TIER_PRICING = {
   business: 299
 }
 
-const EARLY_ADOPTER_PRICING = {
-  free: 0,
-  premium: 74,    // 50% off
-  business: 149   // 50% off
-}
-```
 
 ## 🔐 **Authentication Model**
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Grid, List, Eye, Edit, Trash2, Share2, MoreVertical } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 interface Listing {
   id: string

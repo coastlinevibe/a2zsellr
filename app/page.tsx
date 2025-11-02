@@ -107,7 +107,7 @@ export default function HomePage() {
         .from('profiles')
         .select('*')
         .eq('is_active', true)
-        .eq('profile_type', 'business') // Only business profiles
+        .eq('subscription_tier', 'business') // Only business profiles
         .not('display_name', 'is', null) // Only profiles with display names
 
       // Apply search query filter
@@ -141,7 +141,7 @@ export default function HomePage() {
           .from('profiles')
           .select('*')
           .eq('is_active', true)
-          .eq('profile_type', 'business')
+          .eq('subscription_tier', 'business')
           .not('display_name', 'is', null)
           .order('verified_seller', { ascending: false })
           .order('updated_at', { ascending: false })
@@ -162,7 +162,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section - Business Directory */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-[52px] pb-20 sm:pb-32 md:pt-[68px] md:pb-40 lg:pt-[100px] lg:pb-48">
+      <section className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-20 pb-20 sm:pb-32 md:pt-24 md:pb-40 lg:pt-32 lg:pb-48">
         <div className="absolute inset-0 bg-[url('/images/hero/bg2.jpg')] bg-center bg-cover opacity-10"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/50"></div>
         <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">

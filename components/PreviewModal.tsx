@@ -1,7 +1,7 @@
 'use client'
 
 import { X, Eye, MapPin, Phone, Globe, Star } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 interface PreviewModalProps {
   isOpen: boolean

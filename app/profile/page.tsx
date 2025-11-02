@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabaseClient'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { ArrowLeft, Upload, User, Mail, FileText, Crown, CheckCircle2, AlertTriangle, Building2, Tag, MapPin, Phone, Globe, Clock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
@@ -12,7 +12,7 @@ import Link from 'next/link'
 interface UserProfile {
   id: string
   display_name: string | null
-  profile_type: 'personal' | 'business'
+  subscription_tier: 'free' | 'premium' | 'business'
   bio: string | null
   avatar_url: string | null
   phone_number: string | null
@@ -20,7 +20,6 @@ interface UserProfile {
   business_category: string | null
   business_location: string | null
   business_hours: any
-  subscription_tier: 'free' | 'premium' | 'business'
   verified_seller: boolean
   early_adopter: boolean
 }
@@ -50,7 +49,7 @@ export default function ProfilePage() {
 
   // Form fields
   const [displayName, setDisplayName] = useState('')
-  const [profileType, setProfileType] = useState<'personal' | 'business'>('business')
+  const [profileType, setProfileType] = useState<'free' | 'premium' | 'business'>('free')
   const [bio, setBio] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -85,7 +84,7 @@ export default function ProfilePage() {
       const currentDisplayName = profileData.display_name || ''
       setDisplayName(currentDisplayName)
       setOriginalDisplayName(currentDisplayName) // Store original for comparison
-      setProfileType(profileData.profile_type || 'personal')
+      setProfileType(profileData.subscription_tier || 'free')
       setBio(profileData.bio || '')
       setAvatarUrl(profileData.avatar_url || '')
       setPhoneNumber(profileData.phone_number || '')
@@ -212,7 +211,7 @@ export default function ProfilePage() {
     try {
       const updates = {
         display_name: displayName.trim() || undefined,
-        profile_type: profileType,
+        subscription_tier: profileType,
         bio: bio.trim() || undefined,
         avatar_url: avatarUrl.trim() || undefined,
         phone_number: phoneNumber.trim() || undefined,

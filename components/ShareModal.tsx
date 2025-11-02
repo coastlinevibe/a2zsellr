@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { X, Copy, Share2, Facebook, Twitter, Linkedin, Mail } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 interface ShareModalProps {
   isOpen: boolean

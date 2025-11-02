@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, memo } from 'react'
 import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 interface UploadedImage {
   id: string

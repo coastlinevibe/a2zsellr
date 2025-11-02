@@ -25,9 +25,10 @@ import {
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabaseClient'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 import { UserProfileDropdown } from '@/components/UserProfileDropdown'
 import { ListingCardGrid } from '@/components/ListingCardGrid'
+import PremiumShopServices from '@/components/ui/premium-shop-services'
 import FreeAccountNotifications from '@/components/FreeAccountNotifications'
 import { GalleryTab } from '@/components/dashboard/GalleryTab'
 
@@ -479,89 +480,16 @@ export default function DashboardPage() {
   }
 
   const renderShopTab = () => {
-    if (productsLoading) return renderLoadingState('shop products')
-
-    if (!products.length) {
-      return renderEmptyState(
-        'No products added',
-        'Add your hero products with pricing, stock, and media to power the in-app shop and WhatsApp catalog.',
-        ShoppingBag,
-        { label: 'Create product', href: '/dashboard/shop/new' }
-      )
+    const handleUpgrade = (tier: string) => {
+      // Redirect to upgrade page or handle subscription upgrade
+      window.location.href = `/upgrade?plan=${tier}&redirect=/dashboard`
     }
 
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Product Catalog</h2>
-            <p className="text-sm text-gray-600">
-              Manage inventory, pricing, and availability synced with your storefront.
-            </p>
-          </div>
-          <Button onClick={() => router.push('/dashboard/shop/new')} className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Add Product
-          </Button>
-        </div>
-
-        <div className="overflow-hidden rounded-xl border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200 bg-white">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Product
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Price
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Stock
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Added
-                </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {products.map((product) => (
-                <tr key={product.id}>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
-                        {product.image_url ? (
-                          <img src={product.image_url} alt={product.name ?? 'Product'} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No image</div>
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{product.name ?? 'Untitled product'}</p>
-                        <p className="text-xs text-gray-500 line-clamp-2">{product.description ?? 'Add a description to increase conversions.'}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {product.price != null ? `R${product.price.toFixed(2)}` : 'Ask for price'}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{product.stock ?? '—'}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {product.created_at ? new Date(product.created_at).toLocaleDateString() : 'Draft'}
-                  </td>
-                  <td className="px-6 py-4 text-right text-sm text-emerald-600">
-                    <button className="hover:underline" onClick={() => router.push(`/dashboard/shop/${product.id}`)}>
-                      Manage
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <PremiumShopServices 
+        currentTier={profile?.subscription_tier || 'free'}
+        onUpgrade={handleUpgrade}
+      />
     )
   }
 

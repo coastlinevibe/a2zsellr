@@ -1,7 +1,7 @@
 'use client'
 
 import { X, Trash2, AlertTriangle } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 interface DeleteConfirmModalProps {
   isOpen: boolean
