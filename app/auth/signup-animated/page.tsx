@@ -34,11 +34,8 @@ export default function AnimatedSignupPage() {
       // Create username handle from email (e.g., @alfbear)
       const userHandle = '@' + (user.email?.split('@')[0] || 'user')
       
-      // Redirect to tier-specific directory profile page with username handle
-      const tierPath = selectedPlan === 'premium' ? `/directory/${userHandle}/premium` :
-                      selectedPlan === 'business' ? `/directory/${userHandle}/business` :
-                      `/directory/${userHandle}/free`
-      router.push(tierPath)
+      // Redirect to profile page
+      router.push('/profile')
     }
   }, [user, router, selectedPlan])
 

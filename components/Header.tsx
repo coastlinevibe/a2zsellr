@@ -12,9 +12,11 @@ export function Header() {
   useEffect(() => {
     setIsClient(true)
     
-    // Always show welcome on home page (permanent banner)
+    // Show welcome banner only on landing page (/)
     if (pathname === '/') {
       setShowWelcome(true)
+    } else {
+      setShowWelcome(false)
     }
   }, [pathname])
 
@@ -25,7 +27,6 @@ export function Header() {
   const handleLogin = () => {
     router.push('/auth/login-animated')
   }
-
 
   if (!isClient || !showWelcome) {
     return null

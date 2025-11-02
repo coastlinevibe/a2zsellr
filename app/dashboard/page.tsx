@@ -28,7 +28,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { UserProfileDropdown } from '@/components/UserProfileDropdown'
 import { ListingCardGrid } from '@/components/ListingCardGrid'
-import PremiumShopServices from '@/components/ui/premium-shop-services'
+import BusinessShop from '@/components/ui/business-shop'
 import FreeAccountNotifications from '@/components/FreeAccountNotifications'
 import { GalleryTab } from '@/components/dashboard/GalleryTab'
 
@@ -370,7 +370,7 @@ export default function DashboardPage() {
             </Link>
 
             <Link
-              href={`/directory/${userHandle}/${profile?.subscription_tier || 'free'}`}
+              href="/profile"
               className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <div className="flex items-center gap-3">
@@ -486,9 +486,9 @@ export default function DashboardPage() {
     }
 
     return (
-      <PremiumShopServices 
-        currentTier={profile?.subscription_tier || 'free'}
-        onUpgrade={handleUpgrade}
+      <BusinessShop 
+        businessId={profile?.id || ''}
+        isOwner={true}
       />
     )
   }

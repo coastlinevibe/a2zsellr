@@ -1,11 +1,11 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabaseClient'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Upload, User, Mail, FileText, Crown, CheckCircle2, AlertTriangle, Building2, Tag, MapPin, Phone, Globe, Clock } from 'lucide-react'
+import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Heart, Check, Truck, Shield, FileText, User, CheckCircle2, AlertTriangle, Building2, Tag, Upload, ArrowLeft } from 'lucide-react'
+import EmojiPicker from '@/components/ui/emoji-picker'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 
@@ -25,8 +25,7 @@ interface UserProfile {
 }
 
 const tabs = [
-  { id: 'general', label: 'General Info', icon: User },
-  { id: 'business', label: 'Business', icon: Building2 },
+  { id: 'profile', label: 'Profile', icon: User },
 ]
 
 export default function ProfilePage() {
@@ -39,7 +38,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [activeTab, setActiveTab] = useState('general')
+  const [activeTab, setActiveTab] = useState('profile')
   
   // Availability checking states
   const [checkingDisplayName, setCheckingDisplayName] = useState(false)
@@ -57,6 +56,16 @@ export default function ProfilePage() {
   const [businessCategory, setBusinessCategory] = useState('')
   const [businessLocation, setBusinessLocation] = useState('')
   const [businessHours, setBusinessHours] = useState('')
+  const [todayHours, setTodayHours] = useState('')
+  const [weeklySchedule, setWeeklySchedule] = useState({
+    monday: { open: '09:00', close: '17:00', closed: false },
+    tuesday: { open: '09:00', close: '17:00', closed: false },
+    wednesday: { open: '09:00', close: '17:00', closed: false },
+    thursday: { open: '09:00', close: '17:00', closed: false },
+    friday: { open: '09:00', close: '17:00', closed: false },
+    saturday: { open: '09:00', close: '14:00', closed: false },
+    sunday: { open: '09:00', close: '17:00', closed: true }
+  })
 
   useEffect(() => {
     if (!user) {
@@ -92,6 +101,21 @@ export default function ProfilePage() {
       setBusinessCategory(profileData.business_category || '')
       setBusinessLocation(profileData.business_location || '')
       setBusinessHours(profileData.business_hours || '')
+      
+      // Parse existing schedule if available
+      if (profileData.business_hours) {
+        try {
+          const parsedSchedule = JSON.parse(profileData.business_hours)
+          if (parsedSchedule && typeof parsedSchedule === 'object') {
+            setWeeklySchedule(parsedSchedule)
+          }
+        } catch (error) {
+          // If it's not JSON, try to parse the old text format
+          console.log('Using legacy text format for business hours')
+        }
+        const todayHours = getTodayHours(profileData.business_hours)
+        setTodayHours(todayHours)
+      }
       
       // Reset availability checking when loading profile
       setDisplayNameAvailable(null)
@@ -216,9 +240,9 @@ export default function ProfilePage() {
         avatar_url: avatarUrl.trim() || undefined,
         phone_number: phoneNumber.trim() || undefined,
         website_url: websiteUrl.trim() || undefined,
-        business_category: profileType === 'business' ? (businessCategory.trim() || undefined) : undefined,
-        business_location: profileType === 'business' ? (businessLocation.trim() || undefined) : undefined,
-        business_hours: profileType === 'business' ? (businessHours.trim() || undefined) : undefined,
+        business_category: businessCategory.trim() || undefined,
+        business_location: businessLocation.trim() || undefined,
+        business_hours: businessHours.trim() || undefined,
       }
 
       const { error } = await supabase
@@ -316,29 +340,106 @@ export default function ProfilePage() {
     return badges[profile?.subscription_tier || 'free']
   }
 
+  // Function to get today's operating hours
+  const getTodayHours = (hoursString: string) => {
+    if (!hoursString) return 'Hours not set'
+    
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' })
+    const todayShort = today.substring(0, 3) // Mon, Tue, etc.
+    
+    // Try to parse the hours string to find today's hours
+    const lines = hoursString.split('\n')
+    for (const line of lines) {
+      const trimmedLine = line.trim()
+      if (trimmedLine.toLowerCase().includes(today.toLowerCase()) || 
+          trimmedLine.toLowerCase().includes(todayShort.toLowerCase())) {
+        // Extract the hours part after the colon
+        const colonIndex = trimmedLine.indexOf(':')
+        if (colonIndex !== -1) {
+          return trimmedLine.substring(colonIndex + 1).trim()
+        }
+      }
+    }
+    
+    // If no specific day found, return a generic message
+    return 'Check full schedule'
+  }
+
+  // Update today's hours when business hours change
+  const handleBusinessHoursChange = (value: string) => {
+    setBusinessHours(value)
+    const todayHours = getTodayHours(value)
+    setTodayHours(todayHours)
+  }
+
+  // Update schedule for a specific day
+  const updateDaySchedule = (day: string, field: string, value: string | boolean) => {
+    const newSchedule = {
+      ...weeklySchedule,
+      [day]: {
+        ...weeklySchedule[day as keyof typeof weeklySchedule],
+        [field]: value
+      }
+    }
+    setWeeklySchedule(newSchedule)
+    
+    // Update business hours with JSON format
+    const scheduleJson = JSON.stringify(newSchedule)
+    setBusinessHours(scheduleJson)
+    
+    // Update today's hours display
+    const todayHours = getTodayHoursFromSchedule(newSchedule)
+    setTodayHours(todayHours)
+  }
+
+  // Get today's hours from schedule object
+  const getTodayHoursFromSchedule = (schedule: typeof weeklySchedule) => {
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
+    const todaySchedule = schedule[today as keyof typeof schedule]
+    
+    if (!todaySchedule) return 'Hours not set'
+    if (todaySchedule.closed) return 'Closed'
+    
+    return `${todaySchedule.open} - ${todaySchedule.close}`
+  }
+
+  const daysOfWeek = [
+    { key: 'monday', label: 'Monday' },
+    { key: 'tuesday', label: 'Tuesday' },
+    { key: 'wednesday', label: 'Wednesday' },
+    { key: 'thursday', label: 'Thursday' },
+    { key: 'friday', label: 'Friday' },
+    { key: 'saturday', label: 'Saturday' },
+    { key: 'sunday', label: 'Sunday' }
+  ]
+
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'general':
+      case 'profile':
         return (
-          <div className="space-y-6">
-            {/* Business Profile Header */}
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
+          <div className="space-y-8">
+            {/* Profile Header */}
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
               <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-emerald-600" />
-                <h3 className="text-lg font-semibold text-emerald-900">Business Profile</h3>
+                <User className="w-5 h-5 text-emerald-600" />
+                <h3 className="text-lg font-semibold text-emerald-900">Complete Profile</h3>
               </div>
               <p className="text-sm text-emerald-700 mt-1">
-                Create and manage your business profile for the A2Z directory
+                Manage your personal and business information for the A2Z directory
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Left Column */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left Column - Personal Info */}
               <div className="space-y-6">
+                <h4 className="text-md font-semibold text-gray-900 flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Personal Information
+                </h4>
+                
                 {/* Display Name */}
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <User className="w-4 h-4" />
                     Display Name - Check Availability
                   </label>
                   <div className="relative">
@@ -404,19 +505,55 @@ export default function ProfilePage() {
                     <FileText className="w-4 h-4" />
                     Bio
                   </label>
-                  <textarea
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    placeholder="Tell us about yourself..."
-                    rows={4}
-                    maxLength={500}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none resize-none"
-                  />
+                  <div className="relative">
+                    <textarea
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      placeholder="Tell us about yourself... 😊"
+                      rows={4}
+                      maxLength={500}
+                      className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none resize-none"
+                    />
+                    <div className="absolute bottom-2 right-2">
+                      <EmojiPicker
+                        onEmojiSelect={(emoji) => {
+                          if (bio.length < 500) {
+                            setBio(bio + emoji)
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
                   <p className="text-xs text-gray-500 mt-1">
                     {bio.length}/500 characters
                   </p>
                 </div>
 
+                {/* Email (Read-only) */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <Mail className="w-4 h-4" />
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={user?.email || ''}
+                    disabled
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Email cannot be changed
+                  </p>
+                </div>
+              </div>
+
+              {/* Middle Column - Contact & Business */}
+              <div className="space-y-6">
+                <h4 className="text-md font-semibold text-gray-900 flex items-center gap-2">
+                  <Building2 className="w-4 h-4" />
+                  Business Information
+                </h4>
+                
                 {/* Contact Info */}
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
@@ -445,25 +582,146 @@ export default function ProfilePage() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                   />
                 </div>
-              </div>
 
-              {/* Right Column */}
-              <div className="space-y-6">
-                {/* Avatar Upload */}
+                {/* Business Category */}
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <Upload className="w-4 h-4" />
-                    Profile Picture
+                    <Tag className="w-4 h-4" />
+                    Business Category
+                  </label>
+                  <select
+                    value={businessCategory}
+                    onChange={(e) => setBusinessCategory(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                  >
+                    <option value="">Select a category</option>
+                    <option value="retail">Retail & Shopping</option>
+                    <option value="food">Food & Restaurants</option>
+                    <option value="health">Health & Beauty</option>
+                    <option value="services">Professional Services</option>
+                    <option value="technology">Technology</option>
+                    <option value="education">Education</option>
+                  </select>
+                </div>
+
+                {/* Business Location */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <MapPin className="w-4 h-4" />
+                    Business Location
+                  </label>
+                  <select
+                    value={businessLocation}
+                    onChange={(e) => setBusinessLocation(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                  >
+                    <option value="">Select a location</option>
+                    <option value="cape-town">Cape Town</option>
+                    <option value="johannesburg">Johannesburg</option>
+                    <option value="durban">Durban</option>
+                    <option value="pretoria">Pretoria</option>
+                  </select>
+                </div>
+
+                {/* Operating Hours Schedule Picker */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+                    <Clock className="w-4 h-4" />
+                    Operating Hours
                   </label>
                   
+                  {/* Today's Hours Display */}
+                  {businessHours && (
+                    <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Clock className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm font-medium text-emerald-900">
+                          Today ({new Date().toLocaleDateString('en-US', { weekday: 'long' })})
+                        </span>
+                      </div>
+                      <p className="text-emerald-700 font-medium">
+                        {getTodayHoursFromSchedule(weeklySchedule)}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Weekly Schedule Picker */}
+                  <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Weekly Schedule</h4>
+                    
+                    {daysOfWeek.map((day) => {
+                      const daySchedule = weeklySchedule[day.key as keyof typeof weeklySchedule]
+                      return (
+                        <div key={day.key} className="flex items-center gap-3 py-2">
+                          <div className="w-20 text-sm font-medium text-gray-700">
+                            {day.label}
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={!daySchedule.closed}
+                              onChange={(e) => updateDaySchedule(day.key, 'closed', !e.target.checked)}
+                              className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                            />
+                            <span className="text-xs text-gray-600">Open</span>
+                          </div>
+                          
+                          {!daySchedule.closed && (
+                            <>
+                              <div className="flex items-center gap-2">
+                                <label className="text-xs text-gray-600">From:</label>
+                                <input
+                                  type="time"
+                                  value={daySchedule.open}
+                                  onChange={(e) => updateDaySchedule(day.key, 'open', e.target.value)}
+                                  className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                />
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <label className="text-xs text-gray-600">To:</label>
+                                <input
+                                  type="time"
+                                  value={daySchedule.close}
+                                  onChange={(e) => updateDaySchedule(day.key, 'close', e.target.value)}
+                                  className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                                />
+                              </div>
+                            </>
+                          )}
+                          
+                          {daySchedule.closed && (
+                            <span className="text-sm text-gray-500 italic">Closed</span>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                  
+                  <p className="text-xs text-gray-500 mt-2">
+                    Set your operating hours for each day of the week
+                  </p>
+                </div>
+              </div>
+
+              {/* Right Column - Profile Picture */}
+              <div className="space-y-6">
+                <h4 className="text-md font-semibold text-gray-900 flex items-center gap-2">
+                  <Upload className="w-4 h-4" />
+                  Profile Picture
+                </h4>
+                
+                {/* Avatar Upload */}
+                <div>
                   {(previewUrl || avatarUrl) && (
-                    <div className="mb-3 flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="mb-4 flex flex-col items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
                       <img 
                         src={previewUrl || avatarUrl} 
                         alt="Avatar preview" 
-                        className="w-16 h-16 rounded-full object-cover border-2 border-emerald-500"
+                        className="w-24 h-24 rounded-full object-cover border-2 border-emerald-500"
                       />
-                      <div className="flex-1">
+                      <div className="text-center">
                         <p className="text-sm font-medium text-gray-900">
                           {previewUrl ? 'Ready to Upload' : 'Current Avatar'}
                         </p>
@@ -486,15 +744,15 @@ export default function ProfilePage() {
                     </div>
                   )}
                   
-                  <div className="flex gap-2">
+                  <div className="space-y-3">
                     <input
                       type="url"
                       value={avatarUrl}
                       onChange={(e) => setAvatarUrl(e.target.value)}
                       placeholder="https://example.com/avatar.jpg"
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                     />
-                    <label className="cursor-pointer">
+                    <label className="cursor-pointer block">
                       <input
                         type="file"
                         accept="image/*"
@@ -502,110 +760,21 @@ export default function ProfilePage() {
                         onChange={handleFileSelect}
                         disabled={uploading}
                       />
-                      <div className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                      <div className={`w-full px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
                         uploading 
                           ? 'bg-gray-400 cursor-not-allowed' 
                           : 'bg-emerald-600 hover:bg-emerald-700 cursor-pointer'
                       } text-white`}>
                         <Upload className="w-4 h-4" />
-                        Select
+                        Select Image
                       </div>
                     </label>
                   </div>
-                </div>
-
-                {/* Email (Read-only) */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <Mail className="w-4 h-4" />
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={user?.email || ''}
-                    disabled
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Email cannot be changed
-                  </p>
                 </div>
               </div>
             </div>
           </div>
         )
-
-      case 'business':
-        return (
-          <div className="space-y-6">
-            {/* Business Information */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-blue-600" />
-                <h3 className="text-lg font-semibold text-blue-900">Business Information</h3>
-              </div>
-              <p className="text-sm text-blue-700 mt-1">
-                Add your business details to help customers find and contact you
-              </p>
-            </div>
-            
-            {/* Business Fields */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <Tag className="w-4 h-4" />
-                    Business Category
-                  </label>
-                  <select
-                    value={businessCategory}
-                    onChange={(e) => setBusinessCategory(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                  >
-                    <option value="">Select a category</option>
-                    <option value="retail">Retail & Shopping</option>
-                    <option value="food">Food & Restaurants</option>
-                    <option value="health">Health & Beauty</option>
-                    <option value="services">Professional Services</option>
-                    <option value="technology">Technology</option>
-                    <option value="education">Education</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <MapPin className="w-4 h-4" />
-                    Business Location
-                  </label>
-                  <select
-                    value={businessLocation}
-                    onChange={(e) => setBusinessLocation(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                  >
-                    <option value="">Select a location</option>
-                    <option value="cape-town">Cape Town</option>
-                    <option value="johannesburg">Johannesburg</option>
-                    <option value="durban">Durban</option>
-                    <option value="pretoria">Pretoria</option>
-                  </select>
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    <Clock className="w-4 h-4" />
-                    Business Hours
-                  </label>
-                  <textarea
-                    value={businessHours}
-                    onChange={(e) => setBusinessHours(e.target.value)}
-                    placeholder="Mon-Fri: 9:00 AM - 5:00 PM&#10;Sat: 9:00 AM - 2:00 PM&#10;Sun: Closed"
-                    rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none resize-none"
-                  />
-                </div>
-              </div>
-            </div>
-        )
-        
 
       default:
         return null
@@ -727,8 +896,8 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {/* Actions - Only show on General and Business tabs */}
-            {(activeTab === 'general' || activeTab === 'business') && (
+            {/* Actions - Only show on Profile tab */}
+            {activeTab === 'profile' && (
               <div className="flex items-center gap-3 pt-6 border-t border-gray-200 mt-6">
                 <Button
                   onClick={handleSave}
@@ -747,7 +916,7 @@ export default function ProfilePage() {
             )}
 
             {/* Upgrade Section */}
-            {profile?.subscription_tier === 'free' && activeTab === 'general' && (
+            {profile?.subscription_tier === 'free' && activeTab === 'profile' && (
               <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                 <div className="flex items-start gap-3">
                   <Crown className="w-5 h-5 text-amber-600 mt-0.5" />

@@ -1,5 +1,27 @@
 # A2Z Business Directory - Data Models & Schema
 
+## 🚀 **WHAT IS A2Z BUSINESS DIRECTORY?**
+
+**A2Z is a comprehensive business directory platform where:**
+
+1. **🔍 DISCOVERY PHASE**: Customers search and find business listing cards with basic info, gallery images, ratings, and contact details
+
+2. **🏪 E-COMMERCE PHASE**: When customers click a listing card, it opens to a full business profile with:
+   - Complete image galleries and sliders
+   - **FULL E-COMMERCE SHOP** with products/services, prices, shopping cart, and checkout
+   - **PAYMENT PROCESSING** - customers can browse, shop, and pay directly
+   - Business information, reviews, and contact options
+
+3. **📢 MARKETING PHASE**: Business owners get powerful marketing tools to:
+   - Create marketing listings/advertisements with before/after galleries
+   - Schedule and share ads on WhatsApp, Facebook, Instagram
+   - Generate direct links with chat integration
+   - Track performance and analytics
+
+**THIS IS NOT JUST A DIRECTORY - IT'S A FULL E-COMMERCE + MARKETING PLATFORM!**
+
+---
+
 This document outlines the complete data model structure for the A2Z Business Directory application.
 
 ## 📊 **Database Schema Overview**
@@ -32,7 +54,79 @@ CREATE TABLE public.profiles (
 );
 ```
 
-#### 2. **Locations Table** (South African Cities)
+#### 2. **Profile Products Table** (E-commerce Shop Items)
+```sql
+CREATE TABLE public.profile_products (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  price DECIMAL(10,2),
+  category TEXT,
+  image_url TEXT,
+  gallery_images TEXT[], -- Array of image URLs
+  stock INTEGER DEFAULT 0,
+  is_active BOOLEAN DEFAULT true,
+  featured BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+#### 3. **Profile Gallery Table** (Business Image Galleries)
+```sql
+CREATE TABLE public.profile_gallery (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+  image_url TEXT NOT NULL,
+  caption TEXT,
+  is_featured BOOLEAN DEFAULT false,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+#### 4. **Marketing Listings Table** (Advertisements/Campaigns)
+```sql
+CREATE TABLE public.marketing_listings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  before_image_url TEXT,
+  after_image_url TEXT,
+  gallery_images TEXT[], -- Array of image URLs
+  campaign_type TEXT CHECK (campaign_type IN ('whatsapp', 'facebook', 'instagram', 'general')),
+  target_audience TEXT,
+  budget DECIMAL(10,2),
+  is_active BOOLEAN DEFAULT true,
+  scheduled_date TIMESTAMP WITH TIME ZONE,
+  performance_metrics JSONB DEFAULT '{}',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+#### 5. **Orders Table** (E-commerce Transactions)
+```sql
+CREATE TABLE public.orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_email TEXT NOT NULL,
+  customer_name TEXT,
+  customer_phone TEXT,
+  business_profile_id UUID REFERENCES public.profiles(id),
+  total_amount DECIMAL(10,2) NOT NULL,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled')),
+  payment_status TEXT DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'failed', 'refunded')),
+  payment_method TEXT,
+  shipping_address JSONB,
+  order_items JSONB NOT NULL, -- Array of {product_id, name, price, quantity}
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+#### 6. **Locations Table** (South African Cities)
 ```sql
 CREATE TABLE public.locations (
   id SERIAL PRIMARY KEY,

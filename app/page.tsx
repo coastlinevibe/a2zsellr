@@ -105,9 +105,16 @@ export default function HomePage() {
     try {
       let query = supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          gallery_images:profile_gallery(
+            id,
+            image_url,
+            caption
+          )
+        `)
         .eq('is_active', true)
-        .eq('subscription_tier', 'business') // Only business profiles
+        .in('subscription_tier', ['free', 'premium', 'business']) // All active profiles
         .not('display_name', 'is', null) // Only profiles with display names
 
       // Apply search query filter
@@ -139,9 +146,16 @@ export default function HomePage() {
         // Fallback to simpler query if join fails
         const fallbackQuery = supabase
           .from('profiles')
-          .select('*')
+          .select(`
+            *,
+            gallery_images:profile_gallery(
+              id,
+              image_url,
+              caption
+            )
+          `)
           .eq('is_active', true)
-          .eq('subscription_tier', 'business')
+          .in('subscription_tier', ['free', 'premium', 'business'])
           .not('display_name', 'is', null)
           .order('verified_seller', { ascending: false })
           .order('updated_at', { ascending: false })
@@ -177,7 +191,7 @@ export default function HomePage() {
               </h1>
             </div>
             <h2 className="text-xl sm:text-2xl lg:text-3xl text-gray-300 mb-6 max-w-4xl mx-auto leading-relaxed">
-              Discover quality businesses nationwide • Mobile-first • Award-winning design
+              Discover talented people nationwide • Mobile-first • Award-winning design
             </h2>
             <div className="text-gray-400 mb-12 max-w-3xl mx-auto">
               <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-sm sm:text-base">
@@ -192,7 +206,7 @@ export default function HomePage() {
             {user && (
               <div className="mb-8">
                 <Link
-                  href="/directory/profile"
+                  href="/profile"
                   className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/30 text-white px-6 py-3 rounded-xl transition-all"
                 >
                   <Eye className="h-4 w-4" />
@@ -209,12 +223,12 @@ export default function HomePage() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
                 {/* Search Input */}
                 <div className="lg:col-span-5">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Find Businesses</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Find People</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input
                       type="text"
-                      placeholder="Search restaurants, services, shops..."
+                      placeholder="Search people, skills, services..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -288,7 +302,7 @@ export default function HomePage() {
             <div className="text-center py-12">
               <div className="inline-flex items-center gap-3 bg-white px-6 py-4 rounded-xl shadow-sm border border-gray-200">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
-                <span className="text-gray-700 font-medium">Searching premium businesses...</span>
+                <span className="text-gray-700 font-medium">Searching profiles...</span>
               </div>
             </div>
           )}
@@ -297,10 +311,10 @@ export default function HomePage() {
           {!isSearching && businesses.length > 0 && (
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                Premium Business Directory
+                Premium Directory
               </h2>
               <p className="text-gray-600 text-lg">
-                Found {businesses.length} premium business{businesses.length !== 1 ? 'es' : ''} 
+                Found {businesses.length} profile{businesses.length !== 1 ? 's' : ''} 
                 {searchQuery && ` matching "${searchQuery}"`}
                 {selectedCategory !== 'all' && ` in ${categories.find(c => c.slug === selectedCategory)?.name}`}
                 {selectedLocation !== 'all' && ` in ${locations.find(l => l.slug === selectedLocation)?.city}`}
@@ -316,10 +330,20 @@ export default function HomePage() {
                 const categoryName = categories.find(c => c.slug === business.business_category)?.name || business.business_category
                 const locationName = locations.find(l => l.slug === business.business_location)?.city || business.business_location
                 
+                // Format gallery images for the BusinessCard component
+                const formattedBusiness = {
+                  ...business,
+                  gallery_images: business.gallery_images?.map((img: any) => ({
+                    id: img.id.toString(),
+                    title: img.caption || 'Gallery Image',
+                    url: img.image_url
+                  })) || []
+                }
+
                 return (
                   <BusinessCard
                     key={business.id}
-                    business={business}
+                    business={formattedBusiness}
                     categoryName={categoryName}
                     locationName={locationName}
                   />
@@ -335,9 +359,9 @@ export default function HomePage() {
                 <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Search className="w-10 h-10 text-gray-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No businesses found</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No profiles found</h3>
                 <p className="text-gray-600 mb-6">
-                  Try adjusting your search criteria or browse all businesses.
+                  Try adjusting your search criteria or browse all profiles.
                 </p>
                 <button
                   onClick={() => {
@@ -360,9 +384,9 @@ export default function HomePage() {
                 <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Award className="w-10 h-10 text-emerald-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Discover Premium Businesses</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Discover Amazing People</h3>
                 <p className="text-gray-600 mb-6">
-                  Use the search above to find quality businesses in your area.
+                  Use the search above to find talented people in your area.
                 </p>
               </div>
             </div>
@@ -377,12 +401,12 @@ export default function HomePage() {
             <div className="flex items-center justify-center gap-2 mb-4">
               <MapPin className="h-6 w-6 text-purple-600" />
               <h2 className="text-3xl font-bold text-gray-900">
-                Business Listings by Location
+                People by Location
               </h2>
               <MapPin className="h-6 w-6 text-purple-600" />
             </div>
             <p className="text-lg text-gray-600">
-              Premium businesses across South Africa's major cities
+              Amazing people across South Africa's major cities
             </p>
           </div>
 
