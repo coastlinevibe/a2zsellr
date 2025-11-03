@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button'
 import { FramerThumbnailCarousel } from '@/components/ui/framer-thumbnail-carousel'
 interface UserProfile {
   id: string
-  display_name: string
+  display_name: string | null
   email: string | null
   avatar_url: string | null
   bio: string | null
@@ -34,7 +34,7 @@ interface UserProfile {
   website_url: string | null
   subscription_tier: 'free' | 'premium' | 'business'
   verified_seller: boolean
-  early_adopter: boolean
+  early_adopter?: boolean
 }
 
 interface Product {
@@ -127,6 +127,8 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
     )
   }
 
+  const displayName = profile.display_name ?? 'Business'
+
   const filteredProducts = selectedCategory === 'all'
     ? products
     : products.filter((product) => (product.category || '').toLowerCase() === selectedCategory)
@@ -151,10 +153,10 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
           <div className="text-center">
             <div className="w-16 h-16 bg-emerald-200 rounded-full flex items-center justify-center mx-auto mb-2">
               <span className="text-2xl font-bold text-emerald-700">
-                {profile.display_name?.charAt(0)?.toUpperCase() || '?'}
+                {displayName.charAt(0).toUpperCase()}
               </span>
             </div>
-            <p className="text-emerald-600 font-medium">{profile.display_name}</p>
+            <p className="text-emerald-600 font-medium">{displayName}</p>
           </div>
         </div>
       )}
@@ -165,14 +167,14 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
           {profile.avatar_url && (
             <img 
               src={profile.avatar_url} 
-              alt={profile.display_name} 
+              alt={displayName} 
               className="w-12 h-12 rounded-[9px] object-cover border border-gray-200"
             />
           )}
           <div className="flex-1">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">{profile.display_name}</h1>
+                <h1 className="text-xl font-semibold text-gray-900">{displayName}</h1>
                 <div className="flex items-center gap-2 mt-1">
                   <div className="flex items-center">
                     {[...Array(5)].map((_, i) => (
