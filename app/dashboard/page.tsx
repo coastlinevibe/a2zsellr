@@ -24,7 +24,8 @@ import {
   TrendingUp,
   User,
   Users,
-  X
+  X,
+  Clipboard
 } from 'lucide-react'
 
 import { useAuth } from '@/lib/auth'
@@ -36,6 +37,7 @@ import { ListingCardGrid } from '@/components/ListingCardGrid'
 import BusinessShop from '@/components/ui/business-shop'
 import FreeAccountNotifications from '@/components/FreeAccountNotifications'
 import { GalleryTab } from '@/components/dashboard/GalleryTab'
+import { MarketingCampaignsTab } from '@/components/dashboard/MarketingCampaignsTab'
 import PublicProfilePreview from '@/components/ui/public-profile-preview'
 
 type SubscriptionTier = 'free' | 'premium' | 'business'
@@ -223,10 +225,11 @@ export default function DashboardPage() {
   )
 
   const renderMarketingTab = () => {
-    const views = [
-      { id: 'builder', name: 'Create Campaign', icon: Sparkles },
-      { id: 'scheduler', name: 'Schedule & Automate', icon: Calendar },
-      { id: 'analytics', name: 'Analytics', icon: TrendingUp }
+    const marketingViews = [
+      { id: 'builder', label: 'Campaign Builder', icon: Plus },
+      { id: 'campaigns', label: 'My Campaigns', icon: MessageSquare },
+      { id: 'scheduler', label: 'Scheduler', icon: Calendar },
+      { id: 'analytics', label: 'Analytics', icon: TrendingUp }
     ]
 
     return (
@@ -252,7 +255,7 @@ export default function DashboardPage() {
         <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 overflow-hidden">
           <div className="border-b border-gray-200">
             <div className="flex">
-              {views.map((view) => {
+              {marketingViews.map((view) => {
                 const IconComponent = view.icon
                 return (
                   <button
@@ -265,7 +268,7 @@ export default function DashboardPage() {
                     }`}
                   >
                     <IconComponent className="w-4 h-4" />
-                    {view.name}
+                    {view.label}
                   </button>
                 )
               })}
@@ -276,6 +279,10 @@ export default function DashboardPage() {
           <div className="p-6">
             {marketingActiveView === 'builder' && (
               <ShareLinkBuilder products={marketingProducts} businessProfile={profile} />
+            )}
+
+            {marketingActiveView === 'campaigns' && (
+              <MarketingCampaignsTab onCreateNew={() => setMarketingActiveView('builder')} />
             )}
 
             {marketingActiveView === 'scheduler' && (
