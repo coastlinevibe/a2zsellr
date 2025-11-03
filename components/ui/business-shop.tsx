@@ -42,6 +42,7 @@ export default function BusinessShop({
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [manageMode, setManageMode] = useState(false)
   const [productForm, setProductForm] = useState({
     name: '',
     description: '',
@@ -217,12 +218,45 @@ export default function BusinessShop({
           <p className="text-gray-600">{products.length} products available</p>
         </div>
         {isOwner && (
-          <Button onClick={handleAddProduct} className="bg-emerald-600 hover:bg-emerald-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Product
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant={manageMode ? "default" : "outline"} 
+              onClick={() => setManageMode(!manageMode)}
+              className={`rounded-[9px] ${manageMode ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''}`}
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              {manageMode ? 'Done Managing' : 'Manage Shop'}
+            </Button>
+            <Button onClick={handleAddProduct} className="bg-emerald-600 hover:bg-emerald-700 rounded-[9px]">
+              <Plus className="h-4 w-4 mr-2" />
+              Add to Shop
+            </Button>
+          </div>
         )}
       </div>
+
+      {/* Manage Mode Indicator */}
+      {manageMode && (
+        <div className="bg-blue-50 border border-blue-200 rounded-[9px] p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Edit className="h-5 w-5 text-blue-600" />
+              <div>
+                <p className="text-sm font-semibold text-blue-900">Manage Mode Active</p>
+                <p className="text-xs text-blue-700">Click Edit or Delete buttons on products to manage your shop</p>
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setManageMode(false)}
+              className="rounded-[9px] border-blue-300 text-blue-700 hover:bg-blue-100"
+            >
+              Exit
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
@@ -234,14 +268,14 @@ export default function BusinessShop({
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500"
             />
           </div>
         </div>
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+          className="px-4 py-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500"
         >
           {categories.map(cat => (
             <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -260,16 +294,20 @@ export default function BusinessShop({
             {products.length === 0 ? 'Add your first product to get started' : 'Try a different search or category'}
           </p>
           {products.length === 0 && isOwner && (
-            <Button onClick={handleAddProduct} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button onClick={handleAddProduct} className="bg-emerald-600 hover:bg-emerald-700 rounded-[9px]">
               <Plus className="h-4 w-4 mr-2" />
-              Add First Product
+              Add to Shop
             </Button>
           )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map(product => (
-            <div key={product.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+            <div key={product.id} className={`bg-white rounded-[9px] border overflow-hidden transition-all ${
+              manageMode 
+                ? 'border-blue-300 hover:border-blue-500 hover:shadow-lg' 
+                : 'border-gray-200 hover:shadow-md'
+            }`}>
               {product.image_url && (
                 <img
                   src={product.image_url}
@@ -280,30 +318,32 @@ export default function BusinessShop({
               <div className="p-4">
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="font-semibold text-gray-900 flex-1">{product.name}</h3>
-                  {isOwner && (
+                  {isOwner && manageMode && (
                     <div className="flex gap-1 ml-2">
                       <button
-                        onClick={() => handleShareProduct(product)}
-                        className="p-1 text-gray-400 hover:text-emerald-600"
-                        title="Share product"
-                      >
-                        <Share2 className="h-4 w-4" />
-                      </button>
-                      <button
                         onClick={() => handleEditProduct(product)}
-                        className="p-1 text-gray-400 hover:text-blue-600"
+                        className="p-1.5 text-white bg-blue-600 hover:bg-blue-700 rounded-[9px]"
                         title="Edit product"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteProduct(product.id)}
-                        className="p-1 text-gray-400 hover:text-red-600"
+                        className="p-1.5 text-white bg-red-600 hover:bg-red-700 rounded-[9px]"
                         title="Delete product"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
+                  )}
+                  {isOwner && !manageMode && (
+                    <button
+                      onClick={() => handleShareProduct(product)}
+                      className="p-1 text-gray-400 hover:text-emerald-600"
+                      title="Share product"
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </button>
                   )}
                 </div>
                 
@@ -325,7 +365,7 @@ export default function BusinessShop({
                 
                 {product.category && (
                   <div className="mt-2">
-                    <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                    <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-[9px]">
                       {categories.find(c => c.value === product.category)?.label || product.category}
                     </span>
                   </div>
@@ -339,10 +379,10 @@ export default function BusinessShop({
       {/* Add/Edit Product Modal */}
       {showAddProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+          <div className="bg-white rounded-[9px] shadow-xl max-w-md w-full">
             <div className="flex items-center justify-between p-4 border-b">
               <h3 className="text-lg font-semibold">
-                {editingProduct ? 'Edit Product' : 'Add Product'}
+                {editingProduct ? 'Edit Product' : 'Add to Shop'}
               </h3>
               <button onClick={() => setShowAddProduct(false)}>
                 <X className="h-5 w-5" />
@@ -356,7 +396,7 @@ export default function BusinessShop({
                   type="text"
                   value={productForm.name}
                   onChange={(e) => setProductForm({...productForm, name: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500"
                   placeholder="Product name"
                 />
               </div>
@@ -368,7 +408,7 @@ export default function BusinessShop({
                     value={productForm.description}
                     onChange={(e) => setProductForm({...productForm, description: e.target.value})}
                     rows={2}
-                    className="w-full px-3 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3 py-2 pr-12 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500"
                     placeholder="Brief description 😊"
                   />
                   <div className="absolute bottom-2 right-2">
@@ -390,7 +430,7 @@ export default function BusinessShop({
                   min="0"
                   value={productForm.price_cents}
                   onChange={(e) => setProductForm({...productForm, price_cents: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500"
                   placeholder="0.00"
                 />
               </div>
@@ -400,7 +440,7 @@ export default function BusinessShop({
                 <select
                   value={productForm.category}
                   onChange={(e) => setProductForm({...productForm, category: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500"
                 >
                   {categories.slice(1).map(cat => (
                     <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -414,7 +454,7 @@ export default function BusinessShop({
                   type="url"
                   value={productForm.image_url}
                   onChange={(e) => setProductForm({...productForm, image_url: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500"
                   placeholder="https://example.com/image.jpg"
                 />
               </div>
@@ -424,13 +464,13 @@ export default function BusinessShop({
               <Button
                 onClick={() => setShowAddProduct(false)}
                 variant="outline"
-                className="flex-1"
+                className="flex-1 rounded-[9px]"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSaveProduct}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 rounded-[9px]"
                 disabled={!productForm.name.trim()}
               >
                 {editingProduct ? 'Update' : 'Add'} Product

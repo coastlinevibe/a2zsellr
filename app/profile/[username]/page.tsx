@@ -60,6 +60,7 @@ export default function ProfilePage() {
   const [quantity, setQuantity] = useState(1)
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [showContactOptions, setShowContactOptions] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState('all')
   const [metaTags, setMetaTags] = useState({
     title: '',
     description: '',
@@ -349,10 +350,10 @@ Best regards`
   }
 
   const getTierBadge = () => {
-    if (!profile) return { text: 'Member', className: 'bg-gray-100 text-gray-700' }
+    if (!profile) return { text: 'Free', className: 'bg-gray-100 text-gray-700' }
     
     const badges = {
-      free: { text: 'Member', className: 'bg-gray-100 text-gray-700' },
+      free: { text: 'Free', className: 'bg-gray-100 text-gray-700' },
       premium: { text: 'Premium', className: 'bg-orange-100 text-orange-700' },
       business: { text: 'Pro', className: 'bg-blue-100 text-blue-700' }
     }
@@ -417,244 +418,287 @@ Best regards`
   const tierBadge = getTierBadge()
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <Link 
-            href="/"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back to Directory
-          </Link>
-        </div>
+    <div className="min-h-screen bg-white">
+      {/* Hero Gallery Slider */}
+      <div className="relative h-64 bg-gray-100 overflow-hidden">
+        {galleryItems.length > 0 ? (
+          <>
+            <img
+              src={galleryItems[currentImageIndex]?.url}
+              alt={galleryItems[currentImageIndex]?.title || profile.display_name}
+              className="w-full h-full object-cover"
+            />
+            {galleryItems.length > 1 && (
+              <>
+                <button
+                  onClick={prevImage}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  {galleryItems.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`w-2 h-2 rounded-full ${
+                        index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        ) : (
+          <div className="w-full h-full bg-emerald-100 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-emerald-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-2xl font-bold text-emerald-700">
+                  {profile.display_name[0]?.toUpperCase()}
+                </span>
+              </div>
+              <p className="text-emerald-600 font-medium">{profile.display_name}</p>
+            </div>
+          </div>
+        )}
+        
+        {/* Back button overlay */}
+        <Link 
+          href="/"
+          className="absolute top-4 left-4 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </Link>
       </div>
 
-      {/* Profile Header */}
-      <div className="relative bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 py-12 overflow-hidden">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-emerald-400/20 to-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-blue-400/10 to-emerald-400/10 rounded-full blur-3xl animate-spin-slow"></div>
-        </div>
-
-        <div className="relative max-w-6xl mx-auto px-4">
-          <div className="bg-white/80 backdrop-blur-lg rounded-[9px] shadow-2xl border border-white/20 p-8 hover:shadow-3xl transition-all duration-500 hover:scale-[1.02]">
-            <div className="flex flex-col lg:flex-row gap-8 items-start">
-              {/* Avatar Section */}
-              <div className="flex-shrink-0 mx-auto lg:mx-0 relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-blue-500 rounded-full blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-                {profile.avatar_url ? (
-                  <img 
-                    src={profile.avatar_url} 
-                    alt={profile.display_name} 
-                    className="relative w-36 h-36 rounded-full object-cover border-4 border-white shadow-2xl group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="relative w-36 h-36 rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center text-4xl font-bold text-white shadow-2xl group-hover:scale-105 transition-transform duration-300">
-                    {profile.display_name[0].toUpperCase()}
+      {/* Business Info Card */}
+      <div className="bg-white p-4 border-b border-gray-100">
+        <div className="flex items-start gap-3">
+          {profile.avatar_url && (
+            <img 
+              src={profile.avatar_url} 
+              alt={profile.display_name} 
+              className="w-12 h-12 rounded-[9px] object-cover border border-gray-200"
+            />
+          )}
+          <div className="flex-1">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">{profile.display_name}</h1>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
+                    ))}
                   </div>
+                  <span className="text-sm text-gray-600">4.8 (124)</span>
+                </div>
+                {profile.business_category && (
+                  <p className="text-sm text-gray-600 mt-1">{profile.business_category}</p>
                 )}
-                {/* Status Indicator */}
-                <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white shadow-lg animate-bounce"></div>
               </div>
-
-              {/* Profile Info */}
-              <div className="flex-1 text-center lg:text-left space-y-6">
-                {/* Name and Badges Section */}
-                <div className="space-y-4">
-                  <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                    <h1 className="text-4xl font-bold text-gray-900">
-                      {profile.display_name}
-                    </h1>
-                    <div className="flex flex-wrap justify-center lg:justify-start gap-2">
-                      <Badge className={`${tierBadge.className} border-0 shadow-lg hover:scale-105 transition-transform duration-200 animate-slide-in`}>
-                        {profile.subscription_tier !== 'free' && <Crown className="h-3 w-3 mr-1 animate-pulse" />}
-                        {tierBadge.text}
-                      </Badge>
-                      {profile.verified_seller && (
-                        <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg hover:scale-105 transition-transform duration-200 animate-slide-in delay-100">
-                          <Star className="h-3 w-3 mr-1 animate-spin-slow" fill="currentColor" />
-                          Verified
-                        </Badge>
-                      )}
-                      {profile.early_adopter && (
-                        <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 shadow-lg hover:scale-105 transition-transform duration-200 animate-slide-in delay-200">
-                          Early Adopter
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Business Category */}
-                  {profile.business_category && (
-                    <div className="bg-white/50 backdrop-blur-sm rounded-[9px] p-4 border border-white/30 shadow-sm">
-                      <p className="text-lg font-medium text-gray-600">{profile.business_category}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Bio */}
-                {profile.bio && (
-                  <div className="bg-white/50 backdrop-blur-sm rounded-[9px] p-4 border border-white/30 shadow-sm">
-                    <p className="text-gray-700 leading-relaxed italic">{profile.bio}</p>
-                  </div>
+              <div className="flex gap-1">
+                <Badge className={`${tierBadge.className} text-xs`}>
+                  {profile.subscription_tier !== 'free' && <Crown className="h-3 w-3 mr-1" />}
+                  {tierBadge.text}
+                </Badge>
+                {profile.verified_seller && (
+                  <Badge className="bg-blue-100 text-blue-700 text-xs">
+                    <Star className="h-3 w-3 mr-1" fill="currentColor" />
+                    Verified
+                  </Badge>
                 )}
-
-                {/* Contact Info Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {profile.business_location && (
-                    <div className="flex items-center justify-center lg:justify-start gap-3 p-3 bg-white/60 backdrop-blur-sm rounded-[9px] border border-white/30 shadow-sm hover:shadow-md transition-shadow duration-200 group">
-                      <div className="p-2 bg-emerald-100 rounded-[9px] group-hover:bg-emerald-200 transition-colors duration-200">
-                        <MapPin className="h-4 w-4 text-emerald-600" />
-                      </div>
-                      <span className="text-gray-700 font-medium">{profile.business_location}</span>
-                    </div>
-                  )}
-                  {profile.phone_number && (
-                    <div className="flex items-center justify-center lg:justify-start gap-3 p-3 bg-white/60 backdrop-blur-sm rounded-[9px] border border-white/30 shadow-sm hover:shadow-md transition-shadow duration-200 group">
-                      <div className="p-2 bg-blue-100 rounded-[9px] group-hover:bg-blue-200 transition-colors duration-200">
-                        <Phone className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <span className="text-gray-700 font-medium">{profile.phone_number}</span>
-                    </div>
-                  )}
-                  {profile.website_url && (
-                    <div className="flex items-center justify-center lg:justify-start gap-3 p-3 bg-white/60 backdrop-blur-sm rounded-[9px] border border-white/30 shadow-sm hover:shadow-md transition-shadow duration-200 group">
-                      <div className="p-2 bg-purple-100 rounded-[9px] group-hover:bg-purple-200 transition-colors duration-200">
-                        <Globe className="h-4 w-4 text-purple-600" />
-                      </div>
-                      <a href={profile.website_url} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-700 hover:underline font-medium truncate">
-                        {profile.website_url}
-                      </a>
-                    </div>
-                  )}
-                  {todayHours && (
-                    <div className="flex items-center justify-center lg:justify-start gap-3 p-3 bg-white/60 backdrop-blur-sm rounded-[9px] border border-white/30 shadow-sm hover:shadow-md transition-shadow duration-200 group">
-                      <div className="p-2 bg-orange-100 rounded-[9px] group-hover:bg-orange-200 transition-colors duration-200">
-                        <Clock className="h-4 w-4 text-orange-600" />
-                      </div>
-                      <span className="text-gray-700 font-medium">Today: {todayHours}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
-                  <Button className="bg-emerald-600 hover:bg-emerald-700 border-2 border-emerald-600 hover:border-emerald-700 text-white px-8 py-3 rounded-[9px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Contact
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 px-8 py-3 rounded-[9px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 hover:bg-gray-50"
-                    onClick={() => {
-                      const shareUrl = `https://www.a2zsellr.life/profile/${profile.display_name}`
-                      const shareText = `Check out ${profile.display_name}'s business profile on A2Z Business Directory!`
-                      
-                      if (navigator.share) {
-                        // Use native sharing if available (mobile)
-                        navigator.share({
-                          title: `${profile.display_name} - A2Z Business Directory`,
-                          text: shareText,
-                          url: shareUrl,
-                        }).catch(console.error)
-                      } else {
-                        // Fallback: Copy to clipboard
-                        navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
-                          // Show success message (you can add a toast notification here)
-                          alert('Profile link copied to clipboard!')
-                        }).catch(() => {
-                          // Fallback: Show share dialog with the link
-                          prompt('Copy this link to share:', shareUrl)
-                        })
-                      }
-                    }}
-                  >
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Share
-                  </Button>
-                  {profile.phone_number && (
-                    <Button 
-                      className="bg-green-500 hover:bg-green-600 border-2 border-green-500 hover:border-green-600 text-white px-8 py-3 rounded-[9px] shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-                      onClick={() => {
-                        const phoneNumber = profile.phone_number?.replace(/\D/g, '') // Remove non-digits
-                        const message = `Hi ${profile.display_name}, I found your profile on A2Z Business Directory and would like to get in touch!`
-                        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
-                        window.open(whatsappUrl, '_blank')
-                      }}
-                    >
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      WhatsApp
-                    </Button>
-                  )}
-                </div>
               </div>
             </div>
+            
+            {/* Business Hours Status */}
+            <div className="flex items-center gap-2 mt-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-sm text-green-600 font-medium">
+                {todayHours ? `Open until ${todayHours.split(' - ')[1] || '9:00 PM'}` : 'Open now'}
+              </span>
+            </div>
+            
+            {profile.bio && (
+              <p className="text-sm text-gray-600 mt-2 line-clamp-2">{profile.bio}</p>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4">
-          <nav className="flex space-x-8">
-            <button
-              onClick={() => setActiveTab('shop')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'shop'
-                  ? 'border-emerald-500 text-emerald-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
+      {/* Action Buttons */}
+      <div className="bg-white px-4 py-3 border-b border-gray-100">
+        <div className="grid grid-cols-4 gap-3">
+          {profile.phone_number && (
+            <Button 
+              className="bg-green-500 hover:bg-green-600 text-white flex-col h-auto py-3 px-2 rounded-[9px]"
+              onClick={() => {
+                const phoneNumber = profile.phone_number?.replace(/\D/g, '')
+                const message = `Hi ${profile.display_name}, I found your profile on A2Z Business Directory and would like to get in touch!`
+                const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+                window.open(whatsappUrl, '_blank')
+              }}
             >
-              <ShoppingBag className="h-4 w-4 mr-1 inline" />
-              Shop ({products.length})
-            </button>
-          </nav>
+              <MessageCircle className="h-5 w-5 mb-1" />
+              <span className="text-xs">WhatsApp</span>
+            </Button>
+          )}
+          
+          {profile.business_location && (
+            <Button 
+              variant="outline" 
+              className="flex-col h-auto py-3 px-2 rounded-[9px] border-gray-200"
+              onClick={() => {
+                const locationQuery = profile.business_location || ''
+                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`
+                window.open(mapsUrl, '_blank')
+              }}
+            >
+              <MapPin className="h-5 w-5 mb-1 text-blue-600" />
+              <span className="text-xs text-gray-700">Directions</span>
+            </Button>
+          )}
+          
+          <Button 
+            variant="outline" 
+            className="flex-col h-auto py-3 px-2 rounded-[9px] border-gray-200"
+            onClick={() => {
+              const shareUrl = `https://www.a2zsellr.life/profile/${profile.display_name}`
+              const shareText = `Check out ${profile.display_name}'s business profile on A2Z Business Directory!`
+              
+              if (navigator.share) {
+                navigator.share({
+                  title: `${profile.display_name} - A2Z Business Directory`,
+                  text: shareText,
+                  url: shareUrl,
+                }).catch(console.error)
+              } else {
+                navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
+                  alert('Profile link copied to clipboard!')
+                }).catch(() => {
+                  prompt('Copy this link to share:', shareUrl)
+                })
+              }
+            }}
+          >
+            <Share2 className="h-5 w-5 mb-1 text-gray-600" />
+            <span className="text-xs text-gray-700">Share</span>
+          </Button>
+          
+          {profile.website_url && (
+            <Button 
+              variant="outline" 
+              className="flex-col h-auto py-3 px-2 rounded-[9px] border-gray-200"
+              onClick={() => window.open(profile.website_url || '', '_blank')}
+            >
+              <Globe className="h-5 w-5 mb-1 text-purple-600" />
+              <span className="text-xs text-gray-700">Website</span>
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {activeTab === 'shop' && (
-          <div>
-            {products.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map((product) => (
+      {/* Products Section */}
+      <div className="bg-white">
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-gray-900">Products & Services</h2>
+            <span className="text-sm text-gray-500">{products.length} items</span>
+          </div>
+          
+          {/* Category Filter Buttons */}
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+            <button
+              onClick={() => setSelectedCategory('all')}
+              className={`px-3 py-1.5 text-sm font-medium rounded-[9px] whitespace-nowrap transition-colors ${
+                selectedCategory === 'all'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              All Products
+            </button>
+            <button
+              onClick={() => setSelectedCategory('products')}
+              className={`px-3 py-1.5 text-sm font-medium rounded-[9px] whitespace-nowrap transition-colors ${
+                selectedCategory === 'products'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Products
+            </button>
+            <button
+              onClick={() => setSelectedCategory('services')}
+              className={`px-3 py-1.5 text-sm font-medium rounded-[9px] whitespace-nowrap transition-colors ${
+                selectedCategory === 'services'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Services
+            </button>
+            <button
+              onClick={() => setSelectedCategory('food')}
+              className={`px-3 py-1.5 text-sm font-medium rounded-[9px] whitespace-nowrap transition-colors ${
+                selectedCategory === 'food'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Food & Drinks
+            </button>
+            <button
+              onClick={() => setSelectedCategory('retail')}
+              className={`px-3 py-1.5 text-sm font-medium rounded-[9px] whitespace-nowrap transition-colors ${
+                selectedCategory === 'retail'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Retail Items
+            </button>
+          </div>
+          
+          {(selectedCategory === 'all' ? products : products.filter(p => p.category === selectedCategory)).length > 0 ? (
+            <div className="overflow-x-auto">
+              <div className="flex gap-4 pb-2" style={{ width: 'max-content' }}>
+                {(selectedCategory === 'all' ? products : products.filter(p => p.category === selectedCategory)).map((product) => (
                   <div 
                     key={product.id} 
-                    className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                    className="bg-white border border-gray-200 rounded-[9px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex-shrink-0 w-48"
                     onClick={() => setSelectedProduct(product)}
                   >
-                    {product.image_url && (
+                    {product.image_url ? (
                       <img
                         src={product.image_url}
                         alt={product.name}
-                        className="w-full h-48 object-cover"
+                        className="w-full h-32 object-cover"
                       />
-                    )}
-                    <div className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-2">{product.name}</h3>
-                      {product.description && (
-                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
-                      )}
-                      <div className="flex items-center justify-between">
-                        {product.price_cents ? (
-                          <span className="text-lg font-bold text-emerald-600">
-                            R{(product.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </span>
-                        ) : (
-                          <span className="text-gray-500">Contact for price</span>
-                        )}
-                        <button className="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
-                          View Details
-                        </button>
+                    ) : (
+                      <div className="w-full h-32 bg-gray-100 flex items-center justify-center">
+                        <ShoppingBag className="w-8 h-8 text-gray-400" />
                       </div>
+                    )}
+                    <div className="p-3">
+                      <h3 className="font-medium text-gray-900 mb-1 text-sm truncate">{product.name}</h3>
+                      {product.price_cents ? (
+                        <span className="text-sm font-semibold text-emerald-600">
+                          R{(product.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-500">Contact for price</span>
+                      )}
                       {product.category && (
-                        <div className="mt-2">
-                          <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
+                        <div className="mt-1">
+                          <span className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
                             {product.category}
                           </span>
                         </div>
@@ -662,16 +706,76 @@ Best regards`
                     </div>
                   </div>
                 ))}
+                
+                {/* View All Card */}
+                <div className="bg-gray-50 border border-gray-200 rounded-[9px] flex-shrink-0 w-48 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors">
+                  <div className="text-center p-4">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <ChevronRight className="w-4 h-4 text-gray-600" />
+                    </div>
+                    <span className="text-sm text-gray-600 font-medium">View All</span>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-                <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No products available</h3>
-                <p className="text-gray-500">This profile hasn't added any products yet.</p>
+            </div>
+          ) : (
+            <div className="bg-gray-50 rounded-[9px] p-8 text-center">
+              <ShoppingBag className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+              <h3 className="text-sm font-medium text-gray-900 mb-1">No products available</h3>
+              <p className="text-xs text-gray-500">This business hasn't added any products yet.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Business Details */}
+      <div className="bg-gray-50 px-4 py-6 space-y-6">
+        {/* Contact Information */}
+        <div className="bg-white rounded-[9px] border border-gray-200 p-4">
+          <h3 className="font-medium text-gray-900 mb-3">Contact Information</h3>
+          <div className="space-y-3">
+            {profile.business_location && (
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-100 rounded-[9px]">
+                  <MapPin className="h-4 w-4 text-emerald-600" />
+                </div>
+                <span className="text-sm text-gray-700">{profile.business_location}</span>
+              </div>
+            )}
+            {profile.phone_number && (
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-[9px]">
+                  <Phone className="h-4 w-4 text-blue-600" />
+                </div>
+                <span className="text-sm text-gray-700">{profile.phone_number}</span>
+              </div>
+            )}
+            {profile.website_url && (
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 rounded-[9px]">
+                  <Globe className="h-4 w-4 text-purple-600" />
+                </div>
+                <a href={profile.website_url} target="_blank" rel="noopener noreferrer" className="text-sm text-purple-600 hover:underline">
+                  {profile.website_url.replace(/^https?:\/\//, '')}
+                </a>
               </div>
             )}
           </div>
-        )}
+        </div>
+
+        {/* Business Hours */}
+        <div className="bg-white rounded-[9px] border border-gray-200 p-4">
+          <h3 className="font-medium text-gray-900 mb-3">Business Hours</h3>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-orange-100 rounded-[9px]">
+              <Clock className="h-4 w-4 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-700">Today: {todayHours || '9:00 AM - 6:00 PM'}</p>
+              <p className="text-xs text-gray-500">See all hours</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Product Detail Modal */}

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { ImageIcon, UploadCloud, Eye, Edit, Trash2, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ImageGallery } from '@/components/ui/carousel-circular-image-gallery'
+import { FramerThumbnailCarousel } from '@/components/ui/framer-thumbnail-carousel'
 import { ImageUploadGallery } from '@/components/ui/image-upload-gallery'
 import { supabase } from '@/lib/supabaseClient'
 import { useAuth } from '@/lib/auth'
@@ -24,13 +24,18 @@ interface UploadedImage {
 }
 
 interface GalleryTabProps {
-  galleryItems: any[]
-  galleryLoading: boolean
-  userTier: 'free' | 'premium' | 'business'
-  onRefresh: () => void
+  galleryItems?: any[]
+  galleryLoading?: boolean
+  userTier?: 'free' | 'premium' | 'business'
+  onRefresh?: () => void
 }
 
-export function GalleryTab({ galleryItems, galleryLoading, userTier, onRefresh }: GalleryTabProps) {
+export function GalleryTab({ 
+  galleryItems = [], 
+  galleryLoading = false, 
+  userTier = 'free', 
+  onRefresh = () => {} 
+}: GalleryTabProps) {
   const { user } = useAuth()
   const router = useRouter()
   const [viewMode, setViewMode] = useState<'showcase' | 'upload' | 'manage'>('showcase')
@@ -162,7 +167,7 @@ export function GalleryTab({ galleryItems, galleryLoading, userTier, onRefresh }
     return (
       <div className="space-y-6">
         {/* Gallery Showcase */}
-        <ImageGallery images={images} className="rounded-xl" />
+        <FramerThumbnailCarousel items={images} />
         
         {/* Gallery Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
