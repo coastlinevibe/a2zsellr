@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import ShareBuilderPage from '@/app/share-builder/page'
+import ShareLinkBuilder from '@/components/ui/share-link-builder'
+import CampaignScheduler from '@/components/ui/campaign-scheduler'
+import AnalyticsDashboard from '@/components/ui/analytics-dashboard'
 import {
   AlertTriangle,
   Building2,
@@ -17,10 +19,12 @@ import {
   MessageSquare,
   Plus,
   ShoppingBag,
+  Sparkles,
   Star,
   TrendingUp,
-  UploadCloud,
-  Users
+  User,
+  Users,
+  X
 } from 'lucide-react'
 
 import { useAuth } from '@/lib/auth'
@@ -560,16 +564,140 @@ export default function DashboardPage() {
     )
   }
 
-  const renderMarketingTab = () => (
-    <div className="space-y-8" id="whatsapp-builder">
-      {profile?.subscription_tier === 'free' && (
-        <FreeAccountNotifications onUpgrade={() => router.push('/choose-plan')} />
-      )}
+  const renderMarketingTab = () => {
+    const [activeView, setActiveView] = useState('builder')
+    const [products, setProducts] = useState<any[]>([])
 
-      {/* Share Builder Integration */}
-      <ShareBuilderPage />
-    </div>
-  )
+    useEffect(() => {
+      // Fetch products for the campaign builder
+      const fetchProducts = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .eq('business_id', profile?.id)
+            .limit(10)
+
+          if (error) throw error
+          setProducts(data || [])
+        } catch (error) {
+          console.error('Error fetching products:', error)
+        }
+      }
+
+      if (profile?.id) {
+        fetchProducts()
+      }
+    }, [profile?.id])
+
+    const views = [
+      { id: 'builder', name: 'Create Campaign', icon: Sparkles },
+      { id: 'scheduler', name: 'Schedule & Automate', icon: Calendar },
+      { id: 'analytics', name: 'Analytics', icon: TrendingUp }
+    ]
+
+    return (
+      <div className="space-y-8" id="whatsapp-builder">
+        {profile?.subscription_tier === 'free' && (
+          <FreeAccountNotifications onUpgrade={() => router.push('/choose-plan')} />
+        )}
+
+        {/* Marketing Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Campaigns</p>
+                <p className="text-2xl font-bold text-gray-900">3</p>
+              </div>
+              <div className="w-8 h-8 bg-emerald-100 rounded-[9px] flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-emerald-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Reach</p>
+                <p className="text-2xl font-bold text-gray-900">12.4K</p>
+              </div>
+              <div className="w-8 h-8 bg-blue-100 rounded-[9px] flex items-center justify-center">
+                <Eye className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Conversion Rate</p>
+                <p className="text-2xl font-bold text-gray-900">8.2%</p>
+              </div>
+              <div className="w-8 h-8 bg-purple-100 rounded-[9px] flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-purple-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Revenue</p>
+                <p className="text-2xl font-bold text-gray-900">R24.5K</p>
+              </div>
+              <div className="w-8 h-8 bg-green-100 rounded-[9px] flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-green-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 overflow-hidden">
+          <div className="border-b border-gray-200">
+            <nav className="flex">
+              {views.map((view) => {
+                const Icon = view.icon
+                return (
+                  <button
+                    key={view.id}
+                    onClick={() => setActiveView(view.id)}
+                    className={`flex-1 py-4 px-6 text-center font-medium transition-colors flex items-center justify-center gap-2 ${
+                      activeView === view.id
+                        ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {view.name}
+                  </button>
+                )
+              })}
+            </nav>
+          </div>
+
+          {/* Content */}
+          <div className="p-6">
+            {activeView === 'builder' && (
+              <ShareLinkBuilder products={products} businessProfile={profile} />
+            )}
+
+            {activeView === 'scheduler' && (
+              <CampaignScheduler onSchedule={(settings) => {
+                console.log('Campaign scheduled:', settings)
+                alert('🎉 Campaign scheduled successfully! Your messages will be sent at optimal times.')
+              }} />
+            )}
+
+            {activeView === 'analytics' && (
+              <AnalyticsDashboard />
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const renderActiveTab = () => {
     switch (activeTab) {
