@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Image, ArrowRight, Eye } from 'lucide-react'
+import { Image, Eye, GripVertical } from 'lucide-react'
 
 interface MediaItem {
   id: string
@@ -28,7 +28,25 @@ export const BeforeAfterLayout: React.FC<BeforeAfterLayoutProps> = ({
   ctaUrl,
   businessName
 }) => {
-  const [showAfter, setShowAfter] = useState(false)
+  const [sliderPosition, setSliderPosition] = useState(50)
+  const [isDragging, setIsDragging] = useState(false)
+
+  const handleMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDragging) return
+
+    const container = e.currentTarget as HTMLElement
+    const rect = container.getBoundingClientRect()
+    let x = 0
+
+    if ('touches' in e && e.touches.length > 0) {
+      x = e.touches[0].clientX - rect.left
+    } else if ('clientX' in e) {
+      x = e.clientX - rect.left
+    }
+
+    const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100))
+    setSliderPosition(percentage)
+  }
 
   return (
     <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 w-full max-w-md md:max-w-2xl lg:max-w-5xl mx-auto overflow-hidden">
@@ -49,129 +67,88 @@ export const BeforeAfterLayout: React.FC<BeforeAfterLayoutProps> = ({
           <p className="text-gray-700 text-sm md:text-base lg:text-lg leading-relaxed">{message}</p>
         </div>
 
-        {/* Before & After Comparison */}
+        {/* Interactive Before & After Slider */}
         <div className="bg-gray-50 rounded-[9px] p-3 mb-4">
-          <div className="text-xs text-gray-500 mb-2">Before & After Comparison</div>
+          <div className="text-xs text-gray-500 mb-2">Drag to Compare</div>
           {items.length >= 2 ? (
-            <div className="space-y-3">
-              {/* Toggle Buttons */}
-              <div className="flex bg-white rounded-[6px] p-1">
+            <div
+              className="relative aspect-video w-full overflow-hidden rounded-lg select-none cursor-ew-resize"
+              onMouseMove={handleMove}
+              onMouseUp={() => setIsDragging(false)}
+              onMouseLeave={() => setIsDragging(false)}
+              onTouchMove={handleMove}
+              onTouchEnd={() => setIsDragging(false)}
+            >
+              {/* Slider Line */}
+              <div
+                className="absolute z-20 top-0 h-full w-1 bg-white shadow-lg"
+                style={{ left: `${sliderPosition}%`, marginLeft: '-2px' }}
+              >
+                {/* Slider Handle */}
                 <button
-                  onClick={() => setShowAfter(false)}
-                  className={`flex-1 py-2 px-3 rounded-[4px] text-xs font-medium transition-colors ${
-                    !showAfter 
-                      ? 'bg-purple-600 text-white' 
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-full w-10 h-10 md:w-12 md:h-12 shadow-xl hover:scale-110 transition-transform flex items-center justify-center cursor-ew-resize z-30"
+                  onTouchStart={(e) => {
+                    setIsDragging(true)
+                    handleMove(e)
+                  }}
+                  onMouseDown={(e) => {
+                    setIsDragging(true)
+                    handleMove(e)
+                  }}
+                  onTouchEnd={() => setIsDragging(false)}
+                  onMouseUp={() => setIsDragging(false)}
                 >
+                  <GripVertical className="w-5 h-5 md:w-6 md:h-6 text-purple-600" />
+                </button>
+              </div>
+
+              {/* After Image (Top Layer) */}
+              {items[1]?.url ? (
+                <img
+                  src={items[1].url}
+                  alt={items[1].name}
+                  className="absolute left-0 top-0 z-10 w-full h-full object-cover select-none"
+                  style={{
+                    clipPath: `inset(0 0 0 ${sliderPosition}%)`
+                  }}
+                  draggable={false}
+                />
+              ) : (
+                <div className="absolute left-0 top-0 z-10 w-full h-full bg-gray-300 flex items-center justify-center">
+                  <Image className="w-12 h-12 text-gray-400" />
+                </div>
+              )}
+
+              {/* Before Image (Bottom Layer) */}
+              {items[0]?.url ? (
+                <img
+                  src={items[0].url}
+                  alt={items[0].name}
+                  className="absolute left-0 top-0 w-full h-full object-cover select-none"
+                  draggable={false}
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                  <Image className="w-12 h-12 text-gray-400" />
+                </div>
+              )}
+
+              {/* Labels */}
+              <div className="absolute top-3 left-3 z-10">
+                <span className="px-3 py-1 rounded-full text-xs font-bold text-white bg-red-600 shadow-lg">
                   BEFORE
-                </button>
-                <button
-                  onClick={() => setShowAfter(true)}
-                  className={`flex-1 py-2 px-3 rounded-[4px] text-xs font-medium transition-colors ${
-                    showAfter 
-                      ? 'bg-purple-600 text-white' 
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
+                </span>
+              </div>
+              <div className="absolute top-3 right-3 z-10">
+                <span className="px-3 py-1 rounded-full text-xs font-bold text-white bg-green-600 shadow-lg">
                   AFTER
-                </button>
-              </div>
-
-              {/* Comparison Image */}
-              <div className="relative bg-white rounded-[6px] overflow-hidden">
-                <div className="relative h-48 md:h-64 lg:h-96">
-                  {showAfter ? (
-                    items[1]?.url ? (
-                      <img 
-                        src={items[1].url} 
-                        alt={items[1].name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                        <Image className="w-8 h-8 text-gray-400" />
-                      </div>
-                    )
-                  ) : (
-                    items[0]?.url ? (
-                      <img 
-                        src={items[0].url} 
-                        alt={items[0].name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                        <Image className="w-8 h-8 text-gray-400" />
-                      </div>
-                    )
-                  )}
-                  
-                  {/* Label Overlay */}
-                  <div className="absolute top-2 left-2">
-                    <span className={`px-2 py-1 rounded text-xs font-bold text-white ${
-                      showAfter ? 'bg-green-600' : 'bg-red-600'
-                    }`}>
-                      {showAfter ? 'AFTER' : 'BEFORE'}
-                    </span>
-                  </div>
-
-                  {/* Transformation Arrow */}
-                  <div className="absolute top-2 right-2">
-                    <div className="bg-white bg-opacity-90 rounded-full p-1">
-                      <ArrowRight className="w-4 h-4 text-purple-600" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-2">
-                  <div className="text-xs font-medium text-gray-900">
-                    {showAfter ? items[1]?.name : items[0]?.name}
-                  </div>
-                  <div className="text-xs text-purple-600 font-medium">
-                    Transformation Result
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Preview */}
-              <div className="flex gap-2">
-                {items.slice(0, 2).map((item, index) => (
-                  <div 
-                    key={item.id}
-                    className={`flex-1 relative cursor-pointer transition-all duration-200 ${
-                      (index === 0 && !showAfter) || (index === 1 && showAfter)
-                        ? 'ring-2 ring-purple-400' 
-                        : 'opacity-60 hover:opacity-80'
-                    }`}
-                    onClick={() => setShowAfter(index === 1)}
-                  >
-                    {item.url ? (
-                      <img 
-                        src={item.url} 
-                        alt={item.name}
-                        className="w-full h-16 object-cover rounded-[4px]"
-                      />
-                    ) : (
-                      <div className="w-full h-16 bg-gray-200 rounded-[4px] flex items-center justify-center">
-                        <Image className="w-4 h-4 text-gray-400" />
-                      </div>
-                    )}
-                    <div className="absolute bottom-1 left-1">
-                      <span className={`px-1 py-0.5 rounded text-xs font-bold text-white ${
-                        index === 0 ? 'bg-red-600' : 'bg-green-600'
-                      }`}>
-                        {index === 0 ? 'B' : 'A'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                </span>
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-32 bg-white rounded-[6px] border-2 border-dashed border-gray-300">
+            <div className="flex items-center justify-center h-64 bg-white rounded-lg border-2 border-dashed border-gray-300">
               <div className="text-center">
-                <Eye className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <Eye className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                 <p className="text-sm text-gray-500">Add 2+ images for comparison</p>
               </div>
             </div>

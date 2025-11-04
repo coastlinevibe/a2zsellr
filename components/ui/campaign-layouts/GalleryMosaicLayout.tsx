@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Image } from 'lucide-react'
 
 interface MediaItem {
@@ -28,6 +28,8 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
   ctaUrl,
   businessName
 }) => {
+  const [selectedImage, setSelectedImage] = useState(0)
+
   return (
     <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 w-full max-w-md md:max-w-2xl lg:max-w-5xl mx-auto overflow-hidden">
       {/* Header */}
@@ -38,7 +40,7 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
           </div>
           <div>
             <div className="font-semibold text-gray-900 text-base md:text-lg lg:text-xl">{businessName}</div>
-            <div className="text-xs md:text-sm text-gray-500">Broadcast • gallery mosaic</div>
+            <div className="text-xs md:text-sm text-gray-500">Broadcast • gallery</div>
           </div>
         </div>
         
@@ -47,39 +49,71 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
           <p className="text-gray-700 text-sm md:text-base lg:text-lg leading-relaxed">{message}</p>
         </div>
 
-        {/* Gallery Mosaic Grid */}
+        {/* Image Gallery with Thumbnails */}
         <div className="bg-gray-50 rounded-[9px] p-3 mb-4">
-          <div className="text-xs text-gray-500 mb-2">Gallery Mosaic Layout</div>
           {items.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-              {items.slice(0, 4).map((item, index) => (
-                <div key={item.id} className="bg-white rounded-[6px] overflow-hidden shadow-sm">
-                  {item.type?.startsWith('image/') || item.url ? (
+            <div className="space-y-3">
+              {/* Main Image Display */}
+              <div className="relative bg-white rounded-lg overflow-hidden" style={{ paddingTop: '66.67%' }}>
+                <div className="absolute inset-0">
+                  {items[selectedImage]?.url ? (
                     <img 
-                      src={item.url} 
-                      alt={item.name}
-                      className="w-full h-32 md:h-40 lg:h-48 object-cover"
+                      src={items[selectedImage].url} 
+                      alt={items[selectedImage].name}
+                      className="w-full h-full object-cover transition-opacity duration-300"
                     />
                   ) : (
-                    <div className="w-full h-24 bg-gray-200 flex items-center justify-center">
-                      <Image className="w-6 h-6 text-gray-400" />
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <Image className="w-12 h-12 text-gray-400" />
                     </div>
                   )}
-                  <div className="p-2">
-                    <div className="text-xs font-medium text-gray-900 truncate">{item.name}</div>
-                    {item.price && (
-                      <div className="text-xs text-emerald-600 font-medium">
-                        R{item.price.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                  
+                  {/* Price overlay if available */}
+                  {items[selectedImage]?.price && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                      <div className="text-white">
+                        <div className="font-medium text-sm">{items[selectedImage].name}</div>
+                        <div className="text-lg font-bold text-emerald-400">
+                          R{items[selectedImage].price.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Thumbnail Navigation */}
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {items.map((item, index) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setSelectedImage(index)}
+                    className={`flex-shrink-0 rounded-md overflow-hidden transition-all ${
+                      selectedImage === index 
+                        ? 'ring-3 ring-cyan-400 shadow-lg scale-105' 
+                        : 'ring-1 ring-gray-300 hover:ring-gray-400'
+                    }`}
+                    style={{ width: '80px', height: '60px' }}
+                  >
+                    {item.url ? (
+                      <img 
+                        src={item.url} 
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                        <Image className="w-4 h-4 text-gray-400" />
                       </div>
                     )}
-                  </div>
-                </div>
-              ))}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-32 bg-white rounded-[6px] border-2 border-dashed border-gray-300">
+            <div className="flex items-center justify-center h-64 bg-white rounded-lg border-2 border-dashed border-gray-300">
               <div className="text-center">
-                <Image className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <Image className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                 <p className="text-sm text-gray-500">No media selected</p>
               </div>
             </div>
