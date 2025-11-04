@@ -29,36 +29,36 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
   businessName
 }) => {
   return (
-    <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 max-w-md mx-auto overflow-hidden">
+    <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 w-full max-w-md md:max-w-2xl lg:max-w-5xl mx-auto overflow-hidden">
       {/* Header */}
-      <div className="bg-green-50 border-b border-green-200 p-4">
+      <div className="bg-green-50 border-b border-green-200 p-4 md:p-6 lg:p-8">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold">
+          <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl">
             {businessName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div className="font-semibold text-gray-900">{businessName}</div>
-            <div className="text-xs text-gray-500">Broadcast • gallery mosaic</div>
+            <div className="font-semibold text-gray-900 text-base md:text-lg lg:text-xl">{businessName}</div>
+            <div className="text-xs md:text-sm text-gray-500">Broadcast • gallery mosaic</div>
           </div>
         </div>
         
         <div className="mb-4">
-          <h3 className="font-bold text-gray-900 mb-2">{title}</h3>
-          <p className="text-gray-700 text-sm leading-relaxed">{message}</p>
+          <h3 className="font-bold text-gray-900 mb-2 text-lg md:text-xl lg:text-2xl">{title}</h3>
+          <p className="text-gray-700 text-sm md:text-base lg:text-lg leading-relaxed">{message}</p>
         </div>
 
         {/* Gallery Mosaic Grid */}
         <div className="bg-gray-50 rounded-[9px] p-3 mb-4">
           <div className="text-xs text-gray-500 mb-2">Gallery Mosaic Layout</div>
           {items.length > 0 ? (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
               {items.slice(0, 4).map((item, index) => (
                 <div key={item.id} className="bg-white rounded-[6px] overflow-hidden shadow-sm">
                   {item.type?.startsWith('image/') || item.url ? (
                     <img 
                       src={item.url} 
                       alt={item.name}
-                      className="w-full h-24 object-cover"
+                      className="w-full h-32 md:h-40 lg:h-48 object-cover"
                     />
                   ) : (
                     <div className="w-full h-24 bg-gray-200 flex items-center justify-center">
@@ -92,7 +92,7 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
             href={ctaUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-[9px] font-medium text-sm transition-colors"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 md:px-8 md:py-3 lg:px-10 lg:py-4 rounded-[9px] font-medium text-sm md:text-base lg:text-lg transition-colors"
           >
             {ctaLabel}
           </a>

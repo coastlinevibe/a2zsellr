@@ -231,7 +231,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
             `• Selected Products: ${selectedProducts.length} items\n` +
             `• Layout: ${selectedLayout}\n` +
             `• Platforms: ${selectedPlatforms.join(', ')}\n\n` +
-            `View it in Marketing > My Campaigns tab!`)
+            `View it in Marketing > My Listings tab!`)
       
     } catch (error: any) {
       console.error('Error saving listing:', error)

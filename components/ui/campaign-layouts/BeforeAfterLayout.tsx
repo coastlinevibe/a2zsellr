@@ -31,22 +31,22 @@ export const BeforeAfterLayout: React.FC<BeforeAfterLayoutProps> = ({
   const [showAfter, setShowAfter] = useState(false)
 
   return (
-    <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 max-w-md mx-auto overflow-hidden">
+    <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 w-full max-w-md md:max-w-2xl lg:max-w-5xl mx-auto overflow-hidden">
       {/* Header */}
-      <div className="bg-purple-50 border-b border-purple-200 p-4">
+      <div className="bg-purple-50 border-b border-purple-200 p-4 md:p-6 lg:p-8">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+          <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl">
             {businessName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div className="font-semibold text-gray-900">{businessName}</div>
-            <div className="text-xs text-gray-500">Broadcast • before & after</div>
+            <div className="font-semibold text-gray-900 text-base md:text-lg lg:text-xl">{businessName}</div>
+            <div className="text-xs md:text-sm text-gray-500">Broadcast • before & after</div>
           </div>
         </div>
         
         <div className="mb-4">
-          <h3 className="font-bold text-gray-900 mb-2">{title}</h3>
-          <p className="text-gray-700 text-sm leading-relaxed">{message}</p>
+          <h3 className="font-bold text-gray-900 mb-2 text-lg md:text-xl lg:text-2xl">{title}</h3>
+          <p className="text-gray-700 text-sm md:text-base lg:text-lg leading-relaxed">{message}</p>
         </div>
 
         {/* Before & After Comparison */}
@@ -80,7 +80,7 @@ export const BeforeAfterLayout: React.FC<BeforeAfterLayoutProps> = ({
 
               {/* Comparison Image */}
               <div className="relative bg-white rounded-[6px] overflow-hidden">
-                <div className="relative h-32">
+                <div className="relative h-48 md:h-64 lg:h-96">
                   {showAfter ? (
                     items[1]?.url ? (
                       <img 
@@ -184,7 +184,7 @@ export const BeforeAfterLayout: React.FC<BeforeAfterLayoutProps> = ({
             href={ctaUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-[9px] font-medium text-sm transition-colors"
+            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 md:px-8 md:py-3 lg:px-10 lg:py-4 rounded-[9px] font-medium text-sm md:text-base lg:text-lg transition-colors"
           >
             {ctaLabel}
           </a>

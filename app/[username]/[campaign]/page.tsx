@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Head from 'next/head'
 import { supabase } from '@/lib/supabaseClient'
 import {
   GalleryMosaicLayout,
@@ -48,6 +49,7 @@ interface Profile {
   display_name: string
   avatar_url: string | null
   bio: string | null
+  phone_number: string | null
 }
 
 interface Product {
@@ -84,7 +86,7 @@ export default function CampaignPage({ params }: CampaignPageProps) {
       for (const variation of usernameVariations) {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, display_name, avatar_url, bio')
+          .select('id, display_name, avatar_url, bio, phone_number')
           .ilike('display_name', `%${variation}%`)
           .limit(1)
         
@@ -314,7 +316,7 @@ export default function CampaignPage({ params }: CampaignPageProps) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: listing?.title,
+          title: listing?.title || 'Check this out!',
           text: shareText,
           url: shareUrl
         })
@@ -326,6 +328,42 @@ export default function CampaignPage({ params }: CampaignPageProps) {
       navigator.clipboard.writeText(shareUrl)
       alert('Link copied to clipboard!')
     }
+  }
+
+  const handleContactShop = () => {
+    // Get phone number from profile
+    const whatsappNumber = profile?.phone_number
+    
+    if (!whatsappNumber) {
+      alert('Contact information not available for this business.')
+      return
+    }
+    
+    // Clean the phone number (remove spaces, dashes, parentheses, etc.)
+    let cleanNumber = whatsappNumber.replace(/[^0-9+]/g, '')
+    
+    // Convert local format to international format
+    // If number starts with 0 (local SA format), convert to +27
+    if (cleanNumber.startsWith('0')) {
+      cleanNumber = '27' + cleanNumber.substring(1)
+    }
+    // If number starts with +, remove the + (WhatsApp API doesn't need it)
+    else if (cleanNumber.startsWith('+')) {
+      cleanNumber = cleanNumber.substring(1)
+    }
+    // If number doesn't start with country code, assume SA and add 27
+    else if (!cleanNumber.startsWith('27') && cleanNumber.length === 9) {
+      cleanNumber = '27' + cleanNumber
+    }
+    
+    // Pre-filled message
+    const message = `Hi! I'm interested in "${listing?.title}". Can you tell me more?`
+    
+    // WhatsApp URL with pre-filled message
+    const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`
+    
+    // Open WhatsApp
+    window.open(whatsappUrl, '_blank')
   }
 
   const handleWhatsAppShare = () => {
@@ -366,7 +404,40 @@ export default function CampaignPage({ params }: CampaignPageProps) {
     )
   }
 
+  // Get the first media item for OG image
+  const ogImage = listing.uploaded_media?.[0]?.url || 
+                  (products.length > 0 ? products[0].image_url : null) ||
+                  profile?.avatar_url ||
+                  '/og-default.jpg'
+  
+  const pageUrl = typeof window !== 'undefined' ? window.location.href : ''
+
   return (
+    <>
+      <Head>
+        <title>{listing.title} - {profile?.display_name}</title>
+        <meta name="description" content={listing.message_template} />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:title" content={listing.title} />
+        <meta property="og:description" content={listing.message_template} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content={pageUrl} />
+        <meta property="twitter:title" content={listing.title} />
+        <meta property="twitter:description" content={listing.message_template} />
+        <meta property="twitter:image" content={ogImage} />
+        
+        {/* WhatsApp */}
+        <meta property="og:site_name" content="A2Z Business Directory" />
+      </Head>
+      
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
@@ -418,21 +489,38 @@ export default function CampaignPage({ params }: CampaignPageProps) {
         {renderLayout()}
 
         {/* Footer Actions */}
-        <div className="mt-8 text-center">
-          <Button
-            onClick={() => router.push(`/profile/${params.username}`)}
-            variant="outline"
-            className="mb-4"
-          >
-            <ExternalLink className="w-4 h-4 mr-2" />
-            View Full Business Profile
-          </Button>
+        <div className="mt-8 space-y-4">
+          {/* Contact Shop Button - Prominent */}
+          {profile?.phone_number && (
+            <div className="flex justify-center">
+              <Button
+                onClick={handleContactShop}
+                size="lg"
+                className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+              >
+                <MessageCircle className="w-5 h-5 mr-2" />
+                Contact Shop on WhatsApp
+              </Button>
+            </div>
+          )}
           
-          <p className="text-sm text-gray-500">
-            Powered by <span className="font-semibold text-blue-600">A2Z Business Directory</span>
-          </p>
+          <div className="text-center">
+            <Button
+              onClick={() => router.push(`/profile/${params.username}`)}
+              variant="outline"
+              className="mb-4"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              View Full Business Profile
+            </Button>
+            
+            <p className="text-sm text-gray-500">
+              Powered by <span className="font-semibold text-blue-600">A2Z Business Directory</span>
+            </p>
+          </div>
         </div>
       </main>
     </div>
+    </>
   )
 }

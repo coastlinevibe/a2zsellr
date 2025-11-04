@@ -35,22 +35,22 @@ export const VideoSpotlightLayout: React.FC<VideoSpotlightLayoutProps> = ({
   const imageItems = items.filter(item => item.type?.startsWith('image/') || !item.type)
 
   return (
-    <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 max-w-md mx-auto overflow-hidden">
+    <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 w-full max-w-md md:max-w-2xl lg:max-w-5xl mx-auto overflow-hidden">
       {/* Header */}
-      <div className="bg-red-50 border-b border-red-200 p-4">
+      <div className="bg-red-50 border-b border-red-200 p-4 md:p-6 lg:p-8">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-bold">
+          <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl">
             {businessName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div className="font-semibold text-gray-900">{businessName}</div>
-            <div className="text-xs text-gray-500">Broadcast • video spotlight</div>
+            <div className="font-semibold text-gray-900 text-base md:text-lg lg:text-xl">{businessName}</div>
+            <div className="text-xs md:text-sm text-gray-500">Broadcast • video spotlight</div>
           </div>
         </div>
         
         <div className="mb-4">
-          <h3 className="font-bold text-gray-900 mb-2">{title}</h3>
-          <p className="text-gray-700 text-sm leading-relaxed">{message}</p>
+          <h3 className="font-bold text-gray-900 mb-2 text-lg md:text-xl lg:text-2xl">{title}</h3>
+          <p className="text-gray-700 text-sm md:text-base lg:text-lg leading-relaxed">{message}</p>
         </div>
 
         {/* Video Spotlight */}

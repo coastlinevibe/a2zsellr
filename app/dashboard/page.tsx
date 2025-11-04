@@ -227,7 +227,7 @@ export default function DashboardPage() {
   const renderMarketingTab = () => {
     const marketingViews = [
       { id: 'builder', label: 'Campaign Builder', icon: Plus },
-      { id: 'campaigns', label: 'My Campaigns', icon: MessageSquare },
+      { id: 'campaigns', label: 'My Listings', icon: MessageSquare },
       { id: 'scheduler', label: 'Scheduler', icon: Calendar },
       { id: 'analytics', label: 'Analytics', icon: TrendingUp }
     ]

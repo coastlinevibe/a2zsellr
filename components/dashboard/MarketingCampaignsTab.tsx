@@ -9,7 +9,9 @@ import {
   Plus, 
   Calendar,
   ExternalLink,
-  BarChart3
+  BarChart3,
+  Share2,
+  Copy
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -115,6 +117,54 @@ export function MarketingCampaignsTab({ onCreateNew }: MarketingCampaignsTabProp
     }
   }
 
+  const getListingUrl = (listing: Listing) => {
+    const baseUrl = window.location.origin
+    const displayName = listing.cta_url.split('/').slice(-2)[0] || 'business'
+    const listingSlug = listing.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    return `${baseUrl}/${displayName}/${listingSlug}`
+  }
+
+  const copyListingLink = async (listing: Listing) => {
+    const shareUrl = getListingUrl(listing)
+    
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      alert('✅ Link copied to clipboard!\n\n' + shareUrl + '\n\nYou can now paste this link anywhere!')
+    } catch (err) {
+      // Fallback if clipboard API fails
+      const textArea = document.createElement('textarea')
+      textArea.value = shareUrl
+      document.body.appendChild(textArea)
+      textArea.select()
+      try {
+        document.execCommand('copy')
+        alert('✅ Link copied to clipboard!\n\n' + shareUrl + '\n\nYou can now paste this link anywhere!')
+      } catch (e) {
+        alert('Copy this link:\n\n' + shareUrl)
+      }
+      document.body.removeChild(textArea)
+    }
+  }
+
+  const shareListing = async (listing: Listing) => {
+    const shareUrl = getListingUrl(listing)
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: listing.title,
+          text: listing.message_template,
+          url: shareUrl
+        })
+      } catch (err) {
+        console.log('Share cancelled')
+      }
+    } else {
+      // Fallback: copy to clipboard
+      copyListingLink(listing)
+    }
+  }
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -204,20 +254,33 @@ export function MarketingCampaignsTab({ onCreateNew }: MarketingCampaignsTabProp
                 </div>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Button 
                   size="sm" 
                   variant="outline"
-                  onClick={() => {
-                    // Generate listing URL and open in new tab
-                    const baseUrl = window.location.origin
-                    const displayName = listing.cta_url.split('/').slice(-2)[0] // Extract from cta_url
-                    const listingSlug = listing.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-                    window.open(`${baseUrl}/${displayName}/${listingSlug}`, '_blank')
-                  }}
+                  onClick={() => window.open(getListingUrl(listing), '_blank')}
                 >
                   <Eye className="w-3 h-3 mr-1" />
                   Preview
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-300"
+                  onClick={() => copyListingLink(listing)}
+                  title="Copy link to clipboard"
+                >
+                  <Copy className="w-3 h-3 mr-1" />
+                  Copy Link
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => shareListing(listing)}
+                  title="Share this listing"
+                >
+                  <Share2 className="w-3 h-3 mr-1" />
+                  Share
                 </Button>
                 <Button 
                   size="sm" 
@@ -243,33 +306,34 @@ export function MarketingCampaignsTab({ onCreateNew }: MarketingCampaignsTabProp
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-sm text-gray-500">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1">
-                  <MessageSquare className="w-3 h-3" />
-                  <span>{listing.target_platforms.join(', ')}</span>
-                </div>
-                {listing.scheduled_for && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm text-gray-500">
+                <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    <span>Scheduled: {new Date(listing.scheduled_for).toLocaleDateString()}</span>
+                    <MessageSquare className="w-3 h-3" />
+                    <span>{listing.target_platforms.join(', ')}</span>
                   </div>
-                )}
+                  {listing.scheduled_for && (
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      <span>Scheduled: {new Date(listing.scheduled_for).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                </div>
               </div>
               
-              <div className="flex items-center gap-2">
+              {/* Listing URL Display */}
+              <div className="flex items-center gap-2 bg-gray-50 p-2 rounded border border-gray-200">
+                <ExternalLink className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <code className="text-xs text-blue-600 font-mono flex-1 truncate">
+                  {getListingUrl(listing)}
+                </code>
                 <button
-                  onClick={() => {
-                    // Generate the correct landing page URL
-                    const baseUrl = window.location.origin
-                    const displayName = listing.cta_url.split('/').slice(-2)[0] || 'business'
-                    const listingSlug = listing.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-                    window.open(`${baseUrl}/${displayName}/${listingSlug}`, '_blank')
-                  }}
-                  className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs"
+                  onClick={() => copyListingLink(listing)}
+                  className="text-gray-500 hover:text-blue-600 transition-colors flex-shrink-0"
+                  title="Copy link"
                 >
-                  <ExternalLink className="w-3 h-3" />
-                  <span>View Landing Page</span>
+                  <Copy className="w-4 h-4" />
                 </button>
               </div>
             </div>
