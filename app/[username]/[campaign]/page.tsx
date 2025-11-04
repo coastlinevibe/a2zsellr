@@ -404,38 +404,64 @@ export default function CampaignPage({ params }: CampaignPageProps) {
     )
   }
 
-  // Get the first media item for OG image
-  const ogImage = listing.uploaded_media?.[0]?.url || 
-                  (products.length > 0 ? products[0].image_url : null) ||
-                  profile?.avatar_url ||
-                  '/og-default.jpg'
+  // Get the first media item for OG image - ensure it's a full URL
+  const getFullImageUrl = () => {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+    
+    // Try uploaded media first
+    if (listing.uploaded_media?.[0]?.url) {
+      const url = listing.uploaded_media[0].url
+      // If it's already a full URL, use it; otherwise make it absolute
+      return url.startsWith('http') ? url : `${baseUrl}${url}`
+    }
+    
+    // Try products
+    if (products.length > 0 && products[0].image_url) {
+      const url = products[0].image_url
+      return url.startsWith('http') ? url : `${baseUrl}${url}`
+    }
+    
+    // Try profile avatar
+    if (profile?.avatar_url) {
+      const url = profile.avatar_url
+      return url.startsWith('http') ? url : `${baseUrl}${url}`
+    }
+    
+    // Fallback
+    return `${baseUrl}/og-default.jpg`
+  }
   
+  const ogImage = getFullImageUrl()
   const pageUrl = typeof window !== 'undefined' ? window.location.href : ''
+  
+  // Create a better description for the listing
+  const ogDescription = `${listing.message_template} - ${profile?.display_name || 'Business'}`
 
   return (
     <>
       <Head>
         <title>{listing.title} - {profile?.display_name}</title>
-        <meta name="description" content={listing.message_template} />
+        <meta name="description" content={ogDescription} />
         
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content={pageUrl} />
-        <meta property="og:title" content={listing.title} />
-        <meta property="og:description" content={listing.message_template} />
+        <meta property="og:title" content={`${listing.title} - ${profile?.display_name}`} />
+        <meta property="og:description" content={ogDescription} />
         <meta property="og:image" content={ogImage} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content={listing.title} />
         
         {/* Twitter */}
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content={pageUrl} />
-        <meta property="twitter:title" content={listing.title} />
-        <meta property="twitter:description" content={listing.message_template} />
+        <meta property="twitter:title" content={`${listing.title} - ${profile?.display_name}`} />
+        <meta property="twitter:description" content={ogDescription} />
         <meta property="twitter:image" content={ogImage} />
         
-        {/* WhatsApp */}
-        <meta property="og:site_name" content="A2Z Business Directory" />
+        {/* WhatsApp - Use business name instead of A2Z */}
+        <meta property="og:site_name" content={profile?.display_name || 'Business Listing'} />
       </Head>
       
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
