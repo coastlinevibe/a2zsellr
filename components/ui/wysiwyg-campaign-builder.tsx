@@ -19,7 +19,9 @@ import {
   X,
   ShoppingBag,
   Plus,
-  CheckCircle2
+  CheckCircle2,
+  Upload,
+  Loader2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -31,6 +33,7 @@ import {
   VerticalSliderLayout,
   type MediaItem
 } from '@/components/ui/campaign-layouts'
+import { uploadFileToStorage, type UploadResult } from '@/lib/uploadUtils'
 
 interface Product {
   id: string
@@ -55,7 +58,8 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
   const [scheduleDate, setScheduleDate] = useState('')
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([])
   const [showMediaSelector, setShowMediaSelector] = useState(false)
-  const [uploadedMedia, setUploadedMedia] = useState<{id: string, name: string, url: string, type: string}[]>([])
+  const [uploadedMedia, setUploadedMedia] = useState<{id: string, name: string, url: string, type: string, storagePath?: string}[]>([])
+  const [uploadingFiles, setUploadingFiles] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Auto-generate URL based on business profile and campaign title
@@ -70,7 +74,12 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
       .replace(/[^a-zA-Z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
     
-    return `https://a2z-sellr.life/${cleanDisplayName}/${cleanTitle}`
+    // Use localhost for development, production domain for live
+    const baseUrl = window.location.hostname === 'localhost' 
+      ? `http://localhost:${window.location.port}`
+      : 'https://a2z-sellr.life'
+    
+    return `${baseUrl}/${cleanDisplayName}/${cleanTitle}`
   }
 
   // Auto-generated URL based on current values
@@ -79,35 +88,68 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
     campaignTitle
   )
 
-  // Handle file upload
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle file upload with proper storage
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
     if (!files) return
 
-    Array.from(files).forEach((file) => {
-      // Validate file type
-      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-        alert('Please select only image or video files')
-        return
+    // Process files one by one
+    for (const file of Array.from(files)) {
+      const fileId = `upload-${Date.now()}-${Math.random()}`
+      
+      try {
+        // Add to uploading state
+        setUploadingFiles(prev => [...prev, fileId])
+        
+        // Create temporary preview URL for immediate display
+        const previewUrl = URL.createObjectURL(file)
+        const tempMedia = {
+          id: fileId,
+          name: file.name,
+          url: previewUrl,
+          type: file.type
+        }
+        
+        // Add to uploaded media with preview
+        setUploadedMedia(prev => [...prev, tempMedia])
+        
+        // Upload to Supabase Storage
+        const uploadResult: UploadResult = await uploadFileToStorage(
+          file,
+          'sharelinks',
+          `campaign-uploads/${businessProfile?.id || 'anonymous'}`
+        )
+        
+        if (uploadResult.success && uploadResult.url) {
+          // Update media item with permanent URL
+          setUploadedMedia(prev => prev.map(media => 
+            media.id === fileId 
+              ? { 
+                  ...media, 
+                  url: uploadResult.url!, 
+                  storagePath: uploadResult.path 
+                }
+              : media
+          ))
+          
+          // Clean up preview URL
+          URL.revokeObjectURL(previewUrl)
+        } else {
+          // Remove failed upload
+          setUploadedMedia(prev => prev.filter(media => media.id !== fileId))
+          URL.revokeObjectURL(previewUrl)
+          alert(`Failed to upload ${file.name}: ${uploadResult.error}`)
+        }
+        
+      } catch (error: any) {
+        console.error('Upload error:', error)
+        setUploadedMedia(prev => prev.filter(media => media.id !== fileId))
+        alert(`Failed to upload ${file.name}: ${error.message}`)
+      } finally {
+        // Remove from uploading state
+        setUploadingFiles(prev => prev.filter(id => id !== fileId))
       }
-
-      // Validate file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        alert('File size must be less than 10MB')
-        return
-      }
-
-      // Create preview URL
-      const url = URL.createObjectURL(file)
-      const newMedia = {
-        id: `upload-${Date.now()}-${Math.random()}`,
-        name: file.name,
-        url: url,
-        type: file.type
-      }
-
-      setUploadedMedia(prev => [...prev, newMedia])
-    })
+    }
 
     // Reset file input
     if (fileInputRef.current) {
@@ -120,16 +162,21 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
     setUploadedMedia(prev => {
       const mediaToRemove = prev.find(m => m.id === id)
       if (mediaToRemove) {
-        URL.revokeObjectURL(mediaToRemove.url) // Clean up object URL
+        // Clean up object URL if it's a blob URL
+        if (mediaToRemove.url.startsWith('blob:')) {
+          URL.revokeObjectURL(mediaToRemove.url)
+        }
+        // TODO: Also delete from Supabase Storage if needed
+        // This would require the deleteFileFromStorage function
       }
       return prev.filter(m => m.id !== id)
     })
   }
 
-  // Save campaign draft
+  // Save listing draft
   const handleSaveDraft = async () => {
     if (!campaignTitle.trim()) {
-      alert('❌ Please enter a campaign title.')
+      alert('❌ Please enter a listing title.')
       return
     }
 
@@ -142,7 +189,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
       // Import supabase client
       const { supabase } = await import('@/lib/supabaseClient')
       
-      // Prepare campaign data with all required fields
+      // Prepare listing data with all required fields including media
       const campaignData = {
         profile_id: businessProfile.id,
         title: campaignTitle.trim(),
@@ -152,41 +199,49 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
         cta_label: ctaLabel.trim() || 'Learn More',
         cta_url: ctaUrl,
         scheduled_for: scheduleDate ? new Date(scheduleDate).toISOString() : null,
-        status: 'draft' as const
-        // Removed url_slug - let database handle it with DEFAULT
+        status: 'draft' as const,
+        // Store in the new dedicated columns
+        uploaded_media: uploadedMedia.map(m => ({
+          id: m.id,
+          name: m.name,
+          url: m.url,
+          type: m.type,
+          storage_path: m.storagePath
+        })),
+        selected_products: selectedProducts.map(p => p.id)
       }
 
-      // Save campaign to database - try marketing_campaigns first
-      const { data: campaign, error: campaignError } = await supabase
-        .from('marketing_campaigns')
+      // Save listing to database - use profile_listings table
+      const { data: listing, error: listingError } = await supabase
+        .from('profile_listings')
         .insert(campaignData)
         .select()
         .single()
 
-      if (campaignError) {
-        console.error('Database error:', campaignError)
-        throw new Error(`Failed to save campaign: ${campaignError.message}`)
+      if (listingError) {
+        console.error('Database error:', listingError)
+        throw new Error(`Failed to save listing: ${listingError.message}`)
       }
 
-      console.log('Campaign saved successfully:', campaign)
+      console.log('Listing saved successfully:', listing)
       
       // Show success message
-      alert(`✅ Campaign "${campaignTitle}" saved to database!\n\n` +
-            `ID: ${campaign.id}\n` +
-            `Layout: ${selectedLayout}\n` +
-            `Media Items: ${selectedProducts.length + uploadedMedia.length}\n` +
-            `Platforms: ${selectedPlatforms.join(', ')}\n\n` +
-            `You can view it in the Marketing > Campaigns tab!`)
+      alert(`✅ Listing "${campaignTitle}" saved successfully!\n\n` +
+            `• Uploaded Media: ${uploadedMedia.length} files\n` +
+            `• Selected Products: ${selectedProducts.length} items\n` +
+            `• Layout: ${selectedLayout}\n` +
+            `• Platforms: ${selectedPlatforms.join(', ')}\n\n` +
+            `View it in Marketing > My Campaigns tab!`)
       
     } catch (error: any) {
-      console.error('Error saving campaign:', error)
-      alert(`❌ Error saving campaign: ${error.message}\n\nCheck console for details.`)
+      console.error('Error saving listing:', error)
+      alert(`❌ Error saving listing: ${error.message}\n\nCheck console for details.`)
     }
   }
 
-  // Preview in Browser - opens campaign URL directly
+  // Preview in Browser - opens listing URL directly
   const handleBrowserPreview = () => {
-    // Open the campaign URL directly in a new tab for testing
+    // Open the listing URL directly in a new tab for testing
     window.open(ctaUrl, '_blank')
   }
 
@@ -354,26 +409,37 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
                 <div className="bg-emerald-500 rounded-[9px] p-3">
                   <div className="text-sm text-emerald-100 mb-2">Uploaded Media ({uploadedMedia.length})</div>
                   <div className="grid grid-cols-2 gap-2">
-                    {uploadedMedia.map((media) => (
-                      <div key={media.id} className="bg-emerald-400 rounded-[6px] p-2 flex items-center gap-2">
-                        {media.type.startsWith('image/') ? (
-                          <img src={media.url} alt={media.name} className="w-8 h-8 object-cover rounded" />
-                        ) : (
-                          <div className="w-8 h-8 bg-emerald-300 rounded flex items-center justify-center">
-                            <Play className="w-4 h-4 text-emerald-600" />
+                    {uploadedMedia.map((media) => {
+                      const isUploading = uploadingFiles.includes(media.id)
+                      return (
+                        <div key={media.id} className="bg-emerald-400 rounded-[6px] p-2 flex items-center gap-2">
+                          {isUploading ? (
+                            <div className="w-8 h-8 bg-emerald-300 rounded flex items-center justify-center">
+                              <Loader2 className="w-4 h-4 text-emerald-600 animate-spin" />
+                            </div>
+                          ) : media.type.startsWith('image/') ? (
+                            <img src={media.url} alt={media.name} className="w-8 h-8 object-cover rounded" />
+                          ) : (
+                            <div className="w-8 h-8 bg-emerald-300 rounded flex items-center justify-center">
+                              <Play className="w-4 h-4 text-emerald-600" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-medium text-white truncate">{media.name}</div>
+                            {isUploading && (
+                              <div className="text-xs text-emerald-200">Uploading...</div>
+                            )}
                           </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-medium text-white truncate">{media.name}</div>
+                          <button
+                            onClick={() => removeUploadedMedia(media.id)}
+                            className="text-emerald-200 hover:text-white"
+                            disabled={isUploading}
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
                         </div>
-                        <button
-                          onClick={() => removeUploadedMedia(media.id)}
-                          className="text-emerald-200 hover:text-white"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               )}
@@ -391,10 +457,20 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
                 <Button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="bg-blue-500 hover:bg-blue-400 text-white border border-blue-400 rounded-[9px] flex-1"
+                  disabled={uploadingFiles.length > 0}
+                  className="bg-blue-500 hover:bg-blue-400 text-white border border-blue-400 rounded-[9px] flex-1 disabled:opacity-50"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Upload Media
+                  {uploadingFiles.length > 0 ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading ({uploadingFiles.length})
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Upload Media
+                    </>
+                  )}
                 </Button>
               </div>
 
