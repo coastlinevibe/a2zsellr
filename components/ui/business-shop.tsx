@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
+import { TierLimitDisplay } from '@/components/ui/premium-badge'
+import { useCart } from '@/contexts/CartContext'
 import { supabase } from '@/lib/supabaseClient'
 import EmojiPicker from '@/components/ui/emoji-picker'
 import { 
@@ -30,12 +32,22 @@ interface Product {
 interface BusinessShopProps {
   businessId: string
   isOwner?: boolean
+  userTier?: 'free' | 'premium' | 'business'
+}
+
+// Tier limits constant
+const TIER_LIMITS = {
+  free: 5,
+  premium: 999,
+  business: 999
 }
 
 export default function BusinessShop({ 
   businessId, 
-  isOwner = false
+  isOwner = false,
+  userTier = 'free'
 }: BusinessShopProps) {
+  const { addItem } = useCart()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -43,6 +55,8 @@ export default function BusinessShop({
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [manageMode, setManageMode] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [businessName, setBusinessName] = useState<string>('')
   const [productForm, setProductForm] = useState({
     name: '',
     description: '',
@@ -62,7 +76,24 @@ export default function BusinessShop({
 
   useEffect(() => {
     fetchProducts()
+    fetchBusinessName()
   }, [businessId])
+
+  const fetchBusinessName = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', businessId)
+        .single()
+
+      if (error) throw error
+      setBusinessName(data?.display_name || 'Business')
+    } catch (error) {
+      console.error('Error fetching business name:', error)
+      setBusinessName('Business')
+    }
+  }
 
   const fetchProducts = async () => {
     try {
@@ -83,7 +114,34 @@ export default function BusinessShop({
     }
   }
 
+  const handleAddToCart = (product: Product) => {
+    if (!product.price_cents) {
+      alert('This product does not have a price set')
+      return
+    }
+
+    addItem({
+      productId: product.id,
+      name: product.name,
+      price: product.price_cents,
+      image: product.image_url || undefined,
+      businessId: businessId,
+      businessName: businessName
+    })
+
+    alert(`✅ ${product.name} added to cart!`)
+  }
+
   const handleAddProduct = () => {
+    // Enforce tier limits
+    const currentLimit = TIER_LIMITS[userTier]
+    
+    if (products.length >= currentLimit && userTier === 'free') {
+      setError(`Free tier is limited to ${currentLimit} products. You currently have ${products.length}. Please upgrade to add more products.`)
+      return
+    }
+    
+    setError(null)
     setProductForm({
       name: '',
       description: '',
@@ -163,6 +221,20 @@ export default function BusinessShop({
   const handleSaveProduct = async () => {
     if (!productForm.name.trim()) return
 
+    // Enforce tier limits on save (server-side validation)
+    const tierLimits = {
+      free: 5,
+      premium: 999,
+      business: 999
+    }
+    
+    const currentLimit = tierLimits[userTier]
+    
+    if (!editingProduct && products.length >= currentLimit && userTier === 'free') {
+      alert(`Free tier is limited to ${currentLimit} products. Please upgrade to add more.`)
+      return
+    }
+
     try {
       const productData = {
         profile_id: businessId,
@@ -214,8 +286,14 @@ export default function BusinessShop({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Shop</h2>
-          <p className="text-gray-600">{products.length} products available</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Shop</h2>
+          <TierLimitDisplay 
+            current={products.length}
+            limit={TIER_LIMITS[userTier]}
+            tier={userTier}
+            itemName="products"
+            size="md"
+          />
         </div>
         {isOwner && (
           <div className="flex gap-2">
@@ -227,13 +305,42 @@ export default function BusinessShop({
               <Edit className="h-4 w-4 mr-2" />
               {manageMode ? 'Done Managing' : 'Manage Shop'}
             </Button>
-            <Button onClick={handleAddProduct} className="bg-emerald-600 hover:bg-emerald-700 rounded-[9px]">
+            <Button 
+              onClick={handleAddProduct} 
+              className="bg-emerald-600 hover:bg-emerald-700 rounded-[9px]"
+              disabled={userTier === 'free' && products.length >= 5}
+            >
               <Plus className="h-4 w-4 mr-2" />
-              Add to Shop
+              {userTier === 'free' && products.length >= 5 ? 'Limit Reached' : 'Add to Shop'}
             </Button>
           </div>
         )}
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-[9px] p-4">
+          <div className="flex items-center gap-2">
+            <Package className="h-5 w-5 text-red-600" />
+            <p className="text-red-700">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Free Tier Limit Warning */}
+      {userTier === 'free' && products.length >= 5 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-[9px] p-4">
+          <div className="flex items-center gap-2">
+            <Package className="h-5 w-5 text-amber-600" />
+            <div>
+              <h4 className="font-semibold text-amber-900">Shop Limit Reached</h4>
+              <p className="text-sm text-amber-700 mt-1">
+                You've reached the 5-product limit for free accounts. Upgrade to Premium for unlimited products.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Manage Mode Indicator */}
       {manageMode && (
@@ -351,7 +458,7 @@ export default function BusinessShop({
                   <p className="text-gray-600 text-sm mb-3">{product.description}</p>
                 )}
                 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-3">
                   <div>
                     {product.price_cents ? (
                       <span className="text-lg font-bold text-emerald-600">
@@ -362,6 +469,17 @@ export default function BusinessShop({
                     )}
                   </div>
                 </div>
+                
+                {/* Add to Cart Button */}
+                {!isOwner && product.price_cents && (
+                  <Button
+                    onClick={() => handleAddToCart(product)}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2"
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    Add to Cart
+                  </Button>
+                )}
                 
                 {product.category && (
                   <div className="mt-2">

@@ -39,6 +39,11 @@ import FreeAccountNotifications from '@/components/FreeAccountNotifications'
 import { GalleryTab } from '@/components/dashboard/GalleryTab'
 import { MarketingCampaignsTab } from '@/components/dashboard/MarketingCampaignsTab'
 import PublicProfilePreview from '@/components/ui/public-profile-preview'
+import ResetCountdownBanner from '@/components/ResetCountdownBanner'
+import ResetTimer from '@/components/ResetTimer'
+import ResetNotificationModal from '@/components/ResetNotificationModal'
+import { PremiumBadge } from '@/components/ui/premium-badge'
+import CartButton from '@/components/CartButton'
 
 type SubscriptionTier = 'free' | 'premium' | 'business'
 type DashboardTab = 'profile' | 'gallery' | 'shop' | 'marketing'
@@ -56,6 +61,7 @@ interface UserProfile {
   bio: string | null
   phone_number: string | null
   website_url: string | null
+  created_at?: string
 }
 
 const dashboardTabs: { key: DashboardTab; label: string; icon: typeof Users }[] = [
@@ -183,6 +189,15 @@ export default function DashboardPage() {
 
   const renderProfileTab = () => (
     <div className="space-y-8">
+      {/* Reset Countdown Banner for Free Tier */}
+      {profile && profile.subscription_tier === 'free' && (
+        <ResetCountdownBanner
+          profileCreatedAt={profile.created_at || new Date().toISOString()}
+          subscriptionTier={profile.subscription_tier}
+          onUpgradeClick={() => router.push('/choose-plan')}
+        />
+      )}
+      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 overflow-hidden max-w-md">
           <div className="p-3 border-b border-gray-200">
@@ -226,7 +241,7 @@ export default function DashboardPage() {
 
   const renderMarketingTab = () => {
     const marketingViews = [
-      { id: 'builder', label: 'Campaign Builder', icon: Plus },
+      { id: 'builder', label: 'Listing Builder', icon: Plus },
       { id: 'campaigns', label: 'My Listings', icon: MessageSquare },
       { id: 'scheduler', label: 'Scheduler', icon: Calendar },
       { id: 'analytics', label: 'Analytics', icon: TrendingUp }
@@ -237,19 +252,6 @@ export default function DashboardPage() {
         {profile?.subscription_tier === 'free' && (
           <FreeAccountNotifications onUpgrade={() => router.push('/choose-plan')} />
         )}
-
-        {/* Marketing Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Messages Sent</p>
-                <p className="text-2xl font-bold text-gray-900">1,234</p>
-              </div>
-              <MessageSquare className="h-6 w-6 text-emerald-600" />
-            </div>
-          </div>
-        </div>
 
         {/* Marketing Tools */}
         <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 overflow-hidden">
@@ -282,7 +284,7 @@ export default function DashboardPage() {
             )}
 
             {marketingActiveView === 'campaigns' && (
-              <MarketingCampaignsTab onCreateNew={() => setMarketingActiveView('builder')} />
+              <MarketingCampaignsTab onCreateNew={() => setMarketingActiveView('builder')} userTier={profile?.subscription_tier || 'free'} />
             )}
 
             {marketingActiveView === 'scheduler' && (
@@ -327,7 +329,7 @@ export default function DashboardPage() {
           }}
         />
       case 'shop':
-        return <BusinessShop businessId={profile?.id || ''} isOwner={true} />
+        return <BusinessShop businessId={profile?.id || ''} isOwner={true} userTier={profile?.subscription_tier || 'free'} />
       case 'marketing':
         return renderMarketingTab()
       default:
@@ -348,6 +350,16 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Reset Notification Modal */}
+      {profile && (
+        <ResetNotificationModal
+          profileCreatedAt={profile.created_at || new Date().toISOString()}
+          lastResetAt={null}
+          subscriptionTier={profile.subscription_tier}
+          onUpgrade={() => router.push('/choose-plan')}
+        />
+      )}
+
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -358,12 +370,34 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2">
                 <span className="text-gray-600">Welcome back,</span>
                 <span className="font-medium text-gray-900">{displayName}</span>
-                <Badge className={`${tierBadge.className} text-xs`}>
-                  {tierBadge.text}
-                </Badge>
+                {/* Premium Badge */}
+                {profile && profile.subscription_tier !== 'free' && (
+                  <PremiumBadge 
+                    tier={profile.subscription_tier}
+                    size="sm"
+                  />
+                )}
+                {/* Free Tier Badge */}
+                {profile && profile.subscription_tier === 'free' && (
+                  <Badge className="bg-gray-100 text-gray-700 text-xs">
+                    Free
+                  </Badge>
+                )}
+                {/* Reset Timer in Header */}
+                {profile && profile.subscription_tier === 'free' && (
+                  <ResetTimer
+                    profileCreatedAt={profile.created_at || new Date().toISOString()}
+                    lastResetAt={null}
+                    subscriptionTier={profile.subscription_tier}
+                    compact={true}
+                  />
+                )}
               </div>
             </div>
-            <UserProfileDropdown />
+            <div className="flex items-center gap-3">
+              <CartButton />
+              <UserProfileDropdown />
+            </div>
           </div>
         </div>
       </div>

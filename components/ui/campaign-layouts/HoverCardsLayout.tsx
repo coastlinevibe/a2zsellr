@@ -54,17 +54,48 @@ export const HoverCardsLayout: React.FC<HoverCardsLayoutProps> = ({
         <div className="bg-gray-50 rounded-[9px] p-3 mb-4">
           {items.length > 0 ? (
             <div className="flex items-center gap-2 h-[300px] md:h-[400px] lg:h-[500px] w-full overflow-hidden rounded-lg">
-              {items.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="relative group flex-shrink-0 transition-all duration-500 ease-in-out rounded-lg overflow-hidden h-full hover:flex-grow"
-                  style={{ 
-                    width: hoveredCard === item.id ? '100%' : '80px',
-                    flexGrow: hoveredCard === item.id ? 1 : 0
-                  }}
-                  onMouseEnter={() => setHoveredCard(item.id)}
-                  onMouseLeave={() => setHoveredCard(null)}
-                >
+              {items.map((item, index) => {
+                const isHovered = hoveredCard === item.id
+                const hoveredIndex = items.findIndex(i => i.id === hoveredCard)
+                const totalItems = items.length
+                
+                // Calculate flex properties for better distribution
+                let flexBasis
+                let flexGrow = 0
+                let flexShrink = 1
+                
+                if (isHovered) {
+                  // Hovered image takes ALL the space
+                  flexBasis = '100%'
+                  flexGrow = 1
+                  flexShrink = 0
+                } else if (hoveredCard) {
+                  // Non-hovered images get pushed completely out
+                  flexBasis = '0%'
+                  flexGrow = 0
+                  flexShrink = 1
+                } else {
+                  // Default state - all images share space equally
+                  flexBasis = `${100 / totalItems}%`
+                  flexGrow = 1
+                  flexShrink = 1
+                }
+                
+                return (
+                  <div
+                    key={item.id}
+                    className="relative group transition-all duration-500 ease-in-out rounded-lg overflow-hidden h-full"
+                    style={{ 
+                      flexBasis,
+                      flexGrow,
+                      flexShrink,
+                      width: isHovered ? '100%' : hoveredCard ? '0%' : 'auto',
+                      overflow: 'hidden',
+                      transition: 'all 0.5s ease-in-out'
+                    }}
+                    onMouseEnter={() => setHoveredCard(item.id)}
+                    onMouseLeave={() => setHoveredCard(null)}
+                  >
                   {item.url ? (
                     <img
                       className="h-full w-full object-cover object-center"
@@ -78,12 +109,12 @@ export const HoverCardsLayout: React.FC<HoverCardsLayoutProps> = ({
                   )}
                   
                   {/* Gradient overlay with info */}
-                  <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-300 ${
+                  <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-all duration-300 ${
                     hoveredCard === item.id ? 'opacity-100' : 'opacity-0'
                   }`}>
-                    <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
-                      <div className="text-white">
-                        <h4 className="font-bold text-lg md:text-xl lg:text-2xl mb-2">{item.name}</h4>
+                    <div className="absolute inset-0 flex flex-col justify-end p-4 md:p-6">
+                      <div className="text-white w-full">
+                        <h4 className="font-bold text-lg md:text-xl lg:text-2xl mb-2 break-words">{item.name}</h4>
                         {item.price && (
                           <div className="text-2xl md:text-3xl font-bold text-emerald-400">
                             R{item.price.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
@@ -93,7 +124,8 @@ export const HoverCardsLayout: React.FC<HoverCardsLayoutProps> = ({
                     </div>
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <div className="flex items-center justify-center h-64 bg-white rounded-lg border-2 border-dashed border-gray-300">

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { TierLimitDisplay } from '@/components/ui/premium-badge'
 import { supabase } from '@/lib/supabaseClient'
 import { useAuth } from '@/lib/auth'
 
@@ -42,9 +43,10 @@ interface Listing {
 
 interface MarketingCampaignsTabProps {
   onCreateNew: () => void
+  userTier?: 'free' | 'premium' | 'business'
 }
 
-export function MarketingCampaignsTab({ onCreateNew }: MarketingCampaignsTabProps) {
+export function MarketingCampaignsTab({ onCreateNew, userTier = 'free' }: MarketingCampaignsTabProps) {
   const { user } = useAuth()
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
@@ -191,6 +193,23 @@ export function MarketingCampaignsTab({ onCreateNew }: MarketingCampaignsTabProp
     )
   }
 
+  // Tier limits
+  const TIER_LIMITS = {
+    free: 3,
+    premium: 999,
+    business: 999
+  }
+  const currentLimit = TIER_LIMITS[userTier]
+  const isAtLimit = listings.length >= currentLimit && userTier === 'free'
+
+  const handleCreateNew = () => {
+    if (isAtLimit) {
+      alert(`Free tier is limited to ${currentLimit} listings. You currently have ${listings.length}. Please upgrade to create more listings.`)
+      return
+    }
+    onCreateNew()
+  }
+
   if (listings.length === 0) {
     return (
       <div className="text-center py-12">
@@ -201,7 +220,12 @@ export function MarketingCampaignsTab({ onCreateNew }: MarketingCampaignsTabProp
         <p className="text-gray-600 mb-6 max-w-md mx-auto">
           Create your first business listing to showcase your products and services.
         </p>
-        <Button onClick={onCreateNew} className="bg-blue-600 hover:bg-blue-700">
+        {userTier === 'free' && (
+          <p className="text-sm text-amber-600 mb-4 font-medium">
+            Free tier: Create up to {currentLimit} listings
+          </p>
+        )}
+        <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
           <Plus className="w-4 h-4 mr-2" />
           Create First Listing
         </Button>
@@ -214,14 +238,39 @@ export function MarketingCampaignsTab({ onCreateNew }: MarketingCampaignsTabProp
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Your Business Listings</h3>
-          <p className="text-sm text-gray-600">Manage and track your business listings and showcases</p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Your Business Listings</h3>
+          <TierLimitDisplay 
+            current={listings.length}
+            limit={currentLimit}
+            tier={userTier}
+            itemName="listings"
+            size="md"
+          />
         </div>
-        <Button onClick={onCreateNew} className="bg-blue-600 hover:bg-blue-700">
+        <Button 
+          onClick={handleCreateNew} 
+          className="bg-blue-600 hover:bg-blue-700"
+          disabled={isAtLimit}
+        >
           <Plus className="w-4 h-4 mr-2" />
-          New Listing
+          {isAtLimit ? 'Limit Reached' : 'New Listing'}
         </Button>
       </div>
+
+      {/* Free Tier Limit Warning */}
+      {userTier === 'free' && isAtLimit && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-amber-600" />
+            <div>
+              <h4 className="font-semibold text-amber-900">Listing Limit Reached</h4>
+              <p className="text-sm text-amber-700 mt-1">
+                You've reached the {currentLimit}-listing limit for free accounts. Upgrade to Premium for unlimited listings.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Listings Grid */}
       <div className="grid gap-4">

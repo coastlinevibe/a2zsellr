@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
+import { supabase } from '@/lib/supabaseClient'
 import { 
   MessageCircle, 
   Eye,
@@ -56,10 +57,62 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
   const [messageTemplate, setMessageTemplate] = useState('Hey there! We just launched new services tailored for you. Tap to explore what\'s hot this week.')
   const [ctaLabel, setCtaLabel] = useState('View Offers')
   const [scheduleDate, setScheduleDate] = useState('')
+  // IMPORTANT: selectedProducts should ALWAYS start empty - no auto-selection
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([])
+  
+  // Force clear any auto-selected products on component mount
+  React.useEffect(() => {
+    if (selectedProducts.length > 0) {
+      console.warn('DETECTED AUTO-SELECTED PRODUCTS - CLEARING THEM:', selectedProducts)
+      setSelectedProducts([])
+    }
+  }, []) // Run only on mount
   const [showMediaSelector, setShowMediaSelector] = useState(false)
   const [uploadedMedia, setUploadedMedia] = useState<{id: string, name: string, url: string, type: string, storagePath?: string}[]>([])
   const [uploadingFiles, setUploadingFiles] = useState<string[]>([])
+  
+  // Debug: Log when products change to catch any auto-selection
+  console.log('WYSIWYGCampaignBuilder - Available products:', products.length, 'Selected products:', selectedProducts.length)
+  
+  // Clean up duplicate listings function
+  const cleanupDuplicateListings = async () => {
+    try {
+      const { data: duplicates, error } = await supabase
+        .from('profile_listings')
+        .select('id, title, created_at')
+        .eq('profile_id', businessProfile?.id)
+        .order('created_at', { ascending: false })
+      
+      if (error || !duplicates) return
+      
+      // Group by title and keep only the most recent
+      const titleGroups: { [key: string]: any[] } = {}
+      duplicates.forEach(listing => {
+        if (!titleGroups[listing.title]) {
+          titleGroups[listing.title] = []
+        }
+        titleGroups[listing.title].push(listing)
+      })
+      
+      // Delete older duplicates
+      for (const title in titleGroups) {
+        const listings = titleGroups[title]
+        if (listings.length > 1) {
+          const toDelete = listings.slice(1) // Keep first (most recent), delete rest
+          console.log(`Cleaning up ${toDelete.length} duplicate listings for title: ${title}`)
+          
+          for (const listing of toDelete) {
+            await supabase
+              .from('profile_listings')
+              .delete()
+              .eq('id', listing.id)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error cleaning up duplicates:', error)
+    }
+  }
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Auto-generate URL based on business profile and campaign title
@@ -93,8 +146,30 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
     const files = event.target.files
     if (!files) return
 
+    const fileArray = Array.from(files)
+    const currentMediaCount = uploadedMedia.length + selectedProducts.length
+    const LISTING_MEDIA_LIMIT = 5
+    const userTier = businessProfile?.subscription_tier || 'free'
+
+    // Check for video files and user tier
+    const hasVideoFiles = fileArray.some(file => file.type.startsWith('video/'))
+    if (hasVideoFiles && userTier === 'free') {
+      alert('🎥 Video uploads are available for Premium and Business users only.\n\nUpgrade your plan to unlock video features!')
+      // Reset the file input
+      event.target.value = ''
+      return
+    }
+
+    // Check if adding these files would exceed the 5-image limit for listings
+    if (currentMediaCount + fileArray.length > LISTING_MEDIA_LIMIT) {
+      alert(`You can only have up to ${LISTING_MEDIA_LIMIT} media items in a listing. You currently have ${currentMediaCount} items.`)
+      // Reset the file input
+      event.target.value = ''
+      return
+    }
+
     // Process files one by one
-    for (const file of Array.from(files)) {
+    for (const file of fileArray) {
       const fileId = `upload-${Date.now()}-${Math.random()}`
       
       try {
@@ -167,30 +242,107 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
           URL.revokeObjectURL(mediaToRemove.url)
         }
         // TODO: Also delete from Supabase Storage if needed
-        // This would require the deleteFileFromStorage function
       }
       return prev.filter(m => m.id !== id)
     })
   }
 
-  // Save listing draft
-  const handleSaveDraft = async () => {
-    if (!campaignTitle.trim()) {
-      alert('❌ Please enter a listing title.')
-      return
-    }
-
-    if (!businessProfile?.id) {
-      alert('❌ Business profile not found. Please refresh and try again.')
-      return
-    }
-
+  // Check for duplicate listing titles
+  const checkDuplicateTitle = async (title: string): Promise<boolean> => {
     try {
-      // Import supabase client
-      const { supabase } = await import('@/lib/supabaseClient')
+      const { data: existingListings, error } = await supabase
+        .from('profile_listings')
+        .select('id, title, selected_products')
+        .eq('profile_id', businessProfile?.id)
+        .eq('title', title.trim())
       
-      // Prepare listing data with all required fields including media
-      const campaignData = {
+      if (error) {
+        console.error('Error checking duplicate titles:', error)
+        return false // Allow save if check fails
+      }
+      
+      if (existingListings && existingListings.length > 0) {
+        console.log('Found existing listings with same title:', existingListings)
+        return true
+      }
+      
+      return false
+    } catch (error) {
+      console.error('Error checking duplicate titles:', error)
+      return false // Allow save if check fails
+    }
+  }
+
+  // Check if today is a restricted day for free tier
+  const isRestrictedDay = () => {
+    if (userTier !== 'free') return false
+    
+    const today = new Date().getDay() // 0=Sunday, 3=Wednesday, 6=Saturday
+    return today === 0 || today === 3 || today === 6
+  }
+
+  const getRestrictedDayName = () => {
+    const today = new Date().getDay()
+    if (today === 0) return 'Sunday'
+    if (today === 3) return 'Wednesday'
+    if (today === 6) return 'Saturday'
+    return ''
+  }
+
+  // Save listing to database
+  const handleSaveDraft = async () => {
+    // Check day-based restrictions for free tier
+    if (isRestrictedDay()) {
+      alert(`⚠️ Free tier users cannot create or share listings on ${getRestrictedDayName()}s.\n\nRestricted days: Wednesday, Saturday, Sunday\n\nPlease try again on Monday, Tuesday, Thursday, or Friday.\n\nUpgrade to Premium to share any day!`)
+      return
+    }
+
+    // Validate required fields
+    if (!campaignTitle.trim()) {
+      alert('⚠️ Please enter a listing title')
+      return
+    }
+
+    if (!messageTemplate.trim()) {
+      alert('⚠️ Please enter a message template')
+      return
+    }
+
+    // Enforce tier limits
+    const tierLimits = {
+      free: 3,
+      premium: 999,
+      business: 999
+    }
+    
+    const currentLimit = tierLimits[userTier as keyof typeof tierLimits]
+    
+    // Check existing listings count
+    const { data: existingListings, error: countError } = await supabase
+      .from('profile_listings')
+      .select('id')
+      .eq('profile_id', businessProfile?.id)
+    
+    if (!countError && existingListings && existingListings.length >= currentLimit && userTier === 'free') {
+      alert(`⚠️ Free tier is limited to ${currentLimit} listings.\n\nYou currently have ${existingListings.length} listings.\n\nPlease upgrade to Premium to create more listings.`)
+      return
+    }
+
+    // Check for duplicate title
+    const isDuplicate = await checkDuplicateTitle(campaignTitle.trim())
+    if (isDuplicate) {
+      const shouldContinue = confirm(
+        `⚠️ A listing with the title "${campaignTitle}" already exists.\n\n` +
+        `Do you want to create it anyway? This will create a duplicate listing.`
+      )
+      if (!shouldContinue) {
+        return
+      }
+    }
+
+    // Prepare listing data with all required fields including media
+    // IMPORTANT: Only save explicitly selected products, never auto-include any products
+    const campaignData = {
         profile_id: businessProfile.id,
         title: campaignTitle.trim(),
         layout_type: selectedLayout,
@@ -199,8 +351,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
         cta_label: ctaLabel.trim() || 'Learn More',
         cta_url: ctaUrl,
         scheduled_for: scheduleDate ? new Date(scheduleDate).toISOString() : null,
-        status: 'draft' as const,
-        // Store in the new dedicated columns
+        // Fix: Use 'uploaded_media' instead of 'media_items' to match database schema
         uploaded_media: uploadedMedia.map(m => ({
           id: m.id,
           name: m.name,
@@ -208,14 +359,24 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
           type: m.type,
           storage_path: m.storagePath
         })),
-        selected_products: selectedProducts.map(p => p.id)
-      }
+      // Only save products that were explicitly selected by user (never auto-select)
+      selected_products: selectedProducts.length > 0 ? selectedProducts.map(p => p.id) : []
+    }
+    
+    // Debug: Log what we're saving to catch any unwanted auto-selection
+    console.log('Saving listing with:', {
+      title: campaignData.title,
+      selected_products_count: selectedProducts.length,
+      selected_product_ids: campaignData.selected_products,
+      uploaded_media_count: uploadedMedia.length
+    })
 
+    try {
       // Save listing to database - use profile_listings table
       const { data: listing, error: listingError } = await supabase
         .from('profile_listings')
         .insert(campaignData)
-        .select()
+        .select('id, title, selected_products, uploaded_media')
         .single()
 
       if (listingError) {
@@ -239,19 +400,42 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
     }
   }
 
-  // Preview in Browser - opens listing URL directly
-  const handleBrowserPreview = () => {
-    // Open the listing URL directly in a new tab for testing
-    window.open(ctaUrl, '_blank')
+  // Preview in Browser - save current state and preview it
+  const handleBrowserPreview = async () => {
+    // Create a preview with current state data
+    const mediaItems = getMediaItems()
+    
+    if (mediaItems.length === 0) {
+      alert('⚠️ Please add some media (upload files or select products) to preview your listing.')
+      return
+    }
+    
+    // Save current state first, then preview
+    try {
+      await handleSaveDraft()
+      // Small delay to ensure save completes
+      setTimeout(() => {
+        window.open(ctaUrl, '_blank')
+      }, 1000)
+    } catch (error) {
+      alert('⚠️ Please save your listing first using "Save Listing Draft", then try preview again.')
+    }
   }
 
+  const userTier = businessProfile?.subscription_tier || 'free'
+  
   const layouts = [
     { id: 'gallery-mosaic', name: 'Gallery Mosaic', description: 'Grid layout with multiple images' },
     { id: 'hover-cards', name: 'Hover Cards', description: 'Interactive card layout' },
     { id: 'vertical-slider', name: 'Vertical Slider', description: 'Vertical scrolling layout' },
     { id: 'horizontal-slider', name: 'Horizontal Slider', description: 'Horizontal scrolling layout' },
     { id: 'before-after', name: 'Before & After', description: 'Comparison layout' },
-    { id: 'video-spotlight', name: 'Video Spotlight', description: 'Video-focused layout' }
+    { 
+      id: 'video-spotlight', 
+      name: userTier === 'free' ? 'Video Spotlight (Premium Only)' : 'Video Spotlight', 
+      description: 'Video-focused layout',
+      disabled: userTier === 'free'
+    }
   ]
 
   const generatePreviewMessage = () => {
@@ -269,22 +453,36 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
 
   // Convert products and uploaded media to MediaItem format
   const getMediaItems = (): MediaItem[] => {
-    const productItems: MediaItem[] = selectedProducts.map(product => ({
+    // CRITICAL: Only include products that were EXPLICITLY selected by user
+    // Never auto-include any products from the available products list
+    const productItems: MediaItem[] = selectedProducts.length > 0 ? selectedProducts.map(product => ({
       id: product.id,
       name: product.name,
       url: product.image_url || '',
       type: 'image/jpeg',
       price: product.price_cents ? product.price_cents / 100 : undefined
-    }))
+    })) : []
 
-    const uploadedItems: MediaItem[] = uploadedMedia.map(media => ({
+    // Only include media that was explicitly uploaded
+    const uploadedItems: MediaItem[] = uploadedMedia.length > 0 ? uploadedMedia.map(media => ({
       id: media.id,
       name: media.name,
       url: media.url,
       type: media.type
-    }))
+    })) : []
 
-    return [...productItems, ...uploadedItems]
+    // Debug: Ensure we're not accidentally including unwanted items
+    const totalItems = [...productItems, ...uploadedItems]
+    console.log('getMediaItems result:', {
+      selectedProducts: selectedProducts.length,
+      uploadedMedia: uploadedMedia.length,
+      totalMediaItems: totalItems.length,
+      productItems: productItems.length,
+      uploadedItems: uploadedItems.length
+    })
+
+    // Return only explicitly selected/uploaded items - NEVER auto-include anything
+    return totalItems
   }
 
   // Render the appropriate layout component
@@ -322,24 +520,43 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
   const previewData = generatePreviewMessage()
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Left Panel - Campaign Builder */}
-      <div className="bg-blue-600 rounded-[9px] p-6 text-white">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold mb-2">Multi-Platform Campaign Builder</h2>
-          <p className="text-blue-100 text-sm">Create campaigns for WhatsApp, Facebook, Instagram & LinkedIn in one canvas.</p>
+    <div className="space-y-4">
+      {/* Day Restriction Warning for Free Tier */}
+      {userTier === 'free' && isRestrictedDay() && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-red-600" />
+            <div>
+              <h4 className="font-semibold text-red-900">Listing Creation Restricted Today</h4>
+              <p className="text-sm text-red-700 mt-1">
+                Free tier users cannot create or share listings on {getRestrictedDayName()}s. Restricted days: Wednesday, Saturday, Sunday.
+              </p>
+              <p className="text-sm text-red-600 mt-2 font-medium">
+                ✅ Available days: Monday, Tuesday, Thursday, Friday • Upgrade to Premium to share any day!
+              </p>
+            </div>
+          </div>
         </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Panel - Listing Builder */}
+        <div className="bg-blue-600 rounded-[9px] p-6 text-white">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold mb-2">Listing Builder</h2>
+            <p className="text-blue-100 text-sm">Create beautiful listings to showcase your products and services.</p>
+          </div>
 
         <div className="space-y-6">
-          {/* Campaign Title */}
+          {/* Listing Title */}
           <div>
-            <label className="block text-sm font-medium text-blue-100 mb-2">Campaign title</label>
+            <label className="block text-sm font-medium text-blue-100 mb-2">Listing title</label>
             <input
               type="text"
               value={campaignTitle}
               onChange={(e) => setCampaignTitle(e.target.value)}
               className="w-full p-3 bg-blue-500 border border-blue-400 rounded-[9px] text-white placeholder-blue-200 focus:ring-2 focus:ring-blue-300 focus:border-blue-300"
-              placeholder="Enter campaign title"
+              placeholder="e.g., Special Offer - 20% Off All Items"
             />
           </div>
 
@@ -348,11 +565,22 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
             <label className="block text-sm font-medium text-blue-100 mb-2">Layout</label>
             <select
               value={selectedLayout}
-              onChange={(e) => setSelectedLayout(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value === 'video-spotlight' && userTier === 'free') {
+                  alert('🎥 Video Spotlight is available for Premium and Business users only.\n\nUpgrade your plan to unlock video features!')
+                  return
+                }
+                setSelectedLayout(e.target.value)
+              }}
               className="w-full p-3 bg-blue-500 border border-blue-400 rounded-[9px] text-white focus:ring-2 focus:ring-blue-300 focus:border-blue-300"
             >
               {layouts.map((layout) => (
-                <option key={layout.id} value={layout.id} className="bg-blue-600">
+                <option 
+                  key={layout.id} 
+                  value={layout.id} 
+                  className="bg-blue-600"
+                  disabled={layout.disabled}
+                >
                   {layout.name}
                 </option>
               ))}
@@ -373,7 +601,19 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
 
           {/* Media Selection */}
           <div>
-            <label className="block text-sm font-medium text-blue-100 mb-2">Campaign Media</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-blue-100">Listing Media</label>
+              <div className="flex items-center gap-2">
+                <span className="text-xs bg-blue-400 text-blue-100 px-2 py-1 rounded-full">
+                  {uploadedMedia.length + selectedProducts.length}/5 items
+                </span>
+                {businessProfile?.subscription_tier === 'free' && (
+                  <span className="text-xs bg-yellow-500 text-yellow-900 px-2 py-1 rounded-full">
+                    Images only
+                  </span>
+                )}
+              </div>
+            </div>
             <div className="space-y-3">
               {/* Selected Products Display */}
               {selectedProducts.length > 0 && (
@@ -443,13 +683,14 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
                   </div>
                 </div>
               )}
-
+              
               {/* Media Selection Buttons */}
               <div className="flex gap-2">
                 <Button
-                  type="button"
                   onClick={() => setShowMediaSelector(!showMediaSelector)}
-                  className="bg-blue-500 hover:bg-blue-400 text-white border border-blue-400 rounded-[9px] flex-1"
+                  variant="outline"
+                  className="border-blue-300 text-blue-100 hover:bg-blue-500 rounded-[9px] flex-1"
+                  disabled={(uploadedMedia.length + selectedProducts.length) >= 5}
                 >
                   <ShoppingBag className="w-4 h-4 mr-2" />
                   Select from Shop ({products.length} items)
@@ -457,7 +698,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
                 <Button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingFiles.length > 0}
+                  disabled={uploadingFiles.length > 0 || (uploadedMedia.length + selectedProducts.length) >= 5}
                   className="bg-blue-500 hover:bg-blue-400 text-white border border-blue-400 rounded-[9px] flex-1 disabled:opacity-50"
                 >
                   {uploadingFiles.length > 0 ? (
@@ -479,7 +720,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
                 ref={fileInputRef}
                 type="file"
                 multiple
-                accept="image/*,video/*"
+                accept={businessProfile?.subscription_tier === 'free' ? 'image/*' : 'image/*,video/*'}
                 onChange={handleFileUpload}
                 className="hidden"
               />
@@ -498,6 +739,14 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
                             if (isSelected) {
                               setSelectedProducts(prev => prev.filter(p => p.id !== product.id))
                             } else {
+                              const currentMediaCount = uploadedMedia.length + selectedProducts.length
+                              const LISTING_MEDIA_LIMIT = 5
+                              
+                              if (currentMediaCount >= LISTING_MEDIA_LIMIT) {
+                                alert(`You can only have up to ${LISTING_MEDIA_LIMIT} media items in a listing. You currently have ${currentMediaCount} items.`)
+                                return
+                              }
+                              
                               setSelectedProducts(prev => [...prev, product])
                             }
                           }}
@@ -542,15 +791,15 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
                 value={ctaLabel}
                 onChange={(e) => setCtaLabel(e.target.value)}
                 className="w-full p-3 bg-blue-500 border border-blue-400 rounded-[9px] text-white placeholder-blue-200 focus:ring-2 focus:ring-blue-300 focus:border-blue-300"
-                placeholder="Button text"
+                placeholder="e.g., Shop Now"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-blue-100 mb-2">Auto-Generated URL</label>
               <div className="w-full p-3 bg-blue-700 border border-blue-500 rounded-[9px] text-blue-100 text-sm font-mono break-all">
-                {ctaUrl}
+                {ctaUrl ? ctaUrl : 'https://example.com'}
               </div>
-              <p className="text-xs text-blue-200 mt-1">✨ URL automatically generated from business name + campaign title</p>
+              <p className="text-xs text-blue-200 mt-1">✨ URL automatically generated from business name + listing title</p>
             </div>
           </div>
 
@@ -567,16 +816,16 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
 
           {/* Action Buttons */}
           <div className="flex items-center gap-3 pt-4">
-            <Button 
+            <Button
               onClick={handleSaveDraft}
               className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-[9px] flex-1"
             >
               <Save className="w-4 h-4 mr-2" />
-              Save Campaign Draft
+              Save Listing Draft
             </Button>
-            <Button 
+            <Button
               onClick={handleBrowserPreview}
-              variant="outline" 
+              variant="outline"
               className="border-blue-300 text-blue-100 hover:bg-blue-500 rounded-[9px]"
             >
               <Eye className="w-4 h-4 mr-2" />
@@ -602,15 +851,19 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
           {renderLayoutPreview()}
           
           <div className="text-center mt-4">
-            <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-[9px] text-xs">
+            <Button
+              className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-[9px] text-xs"
+            >
               <Calendar className="w-3 h-3" />
               Send instantly or add a schedule above
-            </div>
+            </Button>
           </div>
+          
+          <p className="text-xs text-blue-200 mt-4">Listing draft autosaves every few minutes.</p>
         </div>
+      </div>
       </div>
     </div>
   )
 }
-
 export default WYSIWYGCampaignBuilder

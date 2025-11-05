@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth'
 import { MovingBorderButton } from '@/components/ui/moving-border'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import { AdminLoginModal } from '@/components/AdminLoginModal'
 
 export default function HomePage() {
   const { user, loading } = useAuth()
@@ -17,6 +18,7 @@ export default function HomePage() {
   const [locations, setLocations] = useState<any[]>([])
   const [businesses, setBusinesses] = useState<any[]>([])
   const [isSearching, setIsSearching] = useState(false)
+  const [showAdminModal, setShowAdminModal] = useState(false)
 
   // Fetch categories and locations from database
   useEffect(() => {
@@ -182,23 +184,22 @@ export default function HomePage() {
         <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-3 mb-6">
-              <Award className="h-10 w-10 text-yellow-400" />
-              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-white drop-shadow-lg leading-tight">
-                South Africa's
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-white drop-shadow-lg leading-tight text-center">
+                <span className="block mb-2">Be Seen. Show and Sell.</span>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 block">
-                  Premium Directory
+                  All In One Platform
                 </span>
               </h1>
             </div>
             <h2 className="text-xl sm:text-2xl lg:text-3xl text-gray-300 mb-6 max-w-4xl mx-auto leading-relaxed">
-              Discover talented people nationwide • Mobile-first • Award-winning design
+              Get listed on our directory • Display your products/services • Sell with powerful marketing tools
             </h2>
             <div className="text-gray-400 mb-12 max-w-3xl mx-auto">
               <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-sm sm:text-base">
-                <span className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Multi-Location</span>
-                <span className="flex items-center gap-2"><Award className="h-4 w-4" /> Premium Quality</span>
-                <span className="flex items-center gap-2"><Smartphone className="h-4 w-4" /> Mobile First</span>
-                <span className="flex items-center gap-2"><Zap className="h-4 w-4" /> Fast Navigation</span>
+                <span className="flex items-center gap-2"><Search className="h-4 w-4" /> Directory Listing</span>
+                <span className="flex items-center gap-2"><ShoppingBag className="h-4 w-4" /> Product Showcase</span>
+                <span className="flex items-center gap-2"><Share2 className="h-4 w-4" /> Marketing Tools</span>
+                <span className="flex items-center gap-2"><Zap className="h-4 w-4" /> All In One</span>
               </div>
             </div>
             
@@ -206,11 +207,11 @@ export default function HomePage() {
             {user && (
               <div className="mb-8">
                 <Link
-                  href="/profile"
+                  href="/dashboard"
                   className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/30 text-white px-6 py-3 rounded-xl transition-all"
                 >
                   <Eye className="h-4 w-4" />
-                  <span>Manage Your Directory Profile</span>
+                  <span>Go to Dashboard</span>
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -223,12 +224,12 @@ export default function HomePage() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
                 {/* Search Input */}
                 <div className="lg:col-span-5">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Find People</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Find Businesses</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input
                       type="text"
-                      placeholder="Search people, skills, services..."
+                      placeholder="Search businesses, products, services..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -401,12 +402,12 @@ export default function HomePage() {
             <div className="flex items-center justify-center gap-2 mb-4">
               <MapPin className="h-6 w-6 text-purple-600" />
               <h2 className="text-3xl font-bold text-gray-900">
-                People by Location
+                Businesses by Location
               </h2>
               <MapPin className="h-6 w-6 text-purple-600" />
             </div>
             <p className="text-lg text-gray-600">
-              Amazing people across South Africa's major cities
+              Discover local businesses, browse their products, and connect directly
             </p>
           </div>
 
@@ -545,23 +546,23 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="flex items-center justify-center gap-3 mb-6">
-              <TrendingUp className="h-8 w-8 text-orange-400" />
+              <Share2 className="h-8 w-8 text-orange-400" />
               <h2 className="text-3xl font-bold text-white">
-                a2z Sellr Marketing Tools
+                Built-In Marketing Tools
               </h2>
             </div>
             <p className="text-xl text-gray-300 mb-4">
-              Premium & Business plans with advanced marketing capabilities
+              Create beautiful listings and share your products/services across all platforms
             </p>
             <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-6 max-w-3xl mx-auto mb-8">
               <div className="flex items-center justify-center gap-2 mb-3">
-                <Calendar className="h-6 w-6 text-orange-400" />
+                <MessageCircle className="h-6 w-6 text-orange-400" />
                 <p className="text-orange-300 font-bold text-lg">
-                  🚀 Advanced Ad Scheduling Now Available
+                  🎨 Visual Listing Builder + Multi-Platform Sharing
                 </p>
               </div>
               <p className="text-orange-200 text-center">
-                Schedule and automate your WhatsApp, Facebook, and Instagram marketing campaigns with our new premium tools.
+                Build stunning marketing listings with your products/services, then share them instantly via WhatsApp, Facebook, Instagram, and more. Premium users get advanced scheduling and automation.
               </p>
             </div>
           </div>
@@ -598,7 +599,15 @@ export default function HomePage() {
                 </div>
                 <div className="flex items-center justify-center gap-2">
                   <Check className="w-4 h-4 text-emerald-400" />
-                  <span>3 marketing listings</span>
+                  <span>3 marketing listings/shares</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span>Visual listing builder</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span>Sell via WhatsApp/Facebook</span>
                 </div>
               </div>
               <div className="space-y-2">
@@ -651,7 +660,11 @@ export default function HomePage() {
                 </div>
                 <div className="flex items-center justify-center gap-2">
                   <Check className="w-4 h-4 text-orange-400" />
-                  <span>Premium marketing listing</span>
+                  <span>Unlimited marketing listings</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <Check className="w-4 h-4 text-orange-400" />
+                  <span>Advanced listing templates</span>
                 </div>
               </div>
               <div className="space-y-2">
@@ -703,7 +716,11 @@ export default function HomePage() {
                 </div>
                 <div className="flex items-center justify-center gap-2">
                   <Check className="w-4 h-4 text-blue-400" />
-                  <span>Business marketing listing</span>
+                  <span>Unlimited listings + automation</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <Check className="w-4 h-4 text-blue-400" />
+                  <span>Bulk campaign management</span>
                 </div>
               </div>
               <div className="space-y-2">
@@ -740,18 +757,141 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Directory Features */}
+      {/* How It Works - 3 Step Process */}
+      <section className="py-20 bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              How a2z Sellr Works
+            </h2>
+            <p className="text-lg text-gray-600">
+              Three powerful features working together for your business success
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Step 1: Directory */}
+            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-purple-200">
+              <div className="bg-gradient-to-br from-purple-500 to-purple-600 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                <Search className="h-8 w-8 text-white" />
+              </div>
+              <div className="text-center mb-4">
+                <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-bold">
+                  Step 1
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
+                Find Businesses
+              </h3>
+              <p className="text-gray-600 leading-relaxed text-center mb-4">
+                Search our comprehensive directory to discover local businesses across South Africa. Filter by location, category, and ratings.
+              </p>
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-purple-600" />
+                  <span>Multi-location search</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-purple-600" />
+                  <span>Verified businesses</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-purple-600" />
+                  <span>Real customer reviews</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2: Shop/Products */}
+            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-emerald-200">
+              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                <ShoppingBag className="h-8 w-8 text-white" />
+              </div>
+              <div className="text-center mb-4">
+                <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-bold">
+                  Step 2
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
+                Browse Products & Services
+              </h3>
+              <p className="text-gray-600 leading-relaxed text-center mb-4">
+                View detailed product catalogs, service offerings, pricing, and availability. Each business showcases their best work.
+              </p>
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600" />
+                  <span>Product galleries</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600" />
+                  <span>Pricing & availability</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-600" />
+                  <span>Service descriptions</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 3: Marketing Tools */}
+            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-orange-200">
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                <Share2 className="h-8 w-8 text-white" />
+              </div>
+              <div className="text-center mb-4">
+                <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-bold">
+                  Step 3
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
+                Sell Your Products
+              </h3>
+              <p className="text-gray-600 leading-relaxed text-center mb-4">
+                Business owners can create beautiful marketing listings showcasing their products/services and sell them via WhatsApp, Facebook, and more.
+              </p>
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-orange-600" />
+                  <span>Custom listing builder</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-orange-600" />
+                  <span>Multi-platform sharing</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-orange-600" />
+                  <span>Campaign scheduling</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center mt-12">
+            <Link
+              href="/auth/signup-animated"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-orange-600 hover:from-purple-700 hover:to-orange-700 text-white font-semibold py-4 px-8 rounded-xl transition-all transform hover:scale-105"
+            >
+              <Award className="h-5 w-5" />
+              Get Started Free
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Platform Features */}
       <section className="py-20 bg-gradient-to-br from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Award className="h-6 w-6 text-purple-600" />
               <h2 className="text-3xl font-bold text-gray-900">
-                Why Choose a2z Sellr Directory?
+                Complete Business Platform
               </h2>
             </div>
             <p className="text-lg text-gray-600">
-              South Africa's most comprehensive business directory with premium features
+              Everything you need to find businesses, showcase products, and grow your reach
             </p>
           </div>
 
@@ -952,9 +1092,12 @@ export default function HomePage() {
                 Browse Directory
               </Link>
               <span className="text-gray-600">•</span>
-              <Link href="/admin" className="text-sm text-gray-600 hover:text-gray-400 transition-colors">
+              <button 
+                onClick={() => setShowAdminModal(true)}
+                className="text-sm text-gray-600 hover:text-gray-400 transition-colors"
+              >
                 Admin
-              </Link>
+              </button>
             </div>
             <div className="border-t border-gray-800 pt-6">
               <p className="text-sm text-gray-500 mb-2">
@@ -975,6 +1118,12 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Admin Login Modal */}
+      <AdminLoginModal 
+        isOpen={showAdminModal} 
+        onClose={() => setShowAdminModal(false)} 
+      />
     </div>
   )
 }

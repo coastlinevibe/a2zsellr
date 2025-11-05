@@ -6,6 +6,7 @@ import { ImageIcon, UploadCloud, Eye, Edit, Trash2, Settings } from 'lucide-reac
 import { Button } from '@/components/ui/button'
 import { FramerThumbnailCarousel } from '@/components/ui/framer-thumbnail-carousel'
 import { ImageUploadGallery } from '@/components/ui/image-upload-gallery'
+import { TierLimitDisplay } from '@/components/ui/premium-badge'
 import { supabase } from '@/lib/supabaseClient'
 import { useAuth } from '@/lib/auth'
 
@@ -62,6 +63,21 @@ export function GalleryTab({
     setUploadError(null)
 
     try {
+      // Enforce tier limits
+      const tierLimits = {
+        free: 3,
+        premium: 999, // Effectively unlimited
+        business: 999 // Effectively unlimited
+      }
+      
+      const currentLimit = tierLimits[userTier]
+      const totalAfterUpload = images.length + uploadedImages.length
+      
+      if (totalAfterUpload > currentLimit) {
+        setUploadError(`Free tier is limited to ${currentLimit} images. You currently have ${images.length}. Please upgrade to add more images.`)
+        setUploading(false)
+        return
+      }
       const uploadPromises = uploadedImages.map(async (uploadedImage) => {
         // Upload file to Supabase Storage
         const fileExt = uploadedImage.file.name.split('.').pop()
@@ -131,6 +147,15 @@ export function GalleryTab({
     }
   }, [user?.id, onRefresh])
 
+  // Tier limits
+  const tierLimits = {
+    free: 3,
+    premium: 999,
+    business: 999
+  }
+  const currentLimit = tierLimits[userTier]
+  const isAtLimit = images.length >= currentLimit && userTier === 'free'
+
   if (galleryLoading) {
     return (
       <div className="space-y-6">
@@ -153,6 +178,11 @@ export function GalleryTab({
           <p className="text-gray-600 mb-6 max-w-md mx-auto">
             Spotlight your services or portfolio. Upload high-impact visuals to convert visitors faster.
           </p>
+          {userTier === 'free' && (
+            <p className="text-sm text-amber-600 mb-4 font-medium">
+              Free tier: Upload up to {currentLimit} images
+            </p>
+          )}
           <Button 
             onClick={() => setViewMode('upload')} 
             className="bg-emerald-600 hover:bg-emerald-700"
@@ -172,11 +202,17 @@ export function GalleryTab({
         {/* Gallery Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-2">
               <ImageIcon className="w-5 h-5 text-emerald-600" />
-              <span className="text-sm font-medium text-gray-600">Total Images</span>
+              <span className="text-sm font-medium text-gray-600">Gallery Images</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{images.length}</p>
+            <TierLimitDisplay 
+              current={images.length}
+              limit={currentLimit}
+              tier={userTier}
+              itemName="images"
+              size="md"
+            />
           </div>
           
           <div className="bg-white p-4 rounded-lg border border-gray-200">
@@ -225,6 +261,7 @@ export function GalleryTab({
           tier={userTier}
           onImagesChange={handleImageUpload}
           disabled={uploading}
+          existingImagesCount={images.length}
         />
         
         {uploading && (
@@ -321,10 +358,26 @@ export function GalleryTab({
             <Button 
               onClick={() => setViewMode('upload')} 
               className="bg-emerald-600 hover:bg-emerald-700"
+              disabled={isAtLimit}
             >
               <UploadCloud className="w-4 h-4 mr-2" />
-              Add Images
+              {isAtLimit ? 'Limit Reached' : 'Add Images'}
             </Button>
+          </div>
+        )}
+        
+        {/* Free Tier Limit Warning */}
+        {userTier === 'free' && isAtLimit && viewMode === 'showcase' && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="flex items-center gap-2">
+              <ImageIcon className="w-5 h-5 text-amber-600" />
+              <div>
+                <h4 className="font-semibold text-amber-900">Gallery Limit Reached</h4>
+                <p className="text-sm text-amber-700 mt-1">
+                  You've reached the {currentLimit}-image limit for free accounts. Upgrade to Premium for unlimited gallery images.
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </div>

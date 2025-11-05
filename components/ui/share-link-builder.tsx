@@ -53,11 +53,11 @@ const ShareLinkBuilder = ({ products = [], businessProfile }: { products: Produc
         {/* Create Tab Content */}
         {activeTab === 'create' && (
           <div className="space-y-6">
-            {/* WYSIWYG Campaign Builder - Full width */}
+            {/* WYSIWYG Listing Builder - Full width */}
             <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
                 <Palette className="w-5 h-5 text-emerald-600" />
-                Campaign Builder
+                Listing Builder
               </h3>
               <WYSIWYGCampaignBuilder 
                 products={products.slice(0, 4)}

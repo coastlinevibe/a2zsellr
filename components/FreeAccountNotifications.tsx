@@ -94,8 +94,9 @@ export default function FreeAccountNotifications({
         <ul className="text-sm text-gray-600 space-y-1">
           <li>• Only 3 gallery images</li>
           <li>• Maximum 5 products in shop</li>
-          <li>• Basic contact information only</li>
-          <li>• Limited marketing tools</li>
+          <li>• Maximum 3 marketing listings</li>
+          <li>• No sharing on Wednesday, Saturday, Sunday</li>
+          <li>• Profile resets every 7 days (products & listings cleared)</li>
         </ul>
       </div>
 

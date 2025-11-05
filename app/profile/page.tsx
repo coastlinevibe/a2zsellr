@@ -4,9 +4,14 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabaseClient'
 import { Button } from '@/components/ui/button'
-import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Heart, Check, Truck, Shield, FileText, User, CheckCircle2, AlertTriangle, Building2, Tag, Upload, ArrowLeft } from 'lucide-react'
+import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Heart, Check, Truck, Shield, FileText, User, CheckCircle2, AlertTriangle, Building2, Tag, Upload, ArrowLeft, HelpCircle, Image as ImageIcon } from 'lucide-react'
 import EmojiPicker from '@/components/ui/emoji-picker'
 import { Badge } from '@/components/ui/badge'
+import ProfileCompletenessIndicator from '@/components/ProfileCompletenessIndicator'
+import ProfileCompletionWizard from '@/components/ProfileCompletionWizard'
+import FormValidation, { validateField, validationRules, getInputBorderColor } from '@/components/FormValidation'
+import CompactWeeklySchedule from '@/components/CompactWeeklySchedule'
+import AnimatedProfilePicture from '@/components/AnimatedProfilePicture'
 import Link from 'next/link'
 
 interface UserProfile {
@@ -25,7 +30,7 @@ interface UserProfile {
 }
 
 const tabs = [
-  { id: 'profile', label: 'Profile', icon: User },
+  { id: 'basic', label: 'Profile', icon: User },
 ]
 
 export default function ProfilePage() {
@@ -38,7 +43,12 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [activeTab, setActiveTab] = useState('profile')
+  const [activeTab, setActiveTab] = useState('basic')
+  
+  // Profile completion states
+  const [showWizard, setShowWizard] = useState(false)
+  const [focusedField, setFocusedField] = useState<string | null>(null)
+  const [fieldValidations, setFieldValidations] = useState<Record<string, any>>({})
   
   // Availability checking states
   const [checkingDisplayName, setCheckingDisplayName] = useState(false)
@@ -74,6 +84,26 @@ export default function ProfilePage() {
     }
     fetchProfile()
   }, [user])
+
+  // Check if we should show the wizard for new users
+  useEffect(() => {
+    if (profile && !profile.display_name && !showWizard) {
+      // Show wizard for new users who haven't completed basic info
+      const timer = setTimeout(() => setShowWizard(true), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [profile, showWizard])
+
+  // Real-time field validation
+  useEffect(() => {
+    const validations = {
+      display_name: validateField(displayName, validationRules.displayName, 'Display Name'),
+      bio: validateField(bio, validationRules.bio, 'Bio'),
+      phone_number: validateField(phoneNumber, validationRules.phoneNumber, 'Phone Number'),
+      website_url: validateField(websiteUrl, validationRules.websiteUrl, 'Website URL')
+    }
+    setFieldValidations(validations)
+  }, [displayName, bio, phoneNumber, websiteUrl])
 
   const fetchProfile = async () => {
     if (!user?.id) return
@@ -217,19 +247,34 @@ export default function ProfilePage() {
     setSaving(true)
     setMessage(null)
 
+    // Comprehensive validation before saving
+    const validationErrors = []
+    
     // Validate display name if it has changed
     if (displayName !== originalDisplayName) {
-      if (!displayName.trim()) {
-        setMessage({ type: 'error', text: 'Display name is required' })
-        setSaving(false)
-        return
+      if (!fieldValidations.display_name?.isValid) {
+        validationErrors.push('Display name: ' + fieldValidations.display_name?.message)
       }
-
       if (displayNameAvailable !== true) {
-        setMessage({ type: 'error', text: 'Please choose an available display name' })
-        setSaving(false)
-        return
+        validationErrors.push('Display name is not available')
       }
+    }
+    
+    // Validate other required fields
+    if (!fieldValidations.bio?.isValid && bio.trim()) {
+      validationErrors.push('Bio: ' + fieldValidations.bio?.message)
+    }
+    if (!fieldValidations.phone_number?.isValid && phoneNumber.trim()) {
+      validationErrors.push('Phone: ' + fieldValidations.phone_number?.message)
+    }
+    if (!fieldValidations.website_url?.isValid && websiteUrl.trim()) {
+      validationErrors.push('Website: ' + fieldValidations.website_url?.message)
+    }
+    
+    if (validationErrors.length > 0) {
+      setMessage({ type: 'error', text: validationErrors.join(', ') })
+      setSaving(false)
+      return
     }
 
     try {
@@ -413,34 +458,46 @@ export default function ProfilePage() {
     { key: 'sunday', label: 'Sunday' }
   ]
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'profile':
-        return (
-          <div className="space-y-8">
-            {/* Profile Header */}
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-              <div className="flex items-center gap-2">
-                <User className="w-5 h-5 text-emerald-600" />
-                <h3 className="text-lg font-semibold text-emerald-900">Complete Profile</h3>
-              </div>
-              <p className="text-sm text-emerald-700 mt-1">
-                Manage your personal and business information for the A2Z directory
-              </p>
-            </div>
+  const handleFieldFocus = (fieldId: string) => {
+    setFocusedField(fieldId)
+    // Close wizard when user starts editing
+    if (showWizard) {
+      setShowWizard(false)
+    }
+  }
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Left Column - Personal Info */}
+  const handleWizardClose = () => {
+    setShowWizard(false)
+  }
+
+  const renderTabContent = () => {
+    return (
+      <div className="space-y-6">
+        {/* Profile Completeness Indicator */}
+        <ProfileCompletenessIndicator 
+          profile={profile} 
+          userEmail={user?.email}
+        />
+        
+        {/* Tab Content */}
+        {activeTab === 'basic' && (
+          <div className="space-y-8">
+            {/* Top Section - Two Columns */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Column - All Form Fields */}
               <div className="space-y-6">
-                <h4 className="text-md font-semibold text-gray-900 flex items-center gap-2">
-                  <User className="w-4 h-4" />
-                  Personal Information
-                </h4>
+                {/* Basic Information Section */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Basic Information
+                  </h4>
                 
                 {/* Display Name */}
-                <div>
+                <div id="display_name">
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                    Display Name - Check Availability
+                    Display Name
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -449,84 +506,60 @@ export default function ProfilePage() {
                       onChange={(e) => {
                         setDisplayName(e.target.value)
                         handleDisplayNameChange(e.target.value)
+                        handleFieldFocus('display_name')
                       }}
-                      className={`w-full px-4 py-2 pr-24 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none ${
-                        displayNameAvailable === true ? 'border-green-500' :
-                        displayNameAvailable === false ? 'border-red-500' :
-                        'border-gray-300'
+                      className={`w-full px-3 py-2 pr-20 border rounded-lg focus:ring-2 outline-none text-sm ${
+                        displayNameAvailable === true ? 'border-green-500 focus:border-green-500 focus:ring-green-500' :
+                        displayNameAvailable === false ? 'border-red-500 focus:border-red-500 focus:ring-red-500' :
+                        getInputBorderColor(displayName, validationRules.displayName, true)
                       }`}
+                      placeholder="e.g., Alf's Burger Joint"
                     />
                     
                     {/* Availability Status */}
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
                       {checkingDisplayName && (
                         <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
                       )}
                       {displayNameAvailable === true && (
-                        <div className="flex items-center gap-1 text-green-600 text-xs">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>Available</span>
-                        </div>
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
                       )}
                       {displayNameAvailable === false && (
-                        <div className="flex items-center gap-1 text-red-600 text-xs">
-                          <AlertTriangle className="w-4 h-4" />
-                          <span>Taken</span>
-                        </div>
+                        <AlertTriangle className="w-4 h-4 text-red-600" />
                       )}
                     </div>
                   </div>
                   
-                  {/* Error Message */}
                   {displayNameError && (
-                    <div className="mt-1 text-red-600 text-xs">
-                      {displayNameError}
-                    </div>
-                  )}
-                  
-                  {/* Success Message */}
-                  {displayNameAvailable === true && displayName.length > 0 && displayName !== originalDisplayName && (
-                    <div className="mt-1 text-green-600 text-xs">
-                      "{displayName}" is available!
-                    </div>
-                  )}
-                  
-                  {/* Info Message */}
-                  {displayName === originalDisplayName && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      This is your current display name
-                    </p>
+                    <div className="mt-1 text-red-600 text-xs">{displayNameError}</div>
                   )}
                 </div>
 
                 {/* Bio */}
-                <div>
+                <div id="bio">
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                     <FileText className="w-4 h-4" />
-                    Bio
+                    Business Description
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <textarea
                       value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      placeholder="Tell us about yourself... 😊"
-                      rows={4}
+                      onChange={(e) => {
+                        setBio(e.target.value)
+                        handleFieldFocus('bio')
+                      }}
+                      placeholder="Describe your business..."
+                      rows={3}
                       maxLength={500}
-                      className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none resize-none"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 outline-none resize-none text-sm ${
+                        getInputBorderColor(bio, validationRules.bio, true)
+                      }`}
                     />
-                    <div className="absolute bottom-2 right-2">
-                      <EmojiPicker
-                        onEmojiSelect={(emoji) => {
-                          if (bio.length < 500) {
-                            setBio(bio + emoji)
-                          }
-                        }}
-                      />
-                    </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {bio.length}/500 characters
-                  </p>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {bio.length}/500 characters {bio.length < 20 && `(${20 - bio.length} more needed)`}
+                  </div>
                 </div>
 
                 {/* Email (Read-only) */}
@@ -539,60 +572,76 @@ export default function ProfilePage() {
                     type="email"
                     value={user?.email || ''}
                     disabled
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed text-sm"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Email cannot be changed
-                  </p>
                 </div>
               </div>
 
-              {/* Middle Column - Contact & Business */}
-              <div className="space-y-6">
-                <h4 className="text-md font-semibold text-gray-900 flex items-center gap-2">
-                  <Building2 className="w-4 h-4" />
+              {/* Business Information Section */}
+              <div className="space-y-4 pt-4 border-t border-gray-200">
+                <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Building2 className="w-5 h-5" />
                   Business Information
                 </h4>
                 
-                {/* Contact Info */}
-                <div>
+                {/* Phone Number */}
+                <div id="phone_number">
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                     <Phone className="w-4 h-4" />
                     Phone Number
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    onChange={(e) => {
+                      setPhoneNumber(e.target.value)
+                      handleFieldFocus('phone_number')
+                    }}
                     placeholder="+27 XX XXX XXXX"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 outline-none text-sm ${
+                      getInputBorderColor(phoneNumber, validationRules.phoneNumber, true)
+                    }`}
                   />
                 </div>
 
-                <div>
+                {/* Website URL */}
+                <div id="website_url">
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                     <Globe className="w-4 h-4" />
                     Website URL
+                    <span className="text-gray-400 text-xs">(Optional)</span>
                   </label>
                   <input
                     type="url"
                     value={websiteUrl}
-                    onChange={(e) => setWebsiteUrl(e.target.value)}
+                    onChange={(e) => {
+                      setWebsiteUrl(e.target.value)
+                      handleFieldFocus('website_url')
+                    }}
                     placeholder="https://www.yourwebsite.com"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 outline-none text-sm ${
+                      getInputBorderColor(websiteUrl, validationRules.websiteUrl, true)
+                    }`}
                   />
                 </div>
 
                 {/* Business Category */}
-                <div>
+                <div id="business_category">
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                     <Tag className="w-4 h-4" />
                     Business Category
+                    <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={businessCategory}
-                    onChange={(e) => setBusinessCategory(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                    onChange={(e) => {
+                      setBusinessCategory(e.target.value)
+                      handleFieldFocus('business_category')
+                    }}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 outline-none text-sm ${
+                      businessCategory ? 'border-emerald-500 focus:border-emerald-500 focus:ring-emerald-500' : 'border-gray-300 focus:border-emerald-500 focus:ring-emerald-500'
+                    }`}
                   >
                     <option value="">Select a category</option>
                     <option value="retail">Retail & Shopping</option>
@@ -605,15 +654,21 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Business Location */}
-                <div>
+                <div id="business_location">
                   <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                     <MapPin className="w-4 h-4" />
                     Business Location
+                    <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={businessLocation}
-                    onChange={(e) => setBusinessLocation(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                    onChange={(e) => {
+                      setBusinessLocation(e.target.value)
+                      handleFieldFocus('business_location')
+                    }}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 outline-none text-sm ${
+                      businessLocation ? 'border-emerald-500 focus:border-emerald-500 focus:ring-emerald-500' : 'border-gray-300 focus:border-emerald-500 focus:ring-emerald-500'
+                    }`}
                   >
                     <option value="">Select a location</option>
                     <option value="cape-town">Cape Town</option>
@@ -622,163 +677,67 @@ export default function ProfilePage() {
                     <option value="pretoria">Pretoria</option>
                   </select>
                 </div>
-
-                {/* Operating Hours Schedule Picker */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
-                    <Clock className="w-4 h-4" />
-                    Operating Hours
-                  </label>
-                  
-                  {/* Today's Hours Display */}
-                  {businessHours && (
-                    <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Clock className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm font-medium text-emerald-900">
-                          Today ({new Date().toLocaleDateString('en-US', { weekday: 'long' })})
-                        </span>
-                      </div>
-                      <p className="text-emerald-700 font-medium">
-                        {getTodayHoursFromSchedule(weeklySchedule)}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {/* Weekly Schedule Picker */}
-                  <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Weekly Schedule</h4>
-                    
-                    {daysOfWeek.map((day) => {
-                      const daySchedule = weeklySchedule[day.key as keyof typeof weeklySchedule]
-                      return (
-                        <div key={day.key} className="flex items-center gap-3 py-2">
-                          <div className="w-20 text-sm font-medium text-gray-700">
-                            {day.label}
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={!daySchedule.closed}
-                              onChange={(e) => updateDaySchedule(day.key, 'closed', !e.target.checked)}
-                              className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                            />
-                            <span className="text-xs text-gray-600">Open</span>
-                          </div>
-                          
-                          {!daySchedule.closed && (
-                            <>
-                              <div className="flex items-center gap-2">
-                                <label className="text-xs text-gray-600">From:</label>
-                                <input
-                                  type="time"
-                                  value={daySchedule.open}
-                                  onChange={(e) => updateDaySchedule(day.key, 'open', e.target.value)}
-                                  className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                                />
-                              </div>
-                              
-                              <div className="flex items-center gap-2">
-                                <label className="text-xs text-gray-600">To:</label>
-                                <input
-                                  type="time"
-                                  value={daySchedule.close}
-                                  onChange={(e) => updateDaySchedule(day.key, 'close', e.target.value)}
-                                  className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                                />
-                              </div>
-                            </>
-                          )}
-                          
-                          {daySchedule.closed && (
-                            <span className="text-sm text-gray-500 italic">Closed</span>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-                  
-                  <p className="text-xs text-gray-500 mt-2">
-                    Set your operating hours for each day of the week
-                  </p>
-                </div>
               </div>
+            </div>
 
               {/* Right Column - Profile Picture */}
-              <div className="space-y-6">
-                <h4 className="text-md font-semibold text-gray-900 flex items-center gap-2">
-                  <Upload className="w-4 h-4" />
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Upload className="w-5 h-5" />
                   Profile Picture
                 </h4>
-                
-                {/* Avatar Upload */}
-                <div>
-                  {(previewUrl || avatarUrl) && (
-                    <div className="mb-4 flex flex-col items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <img 
-                        src={previewUrl || avatarUrl} 
-                        alt="Avatar preview" 
-                        className="w-24 h-24 rounded-full object-cover border-2 border-emerald-500"
-                      />
-                      <div className="text-center">
-                        <p className="text-sm font-medium text-gray-900">
-                          {previewUrl ? 'Ready to Upload' : 'Current Avatar'}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {previewUrl 
-                            ? 'Click "Upload" to save to your profile' 
-                            : 'Your current profile picture'
-                          }
-                        </p>
-                      </div>
-                      {previewUrl && (
-                        <button 
-                          onClick={handleImageUpload}
-                          disabled={uploading}
-                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors disabled:opacity-50"
-                        >
-                          {uploading ? 'Uploading...' : 'Upload'}
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  
-                  <div className="space-y-3">
-                    <input
-                      type="url"
-                      value={avatarUrl}
-                      onChange={(e) => setAvatarUrl(e.target.value)}
-                      placeholder="https://example.com/avatar.jpg"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                    />
-                    <label className="cursor-pointer block">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleFileSelect}
-                        disabled={uploading}
-                      />
-                      <div className={`w-full px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
-                        uploading 
-                          ? 'bg-gray-400 cursor-not-allowed' 
-                          : 'bg-emerald-600 hover:bg-emerald-700 cursor-pointer'
-                      } text-white`}>
-                        <Upload className="w-4 h-4" />
-                        Select Image
-                      </div>
-                    </label>
-                  </div>
-                </div>
+                <AnimatedProfilePicture
+                  avatarUrl={avatarUrl}
+                  previewUrl={previewUrl}
+                  uploading={uploading}
+                  onFileSelect={handleFileSelect}
+                  onImageUpload={handleImageUpload}
+                  onAvatarUrlChange={setAvatarUrl}
+                  selectedFile={selectedFile}
+                />
+              </div>
+            </div>
+
+            {/* Bottom Section - Operating Hours */}
+            <div className="pt-6 border-t border-gray-200">
+              <div id="business_hours">
+                <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                  <Clock className="w-5 h-5" />
+                  Operating Hours
+                  <span className="text-red-500">*</span>
+                </h4>
+                <CompactWeeklySchedule
+                  weeklySchedule={weeklySchedule}
+                  updateDaySchedule={updateDaySchedule}
+                  getTodayHoursFromSchedule={getTodayHoursFromSchedule}
+                />
               </div>
             </div>
           </div>
-        )
+        )}
+      </div>
+    )
+  }
 
-      default:
-        return null
-    }
+  // Show wizard if requested
+  const shouldShowWizard = showWizard && profile
+
+  if (shouldShowWizard) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Main Content (blurred background) */}
+        <div className="filter blur-sm pointer-events-none">
+          {/* Your existing profile content here */}
+        </div>
+        
+        {/* Wizard Overlay */}
+        <ProfileCompletionWizard
+          profile={profile}
+          onClose={handleWizardClose}
+          onFieldFocus={handleFieldFocus}
+        />
+      </div>
+    )
   }
 
   if (loading) {
@@ -849,27 +808,15 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Tabs Navigation */}
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6" aria-label="Tabs">
-              {tabs.map((tab) => {
-                const Icon = tab.icon
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`${
-                      activeTab === tab.id
-                        ? 'border-emerald-500 text-emerald-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {tab.label}
-                  </button>
-                )
-              })}
-            </nav>
+          {/* Header - No tabs needed since everything is in one view */}
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center gap-2">
+              <User className="w-5 h-5 text-emerald-600" />
+              <h2 className="text-xl font-semibold text-gray-900">Complete Your Profile</h2>
+            </div>
+            <p className="text-sm text-gray-600 mt-1">
+              Fill out your business information to get discovered by customers
+            </p>
           </div>
 
           {/* Tab Content */}
@@ -896,9 +843,8 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {/* Actions - Only show on Profile tab */}
-            {activeTab === 'profile' && (
-              <div className="flex items-center gap-3 pt-6 border-t border-gray-200 mt-6">
+            {/* Actions */}
+            <div className="flex items-center gap-3 pt-6 border-t border-gray-200 mt-6">
                 <Button
                   onClick={handleSave}
                   disabled={saving}
@@ -913,23 +859,31 @@ export default function ProfilePage() {
                   Cancel
                 </Button>
               </div>
-            )}
 
             {/* Upgrade Section */}
-            {profile?.subscription_tier === 'free' && activeTab === 'profile' && (
+            {profile?.subscription_tier === 'free' && (
               <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                 <div className="flex items-start gap-3">
                   <Crown className="w-5 h-5 text-amber-600 mt-0.5" />
                   <div className="flex-1">
-                    <h3 className="font-semibold text-amber-900">Upgrade to Premium</h3>
+                    <h3 className="font-semibold text-amber-900">Ready for the Next Step?</h3>
                     <p className="text-sm text-amber-700 mt-1">
-                      Get unlimited listings, verified seller badge, and more!
+                      Complete your profile, then upgrade to Premium for unlimited products, gallery images, and marketing tools!
                     </p>
-                    <Link href="/pricing">
-                      <Button className="mt-3 bg-amber-600 hover:bg-amber-700 text-white">
-                        View Plans
+                    <div className="flex gap-2 mt-3">
+                      <Button 
+                        onClick={() => setShowWizard(true)}
+                        variant="outline"
+                        className="border-amber-600 text-amber-700 hover:bg-amber-100"
+                      >
+                        Complete Profile
                       </Button>
-                    </Link>
+                      <Link href="/pricing">
+                        <Button className="bg-amber-600 hover:bg-amber-700 text-white">
+                          View Plans
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -937,6 +891,15 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+      
+      {/* Wizard Modal */}
+      {showWizard && profile && (
+        <ProfileCompletionWizard
+          profile={profile}
+          onClose={handleWizardClose}
+          onFieldFocus={handleFieldFocus}
+        />
+      )}
     </div>
   )
 }

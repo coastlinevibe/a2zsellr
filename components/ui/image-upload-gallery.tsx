@@ -15,6 +15,7 @@ interface ImageUploadGalleryProps {
   maxImages?: number
   onImagesChange: (images: UploadedImage[]) => void
   existingImages?: UploadedImage[]
+  existingImagesCount?: number
   disabled?: boolean
   tier: 'free' | 'premium' | 'business'
 }
@@ -22,8 +23,8 @@ interface ImageUploadGalleryProps {
 // Tier limits based on A2Z_DATA_MODELS.md
 const TIER_LIMITS = {
   free: 3,
-  premium: 12, // unlimited in practice, but we'll set a reasonable limit
-  business: 12 // unlimited in practice, but we'll set a reasonable limit
+  premium: 999, // Effectively unlimited
+  business: 999 // Effectively unlimited
 }
 
 const TIER_FEATURES = {
@@ -34,12 +35,12 @@ const TIER_FEATURES = {
   },
   premium: {
     name: 'Premium',
-    limit: 12,
+    limit: 999,
     description: 'Gallery slider showcase with unlimited images'
   },
   business: {
     name: 'Business',
-    limit: 12,
+    limit: 999,
     description: 'Professional gallery with unlimited images'
   }
 }
@@ -128,6 +129,7 @@ ImageItem.displayName = 'ImageItem'
 export function ImageUploadGallery({ 
   onImagesChange, 
   existingImages = [], 
+  existingImagesCount = 0,
   disabled = false,
   tier = 'free'
 }: ImageUploadGalleryProps) {
@@ -143,9 +145,12 @@ export function ImageUploadGallery({
     setError(null)
     const fileArray = Array.from(files)
     
+    // Calculate total images including existing ones in the gallery
+    const totalExistingImages = existingImagesCount + images.length
+    
     // Check if adding these files would exceed the limit
-    if (images.length + fileArray.length > tierLimit) {
-      setError(`You can only upload up to ${tierLimit} images with your ${tierInfo.name} plan`)
+    if (totalExistingImages + fileArray.length > tierLimit) {
+      setError(`You can only upload up to ${tierLimit} images with your ${tierInfo.name} plan. You currently have ${totalExistingImages} images.`)
       return
     }
 
@@ -180,7 +185,7 @@ export function ImageUploadGallery({
       const updatedImages = [...images, ...newImages]
       setImages(updatedImages)
     }
-  }, [images, tierLimit, tierInfo.name])
+  }, [images, tierLimit, tierInfo.name, existingImagesCount])
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -237,7 +242,8 @@ export function ImageUploadGallery({
     }
   }
 
-  const canAddMore = images.length < tierLimit && !disabled
+  const totalImages = existingImagesCount + images.length
+  const canAddMore = totalImages < tierLimit && !disabled
 
   return (
     <div className="space-y-6">
@@ -247,7 +253,7 @@ export function ImageUploadGallery({
           <ImageIcon className="w-5 h-5 text-emerald-600" />
           <h3 className="font-semibold text-emerald-900">{tierInfo.name} Gallery</h3>
           <span className="text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">
-            {images.length}/{tierLimit} images
+            {totalImages}/{tierLimit} images
           </span>
         </div>
         <p className="text-sm text-emerald-700">{tierInfo.description}</p>
@@ -294,7 +300,7 @@ export function ImageUploadGallery({
                 Drop images here or click to upload
               </p>
               <p className="text-sm text-gray-500 mt-1">
-                PNG, JPG, GIF up to 5MB each • {tierLimit - images.length} remaining
+                PNG, JPG, GIF up to 5MB each • {tierLimit - totalImages} remaining
               </p>
             </div>
             <Button 
@@ -336,7 +342,7 @@ export function ImageUploadGallery({
       )}
 
       {/* Upgrade Prompt for Free Tier */}
-      {tier === 'free' && images.length >= tierLimit && (
+      {tier === 'free' && totalImages >= tierLimit && (
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
             <ImageIcon className="w-5 h-5 text-blue-600" />

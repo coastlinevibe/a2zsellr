@@ -163,12 +163,12 @@ export const VerticalSliderLayout: React.FC<VerticalSliderLayoutProps> = ({
 
               {/* Story Thumbnails Sidebar */}
               {items.length > 1 && (
-                <div className="absolute right-[-60px] top-0 bottom-0 w-12 flex flex-col gap-2 justify-center">
+                <div className="absolute right-[-25px] bottom-0 top-1/2 w-12 flex flex-col gap-2 justify-start pt-4">
                   {items.map((item, index) => (
                     <button
                       key={item.id}
                       onClick={() => goToSlide(index)}
-                      className={`w-10 h-10 rounded-full overflow-hidden transition-all duration-200 ${
+                      className={`w-8 h-8 rounded-full overflow-hidden transition-all duration-200 ${
                         currentSlide === index 
                           ? 'ring-2 ring-indigo-400 scale-110' 
                           : 'opacity-60 hover:opacity-80'
@@ -182,7 +182,7 @@ export const VerticalSliderLayout: React.FC<VerticalSliderLayoutProps> = ({
                         />
                       ) : (
                         <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                          <Image className="w-3 h-3 text-gray-400" />
+                          <Image className="w-2 h-2 text-gray-400" />
                         </div>
                       )}
                     </button>
