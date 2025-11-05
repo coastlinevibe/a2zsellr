@@ -12,6 +12,9 @@ import {
   type Coordinates 
 } from '@/lib/googleMapsUtils'
 
+// Import types
+import '@/types/google-maps'
+
 interface GoogleMapPickerProps {
   initialCoordinates?: Coordinates
   initialAddress?: string
@@ -28,9 +31,9 @@ export default function GoogleMapPicker({
   className = ''
 }: GoogleMapPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null)
-  const mapInstanceRef = useRef<google.maps.Map | null>(null)
-  const markerRef = useRef<google.maps.Marker | null>(null)
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null)
+  const mapInstanceRef = useRef<any>(null)
+  const markerRef = useRef<any>(null)
+  const autocompleteRef = useRef<any>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const [loading, setLoading] = useState(true)
@@ -63,7 +66,7 @@ export default function GoogleMapPicker({
         }
 
         // Create map
-        const map = new google.maps.Map(mapRef.current, {
+        const map = new window.google.maps.Map(mapRef.current, {
           center: initialCoordinates,
           zoom: 15,
           mapTypeControl: true,
@@ -75,12 +78,12 @@ export default function GoogleMapPicker({
         mapInstanceRef.current = map
 
         // Create marker
-        const marker = new google.maps.Marker({
+        const marker = new window.google.maps.Marker({
           position: initialCoordinates,
           map: map,
           draggable: true,
           title: 'Your Business Location',
-          animation: google.maps.Animation.DROP,
+          animation: window.google.maps.Animation.DROP,
         })
 
         markerRef.current = marker
@@ -99,7 +102,7 @@ export default function GoogleMapPicker({
         })
 
         // Handle map click
-        map.addListener('click', async (e: google.maps.MapMouseEvent) => {
+        map.addListener('click', async (e: any) => {
           if (e.latLng) {
             const coords = {
               lat: e.latLng.lat(),
@@ -113,7 +116,7 @@ export default function GoogleMapPicker({
 
         // Setup autocomplete
         if (searchInputRef.current) {
-          const autocomplete = new google.maps.places.Autocomplete(searchInputRef.current, {
+          const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current, {
             componentRestrictions: { country: 'za' }, // Restrict to South Africa
             fields: ['formatted_address', 'geometry', 'name']
           })
@@ -155,7 +158,7 @@ export default function GoogleMapPicker({
     if (!isGoogleMapsAvailable()) return
 
     try {
-      const geocoder = new google.maps.Geocoder()
+      const geocoder = new window.google.maps.Geocoder()
       const result = await geocoder.geocode({ location: coords })
       
       if (result.results && result.results.length > 0) {
