@@ -4,8 +4,10 @@
 
 declare global {
   interface Window {
-    google: typeof google
+    google: any
   }
+  
+  const google: any
 }
 
 export {}
