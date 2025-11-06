@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { motion } from 'framer-motion'
 
 export function Header() {
   const [showWelcome, setShowWelcome] = useState(false)
@@ -33,31 +34,64 @@ export function Header() {
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-emerald-50 to-blue-50 border-b border-emerald-200 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-3">
-        <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+    <motion.div 
+      className="fixed top-0 left-0 right-0 z-50 bg-yellow-300 border-b-4 border-black shadow-[0px_4px_0px_0px_rgba(0,0,0,0.9)]"
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
+    >
+      <div className="max-w-7xl mx-auto px-4 py-2">
+        <div className="flex flex-col justify-between gap-2 md:flex-row md:items-center">
           <div className="flex items-center gap-3">
-            <div className="text-2xl">🎉</div>
-            <p className="text-sm font-medium text-emerald-800">
-              Welcome to South Africa's Premium Business Directory! Join thousands of businesses growing their reach.
-            </p>
+            <motion.div 
+              className="text-lg"
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              🎉
+            </motion.div>
+            <div className="bg-white p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]">
+              <p className="text-xs font-black text-black uppercase">
+                WELCOME TO SOUTH AFRICA'S PREMIUM BUSINESS DIRECTORY! JOIN THOUSANDS OF BUSINESSES GROWING THEIR REACH.
+              </p>
+            </div>
           </div>
           <div className="flex shrink-0 gap-2 max-md:flex-wrap">
-            <button 
+            <motion.button 
               onClick={handleSignUp}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-black transition-colors border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)]"
+              whileHover={{ 
+                scale: 1.05,
+                boxShadow: "6px 6px 0px 0px rgba(0,0,0,0.9)",
+                x: 2,
+                y: -2
+              }}
+              whileTap={{ 
+                scale: 0.95,
+                transition: { duration: 0.1 }
+              }}
             >
-              Sign Up for Free Trial
-            </button>
-            <button 
+              SIGN UP FOR FREE TRIAL
+            </motion.button>
+            <motion.button 
               onClick={handleLogin}
-              className="border border-emerald-300 text-emerald-700 hover:bg-emerald-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              className="bg-white hover:bg-gray-100 text-black px-4 py-2 rounded-lg text-xs font-black transition-colors border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)]"
+              whileHover={{ 
+                scale: 1.05,
+                boxShadow: "6px 6px 0px 0px rgba(0,0,0,0.9)",
+                x: 2,
+                y: -2
+              }}
+              whileTap={{ 
+                scale: 0.95,
+                transition: { duration: 0.1 }
+              }}
             >
-              Log In
-            </button>
+              LOG IN
+            </motion.button>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

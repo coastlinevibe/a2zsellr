@@ -295,138 +295,171 @@ export default function AnimatedSignupPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black bg-[url('/images/hero/bg2.jpg')] bg-center bg-no-repeat bg-cover py-12 px-4 sm:px-6 lg:px-8 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/85 via-emerald-950/65 to-emerald-950/85 backdrop-blur-[1px] md:backdrop-blur-sm"></div>
+      <div className="min-h-screen bg-gradient-to-br from-green-300 via-blue-300 to-purple-300 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute inset-0" style={{
+            backgroundImage: "linear-gradient(45deg, #00000015 25%, transparent 25%), linear-gradient(-45deg, #00000015 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #00000015 75%), linear-gradient(-45deg, transparent 75%, #00000015 75%)",
+            backgroundSize: "30px 30px",
+            backgroundPosition: "0 0, 0 15px, 15px -15px, -15px 0px"
+          }} />
+        </div>
         
         {/* Home Link */}
-        <Link href="/" className="absolute top-6 left-6 z-20 flex items-center gap-2 text-white hover:text-emerald-300 transition-colors">
+        <Link href="/" className="absolute top-6 left-6 z-20 bg-white border-2 border-black rounded-lg px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-1 hover:translate-y-1 transition-all flex items-center gap-2 text-black font-black">
           <Home className="h-5 w-5" />
-          <span className="font-semibold">Home</span>
+          <span>HOME</span>
         </Link>
         
-        <div className="relative z-10 w-full px-4">
-        <AnimatedForm className="text-center">
-          <NotificationAlert />
-          <div className="relative">
-            <h2 className="text-2xl font-bold text-emerald-400 mb-2 flex items-center justify-center">
-              <div className="w-4 h-4 bg-emerald-400 rounded-full mr-3 relative">
-                <div className="absolute inset-0 bg-emerald-400 rounded-full animate-ping"></div>
-              </div>
-              Check your email
-            </h2>
-            <p className="text-gray-300 text-sm mb-4">
-              We&apos;ve sent you a confirmation link at <strong className="text-white">{email}</strong>
-            </p>
-            <p className="text-gray-400 text-sm">
-              Already confirmed?{' '}
-              <Link href="/auth/login-animated" className="text-emerald-400 hover:underline">
-                Sign in here
+        <div className="relative z-10 w-full px-4 flex items-center justify-center">
+          <div className="w-full max-w-md bg-white rounded-2xl border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,0.9)] p-8 text-center transform rotate-1">
+            <NotificationAlert />
+            
+            {/* Success Header */}
+            <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] mb-6 transform -rotate-1">
+              <div className="text-4xl mb-2">🎉</div>
+              <h2 className="text-2xl font-black uppercase mb-2">CHECK YOUR EMAIL!</h2>
+              <p className="text-sm font-bold">REGISTRATION ALMOST COMPLETE!</p>
+            </div>
+            
+            <div className="bg-yellow-300 p-4 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] mb-6">
+              <p className="text-black font-bold text-sm mb-2">
+                📧 CONFIRMATION LINK SENT TO:
+              </p>
+              <p className="text-black font-black text-lg break-all">
+                {email}
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <p className="text-black font-bold text-sm mb-4">
+                ALREADY CONFIRMED?
+              </p>
+              <Link 
+                href="/auth/login-animated" 
+                className="bg-blue-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all inline-block"
+              >
+                SIGN IN HERE
               </Link>
-            </p>
+            </div>
           </div>
-        </AnimatedForm>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black bg-[url('/images/hero/bg2.jpg')] bg-center bg-no-repeat bg-cover py-12 px-4 sm:px-6 lg:px-8 relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/85 via-emerald-950/65 to-emerald-950/85 backdrop-blur-[1px] md:backdrop-blur-sm"></div>
+    <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-green-300 to-blue-300 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0" style={{
+          backgroundImage: "linear-gradient(45deg, #00000015 25%, transparent 25%), linear-gradient(-45deg, #00000015 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #00000015 75%), linear-gradient(-45deg, transparent 75%, #00000015 75%)",
+          backgroundSize: "30px 30px",
+          backgroundPosition: "0 0, 0 15px, 15px -15px, -15px 0px"
+        }} />
+      </div>
       
       {/* Home Link */}
-      <Link href="/" className="absolute top-6 left-6 z-20 flex items-center gap-2 text-white hover:text-emerald-300 transition-colors">
+      <Link href="/" className="absolute top-6 left-6 z-20 bg-white border-2 border-black rounded-lg px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-1 hover:translate-y-1 transition-all flex items-center gap-2 text-black font-black">
         <Home className="h-5 w-5" />
-        <span className="font-semibold">Home</span>
+        <span>HOME</span>
       </Link>
       
-      <div className="relative z-10 w-full px-4">
-      <AnimatedForm>
-        <NotificationAlert />
-        <div className="relative mb-6">
-          <h2 className="text-2xl font-bold text-emerald-400 flex items-center">
-            <div className="w-4 h-4 bg-emerald-400 rounded-full mr-3 relative">
-              <div className="absolute inset-0 bg-emerald-400 rounded-full animate-ping"></div>
-            </div>
-            Register
-          </h2>
-          <p className="text-gray-300 text-sm mt-2">
-            Join thousands of sellers growing with A2Z Sellr
-          </p>
-        </div>
-
-        {/* Plan Confirmation */}
-        <div className={`mb-6 p-3 rounded-lg border ${
-          planConfig.color === 'emerald' ? 'border-emerald-500 bg-emerald-500/10' :
-          planConfig.color === 'blue' ? 'border-blue-500 bg-blue-500/10' :
-          'border-gray-500 bg-gray-500/10'
-        }`}>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <planConfig.icon className={`w-4 h-4 ${
-                planConfig.color === 'emerald' ? 'text-emerald-400' :
-                planConfig.color === 'blue' ? 'text-blue-400' :
-                'text-gray-400'
-              }`} />
-              <span className="text-white font-medium text-sm">
-                Registering for {planConfig.name} Plan
-              </span>
-            </div>
-            {planConfig.price > 0 && (
-              <div className="text-white font-bold text-sm">
-                {formatPrice(planConfig.price)}/mo
-              </div>
-            )}
-            {planConfig.price === 0 && (
-              <div className="text-emerald-400 font-bold text-sm">FREE</div>
-            )}
-          </div>
+      <div className="relative z-10 w-full px-4 flex items-center justify-center">
+        <div className="w-full max-w-md bg-white rounded-2xl border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,0.9)] p-8 transform -rotate-1">
+          <NotificationAlert />
           
-          <div className="space-y-1">
-            {planConfig.features.slice(0, 4).map((feature, index) => (
-              <div key={index} className="flex items-center gap-2 text-gray-300">
-                <Check className="w-3 h-3 text-emerald-400 flex-shrink-0" />
-                <span className="text-xs">{feature}</span>
-              </div>
-            ))}
-            {planConfig.features.length > 4 && (
-              <div className="text-xs text-gray-400">
-                +{planConfig.features.length - 4} more amazing features
-              </div>
-            )}
-          </div>
-
-          <div className="mt-2 text-center">
-            <Link 
-              href="/choose-plan" 
-              className="text-emerald-400 hover:text-emerald-300 text-xs underline"
-            >
-              Want to change your plan?
-            </Link>
-          </div>
-        </div>
-
-
-        {/* Value Proposition */}
-        <div className="mb-6 p-4 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 rounded-lg">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Star className="w-4 h-4 text-yellow-400 fill-current" />
-              <Star className="w-4 h-4 text-yellow-400 fill-current" />
-              <Star className="w-4 h-4 text-yellow-400 fill-current" />
-              <Star className="w-4 h-4 text-yellow-400 fill-current" />
-              <Star className="w-4 h-4 text-yellow-400 fill-current" />
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-4 rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] mb-4 transform rotate-1">
+              <h1 className="text-3xl font-black uppercase">REGISTER</h1>
+              <p className="text-sm font-bold mt-1">JOIN THE A2Z SELLR COMMUNITY!</p>
             </div>
-            <p className="text-white text-sm font-medium mb-1">
-              "A2Z helped us reach 300% more customers!"
-            </p>
-            <p className="text-gray-300 text-xs">
-              Join 10,000+ sellers already growing with A2Z Sellr
+            <p className="text-black font-bold text-sm bg-yellow-300 p-3 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]">
+              🚀 JOIN 10,000+ SELLERS GROWING WITH A2Z SELLR 🚀
             </p>
           </div>
-        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+          {/* Plan Confirmation */}
+          <div className={`mb-6 p-4 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] ${
+            planConfig.color === 'emerald' ? 'bg-green-400' :
+            planConfig.color === 'blue' ? 'bg-blue-400' :
+            'bg-gray-400'
+          }`}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="bg-white p-2 rounded-lg border-2 border-black">
+                  <planConfig.icon className="w-5 h-5 text-black" />
+                </div>
+                <div>
+                  <div className="text-black font-black text-sm uppercase">
+                    {planConfig.name} PLAN
+                  </div>
+                  <div className="text-black font-bold text-xs">
+                    SELECTED FOR REGISTRATION
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white px-3 py-1 rounded-lg border-2 border-black">
+                {planConfig.price > 0 ? (
+                  <div className="text-black font-black text-sm">
+                    {formatPrice(planConfig.price)}/MO
+                  </div>
+                ) : (
+                  <div className="text-black font-black text-sm">FREE</div>
+                )}
+              </div>
+            </div>
+            
+            <div className="bg-white p-3 rounded-lg border-2 border-black mb-3">
+              <div className="space-y-2">
+                {planConfig.features.slice(0, 3).map((feature, index) => (
+                  <div key={index} className="flex items-center gap-2 text-black">
+                    <div className="bg-green-500 p-1 rounded border border-black">
+                      <Check className="w-3 h-3 text-white" />
+                    </div>
+                    <span className="text-xs font-bold">{feature}</span>
+                  </div>
+                ))}
+                {planConfig.features.length > 3 && (
+                  <div className="text-xs text-black font-bold bg-yellow-300 p-2 rounded border border-black text-center">
+                    +{planConfig.features.length - 3} MORE AMAZING FEATURES!
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="text-center">
+              <Link 
+                href="/choose-plan" 
+                className="bg-white text-black px-4 py-2 rounded-lg border-2 border-black font-black text-xs hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] transition-all inline-block"
+              >
+                CHANGE PLAN?
+              </Link>
+            </div>
+          </div>
+
+
+          {/* Value Proposition */}
+          <div className="mb-6 p-4 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transform rotate-1">
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1 mb-2">
+                <Star className="w-5 h-5 text-black fill-current" />
+                <Star className="w-5 h-5 text-black fill-current" />
+                <Star className="w-5 h-5 text-black fill-current" />
+                <Star className="w-5 h-5 text-black fill-current" />
+                <Star className="w-5 h-5 text-black fill-current" />
+              </div>
+              <p className="text-black text-sm font-black mb-1 uppercase">
+                "A2Z HELPED US REACH 300% MORE CUSTOMERS!"
+              </p>
+              <p className="text-black text-xs font-bold">
+                JOIN 10,000+ SELLERS ALREADY GROWING!
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
             <AnimatedInput
               label="Display Name - Check Availability"
@@ -512,14 +545,19 @@ export default function AnimatedSignupPage() {
             {loading ? 'Creating account...' : 'Submit'}
           </AnimatedButton>
 
-          <p className="text-center text-gray-400 text-sm">
-            Already have an account?{' '}
-            <Link href={`/auth/login-animated${selectedPlan ? `?plan=${selectedPlan}` : ''}`} className="text-emerald-400 hover:underline">
-              Signin
-            </Link>
-          </p>
-        </form>
-      </AnimatedForm>
+            <div className="text-center mt-6">
+              <p className="text-black font-bold text-sm">
+                ALREADY HAVE AN ACCOUNT?{' '}
+                <Link 
+                  href={`/auth/login-animated${selectedPlan ? `?plan=${selectedPlan}` : ''}`} 
+                  className="bg-blue-500 text-white px-3 py-1 rounded border-2 border-black font-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] transition-all inline-block ml-2"
+                >
+                  SIGN IN
+                </Link>
+              </p>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   )

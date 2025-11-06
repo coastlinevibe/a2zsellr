@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Star, MapPin, Phone, Globe, Crown, User } from 'lucide-react'
 import { ImageGallery } from '@/components/ui/carousel-circular-image-gallery'
 import { Badge } from '@/components/ui/badge'
+import { motion } from 'framer-motion'
 
 interface ProfileCardProps {
   business: {
@@ -23,14 +24,15 @@ interface ProfileCardProps {
   }
   categoryName?: string
   locationName?: string
+  index?: number
 }
 
-export function BusinessCard({ business, categoryName, locationName }: ProfileCardProps) {
+export function BusinessCard({ business, categoryName, locationName, index = 0 }: ProfileCardProps) {
   const getTierBadge = () => {
     const badges = {
-      free: { text: 'Free', className: 'bg-gray-100 text-gray-700' },
-      premium: { text: 'Premium', className: 'bg-orange-100 text-orange-700' },
-      business: { text: 'Business', className: 'bg-blue-100 text-blue-700' }
+      free: { text: 'FREE', className: 'bg-gray-500 text-white border-2 border-black' },
+      premium: { text: 'PREMIUM', className: 'bg-green-500 text-white border-2 border-black' },
+      business: { text: 'BUSINESS', className: 'bg-blue-500 text-white border-2 border-black' }
     }
     return badges[business.subscription_tier] || badges.free
   }
@@ -39,100 +41,204 @@ export function BusinessCard({ business, categoryName, locationName }: ProfileCa
   const username = business.display_name?.toLowerCase().replace(/\s+/g, '') || 'business'
 
   return (
-    <div className="relative bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+    <motion.div 
+      className="relative bg-white rounded-2xl border-4 border-black overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
+      initial={{ 
+        opacity: 0, 
+        y: 50,
+        rotate: -5,
+        scale: 0.8
+      }}
+      animate={{ 
+        opacity: 1, 
+        y: 0,
+        rotate: 0,
+        scale: 1
+      }}
+      transition={{ 
+        duration: 0.6,
+        delay: index * 0.1,
+        type: "spring",
+        stiffness: 100,
+        damping: 15
+      }}
+      whileHover={{
+        scale: 1.02,
+        rotate: 1,
+        x: 2,
+        y: -2,
+        boxShadow: "8px 8px 0px 0px rgba(0,0,0,0.9)",
+        transition: { duration: 0.2 }
+      }}
+      whileTap={{
+        scale: 0.98,
+        rotate: -1,
+        transition: { duration: 0.1 }
+      }}
+    >
       {/* Tier Badge - Positioned at top right corner */}
-      <div className="absolute top-2 right-2 z-10">
-        <div className={`${tierBadge.className} px-3 py-1 rounded-full text-xs font-medium border border-white shadow-sm`}>
+      <motion.div 
+        className="absolute -top-2 -right-2 z-10"
+        initial={{ scale: 0, rotate: -180 }}
+        animate={{ scale: 1, rotate: 12 }}
+        transition={{ delay: index * 0.1 + 0.3, type: "spring", stiffness: 200 }}
+      >
+        <div className={`${tierBadge.className} px-3 py-1 rounded-lg text-xs font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)]`}>
           {business.subscription_tier !== 'free' && <Crown className="h-3 w-3 mr-1 inline" />}
           {tierBadge.text}
         </div>
-      </div>
-      {/* Header with gradient based on tier */}
+      </motion.div>
+      {/* Header with solid colors based on tier */}
       <div className={`h-20 relative ${
-        business.subscription_tier === 'business' ? 'bg-gradient-to-br from-blue-400 to-blue-600' :
-        business.subscription_tier === 'premium' ? 'bg-gradient-to-br from-orange-400 to-red-500' :
-        'bg-gradient-to-br from-emerald-400 to-emerald-600'
-      }`}>
+        business.subscription_tier === 'business' ? 'bg-blue-400' :
+        business.subscription_tier === 'premium' ? 'bg-green-400' :
+        'bg-gray-400'
+      } border-b-4 border-black`}>
         
 
         {/* Profile Picture in Header - Top Left */}
-        <div className="absolute top-3 left-3">
+        <motion.div 
+          className="absolute top-3 left-3"
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ delay: index * 0.1 + 0.2, type: "spring", stiffness: 150 }}
+        >
           {business.avatar_url ? (
             <img 
               src={business.avatar_url} 
               alt={business.display_name}
-              className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+              className="w-12 h-12 rounded-lg object-cover border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-white/20 border-2 border-white shadow-sm flex items-center justify-center">
-              <User className="w-5 h-5 text-white" />
+            <div className="w-12 h-12 rounded-lg bg-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] flex items-center justify-center">
+              <User className="w-6 h-6 text-black" />
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Name and Description next to Profile Picture */}
-        <div className="absolute top-3 left-16 text-white">
-          <h3 className="text-sm font-bold leading-tight">{business.display_name}</h3>
-          <p className="text-xs opacity-90 leading-tight">
-            {categoryName || business.business_category || 'Professional'}
+        <motion.div 
+          className="absolute top-3 left-16 right-3 text-black"
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: index * 0.1 + 0.4, duration: 0.5 }}
+        >
+          <h3 className="text-sm font-black leading-tight uppercase truncate pr-2">
+            {business.display_name}
+          </h3>
+          <p className="text-xs font-bold leading-tight uppercase truncate pr-2">
+            {categoryName || business.business_category || 'PROFESSIONAL'}
           </p>
           {business.bio && (
-            <p className="text-xs opacity-75 mt-0.5 line-clamp-1 max-w-[180px] leading-tight">
+            <p className="text-xs font-bold mt-0.5 line-clamp-1 leading-tight truncate pr-2">
               {business.bio}
             </p>
           )}
-        </div>
+        </motion.div>
       </div>
 
       {/* Gallery Showcase - Touching header */}
-      {business.gallery_images && business.gallery_images.length > 0 && (
-        <div className="overflow-hidden">
-          <ImageGallery 
-            images={business.gallery_images}
-            className="rounded-b-[9px] !min-h-[170px] !max-h-[170px] !h-[170px] !w-full overflow-hidden"
-          />
-        </div>
-      )}
+      <div className="overflow-hidden">
+        <ImageGallery 
+          images={business.gallery_images && business.gallery_images.length > 0 ? business.gallery_images : [
+            {
+              id: 'demo-1',
+              title: 'Demo Image 1',
+              url: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop&crop=center'
+            },
+            {
+              id: 'demo-2', 
+              title: 'Demo Image 2',
+              url: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop&crop=center'
+            },
+            {
+              id: 'demo-3',
+              title: 'Demo Image 3', 
+              url: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=400&h=300&fit=crop&crop=center'
+            }
+          ]}
+          className="rounded-b-[9px] !min-h-[170px] !max-h-[170px] !h-[170px] !w-full overflow-hidden"
+        />
+      </div>
 
       {/* Content */}
-      <div className="p-4">
+      <motion.div 
+        className="p-4"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: index * 0.1 + 0.5, duration: 0.5 }}
+      >
 
         {/* Location Info */}
-        <div className="flex items-center gap-2 mb-3 text-sm text-gray-600">
-          <MapPin className="h-4 w-4" />
-          <span>{locationName || business.business_location || 'South Africa'}</span>
-        </div>
+        <motion.div 
+          className="flex items-center gap-2 mb-3 bg-yellow-300 p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: index * 0.1 + 0.6, duration: 0.4 }}
+          whileHover={{ scale: 1.02, x: 2, transition: { duration: 0.2 } }}
+        >
+          <MapPin className="h-4 w-4 text-black" />
+          <span className="text-sm font-black text-black uppercase">{locationName || business.business_location || 'SOUTH AFRICA'}</span>
+        </motion.div>
 
         {/* Contact Info */}
         {(business.phone_number || business.website_url) && (
-          <div className="space-y-1 mb-4">
+          <div className="space-y-2 mb-4">
             {business.phone_number && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Phone className="h-4 w-4" />
-                <span>{business.phone_number}</span>
-              </div>
+              <motion.div 
+                className="flex items-center gap-2 bg-blue-300 p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: index * 0.1 + 0.7, duration: 0.4 }}
+                whileHover={{ scale: 1.02, x: 2, transition: { duration: 0.2 } }}
+              >
+                <Phone className="h-4 w-4 text-black" />
+                <span className="text-sm font-black text-black">{business.phone_number}</span>
+              </motion.div>
             )}
             {business.website_url && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Globe className="h-4 w-4" />
-                <span className="truncate">{business.website_url}</span>
-              </div>
+              <motion.div 
+                className="flex items-center gap-2 bg-green-300 p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: index * 0.1 + 0.8, duration: 0.4 }}
+                whileHover={{ scale: 1.02, x: 2, transition: { duration: 0.2 } }}
+              >
+                <Globe className="h-4 w-4 text-black" />
+                <span className="text-sm font-black text-black truncate">{business.website_url}</span>
+              </motion.div>
             )}
           </div>
         )}
 
         {/* Action Button */}
-        <Link
-          href={`/profile/${username}`}
-          className={`w-full py-2 px-4 rounded-lg text-center text-sm font-medium transition-colors block ${
-            business.subscription_tier === 'business' ? 'bg-blue-600 hover:bg-blue-700 text-white' :
-            business.subscription_tier === 'premium' ? 'bg-orange-600 hover:bg-orange-700 text-white' :
-            'bg-emerald-600 hover:bg-emerald-700 text-white'
-          }`}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: index * 0.1 + 0.9, duration: 0.4 }}
+          whileHover={{ 
+            scale: 1.05,
+            rotate: 1,
+            transition: { duration: 0.2 }
+          }}
+          whileTap={{ 
+            scale: 0.95,
+            rotate: -1,
+            transition: { duration: 0.1 }
+          }}
         >
-          View Profile
-        </Link>
-      </div>
-    </div>
+          <Link
+            href={`/profile/${username}`}
+            className={`w-full py-3 px-4 rounded-lg text-center text-sm font-black transition-all block border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-1 hover:translate-y-1 ${
+              business.subscription_tier === 'business' ? 'bg-blue-500 hover:bg-blue-600 text-white' :
+              business.subscription_tier === 'premium' ? 'bg-green-500 hover:bg-green-600 text-white' :
+              'bg-gray-500 hover:bg-gray-600 text-white'
+            }`}
+          >
+            VIEW PROFILE
+          </Link>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   )
 }

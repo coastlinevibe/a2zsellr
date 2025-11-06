@@ -1,13 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Smartphone, Share2, MessageCircle, Zap, Shield, Globe, Star, Crown, Users, Check, Search, MapPin, Filter, Grid, Calendar, TrendingUp, Award, Eye, ShoppingBag } from 'lucide-react'
+import { ArrowRight, Smartphone, Share2, MessageCircle, Zap, Shield, Globe, Star, Crown, Users, Check, Search, MapPin, Filter, Grid, Calendar, TrendingUp, Award, Eye, ShoppingBag, CheckCircle, BarChart3, Target, Rocket, ChevronLeft, ChevronRight } from 'lucide-react'
 import { BusinessCard } from '@/components/BusinessCard'
 import { useAuth } from '@/lib/auth'
 import { MovingBorderButton } from '@/components/ui/moving-border'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { AdminLoginModal } from '@/components/AdminLoginModal'
+import { PricingContainer, type PricingPlan } from '@/components/ui/pricing-container'
+import { motion } from 'framer-motion'
 
 export default function HomePage() {
   const { user, loading } = useAuth()
@@ -19,12 +21,83 @@ export default function HomePage() {
   const [businesses, setBusinesses] = useState<any[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [showAdminModal, setShowAdminModal] = useState(false)
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false)
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const locationDropdownRef = useRef<HTMLDivElement>(null)
+  const categoryDropdownRef = useRef<HTMLDivElement>(null)
+
+  // Pricing plans data
+  const pricingPlans: PricingPlan[] = [
+    {
+      name: "Free",
+      monthlyPrice: 0,
+      yearlyPrice: 0,
+      features: [
+        "Basic business profile",
+        "3 gallery images",
+        "5 products in shop",
+        "Contact information",
+        "Customer reviews",
+        "3 marketing listings/shares"
+      ],
+      isPopular: false,
+      accent: "bg-gray-500"
+    },
+    {
+      name: "Premium",
+      monthlyPrice: 149,
+      yearlyPrice: 1192, // 20% discount
+      features: [
+        "Everything in Free",
+        "Premium directory placement",
+        "Unlimited products & images",
+        "WhatsApp ad scheduling",
+        "Facebook campaign tools",
+        "Advanced analytics"
+      ],
+      isPopular: true,
+      accent: "bg-green-500"
+    },
+    {
+      name: "Business",
+      monthlyPrice: 299,
+      yearlyPrice: 2392, // 20% discount
+      features: [
+        "Everything in Premium",
+        "Multi-location management",
+        "Instagram ad automation",
+        "Custom branding",
+        "Priority support",
+        "Bulk campaign management"
+      ],
+      isPopular: false,
+      accent: "bg-blue-500"
+    }
+  ]
 
   // Fetch categories and locations from database
   useEffect(() => {
     fetchCategoriesAndLocations()
     // Auto-search on page load to show some businesses
     handleSearch()
+  }, [])
+
+  // Handle clicking outside dropdowns
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (locationDropdownRef.current && !locationDropdownRef.current.contains(event.target as Node)) {
+        setShowLocationDropdown(false)
+      }
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
+        setShowCategoryDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
   }, [])
 
   // Auto-search when filters change
@@ -176,121 +249,466 @@ export default function HomePage() {
     }
   }
   return (
-    <div className="min-h-screen">
-      {/* Hero Section - A2Z Sellr */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-20 pb-20 sm:pb-32 md:pt-24 md:pb-40 lg:pt-32 lg:pb-48">
-        <div className="absolute inset-0 bg-[url('/images/hero/bg2.jpg')] bg-center bg-cover opacity-10"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/50"></div>
-        <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-white drop-shadow-lg leading-tight text-center">
-                <span className="block mb-2">Be Seen. Show and Sell.</span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 block">
-                  All In One Platform
-                </span>
-              </h1>
-            </div>
-            <h2 className="text-xl sm:text-2xl lg:text-3xl text-gray-300 mb-6 max-w-4xl mx-auto leading-relaxed">
-              Get listed on our directory • Display your products/services • Sell with powerful marketing tools
-            </h2>
-            <div className="text-gray-400 mb-12 max-w-3xl mx-auto">
-              <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-sm sm:text-base">
-                <span className="flex items-center gap-2"><Search className="h-4 w-4" /> Directory Listing</span>
-                <span className="flex items-center gap-2"><ShoppingBag className="h-4 w-4" /> Product Showcase</span>
-                <span className="flex items-center gap-2"><Share2 className="h-4 w-4" /> Marketing Tools</span>
-                <span className="flex items-center gap-2"><Zap className="h-4 w-4" /> All In One</span>
+    <motion.div 
+      className="min-h-screen bg-[#f0f0f0] relative overflow-hidden" 
+      style={{
+        backgroundImage: "linear-gradient(#00000008 1px, transparent 1px), linear-gradient(90deg, #00000008 1px, transparent 1px)",
+        backgroundSize: "16px 16px"
+      }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      {/* Hero Section - Brutalist Style */}
+      <motion.section 
+        className="pt-20 pb-16 lg:pt-24 lg:pb-20 relative"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left Content */}
+            <motion.div 
+              className="text-left"
+              initial={{ x: -100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <motion.h1 
+                className="text-4xl sm:text-5xl lg:text-6xl font-black text-black leading-tight mb-6 bg-white p-6 rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]"
+                initial={{ y: 50, opacity: 0, rotate: -5 }}
+                animate={{ y: 0, opacity: 1, rotate: 0 }}
+                transition={{ duration: 0.8, delay: 0.6, type: "spring", stiffness: 100 }}
+              >
+                <span className="block">BE SEEN.</span>
+                <span className="block">SHOW & SELL.</span>
+                <span className="text-green-600 block">ALL IN ONE</span>
+              </motion.h1>
+              <motion.p 
+                className="text-lg text-black mb-8 leading-relaxed max-w-lg bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold"
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
+              >
+                Get listed on our directory, display your products/services, and sell with powerful marketing tools. Everything you need to grow your business.
+              </motion.p>
+              
+              {/* Feature Pills */}
+              <motion.div 
+                className="flex flex-wrap gap-3 mb-8"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 1.0 }}
+              >
+                <motion.div 
+                  className="flex items-center gap-2 bg-blue-400 border-2 border-black px-4 py-2 rounded-lg text-black text-sm font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 1.1 }}
+                  whileHover={{ scale: 1.05, x: 2, transition: { duration: 0.2 } }}
+                >
+                  <motion.div whileHover={{ rotate: 360, transition: { duration: 0.5 } }}>
+                    <Search className="h-4 w-4" />
+                  </motion.div>
+                  DIRECTORY
+                </motion.div>
+                <motion.div 
+                  className="flex items-center gap-2 bg-green-400 border-2 border-black px-4 py-2 rounded-lg text-black text-sm font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 1.2 }}
+                  whileHover={{ scale: 1.05, x: 2, transition: { duration: 0.2 } }}
+                >
+                  <motion.div whileHover={{ rotate: 360, transition: { duration: 0.6 } }}>
+                    <ShoppingBag className="h-4 w-4" />
+                  </motion.div>
+                  PRODUCTS
+                </motion.div>
+                <motion.div 
+                  className="flex items-center gap-2 bg-yellow-400 border-2 border-black px-4 py-2 rounded-lg text-black text-sm font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 1.3 }}
+                  whileHover={{ scale: 1.05, x: 2, transition: { duration: 0.2 } }}
+                >
+                  <motion.div whileHover={{ rotate: 360, transition: { duration: 0.7 } }}>
+                    <Share2 className="h-4 w-4" />
+                  </motion.div>
+                  MARKETING
+                </motion.div>
+              </motion.div>
+
+              {/* CTA Buttons */}
+              <motion.div 
+                className="flex flex-col sm:flex-row gap-4"
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 1.4 }}
+              >
+                <motion.div
+                  whileHover={{ 
+                    scale: 1.05,
+                    rotate: 2,
+                    boxShadow: "10px 10px 0px 0px rgba(0,0,0,0.9)",
+                    x: 3,
+                    y: -3
+                  }}
+                  whileTap={{ 
+                    scale: 0.95,
+                    rotate: -2,
+                    transition: { duration: 0.1 }
+                  }}
+                >
+                  <Link
+                    href="/auth/signup-animated?plan=free"
+                    className="inline-flex items-center justify-center px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-black rounded-lg transition-colors border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]"
+                  >
+                    START FREE TRIAL
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </motion.div>
+                <motion.button 
+                  className="inline-flex items-center justify-center px-8 py-4 bg-white hover:bg-gray-100 text-black font-black rounded-lg transition-colors border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]"
+                  whileHover={{ 
+                    scale: 1.05,
+                    rotate: -2,
+                    boxShadow: "10px 10px 0px 0px rgba(0,0,0,0.9)",
+                    x: 3,
+                    y: -3
+                  }}
+                  whileTap={{ 
+                    scale: 0.95,
+                    rotate: 2,
+                    transition: { duration: 0.1 }
+                  }}
+                >
+                  <Eye className="mr-2 h-5 w-5" />
+                  WATCH DEMO
+                </motion.button>
+              </motion.div>
+            </motion.div>
+
+            {/* Right Content - Brutalist Illustration */}
+            <motion.div 
+              className="relative"
+              initial={{ x: 100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
+              <motion.div 
+                className="inline-flex items-center px-4 py-2 bg-green-400 border-2 border-black rounded-lg text-black text-sm font-black mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ duration: 0.6, delay: 0.4, type: "spring", stiffness: 200 }}
+                whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+              >
+                <motion.div 
+                  className="mr-2"
+                  whileHover={{ rotate: 360, transition: { duration: 0.8 } }}
+                >
+                  <Rocket className="h-4 w-4" />
+                </motion.div>
+                BOOST YOUR REVENUE BY 80%
+              </motion.div>
+              <div className="bg-white rounded-2xl p-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]">
+                <div className="bg-yellow-300 rounded-xl p-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] mb-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <motion.div 
+                      className="w-12 h-12 bg-green-500 rounded-lg border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                      whileHover={{ scale: 1.1, transition: { duration: 0.2 } }}
+                    >
+                      <motion.div whileHover={{ rotate: 360, transition: { duration: 0.6 } }}>
+                        <ShoppingBag className="h-6 w-6 text-white" />
+                      </motion.div>
+                    </motion.div>
+                    <div>
+                      <h3 className="font-black text-black">OCEAN BASKET</h3>
+                      <p className="text-sm text-black font-bold">V&A WATERFRONT</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 mb-3">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 text-black fill-current" />
+                    ))}
+                    <span className="text-sm text-black ml-2 font-bold">(4.8) • 1.2K REVIEWS</span>
+                  </div>
+                  <p className="text-black text-sm mb-4 font-bold">FRESH SEAFOOD WITH HARBOR VIEWS</p>
+                  <div className="flex gap-2">
+                    <motion.button 
+                      className="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg text-sm font-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                      whileHover={{ 
+                        scale: 1.05,
+                        rotate: 2,
+                        boxShadow: "10px 10px 0px 0px rgba(0,0,0,0.9)",
+                        x: 3,
+                        y: -3
+                      }}
+                      whileTap={{ 
+                        scale: 0.95,
+                        rotate: -2,
+                        transition: { duration: 0.1 }
+                      }}
+                    >
+                      VIEW MENU
+                    </motion.button>
+                    <motion.button 
+                      className="bg-blue-400 text-black py-2 px-4 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                      whileHover={{ 
+                        scale: 1.05,
+                        rotate: -2,
+                        boxShadow: "10px 10px 0px 0px rgba(0,0,0,0.9)",
+                        x: 3,
+                        y: -3
+                      }}
+                      whileTap={{ 
+                        scale: 0.95,
+                        rotate: 2,
+                        transition: { duration: 0.1 }
+                      }}
+                    >
+                      <motion.div whileHover={{ rotate: 360, transition: { duration: 0.5 } }}>
+                        <Share2 className="h-4 w-4" />
+                      </motion.div>
+                    </motion.button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <motion.div 
+                    className="bg-blue-400 rounded-lg p-4 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                    whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <motion.div whileHover={{ rotate: 360, transition: { duration: 0.6 } }}>
+                        <BarChart3 className="h-4 w-4 text-black" />
+                      </motion.div>
+                      <span className="text-sm font-black text-black">ANALYTICS</span>
+                    </div>
+                    <p className="text-xs text-black font-bold">TRACK PERFORMANCE</p>
+                  </motion.div>
+                  <motion.div 
+                    className="bg-green-400 rounded-lg p-4 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                    whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <motion.div whileHover={{ rotate: 360, transition: { duration: 0.7 } }}>
+                        <Target className="h-4 w-4 text-black" />
+                      </motion.div>
+                      <span className="text-sm font-black text-black">MARKETING</span>
+                    </div>
+                    <p className="text-xs text-black font-bold">BOOST VISIBILITY</p>
+                  </motion.div>
+                </div>
               </div>
-            </div>
-            
+            </motion.div>
           </div>
+        </div>
+      </motion.section>
+      
+      {/* Directory Search Section - Brutalist Style */}
+      <motion.section 
+        className="py-16 relative"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            className="text-center mb-12"
+            initial={{ y: 30, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+          >
+            <motion.h2 
+              className="text-3xl font-black text-black mb-4 bg-white p-4 rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] inline-block"
+              initial={{ scale: 0, rotate: -10 }}
+              whileInView={{ scale: 1, rotate: 0 }}
+              transition={{ duration: 0.6, delay: 0.4, type: "spring", stiffness: 200 }}
+              viewport={{ once: true }}
+            >
+              FIND LOCAL BUSINESSES
+            </motion.h2>
+            <motion.p 
+              className="text-lg text-black max-w-2xl mx-auto bg-yellow-300 p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold"
+              initial={{ y: 20, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              viewport={{ once: true }}
+            >
+              SEARCH OUR DIRECTORY TO DISCOVER VERIFIED BUSINESSES ACROSS SOUTH AFRICA
+            </motion.p>
+          </motion.div>
           
-          {/* Directory Search - Always Visible */}
-          <div className="max-w-6xl mx-auto">
-            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8">
+          <motion.div 
+            className="max-w-4xl mx-auto"
+            initial={{ y: 30, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <div className="bg-white rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] p-6">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
                 {/* Search Input */}
                 <div className="lg:col-span-5">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Find Businesses</label>
+                  <label className="block text-sm font-black text-black mb-2">FIND BUSINESSES</label>
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black" />
                     <input
                       type="text"
-                      placeholder="Search businesses, products, services..."
+                      placeholder="Search businesses, products..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-3 border-2 border-black rounded-lg focus:ring-0 focus:border-green-500 bg-white font-bold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
                     />
                   </div>
                 </div>
                 
                 {/* Location Filter */}
-                <div className="lg:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                <div className="lg:col-span-3" ref={locationDropdownRef}>
+                  <label className="block text-sm font-black text-black mb-2">LOCATION</label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <select
-                      value={selectedLocation}
-                      onChange={(e) => setSelectedLocation(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none bg-white"
+                    <motion.div whileHover={{ rotate: 360, transition: { duration: 0.5 } }}>
+                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black z-10" />
+                    </motion.div>
+                    <motion.button
+                      onClick={() => setShowLocationDropdown(!showLocationDropdown)}
+                      className="w-full pl-10 pr-4 py-3 border-2 border-black rounded-lg bg-white font-bold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] text-left"
+                      whileHover={{ 
+                        scale: 1.02,
+                        rotate: 1,
+                        boxShadow: "6px 6px 0px 0px rgba(0,0,0,0.9)",
+                        x: 2,
+                        y: -2
+                      }}
+                      whileTap={{ 
+                        scale: 0.98,
+                        rotate: -1,
+                        transition: { duration: 0.1 }
+                      }}
                     >
-                      {locations.map((location) => (
-                        <option key={location.slug || location.city} value={location.slug || location.city}>
-                          {location.city || location}
-                        </option>
-                      ))}
-                    </select>
+                      {locations.find(l => (l.slug || l.city) === selectedLocation)?.city || 'All Locations'}
+                    </motion.button>
+                    {showLocationDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        className="absolute top-full left-0 right-0 mt-2 bg-white border-4 border-black rounded-lg shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] z-20 max-h-60 overflow-y-auto"
+                      >
+                        {locations.map((location) => (
+                          <motion.button
+                            key={location.slug || location.city}
+                            onClick={() => {
+                              setSelectedLocation(location.slug || location.city)
+                              setShowLocationDropdown(false)
+                            }}
+                            className="w-full px-4 py-3 text-left font-bold text-black hover:bg-yellow-300 border-b-2 border-black last:border-b-0 transition-colors"
+                            whileHover={{ x: 4, backgroundColor: '#fde047' }}
+                          >
+                            {location.city || location}
+                          </motion.button>
+                        ))}
+                      </motion.div>
+                    )}
                   </div>
                 </div>
                 
                 {/* Category Filter */}
-                <div className="lg:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <div className="lg:col-span-3" ref={categoryDropdownRef}>
+                  <label className="block text-sm font-black text-black mb-2">CATEGORY</label>
                   <div className="relative">
-                    <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <select
-                      value={selectedCategory}
-                      onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent appearance-none bg-white"
+                    <motion.div whileHover={{ rotate: 360, transition: { duration: 0.5 } }}>
+                      <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black z-10" />
+                    </motion.div>
+                    <motion.button
+                      onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                      className="w-full pl-10 pr-4 py-3 border-2 border-black rounded-lg bg-white font-bold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] text-left"
+                      whileHover={{ 
+                        scale: 1.02,
+                        rotate: -1,
+                        boxShadow: "6px 6px 0px 0px rgba(0,0,0,0.9)",
+                        x: 2,
+                        y: -2
+                      }}
+                      whileTap={{ 
+                        scale: 0.98,
+                        rotate: 1,
+                        transition: { duration: 0.1 }
+                      }}
                     >
-                      {categories.map((category) => (
-                        <option key={category.slug || category.name} value={category.slug || category.name}>
-                          {category.name || category}
-                        </option>
-                      ))}
-                    </select>
+                      {categories.find(c => (c.slug || c.name) === selectedCategory)?.name || 'All Categories'}
+                    </motion.button>
+                    {showCategoryDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        className="absolute top-full left-0 right-0 mt-2 bg-white border-4 border-black rounded-lg shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] z-20 max-h-60 overflow-y-auto"
+                      >
+                        {categories.map((category) => (
+                          <motion.button
+                            key={category.slug || category.name}
+                            onClick={() => {
+                              setSelectedCategory(category.slug || category.name)
+                              setShowCategoryDropdown(false)
+                            }}
+                            className="w-full px-4 py-3 text-left font-bold text-black hover:bg-blue-300 border-b-2 border-black last:border-b-0 transition-colors"
+                            whileHover={{ x: 4, backgroundColor: '#93c5fd' }}
+                          >
+                            {category.name || category}
+                          </motion.button>
+                        ))}
+                      </motion.div>
+                    )}
                   </div>
                 </div>
                 
                 {/* Search Button */}
                 <div className="lg:col-span-1">
-                  <button 
+                  <motion.button 
                     onClick={handleSearch}
                     disabled={isSearching}
-                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 text-white font-semibold py-3 px-6 rounded-xl transition-all transform hover:scale-105 flex items-center justify-center"
+                    className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white font-black py-3 px-6 rounded-lg transition-colors flex items-center justify-center border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
+                    whileHover={{ 
+                      scale: 1.05,
+                      rotate: 3,
+                      boxShadow: "8px 8px 0px 0px rgba(0,0,0,0.9)",
+                      x: 2,
+                      y: -2
+                    }}
+                    whileTap={{ 
+                      scale: 0.95,
+                      rotate: -3,
+                      transition: { duration: 0.1 }
+                    }}
                   >
                     {isSearching ? (
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                     ) : (
-                      <Search className="h-5 w-5" />
+                      <motion.div whileHover={{ rotate: 360, transition: { duration: 0.5 } }}>
+                        <Search className="h-5 w-5" />
+                      </motion.div>
                     )}
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Search Results */}
-      <section className="py-12 bg-gray-50">
+      {/* Search Results - Brutalist Style */}
+      <section className="py-12 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Loading State */}
           {isSearching && (
             <div className="text-center py-12">
-              <div className="inline-flex items-center gap-3 bg-white px-6 py-4 rounded-xl shadow-sm border border-gray-200">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
-                <span className="text-gray-700 font-medium">Searching profiles...</span>
+              <div className="inline-flex items-center gap-3 bg-white px-6 py-4 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+                <span className="text-black font-black">SEARCHING PROFILES...</span>
               </div>
             </div>
           )}
@@ -298,45 +716,141 @@ export default function HomePage() {
           {/* Results Header */}
           {!isSearching && businesses.length > 0 && (
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                Premium Directory
+              <h2 className="text-3xl font-black text-black mb-2 bg-white p-4 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] inline-block">
+                PREMIUM DIRECTORY
               </h2>
-              <p className="text-gray-600 text-lg">
-                Found {businesses.length} profile{businesses.length !== 1 ? 's' : ''} 
-                {searchQuery && ` matching "${searchQuery}"`}
-                {selectedCategory !== 'all' && ` in ${categories.find(c => c.slug === selectedCategory)?.name}`}
-                {selectedLocation !== 'all' && ` in ${locations.find(l => l.slug === selectedLocation)?.city}`}
+              <p className="text-black text-lg bg-yellow-300 p-3 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold inline-block">
+                FOUND {businesses.length} PROFILE{businesses.length !== 1 ? 'S' : ''} 
+                {searchQuery && ` MATCHING "${searchQuery.toUpperCase()}"`}
+                {selectedCategory !== 'all' && ` IN ${categories.find(c => c.slug === selectedCategory)?.name?.toUpperCase()}`}
+                {selectedLocation !== 'all' && ` IN ${locations.find(l => l.slug === selectedLocation)?.city?.toUpperCase()}`}
               </p>
             </div>
           )}
           
-          {/* Business Cards Grid */}
+          {/* Business Cards Carousel */}
           {!isSearching && businesses.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {businesses.map((business: any) => {
-                // Find category and location names from business profile data
-                const categoryName = categories.find(c => c.slug === business.business_category)?.name || business.business_category
-                const locationName = locations.find(l => l.slug === business.business_location)?.city || business.business_location
+            <div className="relative">
+              {/* Carousel Header */}
+              <div className="flex items-center justify-between mb-8">
+                <motion.h3 
+                  className="text-2xl font-black text-black bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] inline-block"
+                  initial={{ x: -50, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  FEATURED BUSINESSES
+                </motion.h3>
                 
-                // Format gallery images for the BusinessCard component
-                const formattedBusiness = {
-                  ...business,
-                  gallery_images: business.gallery_images?.map((img: any) => ({
-                    id: img.id.toString(),
-                    title: img.caption || 'Gallery Image',
-                    url: img.image_url
-                  })) || []
-                }
+                {/* Navigation Buttons */}
+                <div className="flex gap-3">
+                  <motion.button
+                    onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
+                    disabled={currentSlide === 0}
+                    className={`p-3 rounded-lg border-2 border-black font-black transition-all ${
+                      currentSlide === 0 
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                        : 'bg-blue-500 text-white hover:bg-blue-600 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]'
+                    }`}
+                    whileHover={{ 
+                      scale: currentSlide === 0 ? 1 : 1.05,
+                      x: currentSlide === 0 ? 0 : -2,
+                      transition: { duration: 0.2 }
+                    }}
+                    whileTap={{ 
+                      scale: currentSlide === 0 ? 1 : 0.95,
+                      transition: { duration: 0.1 }
+                    }}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </motion.button>
+                  
+                  <motion.button
+                    onClick={() => setCurrentSlide(Math.min(businesses.length - 3, currentSlide + 1))}
+                    disabled={currentSlide >= businesses.length - 3}
+                    className={`p-3 rounded-lg border-2 border-black font-black transition-all ${
+                      currentSlide >= businesses.length - 3
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                        : 'bg-green-500 text-white hover:bg-green-600 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]'
+                    }`}
+                    whileHover={{ 
+                      scale: currentSlide >= businesses.length - 3 ? 1 : 1.05,
+                      x: currentSlide >= businesses.length - 3 ? 0 : 2,
+                      transition: { duration: 0.2 }
+                    }}
+                    whileTap={{ 
+                      scale: currentSlide >= businesses.length - 3 ? 1 : 0.95,
+                      transition: { duration: 0.1 }
+                    }}
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </motion.button>
+                </div>
+              </div>
 
-                return (
-                  <BusinessCard
-                    key={business.id}
-                    business={formattedBusiness}
-                    categoryName={categoryName}
-                    locationName={locationName}
+              {/* Carousel Container */}
+              <div className="overflow-hidden rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] bg-white p-6">
+                <motion.div 
+                  className="flex gap-6"
+                  animate={{ x: -currentSlide * (320 + 24) }} // 320px card width + 24px gap
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 300, 
+                    damping: 30,
+                    duration: 0.6
+                  }}
+                >
+                  {businesses.map((business: any, index: number) => {
+                    // Find category and location names from business profile data
+                    const categoryName = categories.find(c => c.slug === business.business_category)?.name || business.business_category
+                    const locationName = locations.find(l => l.slug === business.business_location)?.city || business.business_location
+                    
+                    // Format gallery images for the BusinessCard component
+                    const formattedBusiness = {
+                      ...business,
+                      gallery_images: business.gallery_images?.map((img: any) => ({
+                        id: img.id.toString(),
+                        title: img.caption || 'Gallery Image',
+                        url: img.image_url
+                      })) || []
+                    }
+
+                    return (
+                      <motion.div
+                        key={business.id}
+                        className="flex-shrink-0 w-80"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1, duration: 0.5 }}
+                      >
+                        <BusinessCard
+                          business={formattedBusiness}
+                          categoryName={categoryName}
+                          locationName={locationName}
+                          index={index}
+                        />
+                      </motion.div>
+                    )
+                  })}
+                </motion.div>
+              </div>
+
+              {/* Slide Indicators */}
+              <div className="flex justify-center gap-2 mt-6">
+                {Array.from({ length: Math.max(1, businesses.length - 2) }).map((_, index) => (
+                  <motion.button
+                    key={index}
+                    onClick={() => setCurrentSlide(index)}
+                    className={`w-4 h-4 rounded-full border-2 border-black transition-all ${
+                      currentSlide === index 
+                        ? 'bg-yellow-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]' 
+                        : 'bg-white hover:bg-gray-200'
+                    }`}
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
                   />
-                )
-              })}
+                ))}
+              </div>
             </div>
           )}
 
@@ -344,23 +858,35 @@ export default function HomePage() {
           {!isSearching && businesses.length === 0 && (searchQuery || selectedCategory !== 'all' || selectedLocation !== 'all') && (
             <div className="text-center py-16">
               <div className="max-w-md mx-auto">
-                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Search className="w-10 h-10 text-gray-400" />
+                <div className="w-20 h-20 bg-red-400 rounded-lg border-4 border-black flex items-center justify-center mx-auto mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]">
+                  <Search className="w-10 h-10 text-black" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No profiles found</h3>
-                <p className="text-gray-600 mb-6">
-                  Try adjusting your search criteria or browse all profiles.
+                <h3 className="text-xl font-black text-black mb-2 bg-white p-3 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] inline-block">NO PROFILES FOUND</h3>
+                <p className="text-black mb-6 bg-yellow-300 p-3 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold">
+                  TRY ADJUSTING YOUR SEARCH CRITERIA OR BROWSE ALL PROFILES.
                 </p>
-                <button
+                <motion.button
                   onClick={() => {
                     setSearchQuery('')
                     setSelectedCategory('all')
                     setSelectedLocation('all')
                   }}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-medium transition-colors"
+                  className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-black transition-colors border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
+                  whileHover={{ 
+                    scale: 1.05,
+                    rotate: 2,
+                    boxShadow: "10px 10px 0px 0px rgba(0,0,0,0.9)",
+                    x: 3,
+                    y: -3
+                  }}
+                  whileTap={{ 
+                    scale: 0.95,
+                    rotate: -2,
+                    transition: { duration: 0.1 }
+                  }}
                 >
-                  Clear Filters
-                </button>
+                  CLEAR FILTERS
+                </motion.button>
               </div>
             </div>
           )}
@@ -369,12 +895,12 @@ export default function HomePage() {
           {!isSearching && businesses.length === 0 && !searchQuery && selectedCategory === 'all' && selectedLocation === 'all' && (
             <div className="text-center py-16">
               <div className="max-w-md mx-auto">
-                <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Award className="w-10 h-10 text-emerald-600" />
+                <div className="w-20 h-20 bg-blue-400 rounded-lg border-4 border-black flex items-center justify-center mx-auto mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]">
+                  <Award className="w-10 h-10 text-black" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Discover Amazing People</h3>
-                <p className="text-gray-600 mb-6">
-                  Use the search above to find talented people in your area.
+                <h3 className="text-xl font-black text-black mb-2 bg-white p-3 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] inline-block">DISCOVER AMAZING PEOPLE</h3>
+                <p className="text-black mb-6 bg-green-300 p-3 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold">
+                  USE THE SEARCH ABOVE TO FIND TALENTED PEOPLE IN YOUR AREA.
                 </p>
               </div>
             </div>
@@ -382,731 +908,738 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Business Listings by Location */}
-      <section className="py-20 bg-gradient-to-br from-gray-50 to-white">
+      {/* Features Section - Brutalist Style */}
+      <motion.section 
+        className="py-20 relative"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <MapPin className="h-6 w-6 text-purple-600" />
-              <h2 className="text-3xl font-bold text-gray-900">
-                Businesses by Location
-              </h2>
-              <MapPin className="h-6 w-6 text-purple-600" />
-            </div>
-            <p className="text-lg text-gray-600">
-              Discover local businesses, browse their products, and connect directly
-            </p>
-          </div>
-
-          {/* Location Tabs */}
-          <div className="flex flex-wrap justify-center gap-2 mb-12">
-            {locations.slice(1).map((location) => (
-              <button
-                key={location.slug || location.city}
-                onClick={() => setSelectedLocation(location.slug || location.city)}
-                className={`px-4 py-2 bg-white border border-gray-300 rounded-lg hover:border-purple-500 hover:text-purple-600 transition-colors text-sm font-medium ${
-                  selectedLocation === (location.slug || location.city) ? 'border-purple-500 text-purple-600 bg-purple-50' : ''
-                }`}
+            <motion.div 
+              className="inline-flex items-center px-4 py-2 bg-blue-400 border-2 border-black rounded-lg text-black text-sm font-black mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
+              whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+            >
+              <motion.div 
+                className="mr-2"
+                whileHover={{ rotate: 360, transition: { duration: 0.6 } }}
               >
-                {location.city || location}
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Featured Business Cards */}
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="h-48 bg-gradient-to-br from-emerald-400 to-emerald-600 relative">
-                <div className="absolute top-4 left-4">
-                  <span className="bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
-                    <Award className="h-4 w-4" /> Premium
-                  </span>
-                </div>
-                <div className="absolute bottom-4 left-4 text-white">
-                  <h3 className="text-xl font-bold">Ocean Basket</h3>
-                  <p className="text-emerald-100">V&A Waterfront, Cape Town</p>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4" fill="currentColor" />
-                    ))}
-                  </div>
-                  <span className="text-gray-600 text-sm">(4.8) • 1.2k reviews</span>
-                </div>
-                <p className="text-gray-600 mb-4">Fresh seafood restaurant with stunning harbor views. Premium dining experience.</p>
-                <div className="flex gap-2">
-                  <button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-lg transition-colors">
-                    View Menu
-                  </button>
-                  <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-colors">
-                    <Share2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="h-48 bg-gradient-to-br from-blue-400 to-blue-600 relative">
-                <div className="absolute top-4 left-4">
-                  <span className="bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
-                    <Award className="h-4 w-4" /> Premium
-                  </span>
-                </div>
-                <div className="absolute bottom-4 left-4 text-white">
-                  <h3 className="text-xl font-bold">TechHub JHB</h3>
-                  <p className="text-blue-100">Sandton, Johannesburg</p>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4" fill="currentColor" />
-                    ))}
-                  </div>
-                  <span className="text-gray-600 text-sm">(4.9) • 856 reviews</span>
-                </div>
-                <p className="text-gray-600 mb-4">Leading IT services and digital transformation solutions for businesses.</p>
-                <div className="flex gap-2">
-                  <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors">
-                    Get Quote
-                  </button>
-                  <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-colors">
-                    <Share2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="h-48 bg-gradient-to-br from-purple-400 to-purple-600 relative">
-                <div className="absolute top-4 left-4">
-                  <span className="bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
-                    <Award className="h-4 w-4" /> Premium
-                  </span>
-                </div>
-                <div className="absolute bottom-4 left-4 text-white">
-                  <h3 className="text-xl font-bold">Wellness Spa</h3>
-                  <p className="text-purple-100">Umhlanga, Durban</p>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4" fill="currentColor" />
-                    ))}
-                  </div>
-                  <span className="text-gray-600 text-sm">(4.7) • 643 reviews</span>
-                </div>
-                <p className="text-gray-600 mb-4">Luxury spa treatments and wellness services in a tranquil beachside setting.</p>
-                <div className="flex gap-2">
-                  <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-colors">
-                    Book Now
-                  </button>
-                  <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-colors">
-                    <Share2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center mt-12">
-            <Link
-              href="/directory"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-4 px-8 rounded-xl transition-all transform hover:scale-105"
-            >
-              <Grid className="h-5 w-5" />
-              Browse All Businesses
-              <ArrowRight className="h-5 w-5" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* a2z Sellr Marketing Tools */}
-      <section className="py-20 bg-gradient-to-br from-slate-900 to-purple-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <Share2 className="h-8 w-8 text-orange-400" />
-              <h2 className="text-3xl font-bold text-white">
-                Built-In Marketing Tools
-              </h2>
-            </div>
-            <p className="text-xl text-gray-300 mb-4">
-              Create beautiful listings and share your products/services across all platforms
-            </p>
-            <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-6 max-w-3xl mx-auto mb-8">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <MessageCircle className="h-6 w-6 text-orange-400" />
-                <p className="text-orange-300 font-bold text-lg">
-                  🎨 Visual Listing Builder + Multi-Platform Sharing
-                </p>
-              </div>
-              <p className="text-orange-200 text-center">
-                Build stunning marketing listings with your products/services, then share them instantly via WhatsApp, Facebook, Instagram, and more. Premium users get advanced scheduling and automation.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto px-4 sm:px-0">
-            {/* Free Directory Listing */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-gray-600 p-4 sm:p-6 text-center">
-              <h3 className="text-xl font-bold text-white mb-2">Free Directory Listing</h3>
-              <div className="text-3xl font-bold text-white mb-4">R0</div>
-              <div className="space-y-3 mb-6 text-sm text-gray-300">
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span>Basic business profile</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span>3 gallery images</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span>5 products in shop</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span>Contact information</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span>Customer reviews</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span>3 marketing listings/shares</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span>Visual listing builder</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span>Sell via WhatsApp/Facebook</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Link
-                  href="/auth/signup-animated?plan=free"
-                  className="w-full py-3 px-4 border-2 border-emerald-400 text-emerald-300 bg-emerald-900/20 rounded-xl hover:bg-emerald-800/30 transition-colors inline-block font-medium"
-                >
-                  List Your Business
-                </Link>
-              </div>
-            </div>
-
-            {/* Premium Plan */}
-            <div className="bg-gradient-to-br from-orange-500/20 to-red-500/20 backdrop-blur-sm rounded-2xl border-2 border-orange-500 p-4 sm:p-6 text-center relative">
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-1 rounded-full text-xs font-bold">
-                  Most Popular
-                </div>
-              </div>
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Crown className="w-5 h-5 text-orange-400" />
-                <h3 className="text-xl font-bold text-white">Premium</h3>
-              </div>
-              <div className="mb-4">
-                <div className="text-3xl font-bold text-white">R149</div>
-                <div className="text-sm text-orange-300 font-medium">
-                  /month • Advanced marketing tools
-                </div>
-              </div>
-              <div className="space-y-3 mb-6 text-sm text-gray-200">
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-orange-400" />
-                  <span>Premium directory placement</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-orange-400" />
-                  <span>Gallery slider showcase</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-orange-400" />
-                  <span>Shop integration</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-orange-400" />
-                  <span>WhatsApp ad scheduling</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-orange-400" />
-                  <span>Facebook campaign tools</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-orange-400" />
-                  <span>Unlimited marketing listings</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-orange-400" />
-                  <span>Advanced listing templates</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Link
-                  href="/choose-plan?plan=premium"
-                  className="w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl transition-all transform hover:scale-105 inline-block font-bold"
-                >
-                  Start Premium
-                </Link>
-              </div>
-            </div>
-
-            {/* Business Plan */}
-            <div className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-2xl border-2 border-blue-500 p-4 sm:p-6 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Users className="w-5 h-5 text-blue-400" />
-                <h3 className="text-xl font-bold text-white">Business</h3>
-              </div>
-              <div className="mb-4">
-                <div className="text-3xl font-bold text-white">R299</div>
-                <div className="text-sm text-blue-300 font-medium">
-                  /month • Enterprise marketing suite
-                </div>
-              </div>
-              <div className="space-y-3 mb-6 text-sm text-gray-200">
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-blue-400" />
-                  <span>Everything in Premium</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-blue-400" />
-                  <span>Multi-location management</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-blue-400" />
-                  <span>Advanced analytics</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-blue-400" />
-                  <span>Instagram ad automation</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-blue-400" />
-                  <span>Custom branding</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-blue-400" />
-                  <span>Priority support</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-blue-400" />
-                  <span>Unlimited listings + automation</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-blue-400" />
-                  <span>Bulk campaign management</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Link
-                  href="/choose-plan?plan=business"
-                  className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl transition-all transform hover:scale-105 inline-block font-bold"
-                >
-                  Start Business
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center mt-12">
-            <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-xl p-6 max-w-2xl mx-auto mb-8">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Calendar className="h-5 w-5 text-yellow-400" />
-                <p className="text-yellow-300 font-bold">
-                  📱 WhatsApp & Facebook Ad Scheduling
-                </p>
-              </div>
-              <p className="text-yellow-200 text-sm">
-                Automate your marketing campaigns across all major platforms with our advanced scheduling tools.
-              </p>
-            </div>
-            <Link
-              href="/choose-plan"
-              className="inline-flex items-center gap-2 text-orange-300 hover:text-orange-200 font-medium transition-colors"
-            >
-              View all marketing features →
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works - 3 Step Process */}
-      <section className="py-20 bg-gradient-to-br from-blue-50 to-purple-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              How a2z Sellr Works
+                <Star className="h-4 w-4" />
+              </motion.div>
+              PLATFORM FEATURES
+            </motion.div>
+            <h2 className="text-4xl font-black text-black mb-4 bg-white p-6 rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] inline-block">
+              EVERYTHING YOU NEED TO GROW
             </h2>
-            <p className="text-lg text-gray-600">
-              Three powerful features working together for your business success
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Step 1: Directory */}
-            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-purple-200">
-              <div className="bg-gradient-to-br from-purple-500 to-purple-600 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 mx-auto">
-                <Search className="h-8 w-8 text-white" />
-              </div>
-              <div className="text-center mb-4">
-                <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-bold">
-                  Step 1
-                </span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
-                Find Businesses
-              </h3>
-              <p className="text-gray-600 leading-relaxed text-center mb-4">
-                Search our comprehensive directory to discover local businesses across South Africa. Filter by location, category, and ratings.
-              </p>
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-purple-600" />
-                  <span>Multi-location search</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-purple-600" />
-                  <span>Verified businesses</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-purple-600" />
-                  <span>Real customer reviews</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Step 2: Shop/Products */}
-            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-emerald-200">
-              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 mx-auto">
-                <ShoppingBag className="h-8 w-8 text-white" />
-              </div>
-              <div className="text-center mb-4">
-                <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-bold">
-                  Step 2
-                </span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
-                Browse Products & Services
-              </h3>
-              <p className="text-gray-600 leading-relaxed text-center mb-4">
-                View detailed product catalogs, service offerings, pricing, and availability. Each business showcases their best work.
-              </p>
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600" />
-                  <span>Product galleries</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600" />
-                  <span>Pricing & availability</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600" />
-                  <span>Service descriptions</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Step 3: Marketing Tools */}
-            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-orange-200">
-              <div className="bg-gradient-to-br from-orange-500 to-orange-600 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 mx-auto">
-                <Share2 className="h-8 w-8 text-white" />
-              </div>
-              <div className="text-center mb-4">
-                <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-bold">
-                  Step 3
-                </span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
-                Sell Your Products
-              </h3>
-              <p className="text-gray-600 leading-relaxed text-center mb-4">
-                Business owners can create beautiful marketing listings showcasing their products/services and sell them via WhatsApp, Facebook, and more.
-              </p>
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-orange-600" />
-                  <span>Custom listing builder</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-orange-600" />
-                  <span>Multi-platform sharing</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-orange-600" />
-                  <span>Campaign scheduling</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center mt-12">
-            <Link
-              href="/auth/signup-animated"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-orange-600 hover:from-purple-700 hover:to-orange-700 text-white font-semibold py-4 px-8 rounded-xl transition-all transform hover:scale-105"
-            >
-              <Award className="h-5 w-5" />
-              Get Started Free
-              <ArrowRight className="h-5 w-5" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Platform Features */}
-      <section className="py-20 bg-gradient-to-br from-white to-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Award className="h-6 w-6 text-purple-600" />
-              <h2 className="text-3xl font-bold text-gray-900">
-                Complete Business Platform
-              </h2>
-            </div>
-            <p className="text-lg text-gray-600">
-              Everything you need to find businesses, showcase products, and grow your reach
+            <p className="text-xl text-black max-w-3xl mx-auto bg-yellow-300 p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold">
+              FROM DIRECTORY LISTINGS TO MARKETING AUTOMATION - ALL THE TOOLS YOU NEED TO SUCCEED ONLINE
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
-              <div className="bg-gradient-to-br from-purple-100 to-purple-200 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
-                <MapPin className="h-8 w-8 text-purple-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                Multi-Location Coverage
-              </h3>
-              <p className="text-gray-600 leading-relaxed">
-                Comprehensive coverage across all major South African cities with precise location mapping and local insights.
+            {/* Feature 1 */}
+            <div className="bg-white p-8 rounded-2xl border-4 border-black hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] transition-all duration-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] group">
+              <motion.div 
+                className="w-12 h-12 bg-green-500 rounded-lg border-2 border-black flex items-center justify-center mb-6 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                whileHover={{ 
+                  scale: 1.2,
+                  rotate: 15,
+                  boxShadow: "4px 4px 0px 0px rgba(0,0,0,0.9)",
+                  transition: { 
+                    duration: 0.6,
+                    ease: "easeInOut"
+                  }
+                }}
+              >
+                <motion.div
+                  whileHover={{ 
+                    scale: 1.1,
+                    rotate: 360,
+                    transition: { duration: 0.8 }
+                  }}
+                >
+                  <Search className="h-6 w-6 text-white" />
+                </motion.div>
+              </motion.div>
+              <h3 className="text-xl font-black text-black mb-3">SMART DIRECTORY</h3>
+              <p className="text-black mb-4 leading-relaxed font-bold">
+                GET DISCOVERED BY CUSTOMERS WITH OUR INTELLIGENT SEARCH AND FILTERING SYSTEM. PREMIUM PLACEMENT FOR VERIFIED BUSINESSES.
               </p>
+              <ul className="space-y-2 text-sm text-black">
+                <motion.li 
+                  className="flex items-center gap-2 bg-green-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]"
+                  whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                >
+                  <motion.div whileHover={{ rotate: 360, transition: { duration: 0.4 } }}>
+                    <CheckCircle className="h-4 w-4 text-black" />
+                  </motion.div>
+                  <span className="font-black">MULTI-LOCATION COVERAGE</span>
+                </motion.li>
+                <motion.li 
+                  className="flex items-center gap-2 bg-green-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]"
+                  whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                >
+                  <motion.div whileHover={{ rotate: 360, transition: { duration: 0.4 } }}>
+                    <CheckCircle className="h-4 w-4 text-black" />
+                  </motion.div>
+                  <span className="font-black">VERIFIED BUSINESS BADGES</span>
+                </motion.li>
+                <motion.li 
+                  className="flex items-center gap-2 bg-green-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]"
+                  whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                >
+                  <motion.div whileHover={{ rotate: 360, transition: { duration: 0.4 } }}>
+                    <CheckCircle className="h-4 w-4 text-black" />
+                  </motion.div>
+                  <span className="font-black">CUSTOMER REVIEWS & RATINGS</span>
+                </motion.li>
+              </ul>
             </div>
 
-            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
-              <div className="bg-gradient-to-br from-emerald-100 to-emerald-200 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
-                <Award className="h-8 w-8 text-emerald-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                Premium Quality
-              </h3>
-              <p className="text-gray-600 leading-relaxed">
-                Verified businesses with authentic reviews, professional photos, and detailed service information.
+            {/* Feature 2 */}
+            <div className="bg-white p-8 rounded-2xl border-4 border-black hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] transition-all duration-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] group">
+              <motion.div 
+                className="w-12 h-12 bg-blue-500 rounded-lg border-2 border-black flex items-center justify-center mb-6 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                whileHover={{ 
+                  scale: 1.2,
+                  rotate: -15,
+                  y: 3,
+                  boxShadow: "4px 4px 0px 0px rgba(0,0,0,0.9)",
+                  transition: { 
+                    duration: 0.7,
+                    ease: "easeInOut"
+                  }
+                }}
+              >
+                <motion.div
+                  whileHover={{ 
+                    scale: 1.2,
+                    rotate: -360,
+                    transition: { duration: 0.9 }
+                  }}
+                >
+                  <ShoppingBag className="h-6 w-6 text-white" />
+                </motion.div>
+              </motion.div>
+              <h3 className="text-xl font-black text-black mb-3">PRODUCT SHOWCASE</h3>
+              <p className="text-black mb-4 leading-relaxed font-bold">
+                DISPLAY YOUR PRODUCTS AND SERVICES WITH BEAUTIFUL GALLERIES, DETAILED DESCRIPTIONS, AND INTEGRATED SHOPPING FEATURES.
               </p>
+              <ul className="space-y-2 text-sm text-black">
+                <li className="flex items-center gap-2 bg-blue-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="h-4 w-4 text-black" />
+                  <span className="font-black">UNLIMITED PRODUCT LISTINGS</span>
+                </li>
+                <li className="flex items-center gap-2 bg-blue-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="h-4 w-4 text-black" />
+                  <span className="font-black">HIGH-QUALITY IMAGE GALLERIES</span>
+                </li>
+                <li className="flex items-center gap-2 bg-blue-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="h-4 w-4 text-black" />
+                  <span className="font-black">DIRECT WHATSAPP INTEGRATION</span>
+                </li>
+              </ul>
             </div>
 
-            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
-              <div className="bg-gradient-to-br from-blue-100 to-blue-200 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
-                <Smartphone className="h-8 w-8 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                Mobile-First Design
-              </h3>
-              <p className="text-gray-600 leading-relaxed">
-                Award-winning mobile interface optimized for touch navigation and lightning-fast performance.
+            {/* Feature 3 */}
+            <div className="bg-white p-8 rounded-2xl border-4 border-black hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] transition-all duration-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] group">
+              <motion.div 
+                className="w-12 h-12 bg-yellow-500 rounded-lg border-2 border-black flex items-center justify-center mb-6 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                whileHover={{ 
+                  scale: 1.3,
+                  rotate: 20,
+                  x: 4,
+                  boxShadow: "6px 6px 0px 0px rgba(0,0,0,0.9)",
+                  transition: { 
+                    duration: 0.8,
+                    ease: "easeInOut"
+                  }
+                }}
+              >
+                <motion.div
+                  whileHover={{ 
+                    scale: 1.3,
+                    rotate: 360,
+                    transition: { 
+                      duration: 1.0,
+                      ease: "easeInOut"
+                    }
+                  }}
+                >
+                  <Share2 className="h-6 w-6 text-black" />
+                </motion.div>
+              </motion.div>
+              <h3 className="text-xl font-black text-black mb-3">MARKETING AUTOMATION</h3>
+              <p className="text-black mb-4 leading-relaxed font-bold">
+                CREATE STUNNING MARKETING CAMPAIGNS AND SHARE THEM ACROSS WHATSAPP, FACEBOOK, INSTAGRAM, AND MORE WITH ONE CLICK.
               </p>
+              <ul className="space-y-2 text-sm text-black">
+                <li className="flex items-center gap-2 bg-yellow-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="h-4 w-4 text-black" />
+                  <span className="font-black">CAMPAIGN SCHEDULING</span>
+                </li>
+                <li className="flex items-center gap-2 bg-yellow-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="h-4 w-4 text-black" />
+                  <span className="font-black">MULTI-PLATFORM SHARING</span>
+                </li>
+                <li className="flex items-center gap-2 bg-yellow-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="h-4 w-4 text-black" />
+                  <span className="font-black">PERFORMANCE ANALYTICS</span>
+                </li>
+              </ul>
             </div>
 
-            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
-              <div className="bg-gradient-to-br from-orange-100 to-orange-200 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
-                <Eye className="h-8 w-8 text-orange-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                Gallery Showcase
-              </h3>
-              <p className="text-gray-600 leading-relaxed">
-                Beautiful image galleries and video content that showcase businesses at their best.
+            {/* Feature 4 */}
+            <div className="bg-white p-8 rounded-2xl border-4 border-black hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] transition-all duration-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] group">
+              <motion.div 
+                className="w-12 h-12 bg-purple-500 rounded-lg border-2 border-black flex items-center justify-center mb-6 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                whileHover={{ 
+                  scale: 1.25,
+                  rotate: -10,
+                  y: 4,
+                  boxShadow: "5px 5px 0px 0px rgba(0,0,0,0.9)",
+                  transition: { 
+                    duration: 0.6,
+                    ease: "easeInOut"
+                  }
+                }}
+              >
+                <motion.div
+                  whileHover={{ 
+                    scale: 1.1,
+                    rotate: -360,
+                    transition: { 
+                      duration: 1.2,
+                      ease: "linear"
+                    }
+                  }}
+                >
+                  <BarChart3 className="h-6 w-6 text-white" />
+                </motion.div>
+              </motion.div>
+              <h3 className="text-xl font-black text-black mb-3">ANALYTICS DASHBOARD</h3>
+              <p className="text-black mb-4 leading-relaxed font-bold">
+                TRACK YOUR BUSINESS PERFORMANCE WITH DETAILED INSIGHTS ON VIEWS, ENGAGEMENT, AND CUSTOMER INTERACTIONS.
               </p>
+              <ul className="space-y-2 text-sm text-black">
+                <li className="flex items-center gap-2 bg-purple-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="h-4 w-4 text-black" />
+                  <span className="font-black">REAL-TIME METRICS</span>
+                </li>
+                <li className="flex items-center gap-2 bg-purple-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="h-4 w-4 text-black" />
+                  <span className="font-black">CUSTOMER BEHAVIOR INSIGHTS</span>
+                </li>
+                <li className="flex items-center gap-2 bg-purple-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="h-4 w-4 text-black" />
+                  <span className="font-black">ROI TRACKING</span>
+                </li>
+              </ul>
             </div>
 
-            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
-              <div className="bg-gradient-to-br from-red-100 to-red-200 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
-                <ShoppingBag className="h-8 w-8 text-red-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                Integrated Shopping
-              </h3>
-              <p className="text-gray-600 leading-relaxed">
-                Direct product and service purchasing with secure payment processing and delivery tracking.
+            {/* Feature 5 */}
+            <div className="bg-white p-8 rounded-2xl border-4 border-black hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] transition-all duration-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] group">
+              <motion.div 
+                className="w-12 h-12 bg-pink-500 rounded-lg border-2 border-black flex items-center justify-center mb-6 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                whileHover={{ 
+                  scale: 1.15,
+                  rotate: 25,
+                  x: 2,
+                  y: -3,
+                  boxShadow: "6px 6px 0px 0px rgba(0,0,0,0.9)",
+                  transition: { 
+                    duration: 0.9,
+                    ease: "easeInOut"
+                  }
+                }}
+              >
+                <motion.div
+                  whileHover={{ 
+                    scale: 1.4,
+                    rotate: 360,
+                    transition: { 
+                      duration: 1.5,
+                      ease: "easeInOut"
+                    }
+                  }}
+                >
+                  <Smartphone className="h-6 w-6 text-white" />
+                </motion.div>
+              </motion.div>
+              <h3 className="text-xl font-black text-black mb-3">MOBILE-FIRST DESIGN</h3>
+              <p className="text-black mb-4 leading-relaxed font-bold">
+                OPTIMIZED FOR MOBILE DEVICES WITH LIGHTNING-FAST LOADING AND INTUITIVE TOUCH NAVIGATION FOR THE BEST USER EXPERIENCE.
               </p>
+              <ul className="space-y-2 text-sm text-black">
+                <li className="flex items-center gap-2 bg-pink-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="h-4 w-4 text-black" />
+                  <span className="font-black">RESPONSIVE DESIGN</span>
+                </li>
+                <li className="flex items-center gap-2 bg-pink-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="h-4 w-4 text-black" />
+                  <span className="font-black">FAST LOADING TIMES</span>
+                </li>
+                <li className="flex items-center gap-2 bg-pink-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="h-4 w-4 text-black" />
+                  <span className="font-black">TOUCH-OPTIMIZED INTERFACE</span>
+                </li>
+              </ul>
             </div>
 
-            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
-              <div className="bg-gradient-to-br from-green-100 to-green-200 w-16 h-16 rounded-2xl flex items-center justify-center mb-6">
-                <Share2 className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                Smart Sharing
-              </h3>
-              <p className="text-gray-600 leading-relaxed">
-                One-click sharing to WhatsApp, Facebook, Instagram, and SMS with optimized previews.
+            {/* Feature 6 */}
+            <div className="bg-white p-8 rounded-2xl border-4 border-black hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] transition-all duration-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] group">
+              <motion.div 
+                className="w-12 h-12 bg-red-500 rounded-lg border-2 border-black flex items-center justify-center mb-6 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                whileHover={{ 
+                  scale: 1.35,
+                  rotate: -30,
+                  y: 5,
+                  boxShadow: "8px 8px 0px 0px rgba(0,0,0,0.9)",
+                  transition: { 
+                    duration: 1.0,
+                    ease: "easeInOut"
+                  }
+                }}
+              >
+                <motion.div
+                  whileHover={{ 
+                    scale: 1.2,
+                    rotate: -720,
+                    transition: { 
+                      duration: 1.8,
+                      ease: "easeInOut"
+                    }
+                  }}
+                >
+                  <Shield className="h-6 w-6 text-white" />
+                </motion.div>
+              </motion.div>
+              <h3 className="text-xl font-black text-black mb-3">SECURE & RELIABLE</h3>
+              <p className="text-black mb-4 leading-relaxed font-bold">
+                ENTERPRISE-GRADE SECURITY WITH 99.9% UPTIME GUARANTEE. YOUR BUSINESS DATA IS PROTECTED WITH INDUSTRY-LEADING ENCRYPTION.
               </p>
+              <ul className="space-y-2 text-sm text-black">
+                <li className="flex items-center gap-2 bg-red-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="h-4 w-4 text-black" />
+                  <span className="font-black">SSL ENCRYPTION</span>
+                </li>
+                <li className="flex items-center gap-2 bg-red-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="h-4 w-4 text-black" />
+                  <span className="font-black">99.9% UPTIME</span>
+                </li>
+                <li className="flex items-center gap-2 bg-red-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="h-4 w-4 text-black" />
+                  <span className="font-black">REGULAR BACKUPS</span>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
+      </motion.section>
+
+      {/* Animated Pricing Section */}
+      <section className="py-0">
+        <PricingContainer
+          title="Choose Your Perfect Plan"
+          plans={pricingPlans}
+          className="min-h-auto"
+        />
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-purple-900 via-blue-900 to-slate-900 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/images/hero/bg2.jpg')] bg-center bg-cover opacity-5"></div>
-        <div className="relative z-10 max-w-5xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-center mb-8">
-            <MovingBorderButton
-              borderRadius="1rem"
-              duration={3000}
-              className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-8 py-4"
-              containerClassName="inline-block"
-            >
-              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
-                <div className="flex items-center gap-2">
-                  <Award className="w-5 h-5 sm:w-6 sm:h-6" fill="white" />
-                  <span className="font-bold text-base sm:text-lg text-center sm:text-left">🏆 Join South Africa's Premium Seller Platform</span>
+      {/* How It Works - Brutalist Style */}
+      <motion.section 
+        className="py-20 relative"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center px-4 py-2 bg-orange-400 border-2 border-black rounded-lg text-black text-sm font-black mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]">
+              <Rocket className="h-4 w-4 mr-2" />
+              HOW IT WORKS
+            </div>
+            <h2 className="text-4xl font-black text-black mb-4 bg-white p-6 rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] inline-block">
+              GET STARTED IN 3 SIMPLE STEPS
+            </h2>
+            <p className="text-xl text-black max-w-3xl mx-auto bg-green-300 p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold">
+              FROM LISTING YOUR BUSINESS TO GROWING YOUR CUSTOMER BASE - WE MAKE IT EASY TO SUCCEED ONLINE
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-12">
+            {/* Step 1 */}
+            <div className="text-center bg-white p-8 rounded-2xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]">
+              <div className="relative mb-8">
+                <div className="w-16 h-16 bg-green-500 rounded-lg flex items-center justify-center mx-auto mb-4 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)]">
+                  <Search className="h-8 w-8 text-white" />
                 </div>
-                <Link href="/auth/signup-animated?plan=free" className="inline-flex items-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-bold transition-all shadow-lg hover:shadow-xl hover:scale-105 border border-purple-400 whitespace-nowrap">
-                  List Your Business Free
-                  <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={3} />
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-black border-2 border-white">
+                  1
+                </div>
+              </div>
+              <h3 className="text-2xl font-black text-black mb-4">
+                CREATE YOUR LISTING
+              </h3>
+              <p className="text-black leading-relaxed mb-6 font-bold">
+                SIGN UP AND CREATE YOUR BUSINESS PROFILE WITH PHOTOS, CONTACT INFORMATION, AND SERVICE DETAILS. GET VERIFIED FOR PREMIUM PLACEMENT.
+              </p>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 bg-green-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="w-5 h-5 text-black flex-shrink-0" />
+                  <span className="text-black text-sm font-black">BUSINESS PROFILE SETUP</span>
+                </div>
+                <div className="flex items-center gap-3 bg-green-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="w-5 h-5 text-black flex-shrink-0" />
+                  <span className="text-black text-sm font-black">PHOTO GALLERY UPLOAD</span>
+                </div>
+                <div className="flex items-center gap-3 bg-green-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="w-5 h-5 text-black flex-shrink-0" />
+                  <span className="text-black text-sm font-black">VERIFICATION PROCESS</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="text-center bg-white p-8 rounded-2xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]">
+              <div className="relative mb-8">
+                <div className="w-16 h-16 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-4 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)]">
+                  <ShoppingBag className="h-8 w-8 text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-black border-2 border-white">
+                  2
+                </div>
+              </div>
+              <h3 className="text-2xl font-black text-black mb-4">
+                SHOWCASE PRODUCTS
+              </h3>
+              <p className="text-black leading-relaxed mb-6 font-bold">
+                ADD YOUR PRODUCTS AND SERVICES WITH DETAILED DESCRIPTIONS, PRICING, AND HIGH-QUALITY IMAGES TO ATTRACT CUSTOMERS.
+              </p>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 bg-blue-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="w-5 h-5 text-black flex-shrink-0" />
+                  <span className="text-black text-sm font-black">PRODUCT CATALOG CREATION</span>
+                </div>
+                <div className="flex items-center gap-3 bg-blue-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="w-5 h-5 text-black flex-shrink-0" />
+                  <span className="text-black text-sm font-black">PRICING & DESCRIPTIONS</span>
+                </div>
+                <div className="flex items-center gap-3 bg-blue-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="w-5 h-5 text-black flex-shrink-0" />
+                  <span className="text-black text-sm font-black">IMAGE OPTIMIZATION</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="text-center bg-white p-8 rounded-2xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]">
+              <div className="relative mb-8">
+                <div className="w-16 h-16 bg-yellow-500 rounded-lg flex items-center justify-center mx-auto mb-4 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)]">
+                  <Share2 className="h-8 w-8 text-black" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-black border-2 border-white">
+                  3
+                </div>
+              </div>
+              <h3 className="text-2xl font-black text-black mb-4">
+                MARKET & GROW
+              </h3>
+              <p className="text-black leading-relaxed mb-6 font-bold">
+                USE OUR BUILT-IN MARKETING TOOLS TO CREATE CAMPAIGNS AND SHARE YOUR BUSINESS ACROSS WHATSAPP, FACEBOOK, INSTAGRAM, AND MORE.
+              </p>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 bg-yellow-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="w-5 h-5 text-black flex-shrink-0" />
+                  <span className="text-black text-sm font-black">CAMPAIGN CREATION</span>
+                </div>
+                <div className="flex items-center gap-3 bg-yellow-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="w-5 h-5 text-black flex-shrink-0" />
+                  <span className="text-black text-sm font-black">MULTI-PLATFORM SHARING</span>
+                </div>
+                <div className="flex items-center gap-3 bg-yellow-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                  <CheckCircle className="w-5 h-5 text-black flex-shrink-0" />
+                  <span className="text-black text-sm font-black">PERFORMANCE TRACKING</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center mt-16">
+            <div className="bg-white rounded-2xl p-8 border-4 border-black max-w-2xl mx-auto shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]">
+              <h3 className="text-2xl font-black text-black mb-4">
+                READY TO GROW YOUR BUSINESS?
+              </h3>
+              <p className="text-black mb-6 font-bold">
+                JOIN THOUSANDS OF BUSINESSES ALREADY USING OUR PLATFORM TO REACH MORE CUSTOMERS.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  href="/auth/signup-animated?plan=free"
+                  className="inline-flex items-center justify-center px-8 py-3 bg-green-500 hover:bg-green-600 text-white font-black rounded-lg transition-colors border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-1 hover:translate-y-1"
+                >
+                  START FREE TRIAL
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+                <Link
+                  href="/choose-plan"
+                  className="inline-flex items-center justify-center px-8 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-black rounded-lg transition-colors border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-1 hover:translate-y-1"
+                >
+                  VIEW PRICING
                 </Link>
               </div>
-            </MovingBorderButton>
-          </div>
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <Star className="h-8 w-8 text-yellow-400" fill="currentColor" />
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
-              Ready to Go Premium?
-            </h2>
-            <Star className="h-8 w-8 text-yellow-400" fill="currentColor" />
-          </div>
-          <p className="text-xl sm:text-2xl text-gray-300 mb-8 leading-relaxed max-w-3xl mx-auto">
-            Join thousands of premium businesses showcasing their services with award-winning design and advanced marketing tools.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto mb-10">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <div className="flex items-center justify-center gap-2 text-emerald-300 mb-2">
-                <Eye className="h-5 w-5" />
-                <span className="font-semibold">Gallery View</span>
-              </div>
-              <p className="text-gray-400 text-sm">Showcase with stunning visuals</p>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <div className="flex items-center justify-center gap-2 text-orange-300 mb-2">
-                <ShoppingBag className="h-5 w-5" />
-                <span className="font-semibold">Shop Integration</span>
-              </div>
-              <p className="text-gray-400 text-sm">Sell directly from your listing</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <div className="flex items-center justify-center gap-2 text-blue-300 mb-2">
-                <TrendingUp className="h-5 w-5" />
-                <span className="font-semibold">Marketing Tools</span>
-              </div>
-              <p className="text-gray-400 text-sm">Automate your campaigns</p>
-            </div>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center px-4 sm:px-0">
-            <Link
-              href="/auth/signup-animated?plan=free"
-              className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-4 px-8 rounded-xl transition-all transform hover:scale-105 inline-flex items-center justify-center text-base sm:text-lg shadow-lg"
-            >
-              <Award className="mr-2 h-5 w-5" />
-              Start Free Directory Listing
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-            <Link
-              href="/choose-plan"
-              className="border-2 border-white/30 text-white hover:bg-white/10 font-semibold py-4 px-8 rounded-xl transition-all inline-flex items-center justify-center text-base sm:text-lg backdrop-blur-sm"
-            >
-              <TrendingUp className="mr-2 h-5 w-5" />
-              View Premium Plans
-            </Link>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Footer */}
-      <footer className="bg-gradient-to-br from-slate-900 to-black text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-blue-500 to-emerald-500 rounded-2xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">A</span>
+      {/* Footer - Enhanced Brutalist Style */}
+      <motion.footer 
+        className="bg-gradient-to-br from-black via-gray-900 to-black py-16 relative overflow-hidden"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true }}
+      >
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: "linear-gradient(45deg, #ffffff08 25%, transparent 25%), linear-gradient(-45deg, #ffffff08 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ffffff08 75%), linear-gradient(-45deg, transparent 75%, #ffffff08 75%)",
+            backgroundSize: "20px 20px",
+            backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px"
+          }} />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          {/* Main Footer Content */}
+          <div className="text-center mb-12">
+            {/* Logo Section */}
+            <motion.div 
+              className="flex items-center justify-center gap-4 mb-8"
+              initial={{ scale: 0.8, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <motion.div 
+                className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-xl border-4 border-white flex items-center justify-center shadow-[6px_6px_0px_0px_rgba(255,255,255,0.9)] transform rotate-3"
+                whileHover={{ 
+                  rotate: [3, -3, 3],
+                  scale: 1.1,
+                  transition: { duration: 0.5 }
+                }}
+              >
+                <span className="text-black font-black text-2xl">A</span>
+              </motion.div>
+              <div className="text-left">
+                <motion.h2 
+                  className="text-4xl font-black text-white mb-1"
+                  whileHover={{ 
+                    scale: 1.05,
+                    color: "#fbbf24",
+                    transition: { duration: 0.3 }
+                  }}
+                >
+                  A2Z SELLR
+                </motion.h2>
+                <motion.p 
+                  className="text-sm text-green-400 font-black uppercase tracking-wider bg-black px-2 py-1 rounded border border-green-400"
+                  animate={{ 
+                    boxShadow: ["0 0 0 0 rgba(34, 197, 94, 0.4)", "0 0 0 4px rgba(34, 197, 94, 0.4)", "0 0 0 0 rgba(34, 197, 94, 0.4)"]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  PREMIUM DIRECTORY
+                </motion.p>
               </div>
-              <div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">a2z Sellr</span>
-                <p className="text-xs text-gray-400 -mt-1">Premium Directory</p>
+            </motion.div>
+            
+            {/* Tagline */}
+            <motion.div 
+              className="mb-10"
+              initial={{ y: 20, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <div className="bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400 text-black p-6 rounded-2xl border-4 border-white shadow-[8px_8px_0px_0px_rgba(255,255,255,0.9)] max-w-2xl mx-auto transform -rotate-1">
+                <p className="text-lg font-black uppercase leading-tight">
+                  🚀 SOUTH AFRICA'S LEADING BUSINESS DIRECTORY 🚀
+                </p>
+                <p className="text-sm font-bold mt-2">
+                  CONNECTING BUSINESSES • GROWING COMMUNITIES • BUILDING SUCCESS
+                </p>
               </div>
-            </div>
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Award className="h-5 w-5 text-yellow-400" />
-              <p className="text-lg text-gray-300 font-medium">
-                South Africa's Award-Winning Seller Platform
-              </p>
-              <Award className="h-5 w-5 text-yellow-400" />
-            </div>
-            <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
-              Connecting premium businesses with customers nationwide through mobile-first design and advanced marketing tools.
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-6 mb-8">
-              <button 
+            </motion.div>
+            
+            {/* Navigation Buttons */}
+            <motion.div 
+              className="flex flex-wrap items-center justify-center gap-4 mb-12"
+              initial={{ y: 30, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              <motion.button 
                 onClick={() => {
                   const message = encodeURIComponent('Hi! I need support with a2z Sellr Premium Directory.')
                   window.open(`https://wa.me/27714329190?text=${message}`, '_blank')
                 }}
-                className="text-sm text-gray-400 hover:text-emerald-300 transition-colors flex items-center gap-1"
+                className="bg-green-500 hover:bg-green-600 text-black font-black px-4 py-2 rounded-lg border-2 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.9)] transition-all flex items-center gap-2"
+                whileHover={{ 
+                  scale: 1.05,
+                  rotate: 2,
+                  boxShadow: "6px 6px 0px 0px rgba(255,255,255,0.9)",
+                  x: 3,
+                  y: -3
+                }}
+                whileTap={{ 
+                  scale: 0.95,
+                  rotate: -2,
+                  transition: { duration: 0.1 }
+                }}
               >
                 <MessageCircle className="h-4 w-4" />
-                WhatsApp Support
-              </button>
-              <span className="text-gray-600">•</span>
-              <Link href="/choose-plan" className="text-sm text-gray-400 hover:text-purple-300 transition-colors flex items-center gap-1">
-                <Crown className="h-4 w-4" />
-                Premium Plans
-              </Link>
-              <span className="text-gray-600">•</span>
-              <Link href="/directory" className="text-sm text-gray-400 hover:text-blue-300 transition-colors flex items-center gap-1">
-                <Grid className="h-4 w-4" />
-                Browse Directory
-              </Link>
-              <span className="text-gray-600">•</span>
-              <button 
-                onClick={() => setShowAdminModal(true)}
-                className="text-sm text-gray-600 hover:text-gray-400 transition-colors"
+                SUPPORT
+              </motion.button>
+              <motion.div
+                whileHover={{ 
+                  scale: 1.05,
+                  rotate: -2,
+                  x: 3,
+                  y: -3
+                }}
+                whileTap={{ 
+                  scale: 0.95,
+                  rotate: 2,
+                  transition: { duration: 0.1 }
+                }}
               >
-                Admin
-              </button>
-            </div>
-            <div className="border-t border-gray-800 pt-6">
-              <p className="text-sm text-gray-500 mb-2">
-                © 2024 a2z Sellr Premium Directory. Made with ❤️ for South African businesses.
-              </p>
-              <div className="flex items-center justify-center gap-4 text-xs text-gray-600">
-                <span className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3" /> Multi-Location
-                </span>
-                <span className="flex items-center gap-1">
-                  <Smartphone className="h-3 w-3" /> Mobile-First
-                </span>
-                <span className="flex items-center gap-1">
-                  <Award className="h-3 w-3" /> Award-Winning
-                </span>
-              </div>
-            </div>
+                <Link href="/choose-plan" className="bg-blue-500 hover:bg-blue-600 text-white font-black px-4 py-2 rounded-lg border-2 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.9)] transition-all flex items-center gap-2 inline-flex">
+                  <Crown className="h-4 w-4" />
+                  PRICING
+                </Link>
+              </motion.div>
+              <motion.div
+                whileHover={{ 
+                  scale: 1.05,
+                  rotate: 2,
+                  x: 3,
+                  y: -3
+                }}
+                whileTap={{ 
+                  scale: 0.95,
+                  rotate: -2,
+                  transition: { duration: 0.1 }
+                }}
+              >
+                <Link href="/directory" className="bg-yellow-500 hover:bg-yellow-600 text-black font-black px-4 py-2 rounded-lg border-2 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.9)] transition-all flex items-center gap-2 inline-flex">
+                  <Grid className="h-4 w-4" />
+                  DIRECTORY
+                </Link>
+              </motion.div>
+              <motion.button 
+                onClick={() => setShowAdminModal(true)}
+                className="bg-gray-600 hover:bg-gray-700 text-white font-black px-4 py-2 rounded-lg border-2 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.9)] transition-all"
+                whileHover={{ 
+                  scale: 1.05,
+                  rotate: -2,
+                  boxShadow: "6px 6px 0px 0px rgba(255,255,255,0.9)",
+                  x: 3,
+                  y: -3
+                }}
+                whileTap={{ 
+                  scale: 0.95,
+                  rotate: 2,
+                  transition: { duration: 0.1 }
+                }}
+              >
+                ADMIN
+              </motion.button>
+            </motion.div>
+            
+            {/* Stats Section */}
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
+              initial={{ y: 40, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+            >
+              <motion.div 
+                className="bg-blue-500 p-6 rounded-xl border-4 border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,0.9)] transform rotate-1"
+                whileHover={{ 
+                  rotate: [1, -1, 1],
+                  scale: 1.05,
+                  transition: { duration: 0.3 }
+                }}
+              >
+                <div className="text-center">
+                  <div className="text-3xl font-black text-white mb-2">1000+</div>
+                  <div className="text-sm font-bold text-white uppercase">BUSINESSES LISTED</div>
+                </div>
+              </motion.div>
+              
+              <motion.div 
+                className="bg-green-500 p-6 rounded-xl border-4 border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,0.9)] transform -rotate-1"
+                whileHover={{ 
+                  rotate: [-1, 1, -1],
+                  scale: 1.05,
+                  transition: { duration: 0.3 }
+                }}
+              >
+                <div className="text-center">
+                  <div className="text-3xl font-black text-white mb-2">50K+</div>
+                  <div className="text-sm font-bold text-white uppercase">MONTHLY VISITORS</div>
+                </div>
+              </motion.div>
+              
+              <motion.div 
+                className="bg-yellow-400 p-6 rounded-xl border-4 border-white shadow-[6px_6px_0px_0px_rgba(255,255,255,0.9)] transform rotate-1"
+                whileHover={{ 
+                  rotate: [1, -1, 1],
+                  scale: 1.05,
+                  transition: { duration: 0.3 }
+                }}
+              >
+                <div className="text-center">
+                  <div className="text-3xl font-black text-black mb-2">24/7</div>
+                  <div className="text-sm font-bold text-black uppercase">SUPPORT AVAILABLE</div>
+                </div>
+              </motion.div>
+            </motion.div>
+
+            {/* Copyright */}
+            <motion.div 
+              className="border-t-4 border-white pt-8"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 1.0 }}
+            >
+              <motion.div 
+                className="bg-white text-black p-4 rounded-xl border-4 border-yellow-400 shadow-[6px_6px_0px_0px_rgba(251,191,36,0.9)] inline-block"
+                whileHover={{ 
+                  rotate: [0, 2, -2, 0],
+                  scale: 1.05,
+                  transition: { duration: 0.4 }
+                }}
+              >
+                <p className="text-lg font-black uppercase">
+                  © 2024 A2Z SELLR • ALL RIGHTS RESERVED
+                </p>
+                <p className="text-sm font-bold mt-1">
+                  MADE WITH ❤️ IN SOUTH AFRICA
+                </p>
+              </motion.div>
+            </motion.div>
           </div>
         </div>
-      </footer>
+      </motion.footer>
 
       {/* Admin Login Modal */}
       <AdminLoginModal 
         isOpen={showAdminModal} 
         onClose={() => setShowAdminModal(false)} 
       />
-    </div>
+    </motion.div>
   )
 }
