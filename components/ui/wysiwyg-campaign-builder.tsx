@@ -400,24 +400,27 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
     }
   }
 
-  // Preview in Browser - save current state and preview it
+  // Preview in Browser - only preview existing saved listings
   const handleBrowserPreview = async () => {
-    // Create a preview with current state data
-    const mediaItems = getMediaItems()
-    
-    if (mediaItems.length === 0) {
-      alert('⚠️ Please add some media (upload files or select products) to preview your listing.')
-      return
-    }
-    
-    // Save current state first, then preview
+    // Check if listing already exists
     try {
-      await handleSaveDraft()
-      // Small delay to ensure save completes
-      setTimeout(() => {
-        window.open(ctaUrl, '_blank')
-      }, 1000)
+      const { data: existingListing, error } = await supabase
+        .from('profile_listings')
+        .select('id, title')
+        .eq('profile_id', businessProfile?.id)
+        .eq('title', campaignTitle.trim())
+        .single()
+      
+      if (error || !existingListing) {
+        alert('⚠️ Please save your listing first using "Save Listing Draft", then try preview again.\n\nThe preview button only works for saved listings.')
+        return
+      }
+      
+      // Listing exists, open preview
+      window.open(ctaUrl, '_blank')
+      
     } catch (error) {
+      console.error('Error checking for existing listing:', error)
       alert('⚠️ Please save your listing first using "Save Listing Draft", then try preview again.')
     }
   }

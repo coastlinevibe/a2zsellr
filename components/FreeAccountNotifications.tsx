@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Crown, X, Star, Zap, TrendingUp, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -15,10 +15,20 @@ export default function FreeAccountNotifications({
 }: FreeAccountNotificationsProps) {
   const [isDismissed, setIsDismissed] = useState(false)
 
+  // Check session storage on mount
+  useEffect(() => {
+    const dismissed = sessionStorage.getItem('freeAccountNotificationDismissed')
+    if (dismissed === 'true') {
+      setIsDismissed(true)
+    }
+  }, [])
+
   if (isDismissed) return null
 
   const handleDismiss = () => {
     setIsDismissed(true)
+    // Store dismissal in session storage (persists until browser tab is closed)
+    sessionStorage.setItem('freeAccountNotificationDismissed', 'true')
     onDismiss?.()
   }
 

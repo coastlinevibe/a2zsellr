@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
+import { Badge } from '@/components/ui/badge'
 import { TierLimitDisplay } from '@/components/ui/premium-badge'
 import { useCart } from '@/contexts/CartContext'
 import { supabase } from '@/lib/supabaseClient'
 import EmojiPicker from '@/components/ui/emoji-picker'
+import RichTextEditor from '@/components/ui/rich-text-editor'
 import { 
   ShoppingCart, 
   Plus, 
@@ -18,7 +20,13 @@ import {
   Upload,
   Image as ImageIcon,
   Loader2,
-  Eye
+  Eye,
+  Filter,
+  Grid,
+  List,
+  Star,
+  Heart,
+  MessageCircle
 } from 'lucide-react'
 
 interface ProductImage {
@@ -248,10 +256,24 @@ export default function BusinessShop({
     const files = Array.from(e.target.files || [])
     if (files.length === 0) return
 
-    // Limit to 5 images total
-    const remainingSlots = 5 - productImages.length
+    // Tier-based image limits per product
+    const tierImageLimits = {
+      free: 5,
+      premium: 20,
+      business: 50
+    }
+    
+    const maxImagesPerProduct = tierImageLimits[userTier]
+    const currentTotalImages = productImages.length + imageFiles.length
+    const remainingSlots = maxImagesPerProduct - currentTotalImages
+    
     if (files.length > remainingSlots) {
-      alert(`You can only add ${remainingSlots} more image(s). Maximum 5 images per product.`)
+      alert(`You can only add ${remainingSlots} more image(s). Maximum ${maxImagesPerProduct} images per product for ${userTier} tier.`)
+      return
+    }
+    
+    if (currentTotalImages + files.length > maxImagesPerProduct) {
+      alert(`Maximum ${maxImagesPerProduct} images per product for ${userTier} tier. You currently have ${currentTotalImages} images.`)
       return
     }
 
@@ -566,7 +588,10 @@ export default function BusinessShop({
                 </div>
                 
                 {product.description && (
-                  <p className="text-gray-600 text-sm mb-3">{product.description}</p>
+                  <div 
+                    className="text-gray-600 text-sm mb-3 prose prose-sm max-w-none prose-headings:text-gray-800 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-800"
+                    dangerouslySetInnerHTML={{ __html: product.description }}
+                  />
                 )}
                 
                 <div className="flex items-center justify-between mb-3">
@@ -607,87 +632,115 @@ export default function BusinessShop({
 
       {/* Add/Edit Product Modal */}
       {showAddProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 overflow-y-auto">
-          <div className="bg-white rounded-[9px] shadow-xl max-w-md w-full my-8 max-h-[90vh] flex flex-col">
-            {/* Fixed Header */}
-            <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
-              <h3 className="text-lg font-semibold">
-                {editingProduct ? 'Edit Product' : 'Add to Shop'}
-              </h3>
-              <button onClick={() => setShowAddProduct(false)} className="hover:bg-gray-100 rounded-full p-1">
-                <X className="h-5 w-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full my-8 max-h-[95vh] flex flex-col border border-gray-200">
+            {/* Enhanced Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-blue-50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-100 rounded-lg">
+                  <Package className="h-5 w-5 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    {editingProduct ? 'Edit Product' : 'Add New Product'}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {editingProduct ? 'Update your product details' : 'Create a new product for your shop'}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowAddProduct(false)} 
+                className="hover:bg-white/80 rounded-lg p-2 transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-500" />
               </button>
             </div>
             
-            {/* Scrollable Content */}
-            <div className="p-4 space-y-3 overflow-y-auto flex-1">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+            {/* Enhanced Content */}
+            <div className="p-6 space-y-6 overflow-y-auto flex-1 bg-gray-50/30">
+              {/* Product Name */}
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <label className="block text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                  Product Name *
+                </label>
                 <input
                   type="text"
                   value={productForm.name}
                   onChange={(e) => setProductForm({...productForm, name: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500"
-                  placeholder="Product name"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                  placeholder="Enter a compelling product name"
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <div className="relative">
-                  <textarea
-                    value={productForm.description}
-                    onChange={(e) => setProductForm({...productForm, description: e.target.value})}
-                    rows={1}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500 resize-none"
-                    placeholder="Brief description"
+              {/* Rich Text Description */}
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <label className="block text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                  Product Description
+                </label>
+                <RichTextEditor
+                  value={productForm.description}
+                  onChange={(value) => setProductForm({...productForm, description: value})}
+                  placeholder="Describe your product with rich formatting - add bullet points, bold text, links, and more..."
+                  maxLength={1000}
+                  className="border-gray-300 focus-within:ring-2 focus-within:ring-emerald-500"
+                />
+              </div>
+              
+              {/* Price & Category Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Price */}
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <label className="block text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                    Price (R)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={productForm.price_cents}
+                    onChange={(e) => setProductForm({...productForm, price_cents: e.target.value})}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                    placeholder="0.00"
                   />
-                  <div className="absolute top-2 right-2">
-                    <EmojiPicker
-                      onEmojiSelect={(emoji) => {
-                        const newDescription = productForm.description + emoji
-                        setProductForm({...productForm, description: newDescription})
-                      }}
-                    />
-                  </div>
+                </div>
+                
+                {/* Category */}
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <label className="block text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                    Category
+                  </label>
+                  <select
+                    value={productForm.category}
+                    onChange={(e) => setProductForm({...productForm, category: e.target.value})}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                  >
+                    {categories.slice(1).map(cat => (
+                      <option key={cat.value} value={cat.value}>{cat.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Price (R)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={productForm.price_cents}
-                  onChange={(e) => setProductForm({...productForm, price_cents: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500"
-                  placeholder="0.00"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                <select
-                  value={productForm.category}
-                  onChange={(e) => setProductForm({...productForm, category: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500"
-                >
-                  {categories.slice(1).map(cat => (
-                    <option key={cat.value} value={cat.value}>{cat.label}</option>
-                  ))}
-                </select>
-              </div>
-              
               {/* Product Images Upload */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Images ({productImages.length + imageFiles.length}/5)
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-semibold text-gray-800 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                    Product Images ({productImages.length + imageFiles.length}/{userTier === 'free' ? 5 : userTier === 'premium' ? 20 : 50})
                   </label>
-                  <span className="text-xs text-gray-500">
-                    📐 Recommended: 800×800px
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                      📐 800×800px recommended
+                    </span>
+                    <Badge variant={userTier === 'free' ? 'destructive' : 'default'} className="text-xs">
+                      {userTier} tier
+                    </Badge>
+                  </div>
                 </div>
                 
                 {/* Combined Images Grid - Compact */}
@@ -735,7 +788,7 @@ export default function BusinessShop({
                 )}
 
                 {/* Upload Button - Compact */}
-                {(productImages.length + imageFiles.length) < 5 && (
+                {(productImages.length + imageFiles.length) < (userTier === 'free' ? 5 : userTier === 'premium' ? 20 : 50) && (
                   <label className="flex items-center justify-center gap-2 w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-colors">
                     <Upload className="h-4 w-4 text-gray-400" />
                     <span className="text-xs text-gray-600">
@@ -751,42 +804,33 @@ export default function BusinessShop({
                   </label>
                 )}
 
-                {/* Fallback: Image URL - Collapsible */}
-                {(productImages.length + imageFiles.length) === 0 && (
-                  <div className="mt-2">
-                    <input
-                      type="url"
-                      value={productForm.image_url}
-                      onChange={(e) => setProductForm({...productForm, image_url: e.target.value})}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-emerald-500"
-                      placeholder="Or paste image URL"
-                    />
-                  </div>
-                )}
               </div>
             </div>
             
-            {/* Fixed Footer */}
-            <div className="flex gap-3 p-4 border-t flex-shrink-0 bg-white">
+            {/* Enhanced Footer */}
+            <div className="flex gap-4 p-6 border-t border-gray-200 flex-shrink-0 bg-gradient-to-r from-gray-50 to-white">
               <Button
                 onClick={() => setShowAddProduct(false)}
                 variant="outline"
-                className="flex-1 rounded-[9px]"
+                className="flex-1 rounded-lg border-2 hover:bg-gray-50 transition-colors py-3"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSaveProduct}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 rounded-[9px]"
+                className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 rounded-lg shadow-lg hover:shadow-xl transition-all py-3"
                 disabled={!productForm.name.trim() || uploadingImages}
               >
                 {uploadingImages ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Uploading...
+                    Uploading Images...
                   </>
                 ) : (
-                  <>{editingProduct ? 'Update' : 'Add'} Product</>
+                  <>
+                    <Package className="h-4 w-4 mr-2" />
+                    {editingProduct ? 'Update Product' : 'Add to Shop'}
+                  </>
                 )}
               </Button>
             </div>
@@ -877,7 +921,10 @@ export default function BusinessShop({
                 {viewingProduct.description && (
                   <div>
                     <label className="text-sm font-medium text-gray-500">Description</label>
-                    <p className="text-gray-700 mt-1">{viewingProduct.description}</p>
+                    <div 
+                      className="text-gray-700 mt-1 prose prose-sm max-w-none prose-headings:text-gray-800 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-800"
+                      dangerouslySetInnerHTML={{ __html: viewingProduct.description }}
+                    />
                   </div>
                 )}
 

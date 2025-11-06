@@ -12,6 +12,8 @@ export function AnimatedForm({ children, className, ...props }: AnimatedFormProp
     <div
       className={cn(
         'animate-in fade-in-0 slide-in-from-bottom-4 duration-500',
+        'bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl',
+        'w-full max-w-sm mx-auto',
         className
       )}
       {...props}

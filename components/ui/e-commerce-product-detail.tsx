@@ -255,7 +255,10 @@ export default function ProductDetail() {
             <div className="mb-8">
               {activeTab === 'description' && (
                 <div>
-                  <p className="text-gray-700 dark:text-gray-300 mb-4">{product.description}</p>
+                  <div 
+                    className="text-gray-700 dark:text-gray-300 mb-4 prose prose-sm max-w-none prose-headings:text-gray-800 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-800"
+                    dangerouslySetInnerHTML={{ __html: product.description }}
+                  />
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Highlights</h3>
                   <ul className="space-y-2">
                     {product.highlights.map((highlight, idx) => (

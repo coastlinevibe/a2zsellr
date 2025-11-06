@@ -46,11 +46,11 @@ export default function LoginPage() {
       <div className="absolute inset-0 bg-[url('/images/hero/bg2.jpg')] bg-center bg-cover opacity-10"></div>
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/50"></div>
       
-      <div className="relative z-10 w-full max-w-md">
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8">
+      <div className="relative z-10 w-full px-4">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h1>
             <p className="text-gray-600">Sign in to your A2Z Business Directory account</p>
           </div>
 

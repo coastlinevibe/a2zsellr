@@ -60,7 +60,7 @@ const ShareLinkBuilder = ({ products = [], businessProfile }: { products: Produc
                 Listing Builder
               </h3>
               <WYSIWYGCampaignBuilder 
-                products={products.slice(0, 4)}
+                products={products}
                 selectedPlatforms={selectedPlatforms}
                 businessProfile={businessProfile}
               />

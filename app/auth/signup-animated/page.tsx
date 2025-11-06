@@ -278,11 +278,11 @@ export default function AnimatedSignupPage() {
           <span className="font-semibold">Home</span>
         </Link>
         
-        <div className="relative z-10">
+        <div className="relative z-10 w-full px-4">
         <AnimatedForm className="text-center">
           <NotificationAlert />
           <div className="relative">
-            <h2 className="text-3xl font-bold text-emerald-400 mb-2 flex items-center justify-center">
+            <h2 className="text-2xl font-bold text-emerald-400 mb-2 flex items-center justify-center">
               <div className="w-4 h-4 bg-emerald-400 rounded-full mr-3 relative">
                 <div className="absolute inset-0 bg-emerald-400 rounded-full animate-ping"></div>
               </div>
@@ -314,11 +314,11 @@ export default function AnimatedSignupPage() {
         <span className="font-semibold">Home</span>
       </Link>
       
-      <div className="relative z-10 w-full max-w-2xl mx-auto">
+      <div className="relative z-10 w-full px-4">
       <AnimatedForm>
         <NotificationAlert />
         <div className="relative mb-6">
-          <h2 className="text-3xl font-bold text-emerald-400 flex items-center">
+          <h2 className="text-2xl font-bold text-emerald-400 flex items-center">
             <div className="w-4 h-4 bg-emerald-400 rounded-full mr-3 relative">
               <div className="absolute inset-0 bg-emerald-400 rounded-full animate-ping"></div>
             </div>
@@ -330,55 +330,57 @@ export default function AnimatedSignupPage() {
         </div>
 
         {/* Plan Confirmation */}
-        <div className={`mb-6 p-4 rounded-xl border-2 ${
+        <div className={`mb-6 p-3 rounded-lg border ${
           planConfig.color === 'emerald' ? 'border-emerald-500 bg-emerald-500/10' :
           planConfig.color === 'blue' ? 'border-blue-500 bg-blue-500/10' :
           'border-gray-500 bg-gray-500/10'
         }`}>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <planConfig.icon className={`w-5 h-5 ${
+              <planConfig.icon className={`w-4 h-4 ${
                 planConfig.color === 'emerald' ? 'text-emerald-400' :
                 planConfig.color === 'blue' ? 'text-blue-400' :
                 'text-gray-400'
               }`} />
-              <span className="text-white font-semibold">
+              <span className="text-white font-medium text-sm">
                 Registering for {planConfig.name} Plan
               </span>
             </div>
             {planConfig.price > 0 && (
-              <div className="text-right">
-                <div className="text-white font-bold">
-                  {formatPrice(planConfig.price)}/month
-                </div>
+              <div className="text-white font-bold text-sm">
+                {formatPrice(planConfig.price)}/mo
               </div>
             )}
             {planConfig.price === 0 && (
-              <div className="text-emerald-400 font-bold">FREE</div>
+              <div className="text-emerald-400 font-bold text-sm">FREE</div>
             )}
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-            {planConfig.features.map((feature, index) => (
+          <div className="space-y-1">
+            {planConfig.features.slice(0, 3).map((feature, index) => (
               <div key={index} className="flex items-center gap-2 text-gray-300">
                 <Check className="w-3 h-3 text-emerald-400 flex-shrink-0" />
-                <span className="text-xs sm:text-sm">{feature}</span>
+                <span className="text-xs">{feature}</span>
               </div>
             ))}
+            {planConfig.features.length > 3 && (
+              <div className="text-xs text-gray-400">
+                +{planConfig.features.length - 3} more features
+              </div>
+            )}
           </div>
 
-
-          <div className="mt-3 text-center">
+          <div className="mt-2 text-center">
             <Link 
               href="/choose-plan" 
-              className="text-emerald-400 hover:text-emerald-300 text-sm underline"
+              className="text-emerald-400 hover:text-emerald-300 text-xs underline"
             >
               Want to change your plan?
             </Link>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div className="relative">
             <AnimatedInput
               label="Display Name - Check Availability"

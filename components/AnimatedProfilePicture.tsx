@@ -82,7 +82,7 @@ export default function AnimatedProfilePicture({
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-6"
+      className="space-y-3"
     >
       {/* Current Avatar Display */}
       <AnimatePresence mode="wait">
@@ -95,12 +95,12 @@ export default function AnimatedProfilePicture({
             transition={{ duration: 0.6, ease: "backOut" }}
             className="relative"
           >
-            <div className="flex flex-col items-center gap-4 p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border border-gray-200 shadow-sm">
+            <div className="flex flex-col items-center gap-2 p-3 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200 shadow-sm">
               {/* Avatar Container */}
               <div className="relative">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl"
+                  className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-md"
                 >
                   <img 
                     src={previewUrl || avatarUrl} 
@@ -114,7 +114,7 @@ export default function AnimatedProfilePicture({
                     whileHover={{ opacity: 1 }}
                     className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center"
                   >
-                    <Camera className="w-8 h-8 text-white" />
+                    <Camera className="w-4 h-4 text-white" />
                   </motion.div>
                 </motion.div>
 
@@ -126,12 +126,12 @@ export default function AnimatedProfilePicture({
                   className="absolute -bottom-2 -right-2"
                 >
                   {previewUrl ? (
-                    <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center shadow-lg">
-                      <Upload className="w-4 h-4 text-white" />
+                    <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center shadow-lg">
+                      <Upload className="w-3 h-3 text-white" />
                     </div>
                   ) : (
-                    <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg">
-                      <Check className="w-4 h-4 text-white" />
+                    <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+                      <Check className="w-3 h-3 text-white" />
                     </div>
                   )}
                 </motion.div>
@@ -142,14 +142,8 @@ export default function AnimatedProfilePicture({
                 variants={itemVariants}
                 className="text-center"
               >
-                <h4 className="font-semibold text-gray-900 mb-1">
-                  {previewUrl ? 'Ready to Upload' : 'Current Profile Picture'}
-                </h4>
-                <p className="text-sm text-gray-600">
-                  {previewUrl 
-                    ? 'Click "Upload" to save this image to your profile' 
-                    : 'This is your current profile picture'
-                  }
+                <p className="text-xs text-gray-600">
+                  {previewUrl ? 'Ready to Upload' : 'Current Picture'}
                 </p>
               </motion.div>
 
@@ -189,16 +183,15 @@ export default function AnimatedProfilePicture({
         variants={itemVariants}
         className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm"
       >
-        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+        <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
           <div className="flex items-center gap-2">
-            <ImageIcon className="w-5 h-5 text-gray-600" />
-            <h4 className="text-lg font-semibold text-gray-900">Profile Picture</h4>
+            <ImageIcon className="w-4 h-4 text-gray-600" />
+            <h4 className="text-sm font-semibold text-gray-900">Profile Picture</h4>
           </div>
-          <p className="text-sm text-gray-600 mt-1">Upload an image or provide a URL</p>
         </div>
 
         {/* Method Toggle */}
-        <div className="p-6 space-y-6">
+        <div className="p-3 space-y-3">
           <div className="flex bg-gray-100 rounded-lg p-1">
             {[
               { id: 'upload', label: 'Upload File', icon: Upload },
@@ -241,7 +234,7 @@ export default function AnimatedProfilePicture({
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                   whileHover={{ scale: 1.02 }}
-                  className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${
+                  className={`relative border-2 border-dashed rounded-lg p-4 text-center transition-all cursor-pointer ${
                     dragOver
                       ? 'border-emerald-400 bg-emerald-50'
                       : 'border-gray-300 hover:border-emerald-400 hover:bg-emerald-50/50'
@@ -259,24 +252,18 @@ export default function AnimatedProfilePicture({
                   
                   <motion.div
                     animate={dragOver ? { scale: 1.1 } : { scale: 1 }}
-                    className="space-y-4"
+                    className="space-y-2"
                   >
-                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
-                      <Upload className="w-8 h-8 text-emerald-600" />
+                    <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
+                      <Upload className="w-5 h-5 text-emerald-600" />
                     </div>
                     
                     <div>
-                      <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                        {dragOver ? 'Drop your image here' : 'Upload Profile Picture'}
-                      </h4>
-                      <p className="text-gray-600 text-sm">
-                        Drag and drop an image file, or click to browse
+                      <p className="text-sm font-medium text-gray-900">
+                        {dragOver ? 'Drop here' : 'Upload Image'}
                       </p>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Supports: JPG, PNG, GIF (max 5MB)
-                      </p>
-                      <p className="text-xs text-emerald-600 font-medium mt-1">
-                        📐 Recommended: 400×400px (square)
+                      <p className="text-xs text-gray-500 mt-1">
+                        JPG, PNG, GIF (max 5MB)
                       </p>
                     </div>
                   </motion.div>

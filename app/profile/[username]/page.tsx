@@ -856,7 +856,10 @@ Best regards`
                     {productModalTab === 'description' && (
                       <div>
                         {selectedProduct.description ? (
-                          <p className="text-gray-700 leading-relaxed">{selectedProduct.description}</p>
+                          <div 
+                            className="text-gray-700 leading-relaxed prose prose-sm max-w-none prose-headings:text-gray-800 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-800"
+                            dangerouslySetInnerHTML={{ __html: selectedProduct.description }}
+                          />
                         ) : (
                           <p className="text-gray-500 italic">No description available.</p>
                         )}

@@ -88,6 +88,13 @@ export default function DashboardPage() {
   const [marketingActiveView, setMarketingActiveView] = useState('builder')
   const [marketingProducts, setMarketingProducts] = useState<any[]>([])
 
+  // Redirect free tier users away from premium tabs
+  useEffect(() => {
+    if (profile?.subscription_tier === 'free' && ['scheduler', 'analytics'].includes(marketingActiveView)) {
+      setMarketingActiveView('builder')
+    }
+  }, [profile?.subscription_tier, marketingActiveView])
+
   useEffect(() => {
     if (!loading && !user) {
       router.push('/auth/login-animated')
@@ -137,12 +144,16 @@ export default function DashboardPage() {
           .from('profile_products')
           .select('*')
           .eq('profile_id', profile.id)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
           .limit(10)
 
         if (error) throw error
+        console.log('Fetched marketing products:', data?.length || 0, 'products')
         setMarketingProducts(data || [])
       } catch (error) {
         console.error('Error fetching marketing products:', error)
+        setMarketingProducts([]) // Ensure empty array on error
       }
     }
 
@@ -242,11 +253,14 @@ export default function DashboardPage() {
   )
 
   const renderMarketingTab = () => {
+    const userTier = profile?.subscription_tier || 'free'
+    const isPremiumFeature = (viewId: string) => ['scheduler', 'analytics'].includes(viewId)
+    
     const marketingViews = [
       { id: 'builder', label: 'Listing Builder', icon: Plus },
       { id: 'campaigns', label: 'My Listings', icon: MessageSquare },
-      { id: 'scheduler', label: 'Scheduler', icon: Calendar },
-      { id: 'analytics', label: 'Analytics', icon: TrendingUp }
+      { id: 'scheduler', label: 'Scheduler', icon: Calendar, premium: true },
+      { id: 'analytics', label: 'Analytics', icon: TrendingUp, premium: true }
     ]
 
     return (
@@ -261,18 +275,34 @@ export default function DashboardPage() {
             <div className="flex">
               {marketingViews.map((view) => {
                 const IconComponent = view.icon
+                const isDisabled = userTier === 'free' && isPremiumFeature(view.id)
+                
                 return (
                   <button
                     key={view.id}
-                    onClick={() => setMarketingActiveView(view.id)}
-                    className={`flex-1 py-4 px-6 text-center font-medium transition-colors flex items-center justify-center gap-2 ${
-                      marketingActiveView === view.id
+                    onClick={() => {
+                      if (isDisabled) {
+                        alert('🔒 This feature is only available on Premium and Business tiers.\n\nUpgrade your plan to unlock advanced marketing tools!')
+                        return
+                      }
+                      setMarketingActiveView(view.id)
+                    }}
+                    className={`flex-1 py-4 px-6 text-center font-medium transition-colors flex items-center justify-center gap-2 relative ${
+                      marketingActiveView === view.id && !isDisabled
                         ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                        : isDisabled
+                        ? 'text-gray-400 cursor-not-allowed bg-gray-50'
                         : 'text-gray-500 hover:text-gray-700'
                     }`}
+                    disabled={isDisabled}
                   >
                     <IconComponent className="w-4 h-4" />
                     {view.label}
+                    {isDisabled && (
+                      <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
+                        Premium
+                      </span>
+                    )}
                   </button>
                 )
               })}
@@ -290,14 +320,50 @@ export default function DashboardPage() {
             )}
 
             {marketingActiveView === 'scheduler' && (
-              <CampaignScheduler onSchedule={(settings) => {
-                console.log('Campaign scheduled:', settings)
-                alert('🎉 Campaign scheduled successfully! Your messages will be sent at optimal times.')
-              }} />
+              userTier === 'free' ? (
+                <div className="text-center py-12">
+                  <div className="mx-auto w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mb-6">
+                    <Calendar className="w-12 h-12 text-amber-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Scheduler - Premium Feature</h3>
+                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                    Schedule your marketing campaigns for optimal engagement times. Only available on Premium and Business tiers.
+                  </p>
+                  <button
+                    onClick={() => router.push('/choose-plan')}
+                    className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 transition-all"
+                  >
+                    Upgrade to Premium
+                  </button>
+                </div>
+              ) : (
+                <CampaignScheduler onSchedule={(settings) => {
+                  console.log('Campaign scheduled:', settings)
+                  alert('🎉 Campaign scheduled successfully! Your messages will be sent at optimal times.')
+                }} />
+              )
             )}
 
             {marketingActiveView === 'analytics' && (
-              <AnalyticsDashboard />
+              userTier === 'free' ? (
+                <div className="text-center py-12">
+                  <div className="mx-auto w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+                    <TrendingUp className="w-12 h-12 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Analytics - Premium Feature</h3>
+                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                    Track your campaign performance with detailed analytics and insights. Only available on Premium and Business tiers.
+                  </p>
+                  <button
+                    onClick={() => router.push('/choose-plan')}
+                    className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all"
+                  >
+                    Upgrade to Premium
+                  </button>
+                </div>
+              ) : (
+                <AnalyticsDashboard />
+              )
             )}
           </div>
         </div>

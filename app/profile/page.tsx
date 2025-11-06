@@ -56,6 +56,10 @@ export default function ProfilePage() {
   const [displayNameError, setDisplayNameError] = useState('')
   const [originalDisplayName, setOriginalDisplayName] = useState('')
 
+  // Categories and locations data
+  const [categories, setCategories] = useState<any[]>([])
+  const [locations, setLocations] = useState<any[]>([])
+
   // Form fields
   const [displayName, setDisplayName] = useState('')
   const [profileType, setProfileType] = useState<'free' | 'premium' | 'business'>('free')
@@ -83,6 +87,7 @@ export default function ProfilePage() {
       return
     }
     fetchProfile()
+    fetchCategoriesAndLocations()
   }, [user])
 
   // Check if we should show the wizard for new users
@@ -115,7 +120,16 @@ export default function ProfilePage() {
         .eq('id', user.id)
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Profile fetch error:', error)
+        // If profile doesn't exist, create it
+        if (error.code === 'PGRST116') {
+          console.log('Profile not found, creating new profile...')
+          await createProfile()
+          return
+        }
+        throw error
+      }
 
       const profileData = (data || {}) as UserProfile
 
@@ -155,6 +169,68 @@ export default function ProfilePage() {
       setMessage({ type: 'error', text: 'Failed to load profile' })
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Create profile if it doesn't exist
+  const createProfile = async () => {
+    if (!user?.id) return
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          display_name: user.email?.split('@')[0] || 'User',
+          subscription_tier: 'free',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+
+      if (error) {
+        console.error('Error creating profile:', error)
+        throw error
+      }
+
+      console.log('Profile created successfully')
+      // Fetch the newly created profile
+      await fetchProfile()
+    } catch (error) {
+      console.error('Error creating profile:', error)
+      setMessage({ type: 'error', text: 'Failed to create profile' })
+    }
+  }
+
+  // Fetch categories and locations from database
+  const fetchCategoriesAndLocations = async () => {
+    try {
+      // Fetch categories
+      const { data: categoriesData, error: catError } = await supabase
+        .from('categories')
+        .select('id, name, slug')
+        .eq('is_active', true)
+        .order('name')
+      
+      if (catError) {
+        console.error('Error fetching categories:', catError)
+      } else {
+        setCategories(categoriesData || [])
+      }
+
+      // Fetch locations
+      const { data: locationsData, error: locError } = await supabase
+        .from('locations')
+        .select('id, city, slug')
+        .eq('is_active', true)
+        .order('city')
+      
+      if (locError) {
+        console.error('Error fetching locations:', locError)
+      } else {
+        setLocations(locationsData || [])
+      }
+    } catch (error) {
+      console.error('Error fetching categories and locations:', error)
     }
   }
 
@@ -337,7 +413,7 @@ export default function ProfilePage() {
       const filePath = `avatars/${fileName}`
 
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('posts')
+        .from('profile')
         .upload(filePath, selectedFile, {
           cacheControl: '3600',
           upsert: false
@@ -346,7 +422,7 @@ export default function ProfilePage() {
       if (uploadError) throw uploadError
 
       const { data } = supabase.storage
-        .from('posts')
+        .from('profile')
         .getPublicUrl(filePath)
 
       if (previewUrl) URL.revokeObjectURL(previewUrl)
@@ -644,12 +720,11 @@ export default function ProfilePage() {
                     }`}
                   >
                     <option value="">Select a category</option>
-                    <option value="retail">Retail & Shopping</option>
-                    <option value="food">Food & Restaurants</option>
-                    <option value="health">Health & Beauty</option>
-                    <option value="services">Professional Services</option>
-                    <option value="technology">Technology</option>
-                    <option value="education">Education</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.slug}>
+                        {category.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -671,10 +746,11 @@ export default function ProfilePage() {
                     }`}
                   >
                     <option value="">Select a location</option>
-                    <option value="cape-town">Cape Town</option>
-                    <option value="johannesburg">Johannesburg</option>
-                    <option value="durban">Durban</option>
-                    <option value="pretoria">Pretoria</option>
+                    {locations.map((location) => (
+                      <option key={location.id} value={location.slug}>
+                        {location.city}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
