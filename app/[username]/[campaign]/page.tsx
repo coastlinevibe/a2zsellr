@@ -155,23 +155,10 @@ export default function CampaignPage({ params }: CampaignPageProps) {
         
         setProducts(productsData || [])
       } else {
-        // Fallback: show some products from this business
-        let { data: productsData } = await supabase
-          .from('profile_products')
-          .select('id, name, image_url, price_cents')
-          .eq('profile_id', profileData.id)
-          .limit(6)
-        
-        if (!productsData || productsData.length === 0) {
-          const result = await supabase
-            .from('products')
-            .select('id, name, image_url, price_cents')
-            .eq('profile_id', profileData.id)
-            .limit(6)
-          productsData = result.data
-        }
-
-        setProducts(productsData || [])
+        // ✅ FIX: Don't auto-fetch products if none were selected
+        // Only show products that were explicitly selected by user
+        console.log('🔍 No products selected for this listing - showing none')
+        setProducts([])
       }
 
     } catch (err: any) {
@@ -217,22 +204,10 @@ export default function CampaignPage({ params }: CampaignPageProps) {
             }
             setProducts(productsData || [])
           } else {
-            // Fallback: show some products from this business
-            let { data: productsData } = await supabase
-              .from('profile_products')
-              .select('id, name, image_url, price_cents')
-              .eq('profile_id', matchingListing.profile_id)
-              .limit(6)
-            
-            if (!productsData || productsData.length === 0) {
-              const result = await supabase
-                .from('products')
-                .select('id, name, image_url, price_cents')
-                .eq('profile_id', matchingListing.profile_id)
-                .limit(6)
-              productsData = result.data
-            }
-            setProducts(productsData || [])
+            // ✅ FIX: Don't auto-fetch products if none were selected
+            // Only show products that were explicitly selected by user
+            console.log('🔍 Fallback: No products selected for this listing - showing none')
+            setProducts([])
           }
           
           setError(null) // Clear error

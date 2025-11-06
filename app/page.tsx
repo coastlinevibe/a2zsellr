@@ -203,19 +203,6 @@ export default function HomePage() {
               </div>
             </div>
             
-            {/* Quick Access for Logged-in Users */}
-            {user && (
-              <div className="mb-8">
-                <Link
-                  href="/dashboard"
-                  className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/30 text-white px-6 py-3 rounded-xl transition-all"
-                >
-                  <Eye className="h-4 w-4" />
-                  <span>Go to Dashboard</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            )}
           </div>
           
           {/* Directory Search - Always Visible */}

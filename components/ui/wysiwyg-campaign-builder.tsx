@@ -604,6 +604,9 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-blue-100">Listing Media</label>
               <div className="flex items-center gap-2">
+                <span className="text-xs text-blue-200">
+                  📐 1200×800px
+                </span>
                 <span className="text-xs bg-blue-400 text-blue-100 px-2 py-1 rounded-full">
                   {uploadedMedia.length + selectedProducts.length}/5 items
                 </span>

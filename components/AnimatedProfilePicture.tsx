@@ -275,6 +275,9 @@ export default function AnimatedProfilePicture({
                       <p className="text-xs text-gray-500 mt-2">
                         Supports: JPG, PNG, GIF (max 5MB)
                       </p>
+                      <p className="text-xs text-emerald-600 font-medium mt-1">
+                        📐 Recommended: 400×400px (square)
+                      </p>
                     </div>
                   </motion.div>
 
