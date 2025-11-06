@@ -55,6 +55,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data: metadata
       }
     })
+    
+    // If signup successful, create profile manually
+    if (!error && data.user) {
+      try {
+        // Wait a moment for user to be fully created
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            display_name: metadata?.display_name || email.split('@')[0],
+            email: email,
+            subscription_tier: metadata?.selected_plan || 'free',
+            subscription_status: 'active',
+            verified_seller: false,
+            is_active: true,
+            current_listings: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+        
+        if (profileError) {
+          console.warn('Profile creation failed:', profileError.message)
+          // Don't fail the signup, just log the warning
+        }
+      } catch (profileErr) {
+        console.warn('Profile creation error:', profileErr)
+      }
+    }
+    
     return { error }
   }
 

@@ -16,14 +16,15 @@ export default function ChoosePlanPage() {
       name: 'Free',
       price: 0,
       icon: Check,
-      color: 'gray',
+      color: 'emerald',
       features: [
-        'Basic business profile',
-        '3 gallery images',
-        '5 products in shop',
-        'Contact information',
-        'Location mapping',
-        'Customer reviews'
+        '🏢 Professional Business Listing',
+        '🛍️ Complete Online Shop (5 Products)',
+        '🎯 Powerful Marketing Tools',
+        '📸 Business Gallery (3 Images)',
+        '📱 Complete Contact Information',
+        '⭐ Customer Reviews & Ratings',
+        '📧 Direct Customer Contact'
       ]
     },
     {
@@ -34,12 +35,14 @@ export default function ChoosePlanPage() {
       color: 'emerald',
       popular: true,
       features: [
-        'Everything in Free',
-        'Premium directory placement',
-        'Gallery slider showcase',
-        'Shop integration',
-        'WhatsApp ad scheduling',
-        'Facebook campaign tools'
+        '✨ Everything in Free Plan',
+        '🚀 Premium Directory Placement',
+        '🎨 Gallery Slider Showcase',
+        '🛒 Advanced Shop Integration',
+        '📱 WhatsApp Ad Scheduling',
+        '📘 Facebook Campaign Tools',
+        '📊 Enhanced Analytics',
+        '🎯 Premium Marketing Listing'
       ]
     },
     {
@@ -49,12 +52,14 @@ export default function ChoosePlanPage() {
       icon: Users,
       color: 'blue',
       features: [
-        'Everything in Premium',
-        'Multi-location management',
-        'Advanced analytics',
-        'Instagram ad automation',
-        'Custom branding',
-        'Priority support'
+        '💎 Everything in Premium Plan',
+        '🏪 Multi-Location Management',
+        '📈 Advanced Analytics Dashboard',
+        '📷 Instagram Ad Automation',
+        '🎨 Custom Business Branding',
+        '🏆 Priority Customer Support',
+        '🚀 Business Marketing Listing',
+        '📊 Performance Insights'
       ]
     }
   ]
@@ -72,15 +77,39 @@ export default function ChoosePlanPage() {
         {/* Header */}
         <div className="text-center mb-16">
           <Link href="/" className="inline-block mb-8">
-            <div className="text-2xl font-bold text-white">A2Z Business Directory</div>
+            <div className="text-2xl font-bold text-white">A2Z Sellr</div>
           </Link>
           
           <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">
-            Choose Your Plan
+            Choose Your Seller Growth Plan
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Start with our free plan or upgrade to unlock premium features for your business
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-6">
+            Start with our powerful free plan featuring professional listings, online shop, and marketing tools. Upgrade anytime to unlock premium features and accelerate your sales growth.
           </p>
+          
+          {/* Free Plan Highlight */}
+          <div className="max-w-2xl mx-auto mb-8 p-6 bg-gradient-to-r from-emerald-600/20 to-emerald-500/20 border border-emerald-400/30 rounded-xl">
+            <div className="text-center">
+              <p className="text-emerald-300 text-lg font-bold mb-4">🎉 FREE PLAN POWER FEATURES:</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl mb-2">🏢</div>
+                  <p className="text-white font-semibold text-sm">Professional Business Listing</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl mb-2">🛍️</div>
+                  <p className="text-white font-semibold text-sm">Complete Online Shop</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl mb-2">🎯</div>
+                  <p className="text-white font-semibold text-sm">Powerful Marketing Tools</p>
+                </div>
+              </div>
+              <p className="text-emerald-200 text-sm mt-4">
+                Worth hundreds of dollars - yours completely FREE!
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Plans Grid */}
@@ -93,7 +122,8 @@ export default function ChoosePlanPage() {
               <div
                 key={plan.id}
                 className={`relative bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 ${
-                  isPopular ? 'ring-2 ring-emerald-500 scale-105' : ''
+                  isPopular ? 'ring-2 ring-emerald-500 scale-105' : 
+                  plan.id === 'free' ? 'ring-2 ring-emerald-400 border-emerald-200' : ''
                 }`}
               >
                 {isPopular && (
@@ -101,6 +131,15 @@ export default function ChoosePlanPage() {
                     <div className="bg-emerald-500 text-white px-4 py-1 rounded-full text-sm font-bold flex items-center gap-1">
                       <Star className="h-4 w-4" />
                       Most Popular
+                    </div>
+                  </div>
+                )}
+
+                {plan.id === 'free' && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <div className="bg-emerald-500 text-white px-4 py-1 rounded-full text-sm font-bold flex items-center gap-1">
+                      <Check className="h-4 w-4" />
+                      Start Here
                     </div>
                   </div>
                 )}
@@ -122,7 +161,10 @@ export default function ChoosePlanPage() {
                   
                   <div className="mb-4">
                     {plan.price === 0 ? (
-                      <div className="text-4xl font-bold text-gray-900">Free</div>
+                      <div>
+                        <div className="text-4xl font-bold text-gray-900">Free</div>
+                        <div className="text-emerald-600 font-semibold text-sm">Forever & Always</div>
+                      </div>
                     ) : (
                       <div>
                         <div className="text-4xl font-bold text-gray-900">
@@ -152,10 +194,12 @@ export default function ChoosePlanPage() {
                       ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                       : plan.color === 'blue'
                       ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : plan.id === 'free'
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                       : 'bg-gray-600 hover:bg-gray-700 text-white'
                   }`}
                 >
-                  {plan.id === 'free' ? 'Start Free' : `Choose ${plan.name}`}
+                  {plan.id === 'free' ? 'Start Free Today' : `Choose ${plan.name}`}
                   <ArrowRight className="h-5 w-5" />
                 </button>
               </div>
@@ -166,7 +210,7 @@ export default function ChoosePlanPage() {
         {/* Footer */}
         <div className="text-center mt-16">
           <p className="text-gray-300 mb-4">
-            All plans include our core directory features and customer support
+            All plans include our core directory features and customer support. Start free, upgrade anytime!
           </p>
           <Link
             href="/"

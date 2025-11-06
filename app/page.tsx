@@ -177,7 +177,7 @@ export default function HomePage() {
   }
   return (
     <div className="min-h-screen">
-      {/* Hero Section - Business Directory */}
+      {/* Hero Section - A2Z Sellr */}
       <section className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pt-20 pb-20 sm:pb-32 md:pt-24 md:pb-40 lg:pt-32 lg:pb-48">
         <div className="absolute inset-0 bg-[url('/images/hero/bg2.jpg')] bg-center bg-cover opacity-10"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/50"></div>
@@ -578,10 +578,6 @@ export default function HomePage() {
                 </div>
                 <div className="flex items-center justify-center gap-2">
                   <Check className="w-4 h-4 text-emerald-400" />
-                  <span>Location mapping</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
                   <span>Customer reviews</span>
                 </div>
                 <div className="flex items-center justify-center gap-2">
@@ -972,7 +968,7 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                 <div className="flex items-center gap-2">
                   <Award className="w-5 h-5 sm:w-6 sm:h-6" fill="white" />
-                  <span className="font-bold text-base sm:text-lg text-center sm:text-left">🏆 Join South Africa's Premium Business Directory</span>
+                  <span className="font-bold text-base sm:text-lg text-center sm:text-left">🏆 Join South Africa's Premium Seller Platform</span>
                 </div>
                 <Link href="/auth/signup-animated?plan=free" className="inline-flex items-center gap-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-bold transition-all shadow-lg hover:shadow-xl hover:scale-105 border border-purple-400 whitespace-nowrap">
                   List Your Business Free
@@ -1050,7 +1046,7 @@ export default function HomePage() {
             <div className="flex items-center justify-center gap-2 mb-4">
               <Award className="h-5 w-5 text-yellow-400" />
               <p className="text-lg text-gray-300 font-medium">
-                South Africa's Award-Winning Business Directory
+                South Africa's Award-Winning Seller Platform
               </p>
               <Award className="h-5 w-5 text-yellow-400" />
             </div>

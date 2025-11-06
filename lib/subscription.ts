@@ -19,8 +19,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
       '3 gallery images',
       '5 products in shop',
       'Basic contact information',
-      'Customer reviews',
-      'Location mapping'
+      'Customer reviews'
     ]
   },
   {
