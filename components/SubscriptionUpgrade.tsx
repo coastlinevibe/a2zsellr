@@ -20,8 +20,8 @@ export function SubscriptionUpgrade({ currentTier, onUpgrade }: SubscriptionUpgr
       name: 'Premium',
       icon: Star,
       color: 'purple',
-      monthlyPrice: 99,
-      annualPrice: 1069.20,
+      monthlyPrice: 149,
+      annualPrice: 149,
       features: [
         'Unlimited gallery images',
         'Advanced analytics',
@@ -36,7 +36,7 @@ export function SubscriptionUpgrade({ currentTier, onUpgrade }: SubscriptionUpgr
       icon: Crown,
       color: 'emerald',
       monthlyPrice: 299,
-      annualPrice: 3238.92,
+      annualPrice: 299,
       features: [
         'Everything in Premium',
         'Unlimited products/services',
@@ -58,11 +58,6 @@ export function SubscriptionUpgrade({ currentTier, onUpgrade }: SubscriptionUpgr
     return cycle === 'monthly' ? tiers[tier].monthlyPrice : tiers[tier].annualPrice
   }
 
-  const getSavings = (tier: 'premium' | 'business') => {
-    const monthly = tiers[tier].monthlyPrice * 12
-    const annual = tiers[tier].annualPrice
-    return ((monthly - annual) / monthly * 100).toFixed(0)
-  }
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -98,9 +93,6 @@ export function SubscriptionUpgrade({ currentTier, onUpgrade }: SubscriptionUpgr
             }`}
           >
             Annual
-            <span className="ml-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-              Save {getSavings('premium')}%
-            </span>
           </button>
         </div>
       </div>
@@ -141,11 +133,6 @@ export function SubscriptionUpgrade({ currentTier, onUpgrade }: SubscriptionUpgr
                     /{billingCycle === 'monthly' ? 'month' : 'year'}
                   </span>
                 </div>
-                {billingCycle === 'annual' && (
-                  <p className="text-sm text-green-600 font-medium">
-                    Save {getSavings(tierType)}% annually
-                  </p>
-                )}
               </div>
 
               <ul className="space-y-3 mb-8">

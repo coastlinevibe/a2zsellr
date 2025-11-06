@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabaseClient'
 import { AnimatedForm, AnimatedInput, AnimatedButton } from '@/components/ui/AnimatedForm'
 import { Home, Crown, Users, Check, Star, CheckCircle2, AlertTriangle, Info } from 'lucide-react'
-import { formatPrice, TIER_PRICING, EARLY_ADOPTER_PRICING } from '@/lib/subscription'
+import { formatPrice, TIER_PRICING } from '@/lib/subscription'
 
 export default function AnimatedSignupPage() {
   const [email, setEmail] = useState('')
@@ -27,7 +27,6 @@ export default function AnimatedSignupPage() {
   
   // Get selected plan from URL params
   const selectedPlan = searchParams?.get('plan') || 'free'
-  const isEarlyAdopter = true // For first 500 users
 
   useEffect(() => {
     if (user) {
@@ -130,7 +129,7 @@ export default function AnimatedSignupPage() {
           name: 'Premium',
           icon: Crown,
           color: 'emerald',
-          price: isEarlyAdopter ? EARLY_ADOPTER_PRICING.premium.monthly : TIER_PRICING.premium.monthly,
+          price: TIER_PRICING.premium.monthly,
           originalPrice: TIER_PRICING.premium.monthly,
           features: ['Premium directory placement', 'Gallery slider showcase', 'Shop integration', 'WhatsApp ad scheduling', 'Facebook campaign tools', 'Premium marketing listing'],
           discount: null

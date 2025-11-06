@@ -25,7 +25,8 @@ import {
   User,
   Users,
   X,
-  Clipboard
+  Clipboard,
+  Shield
 } from 'lucide-react'
 
 import { useAuth } from '@/lib/auth'
@@ -61,6 +62,7 @@ interface UserProfile {
   bio: string | null
   phone_number: string | null
   website_url: string | null
+  is_admin: boolean
   created_at?: string
 }
 
@@ -395,6 +397,18 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              {/* Admin Dashboard Button - Only show for admin users */}
+              {profile && (profile.is_admin || profile.email === 'admin@out.com') && (
+                <Button 
+                  onClick={() => router.push('/admin')}
+                  variant="outline"
+                  size="sm"
+                  className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  GoTo Admin Dash
+                </Button>
+              )}
               <CartButton />
               <UserProfileDropdown />
             </div>

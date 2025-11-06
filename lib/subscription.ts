@@ -62,11 +62,6 @@ export const TIER_PRICING = {
   business: { monthly: 299 }
 }
 
-export const EARLY_ADOPTER_PRICING = {
-  free: { monthly: 0 },
-  premium: { monthly: 74 }, // 50% off
-  business: { monthly: 149 } // 50% off
-}
 
 export async function getUserSubscription(userId?: string) {
   try {
@@ -127,11 +122,7 @@ export function getPlanFeatures(planId: string): string[] {
   return plan?.features || []
 }
 
-export function getPlanPrice(planId: string, isEarlyAdopter: boolean = false): number {
-  if (isEarlyAdopter) {
-    const pricing = EARLY_ADOPTER_PRICING[planId as keyof typeof EARLY_ADOPTER_PRICING]
-    return pricing?.monthly || 0
-  }
+export function getPlanPrice(planId: string): number {
   const pricing = TIER_PRICING[planId as keyof typeof TIER_PRICING]
   return pricing?.monthly || 0
 }

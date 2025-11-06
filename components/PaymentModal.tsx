@@ -25,13 +25,13 @@ export function PaymentModal({ isOpen, onClose, selectedTier, billingCycle }: Pa
 
   // Pricing data
   const pricing = {
-    premium: { monthly: 9900, annual: 106920 }, // In cents
-    business: { monthly: 29900, annual: 323892 }
+    premium: { monthly: 14900, annual: 14900 }, // In cents - R149
+    business: { monthly: 29900, annual: 29900 } // In cents - R299
   }
 
   const amount = pricing[selectedTier][billingCycle]
   const displayAmount = (amount / 100).toFixed(2)
-  const discount = billingCycle === 'annual' ? '10% OFF' : null
+  const discount = null // No discounts
 
   const handlePayFastPayment = async () => {
     if (!user) return

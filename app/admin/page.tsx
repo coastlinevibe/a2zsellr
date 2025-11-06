@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Shield, Users, Search, Edit, CheckCircle, X, CreditCard } from 'lucide-react'
+import { Shield, Users, Search, Edit, CheckCircle, X, CreditCard, Settings } from 'lucide-react'
 import { AdminPaymentDashboard } from '@/components/AdminPaymentDashboard'
+import { AdminCategoriesLocations } from '@/components/AdminCategoriesLocations'
 
 interface UserProfile {
   id: string
@@ -26,7 +27,7 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('')
   const [editingUser, setEditingUser] = useState<string | null>(null)
   const [selectedTier, setSelectedTier] = useState<'free' | 'premium' | 'business'>('free')
-  const [activeTab, setActiveTab] = useState<'users' | 'payments'>('users')
+  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'categories'>('users')
 
   useEffect(() => {
     checkAdminStatus()
@@ -163,7 +164,7 @@ export default function AdminDashboard() {
               </div>
             </div>
             <Button onClick={() => router.push('/dashboard')} variant="outline">
-              Back to Dashboard
+              GoTo Profile Dash
             </Button>
           </div>
         </div>
@@ -241,6 +242,17 @@ export default function AdminDashboard() {
               >
                 <CreditCard className="w-5 h-5 inline mr-2" />
                 Payment Management
+              </button>
+              <button
+                onClick={() => setActiveTab('categories')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'categories'
+                    ? 'border-emerald-500 text-emerald-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Settings className="w-5 h-5 inline mr-2" />
+                Categories & Locations
               </button>
             </nav>
           </div>
@@ -391,9 +403,12 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
-        ) : (
+        ) : activeTab === 'payments' ? (
           /* Payment Management Tab */
           <AdminPaymentDashboard />
+        ) : (
+          /* Categories & Locations Management Tab */
+          <AdminCategoriesLocations />
         )}
       </div>
     </div>
