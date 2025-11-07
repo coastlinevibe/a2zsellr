@@ -5,11 +5,19 @@ import { ArrowRight, Smartphone, Share2, MessageCircle, Zap, Shield, Globe, Star
 import { BusinessCard } from '@/components/BusinessCard'
 import { useAuth } from '@/lib/auth'
 import { MovingBorderButton } from '@/components/ui/moving-border'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { AdminLoginModal } from '@/components/AdminLoginModal'
 import { PricingContainer, type PricingPlan } from '@/components/ui/pricing-container'
 import { motion } from 'framer-motion'
+
+type RecentActivity = {
+  id: string
+  name: string
+  created_at: string
+  profile_id: string | null
+  profile_name: string
+}
 
 export default function HomePage() {
   const { user, loading } = useAuth()
@@ -26,9 +34,30 @@ export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [showExitIntent, setShowExitIntent] = useState(false)
   const [chatWidgetCollapsed, setChatWidgetCollapsed] = useState(false)
-  const [recentActivities, setRecentActivities] = useState<any[]>([])
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([])
   const locationDropdownRef = useRef<HTMLDivElement>(null)
   const categoryDropdownRef = useRef<HTMLDivElement>(null)
+
+  const fallbackTickerMessages = useMemo(
+    () => [
+      '🎉 Model Mania added "Dodge Black Beauty V8" to their shop • ',
+      '🎉 Model Mania added "Rolls Royce Racers" to their shop • ',
+      '🎉 jan stene added "baie lekke steen" to their shop • '
+    ],
+    []
+  )
+
+  const tickerContent = useMemo(() => {
+    const messages = recentActivities.length > 0
+      ? recentActivities.map((activity) => {
+          const displayName = activity.profile_name || activity.profile_id || 'Someone'
+          return `🎉 ${displayName} added "${activity.name}" to their shop • `
+        })
+      : fallbackTickerMessages
+
+    const baseLoop = messages.join(' ')
+    return `${baseLoop} ${baseLoop}` // duplicate for seamless scroll
+  }, [recentActivities, fallbackTickerMessages])
 
   // Pricing plans data
   const pricingPlans: PricingPlan[] = [
@@ -82,22 +111,6 @@ export default function HomePage() {
   // Fetch recent activities for success ticker
   const fetchRecentActivities = async () => {
     try {
-      console.log('🔍 Fetching recent activities...')
-      
-      // First, let's try a simple query without joins to see all products
-      const { data: allProducts, error: allError } = await supabase
-        .from('profile_products')
-        .select('id, name, created_at, profile_id')
-        .order('created_at', { ascending: false })
-        .limit(15)
-
-      console.log('📦 All products query result:', allProducts?.length, 'items:', allProducts)
-      
-      if (allError) {
-        console.error('❌ Error fetching all products:', allError)
-      }
-
-      // Now try the join query
       const { data, error } = await supabase
         .from('profile_products')
         .select(`
@@ -110,45 +123,54 @@ export default function HomePage() {
         .order('created_at', { ascending: false })
         .limit(15)
 
-      console.log('🔗 Join query result:', data?.length, 'items:', data)
-
       if (error) {
-        console.error('❌ Error fetching recent activities with join:', error)
-        // Fallback to products without profile names if join fails
-        if (allProducts && allProducts.length > 0) {
-          console.log('🔄 Using fallback data without profile names')
-          const fallbackActivities = allProducts.filter(activity => 
-            activity.name && activity.name.trim().length > 0
-          ).map(activity => ({
-            ...activity,
-            profiles: { display_name: `User ${activity.profile_id?.slice(-4)}` }
-          }))
-          setRecentActivities(fallbackActivities)
-        }
-        return
+        throw error
       }
 
-      // Filter out any items that might have null/undefined names
-      const validActivities = (data || []).filter(activity => 
-        activity.name && activity.name.trim().length > 0
-      )
-      
-      console.log('✅ Valid activities after filtering:', validActivities.length, validActivities)
-      
-      // Let's see the first few items in detail
-      validActivities.slice(0, 5).forEach((activity, index) => {
-        console.log(`📋 Activity ${index + 1}:`, {
-          name: activity.name,
-          profile_name: Array.isArray(activity.profiles) ? activity.profiles[0]?.display_name : activity.profiles?.display_name,
-          profile_id: activity.profile_id,
-          created_at: activity.created_at,
-          full_profiles: activity.profiles
+      const normalizedActivities: RecentActivity[] = (data ?? [])
+        .map((activity: any) => {
+          const profileData = Array.isArray(activity.profiles)
+            ? activity.profiles[0]
+            : activity.profiles
+
+          return {
+            id: activity.id,
+            name: activity.name ?? '',
+            created_at: activity.created_at ?? '',
+            profile_id: activity.profile_id ?? null,
+            profile_name: profileData?.display_name ?? ''
+          }
         })
-      })
-      
-      setRecentActivities(validActivities)
+        .filter((activity: RecentActivity) => activity.name.trim().length > 0)
+
+      setRecentActivities(normalizedActivities)
     } catch (error) {
-      console.error('💥 Catch block error:', error)
+      console.error('Error fetching recent activities:', error)
+
+      // Fallback query without join to ensure ticker still shows data
+      try {
+        const { data: fallbackData } = await supabase
+          .from('profile_products')
+          .select('id, name, created_at, profile_id')
+          .order('created_at', { ascending: false })
+          .limit(15)
+
+        const fallbackActivities: RecentActivity[] = (fallbackData ?? [])
+          .map((activity: any) => ({
+            id: activity.id,
+            name: activity.name ?? '',
+            created_at: activity.created_at ?? '',
+            profile_id: activity.profile_id ?? null,
+            profile_name: activity.profile_id ? `User ${activity.profile_id.slice(-4)}` : ''
+          }))
+          .filter((activity: RecentActivity) => activity.name.trim().length > 0)
+
+        if (fallbackActivities.length > 0) {
+          setRecentActivities(fallbackActivities)
+        }
+      } catch (fallbackError) {
+        console.error('Fallback recent activities fetch failed:', fallbackError)
+      }
     }
   }
 
@@ -527,42 +549,13 @@ export default function HomePage() {
                   className="flex whitespace-nowrap py-2 px-4"
                   animate={{ x: ["0%", "-50%"] }}
                   transition={{ 
-                    duration: 35, 
+                    duration: 32, 
                     repeat: Infinity, 
                     ease: "linear" 
                   }}
                 >
                   <span className="text-yellow-800 font-bold text-sm mr-8">
-                    {(() => {
-                      console.log('🎯 Ticker rendering with activities:', recentActivities.length, recentActivities)
-                      
-                      if (recentActivities.length > 0) {
-                        // Let's see what we're actually mapping
-                        const mappedItems = recentActivities.map((activity, index) => {
-                          const profileName = Array.isArray(activity.profiles) 
-                            ? activity.profiles[0]?.display_name 
-                            : activity.profiles?.display_name
-                          const item = `🎉 ${profileName || activity.profile_id || 'Someone'} added "${activity.name}" to their shop • `
-                          console.log(`🎯 Mapping item ${index + 1}:`, item)
-                          return item
-                        })
-                        
-                        const singleLoop = mappedItems.join('')
-                        console.log('🔄 Single loop content:', singleLoop.substring(0, 200) + '...')
-                        
-                        // Create a longer string by repeating the activities multiple times for smooth scrolling
-                        const tickerContent = Array(Math.max(3, Math.ceil(20 / recentActivities.length))).fill(singleLoop).join('')
-                        
-                        console.log('📝 Final ticker content length:', tickerContent.length)
-                        console.log('📝 First 300 chars:', tickerContent.substring(0, 300))
-                        return tickerContent
-                      } else {
-                        // Fallback content with multiple repeated items for smooth scrolling
-                        const fallbackContent = Array(4).fill('🎉 Sarah just added "baie lekke steen" to their shop • Jan added "WE SELL BURGERS" to their shop • Candys added "sandye" to their shop • ').join('')
-                        console.log('🔄 Using fallback content')
-                        return fallbackContent
-                      }
-                    })()}
+                    {tickerContent}
                   </span>
                 </motion.div>
               </motion.div>
