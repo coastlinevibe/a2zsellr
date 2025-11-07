@@ -24,6 +24,9 @@ export default function HomePage() {
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [showExitIntent, setShowExitIntent] = useState(false)
+  const [chatWidgetCollapsed, setChatWidgetCollapsed] = useState(false)
+  const [recentActivities, setRecentActivities] = useState<any[]>([])
   const locationDropdownRef = useRef<HTMLDivElement>(null)
   const categoryDropdownRef = useRef<HTMLDivElement>(null)
 
@@ -76,11 +79,124 @@ export default function HomePage() {
     }
   ]
 
-  // Fetch categories and locations from database
+  // Fetch recent activities for success ticker
+  const fetchRecentActivities = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profile_products')
+        .select(`
+          id,
+          name,
+          created_at,
+          profiles!inner(display_name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(15)
+
+      if (error) {
+        console.error('Error fetching recent activities:', error)
+        return
+      }
+
+      setRecentActivities(data || [])
+    } catch (error) {
+      console.error('Error fetching recent activities:', error)
+    }
+  }
+
+  // Fetch categories
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name')
+
+      if (error) {
+        console.error('Error fetching categories:', error)
+        setCategories([])
+        return
+      }
+
+      setCategories(data || [])
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+      setCategories([])
+    }
+  }
+
+  // Fetch locations
+  const fetchLocations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('locations')
+        .select('*')
+        .order('name')
+
+      if (error) {
+        console.error('Error fetching locations:', error)
+        setLocations([])
+        return
+      }
+
+      setLocations(data || [])
+    } catch (error) {
+      console.error('Error fetching locations:', error)
+      setLocations([])
+    }
+  }
+
+  // Fetch businesses
+  const fetchBusinesses = async () => {
+    try {
+      setIsSearching(true)
+      
+      let query = supabase
+        .from('profiles')
+        .select(`
+          *,
+          categories(name),
+          locations(name)
+        `)
+
+      // Apply search filters
+      if (searchQuery && searchQuery.trim() !== '') {
+        query = query.or(`display_name.ilike.%${searchQuery}%,bio.ilike.%${searchQuery}%`)
+      }
+
+      if (selectedCategory && selectedCategory !== 'all') {
+        query = query.eq('category_id', selectedCategory)
+      }
+
+      if (selectedLocation && selectedLocation !== 'all') {
+        query = query.eq('location_id', selectedLocation)
+      }
+
+      const { data, error } = await query
+        .order('created_at', { ascending: false })
+        .limit(50)
+
+      if (error) {
+        console.error('Error fetching businesses:', error)
+        setBusinesses([])
+      } else {
+        setBusinesses(data || [])
+      }
+    } catch (error) {
+      console.error('Error fetching businesses:', error)
+      setBusinesses([])
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+
+  // Fetch initial data
   useEffect(() => {
-    fetchCategoriesAndLocations()
-    // Auto-search on page load to show some businesses
-    handleSearch()
+    fetchCategories()
+    fetchLocations()
+    fetchBusinesses()
+    fetchRecentActivities()
   }, [])
 
   // Handle clicking outside dropdowns
@@ -100,6 +216,23 @@ export default function HomePage() {
     }
   }, [])
 
+  // Exit intent detection
+  useEffect(() => {
+    let hasShownExitIntent = false
+    
+    function handleMouseLeave(event: MouseEvent) {
+      if (event.clientY <= 0 && !hasShownExitIntent) {
+        setShowExitIntent(true)
+        hasShownExitIntent = true
+      }
+    }
+
+    document.addEventListener('mouseleave', handleMouseLeave)
+    return () => {
+      document.removeEventListener('mouseleave', handleMouseLeave)
+    }
+  }, [])
+
   // Auto-search when filters change
   useEffect(() => {
     if (categories.length > 0 && locations.length > 0) {
@@ -110,6 +243,15 @@ export default function HomePage() {
       return () => clearTimeout(timeoutId)
     }
   }, [searchQuery, selectedCategory, selectedLocation])
+
+  // Refresh recent activities every 30 seconds to keep ticker fresh
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchRecentActivities()
+    }, 30000) // 30 seconds
+
+    return () => clearInterval(interval)
+  }, [])
 
   // Fetch categories and locations from database
   const fetchCategoriesAndLocations = async () => {
@@ -291,7 +433,7 @@ export default function HomePage() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
               >
-                Get listed on our directory, display your products/services, and sell with powerful marketing tools. Everything you need to grow your business.
+                Setup your profile to, display your products/services, and sell with powerful marketing tools. Everything you need to boost your sales.
               </motion.p>
               
               {/* Feature Pills */}
@@ -301,17 +443,59 @@ export default function HomePage() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 1.0 }}
               >
+              </motion.div>
+
+              {/* Social Proof Counter */}
+              <motion.div 
+                className="mb-6"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 1.2 }}
+              >
+                <div className="bg-green-100 border-2 border-green-500 rounded-lg p-3 inline-flex items-center gap-2 shadow-[2px_2px_0px_0px_rgba(34,197,94,0.9)]">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-green-800 font-bold text-sm">
+                    Join <motion.span 
+                      key={Math.floor(Date.now() / 10000)} // Changes every 10 seconds
+                      initial={{ scale: 1.2 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                      className="font-black"
+                    >
+                      1,247
+                    </motion.span> members selling today
+                  </span>
+                </div>
+              </motion.div>
+
+              {/* Success Stories Ticker */}
+              <motion.div 
+                className="mb-8 overflow-hidden bg-yellow-100 border-2 border-yellow-500 rounded-lg shadow-[2px_2px_0px_0px_rgba(234,179,8,0.9)]"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 1.4 }}
+              >
                 <motion.div 
-                  className="flex items-center gap-2 bg-yellow-400 border-2 border-black px-4 py-2 rounded-lg text-black text-sm font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ duration: 0.4, delay: 1.3 }}
-                  whileHover={{ scale: 1.05, x: 2, transition: { duration: 0.2 } }}
+                  className="flex whitespace-nowrap py-2 px-4"
+                  animate={{ x: [0, -100] }}
+                  transition={{ 
+                    duration: 20, 
+                    repeat: Infinity, 
+                    ease: "linear" 
+                  }}
                 >
-                  <motion.div whileHover={{ rotate: 360, transition: { duration: 0.7 } }}>
-                    <Share2 className="h-4 w-4" />
-                  </motion.div>
-                  MARKETING
+                  <span className="text-yellow-800 font-bold text-sm mr-8">
+                    {recentActivities.length > 0 ? (
+                      recentActivities.map((activity, index) => (
+                        `🎉 ${activity.profiles?.display_name || 'Someone'} added "${activity.name}" to their shop • `
+                      )).join('') + 
+                      recentActivities.map((activity, index) => (
+                        `🎉 ${activity.profiles?.display_name || 'Someone'} added "${activity.name}" to their shop • `
+                      )).join('')
+                    ) : (
+                      '🎉 Sarah just added "baie lekke steen" to their shop • Jan added "WE SELL BURGERS" to their shop • Candys added "sandye" to their shop • '
+                    )}
+                  </span>
                 </motion.div>
               </motion.div>
 
@@ -866,7 +1050,7 @@ export default function HomePage() {
               PLATFORM FEATURES
             </motion.div>
             <h2 className="text-4xl font-black text-black mb-4 bg-white p-6 rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] inline-block">
-              EVERYTHING YOU NEED TO GROW
+              EVERYTHING YOU NEED TO BOOST YOUR SALES
             </h2>
             <p className="text-xl text-black max-w-3xl mx-auto bg-yellow-300 p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold">
               FROM DIRECTORY LISTINGS TO MARKETING AUTOMATION - ALL THE TOOLS YOU NEED TO SUCCEED ONLINE
@@ -1201,7 +1385,7 @@ export default function HomePage() {
               GET STARTED IN 3 SIMPLE STEPS
             </h2>
             <p className="text-xl text-black max-w-3xl mx-auto bg-green-300 p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold">
-              FROM LISTING YOUR BUSINESS TO GROWING YOUR CUSTOMER BASE - WE MAKE IT EASY TO SUCCEED ONLINE
+              FROM LISTING YOUR BUSINESS TO BOOSTING YOUR SALES - WE MAKE IT EASY TO SUCCEED ONLINE
             </p>
           </div>
 
@@ -1281,7 +1465,7 @@ export default function HomePage() {
                 </div>
               </div>
               <h3 className="text-2xl font-black text-black mb-4">
-                MARKET & GROW
+                MARKET & SELL
               </h3>
               <p className="text-black leading-relaxed mb-6 font-bold">
                 USE OUR BUILT-IN MARKETING TOOLS TO CREATE CAMPAIGNS AND SHARE YOUR BUSINESS ACROSS WHATSAPP, FACEBOOK, INSTAGRAM, AND MORE.
@@ -1306,10 +1490,10 @@ export default function HomePage() {
           <div className="text-center mt-16">
             <div className="bg-white rounded-2xl p-8 border-4 border-black max-w-2xl mx-auto shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]">
               <h3 className="text-2xl font-black text-black mb-4">
-                READY TO GROW YOUR BUSINESS?
+                READY TO BOOST YOUR SALES?
               </h3>
               <p className="text-black mb-6 font-bold">
-                JOIN THOUSANDS OF BUSINESSES ALREADY USING OUR PLATFORM TO REACH MORE CUSTOMERS.
+                JOIN THOUSANDS OF MEMBERS ALREADY USING OUR PLATFORM TO REACH MORE CUSTOMERS.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
@@ -1400,10 +1584,10 @@ export default function HomePage() {
             >
               <div className="bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400 text-black p-6 rounded-2xl border-4 border-white shadow-[8px_8px_0px_0px_rgba(255,255,255,0.9)] max-w-2xl mx-auto transform -rotate-1">
                 <p className="text-lg font-black uppercase leading-tight">
-                  🚀 SOUTH AFRICA'S LEADING BUSINESS DIRECTORY 🚀
+                  🚀 SOUTH AFRICA'S LEADING SELLER DIRECTORY 🚀
                 </p>
                 <p className="text-sm font-bold mt-2">
-                  CONNECTING BUSINESSES • GROWING COMMUNITIES • BUILDING SUCCESS
+                  CONNECTING PEOPLE • PRO MARKETING TOOLS • BOOSTING SALES
                 </p>
               </div>
             </motion.div>
@@ -1510,7 +1694,7 @@ export default function HomePage() {
               >
                 <div className="text-center">
                   <div className="text-3xl font-black text-white mb-2">1000+</div>
-                  <div className="text-sm font-bold text-white uppercase">BUSINESSES LISTED</div>
+                  <div className="text-sm font-bold text-white uppercase">PROFILES LISTED</div>
                 </div>
               </motion.div>
               
@@ -1559,7 +1743,7 @@ export default function HomePage() {
                 }}
               >
                 <p className="text-lg font-black uppercase">
-                  © 2024 A2Z SELLR • ALL RIGHTS RESERVED
+                  © 2026 A2Z SELLR • ALL RIGHTS RESERVED
                 </p>
                 <p className="text-sm font-bold mt-1">
                   MADE WITH ❤️ IN SOUTH AFRICA
@@ -1575,6 +1759,167 @@ export default function HomePage() {
         isOpen={showAdminModal} 
         onClose={() => setShowAdminModal(false)} 
       />
+
+      {/* Live Chat Widget with Success Guarantee */}
+      <motion.div 
+        className="fixed bottom-6 right-6 z-50"
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 2, duration: 0.5 }}
+      >
+        <motion.div 
+          className={`bg-green-500 text-white rounded-2xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] cursor-pointer relative ${
+            chatWidgetCollapsed ? 'p-3' : 'p-4 max-w-xs'
+          }`}
+          whileHover={{ 
+            scale: 1.05,
+            boxShadow: "8px 8px 0px 0px rgba(0,0,0,0.9)",
+            x: 2,
+            y: -2
+          }}
+          whileTap={{ scale: 0.95 }}
+          animate={{
+            y: [0, -5, 0],
+          }}
+          transition={{
+            y: {
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }
+          }}
+          onClick={() => !chatWidgetCollapsed && setChatWidgetCollapsed(false)}
+        >
+          {/* Collapse/Expand Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setChatWidgetCollapsed(!chatWidgetCollapsed)
+            }}
+            className="absolute -top-2 -right-2 w-6 h-6 bg-white text-green-500 rounded-full border-2 border-black font-black text-xs hover:bg-gray-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] flex items-center justify-center"
+          >
+            {chatWidgetCollapsed ? '+' : '−'}
+          </button>
+
+          {chatWidgetCollapsed ? (
+            /* Collapsed State */
+            <motion.div 
+              className="flex items-center gap-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              onClick={() => setChatWidgetCollapsed(false)}
+            >
+              <MessageCircle className="w-5 h-5" />
+              <span className="font-black text-sm whitespace-nowrap">Free sales advice</span>
+            </motion.div>
+          ) : (
+            /* Expanded State */
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+                <span className="font-black text-sm">Talk to a Sales Success Coach</span>
+              </div>
+              <div className="text-xs font-bold opacity-90 mb-2">
+                💬 Get personalized advice to boost your sales
+              </div>
+              <div className="bg-white text-green-800 p-2 rounded-lg border-2 border-black text-xs font-black text-center">
+                🎯 30-day sales boost guarantee or money back!
+              </div>
+            </motion.div>
+          )}
+        </motion.div>
+      </motion.div>
+
+      {/* Sticky Mobile CTA */}
+      <motion.div 
+        className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-green-500 border-t-4 border-black p-4"
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 1.5, duration: 0.5 }}
+      >
+        <Link
+          href="/auth/signup-animated?plan=free"
+          className="block w-full bg-white text-green-800 font-black text-center py-3 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] active:translate-x-1 active:translate-y-1"
+        >
+          🚀 START SELLING TODAY - FREE!
+        </Link>
+      </motion.div>
+
+      {/* Exit Intent Popup */}
+      {showExitIntent && (
+        <motion.div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div 
+            className="bg-white p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] max-w-md mx-4 relative"
+            initial={{ scale: 0.5, y: 50 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          >
+            <button 
+              onClick={() => setShowExitIntent(false)}
+              className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full border-2 border-black font-black text-sm hover:bg-red-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+            >
+              ×
+            </button>
+            
+            <div className="text-center">
+              <motion.div 
+                className="text-4xl mb-4"
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 0.5, repeat: 2 }}
+              >
+                🛑
+              </motion.div>
+              
+              <h3 className="text-2xl font-black text-black mb-4">
+                Wait! Don't Miss Out!
+              </h3>
+              
+              <p className="text-black font-bold mb-6">
+                Get your <span className="bg-yellow-300 px-2 py-1 rounded border-2 border-black">first month FREE</span> and start boosting your sales today!
+              </p>
+              
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center gap-2 text-sm font-bold text-green-800">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  30-day money-back guarantee
+                </div>
+                <div className="flex items-center gap-2 text-sm font-bold text-green-800">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  No setup fees or hidden costs
+                </div>
+                <div className="flex items-center gap-2 text-sm font-bold text-green-800">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  Cancel anytime
+                </div>
+              </div>
+              
+              <Link
+                href="/auth/signup-animated?plan=premium&promo=FIRSTFREE"
+                className="block w-full bg-green-500 hover:bg-green-600 text-white font-black py-3 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-1 hover:translate-y-1 transition-all mb-3"
+              >
+                🎉 CLAIM YOUR FREE MONTH NOW!
+              </Link>
+              
+              <button 
+                onClick={() => setShowExitIntent(false)}
+                className="text-gray-500 text-sm font-bold hover:text-gray-700"
+              >
+                No thanks, I'll pay full price later
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </motion.div>
   )
 }

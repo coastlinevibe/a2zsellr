@@ -255,7 +255,7 @@ const PricingCard = ({
                             repeat: Infinity
                         }}
                     >
-                        POPULAR
+                        🔥 MOST POPULAR
                     </motion.span>
                 )}
             </div>

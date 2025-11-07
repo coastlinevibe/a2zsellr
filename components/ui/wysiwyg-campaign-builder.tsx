@@ -1,31 +1,31 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import React, { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
-  MessageCircle, 
-  Eye,
+  Upload, 
+  X, 
+  Eye, 
+  Save, 
+  ShoppingBag, 
+  Image as ImageIcon, 
+  Video, 
+  FileText, 
+  Grid3X3, 
+  Layers, 
+  Smartphone, 
+  Monitor,
   Calendar,
-  Send,
-  Save,
-  Settings,
-  Image,
-  Link,
-  Type,
-  Palette,
-  Layout,
-  Grid,
-  Layers,
-  Play,
-  X,
-  ShoppingBag,
-  Plus,
-  CheckCircle2,
-  Upload,
-  Loader2
+  Clock,
+  ExternalLink,
+  AlertTriangle,
+  CheckCircle,
+  Info
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
+import { supabase } from '@/lib/supabaseClient'
+import { useAuth } from '@/lib/auth'
+import { useGlobalNotifications } from '@/contexts/NotificationContext'
+import { 
   GalleryMosaicLayout,
   HoverCardsLayout,
   BeforeAfterLayout,
@@ -59,6 +59,9 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
   const [scheduleDate, setScheduleDate] = useState('')
   // IMPORTANT: selectedProducts should ALWAYS start empty - no auto-selection
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([])
+  
+  // Notification system
+  const { showSuccess, showError } = useGlobalNotifications()
   
   // Force clear any auto-selected products on component mount
   React.useEffect(() => {
@@ -387,16 +390,17 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
       console.log('Listing saved successfully:', listing)
       
       // Show success message
-      alert(`✅ Listing "${campaignTitle}" saved successfully!\n\n` +
-            `• Uploaded Media: ${uploadedMedia.length} files\n` +
-            `• Selected Products: ${selectedProducts.length} items\n` +
-            `• Layout: ${selectedLayout}\n` +
-            `• Platforms: ${selectedPlatforms.join(', ')}\n\n` +
-            `View it in Marketing > My Listings tab!`)
+      showSuccess(
+        `Listing "${campaignTitle}" saved successfully!`,
+        `• ${uploadedMedia.length} files • ${selectedProducts.length} products • ${selectedLayout} layout • View in Marketing > My Listings tab!`
+      )
       
     } catch (error: any) {
       console.error('Error saving listing:', error)
-      alert(`❌ Error saving listing: ${error.message}\n\nCheck console for details.`)
+      showError(
+        'Error saving listing',
+        `${error.message} - Check console for details.`
+      )
     }
   }
 

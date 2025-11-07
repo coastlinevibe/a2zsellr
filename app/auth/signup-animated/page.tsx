@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabaseClient'
-import { AnimatedForm, AnimatedInput, AnimatedButton } from '@/components/ui/AnimatedForm'
+import { AnimatedForm, AnimatedInput, AnimatedPasswordInput, AnimatedButton } from '@/components/ui/AnimatedForm'
 import { Home, Crown, Users, Check, Star, CheckCircle2, AlertTriangle, Info } from 'lucide-react'
 import { formatPrice, TIER_PRICING } from '@/lib/subscription'
 
@@ -519,17 +519,15 @@ export default function AnimatedSignupPage() {
             required
           />
 
-          <AnimatedInput
+          <AnimatedPasswordInput
             label="Password"
-            type="password"
             value={password}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
             required
           />
 
-          <AnimatedInput
+          <AnimatedPasswordInput
             label="Confirm password"
-            type="password"
             value={confirmPassword}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
             required

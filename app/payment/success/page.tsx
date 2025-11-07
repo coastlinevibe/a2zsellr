@@ -134,7 +134,7 @@ export default function PaymentSuccessPage() {
         <div className="mt-6 p-4 bg-blue-50 rounded-lg">
           <p className="text-sm text-blue-800">
             <strong>What's next?</strong><br />
-            Explore your new features in the dashboard and start growing your business with our premium tools!
+            Explore your new features in the dashboard and start boosting your sales with our premium tools!
           </p>
         </div>
       </div>

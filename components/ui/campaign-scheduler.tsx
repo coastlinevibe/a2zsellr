@@ -21,6 +21,93 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
+// Helper functions for time format conversion
+const formatTimeTo12Hour = (time24: string): string => {
+  if (!time24) return ''
+  const [hours, minutes] = time24.split(':')
+  const hour = parseInt(hours, 10)
+  const ampm = hour >= 12 ? 'PM' : 'AM'
+  const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+  return `${hour12}:${minutes} ${ampm}`
+}
+
+const formatTimeTo24Hour = (time12: string): string => {
+  if (!time12) return ''
+  const match = time12.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i)
+  if (!match) return time12 // Return as-is if not in expected format
+  
+  const [, hour, minutes, ampm] = match
+  let hour24 = parseInt(hour, 10)
+  
+  if (ampm.toUpperCase() === 'PM' && hour24 !== 12) {
+    hour24 += 12
+  } else if (ampm.toUpperCase() === 'AM' && hour24 === 12) {
+    hour24 = 0
+  }
+  
+  return `${hour24.toString().padStart(2, '0')}:${minutes}`
+}
+
+// Custom time picker component with AM/PM display
+const TimePickerAMPM = ({ 
+  value, 
+  onChange, 
+  className 
+}: { 
+  value: string
+  onChange: (value: string) => void
+  className?: string 
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const displayTime = formatTimeTo12Hour(value)
+
+  const handleTimeChange = (newTime: string) => {
+    const time24 = formatTimeTo24Hour(newTime)
+    onChange(time24)
+    setIsOpen(false)
+  }
+
+  const generateTimeOptions = () => {
+    const options = []
+    for (let hour = 1; hour <= 12; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const minuteStr = minute.toString().padStart(2, '0')
+        options.push(`${hour}:${minuteStr} AM`)
+        options.push(`${hour}:${minuteStr} PM`)
+      }
+    }
+    return options
+  }
+
+  return (
+    <div className="relative">
+      <input
+        type="text"
+        value={displayTime}
+        onClick={() => setIsOpen(!isOpen)}
+        readOnly
+        className={`cursor-pointer ${className}`}
+        placeholder="Select time"
+      />
+      
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto w-32">
+          {generateTimeOptions().map((timeOption) => (
+            <div
+              key={timeOption}
+              onClick={() => handleTimeChange(timeOption)}
+              className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+            >
+              {timeOption}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface ScheduleSettings {
   whatsapp: {
     time: string
@@ -164,10 +251,9 @@ const CampaignScheduler = ({ onSchedule }: { onSchedule: (settings: ScheduleSett
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Send Time</label>
-                    <input
-                      type="time"
+                    <TimePickerAMPM
                       value={schedule.whatsapp.time}
-                      onChange={(e) => handleScheduleUpdate('whatsapp', 'time', e.target.value)}
+                      onChange={(value) => handleScheduleUpdate('whatsapp', 'time', value)}
                       className="w-full p-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>
@@ -216,10 +302,9 @@ const CampaignScheduler = ({ onSchedule }: { onSchedule: (settings: ScheduleSett
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Post Time</label>
-                    <input
-                      type="time"
+                    <TimePickerAMPM
                       value={schedule.facebook.time}
-                      onChange={(e) => handleScheduleUpdate('facebook', 'time', e.target.value)}
+                      onChange={(value) => handleScheduleUpdate('facebook', 'time', value)}
                       className="w-full p-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>
@@ -269,19 +354,17 @@ const CampaignScheduler = ({ onSchedule }: { onSchedule: (settings: ScheduleSett
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Story Time</label>
-                    <input
-                      type="time"
+                    <TimePickerAMPM
                       value={schedule.instagram.storyTime}
-                      onChange={(e) => handleScheduleUpdate('instagram', 'storyTime', e.target.value)}
+                      onChange={(value) => handleScheduleUpdate('instagram', 'storyTime', value)}
                       className="w-full p-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Feed Time</label>
-                    <input
-                      type="time"
+                    <TimePickerAMPM
                       value={schedule.instagram.feedTime}
-                      onChange={(e) => handleScheduleUpdate('instagram', 'feedTime', e.target.value)}
+                      onChange={(value) => handleScheduleUpdate('instagram', 'feedTime', value)}
                       className="w-full p-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>

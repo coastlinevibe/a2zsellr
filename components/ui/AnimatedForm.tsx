@@ -1,7 +1,8 @@
 'use client'
 
-import { ReactNode, HTMLAttributes } from 'react'
+import { ReactNode, HTMLAttributes, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { Eye, EyeOff } from 'lucide-react'
 
 interface AnimatedFormProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode
@@ -52,6 +53,58 @@ export function AnimatedInput({
         )}
         {...props}
       />
+      {error && (
+        <p className="text-sm text-red-600">{error}</p>
+      )}
+    </div>
+  )
+}
+
+interface AnimatedPasswordInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
+  label?: string
+  error?: string
+}
+
+export function AnimatedPasswordInput({ 
+  label, 
+  error, 
+  className, 
+  ...props 
+}: AnimatedPasswordInputProps) {
+  const [showPassword, setShowPassword] = useState(false)
+
+  return (
+    <div className="space-y-2">
+      {label && (
+        <label className="block text-sm font-medium text-gray-700">
+          {label}
+        </label>
+      )}
+      <div className="relative">
+        <input
+          type={showPassword ? 'text' : 'password'}
+          className={cn(
+            'w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl',
+            'focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500',
+            'outline-none transition-all duration-200',
+            'placeholder:text-gray-400',
+            error && 'border-red-300 focus:border-red-500 focus:ring-red-500',
+            className
+          )}
+          {...props}
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors"
+        >
+          {showPassword ? (
+            <EyeOff className="h-5 w-5" />
+          ) : (
+            <Eye className="h-5 w-5" />
+          )}
+        </button>
+      </div>
       {error && (
         <p className="text-sm text-red-600">{error}</p>
       )}

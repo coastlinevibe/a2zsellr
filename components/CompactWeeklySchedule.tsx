@@ -20,6 +20,95 @@ const daysOfWeek = [
   { key: 'sunday', label: 'Sun' }
 ]
 
+// Helper functions for time format conversion
+const formatTimeTo12Hour = (time24: string): string => {
+  if (!time24) return ''
+  const [hours, minutes] = time24.split(':')
+  const hour = parseInt(hours, 10)
+  const ampm = hour >= 12 ? 'PM' : 'AM'
+  const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+  return `${hour12}:${minutes} ${ampm}`
+}
+
+const formatTimeTo24Hour = (time12: string): string => {
+  if (!time12) return ''
+  const match = time12.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i)
+  if (!match) return time12 // Return as-is if not in expected format
+  
+  const [, hour, minutes, ampm] = match
+  let hour24 = parseInt(hour, 10)
+  
+  if (ampm.toUpperCase() === 'PM' && hour24 !== 12) {
+    hour24 += 12
+  } else if (ampm.toUpperCase() === 'AM' && hour24 === 12) {
+    hour24 = 0
+  }
+  
+  return `${hour24.toString().padStart(2, '0')}:${minutes}`
+}
+
+// Custom time picker component with AM/PM display
+const TimePickerAMPM = ({ 
+  value, 
+  onChange, 
+  className 
+}: { 
+  value: string
+  onChange: (value: string) => void
+  className?: string 
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [tempTime, setTempTime] = useState(value)
+
+  const displayTime = formatTimeTo12Hour(value)
+
+  const handleTimeChange = (newTime: string) => {
+    setTempTime(newTime)
+    const time24 = formatTimeTo24Hour(newTime)
+    onChange(time24)
+    setIsOpen(false)
+  }
+
+  const generateTimeOptions = () => {
+    const options = []
+    for (let hour = 1; hour <= 12; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const minuteStr = minute.toString().padStart(2, '0')
+        options.push(`${hour}:${minuteStr} AM`)
+        options.push(`${hour}:${minuteStr} PM`)
+      }
+    }
+    return options
+  }
+
+  return (
+    <div className="relative">
+      <input
+        type="text"
+        value={displayTime}
+        onClick={() => setIsOpen(!isOpen)}
+        readOnly
+        className={`cursor-pointer ${className}`}
+        placeholder="Select time"
+      />
+      
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto w-24">
+          {generateTimeOptions().map((timeOption) => (
+            <div
+              key={timeOption}
+              onClick={() => handleTimeChange(timeOption)}
+              className="px-2 py-1 text-xs hover:bg-gray-100 cursor-pointer"
+            >
+              {timeOption}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function CompactWeeklySchedule({ 
   weeklySchedule, 
   updateDaySchedule, 
@@ -27,6 +116,22 @@ export default function CompactWeeklySchedule({
 }: CompactWeeklyScheduleProps) {
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
   const todayHours = getTodayHoursFromSchedule(weeklySchedule)
+  
+  // Format today's hours to AM/PM format
+  const formatTodayHours = (hours: string): string => {
+    if (hours === 'Closed') return hours
+    
+    // Parse hours like "09:00 - 17:00" and convert to AM/PM
+    const match = hours.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/)
+    if (match) {
+      const [, openTime, closeTime] = match
+      return `${formatTimeTo12Hour(openTime)} - ${formatTimeTo12Hour(closeTime)}`
+    }
+    
+    return hours // Return as-is if format doesn't match
+  }
+  
+  const formattedTodayHours = formatTodayHours(todayHours)
 
   const containerVariants = {
     hidden: { opacity: 0, y: 10 },
@@ -69,7 +174,7 @@ export default function CompactWeeklySchedule({
             <span className="font-medium text-sm">Today's Hours</span>
           </div>
           <div className="text-right">
-            <div className="font-semibold">{todayHours}</div>
+            <div className="font-semibold">{formattedTodayHours}</div>
             <div className="text-xs text-emerald-100">
               {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
             </div>
@@ -120,7 +225,7 @@ export default function CompactWeeklySchedule({
                       <span className="text-red-600 font-medium">Closed</span>
                     ) : (
                       <span className="text-emerald-600 font-medium">
-                        {daySchedule.open} - {daySchedule.close}
+                        {formatTimeTo12Hour(daySchedule.open)} - {formatTimeTo12Hour(daySchedule.close)}
                       </span>
                     )}
                   </div>
@@ -140,19 +245,17 @@ export default function CompactWeeklySchedule({
                       >
                         <div className="flex items-center gap-1">
                           <Sun className="w-3 h-3 text-amber-500" />
-                          <input
-                            type="time"
+                          <TimePickerAMPM
                             value={daySchedule.open}
-                            onChange={(e) => updateDaySchedule(day.key, 'open', e.target.value)}
+                            onChange={(value) => updateDaySchedule(day.key, 'open', value)}
                             className="w-20 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
                           />
                         </div>
                         <div className="flex items-center gap-1">
                           <Moon className="w-3 h-3 text-indigo-500" />
-                          <input
-                            type="time"
+                          <TimePickerAMPM
                             value={daySchedule.close}
-                            onChange={(e) => updateDaySchedule(day.key, 'close', e.target.value)}
+                            onChange={(value) => updateDaySchedule(day.key, 'close', value)}
                             className="w-20 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
                           />
                         </div>
@@ -189,13 +292,17 @@ export default function CompactWeeklySchedule({
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   const mondaySchedule = weeklySchedule.monday
-                  daysOfWeek.forEach(day => {
-                    if (day.key !== 'monday') {
-                      updateDaySchedule(day.key, 'closed', mondaySchedule.closed)
-                      updateDaySchedule(day.key, 'open', mondaySchedule.open)
-                      updateDaySchedule(day.key, 'close', mondaySchedule.close)
-                    }
-                  })
+                  if (mondaySchedule) {
+                    daysOfWeek.forEach(day => {
+                      if (day.key !== 'monday') {
+                        updateDaySchedule(day.key, 'closed', mondaySchedule.closed)
+                        if (!mondaySchedule.closed) {
+                          updateDaySchedule(day.key, 'open', mondaySchedule.open)
+                          updateDaySchedule(day.key, 'close', mondaySchedule.close)
+                        }
+                      }
+                    })
+                  }
                 }}
                 className="px-3 py-1.5 text-xs font-medium bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-md transition-all shadow-sm border border-purple-200"
               >
@@ -219,14 +326,17 @@ export default function CompactWeeklySchedule({
                 whileHover={{ scale: 1.05, y: -1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
-                  ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].forEach(day => {
+                  // Set weekdays (Mon-Fri) to 9-5
+                  ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].forEach((day: string) => {
                     updateDaySchedule(day, 'closed', false)
                     updateDaySchedule(day, 'open', '09:00')
                     updateDaySchedule(day, 'close', '17:00')
                   })
+                  // Set Saturday to 9-2
                   updateDaySchedule('saturday', 'closed', false)
                   updateDaySchedule('saturday', 'open', '09:00')
                   updateDaySchedule('saturday', 'close', '14:00')
+                  // Set Sunday to closed
                   updateDaySchedule('sunday', 'closed', true)
                 }}
                 className="px-3 py-1.5 text-xs font-medium bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-all shadow-sm border border-blue-200"

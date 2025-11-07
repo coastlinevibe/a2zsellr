@@ -52,7 +52,7 @@ export function Header() {
             </motion.div>
             <div className="bg-white p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]">
               <p className="text-xs font-black text-black uppercase">
-                WELCOME TO SOUTH AFRICA'S PREMIUM BUSINESS DIRECTORY! JOIN THOUSANDS OF BUSINESSES GROWING THEIR REACH.
+                WELCOME TO S.A's PREMIUM SELLER DIRECTORY! JOIN THOUSANDS OF MEMBERS SHOWING & SHARING THEIR PRODUCTS AND SERVICES.
               </p>
             </div>
           </div>

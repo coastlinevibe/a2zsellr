@@ -64,10 +64,10 @@ export function SubscriptionUpgrade({ currentTier, onUpgrade }: SubscriptionUpgr
       {/* Header */}
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-4">
-          Upgrade Your Business
+          Boost Your Sales
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Unlock powerful features to grow your business and reach more customers
+          Unlock powerful features to boost your sales and reach more customers
         </p>
       </div>
 
