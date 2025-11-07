@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, Save, X, MapPin, Tag, RefreshCw, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabaseClient'
+import { motion } from 'framer-motion'
 
 interface Category {
   id: number
@@ -27,12 +28,20 @@ interface Location {
   updated_at: string
 }
 
+interface ProductCategory {
+  id: string
+  category: string
+  type: string
+  created_at: string
+}
+
 export function AdminCategoriesLocations() {
-  const [activeTab, setActiveTab] = useState<'categories' | 'locations'>('categories')
+  const [activeTab, setActiveTab] = useState<'categories' | 'locations' | 'product-categories'>('categories')
   const [categories, setCategories] = useState<Category[]>([])
   const [locations, setLocations] = useState<Location[]>([])
+  const [productCategories, setProductCategories] = useState<ProductCategory[]>([])
   const [loading, setLoading] = useState(true)
-  const [editingItem, setEditingItem] = useState<number | null>(null)
+  const [editingItem, setEditingItem] = useState<number | string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [formData, setFormData] = useState<any>({})
   const [error, setError] = useState('')
@@ -52,7 +61,7 @@ export function AdminCategoriesLocations() {
         
         if (error) throw error
         setCategories(data || [])
-      } else {
+      } else if (activeTab === 'locations') {
         const { data, error } = await supabase
           .from('locations')
           .select('*')
@@ -60,6 +69,29 @@ export function AdminCategoriesLocations() {
         
         if (error) throw error
         setLocations(data || [])
+      } else if (activeTab === 'product-categories') {
+        const { data, error } = await supabase
+          .from('profile_products')
+          .select('category, type')
+          .order('category')
+        
+        if (error) throw error
+        
+        // Get unique categories with their types
+        const uniqueCategories = data?.reduce((acc: ProductCategory[], item: any) => {
+          const existing = acc.find(cat => cat.category === item.category)
+          if (!existing) {
+            acc.push({
+              id: item.category,
+              category: item.category,
+              type: item.type || 'product',
+              created_at: new Date().toISOString()
+            })
+          }
+          return acc
+        }, []) || []
+        
+        setProductCategories(uniqueCategories)
       }
     } catch (err) {
       console.error('Error fetching data:', err)
@@ -89,7 +121,7 @@ export function AdminCategoriesLocations() {
         icon: '',
         is_active: true
       })
-    } else {
+    } else if (activeTab === 'locations') {
       setFormData({
         city: '',
         slug: '',
@@ -97,10 +129,15 @@ export function AdminCategoriesLocations() {
         country: 'South Africa',
         is_active: true
       })
+    } else if (activeTab === 'product-categories') {
+      setFormData({
+        category: '',
+        type: 'product'
+      })
     }
   }
 
-  const handleEdit = (item: Category | Location) => {
+  const handleEdit = (item: Category | Location | ProductCategory) => {
     setEditingItem(item.id)
     setShowAddForm(false)
     setFormData(item)
@@ -145,7 +182,7 @@ export function AdminCategoriesLocations() {
           
           if (error) throw error
         }
-      } else {
+      } else if (activeTab === 'locations') {
         // Auto-generate slug if empty
         if (!formData.slug && formData.city) {
           formData.slug = generateSlug(formData.city)
@@ -180,6 +217,24 @@ export function AdminCategoriesLocations() {
           
           if (error) throw error
         }
+      } else if (activeTab === 'product-categories') {
+        if (!editingItem) {
+          // Add new product category - we'll create a sample product with this category
+          const { error } = await supabase
+            .from('profile_products')
+            .insert({
+              id: crypto.randomUUID(),
+              category: formData.category,
+              type: formData.type,
+              name: `Sample ${formData.category}`,
+              description: `Sample product for ${formData.category} category`,
+              price: 0,
+              is_active: false
+            })
+          
+          if (error) throw error
+        }
+        // Note: We don't allow editing product categories directly as they're derived from products
       }
 
       // Reset form and refresh data
@@ -194,17 +249,28 @@ export function AdminCategoriesLocations() {
     }
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number | string) => {
     if (!confirm('Are you sure you want to delete this item?')) return
     
     try {
-      const table = activeTab === 'categories' ? 'categories' : 'locations'
-      const { error } = await supabase
-        .from(table)
-        .delete()
-        .eq('id', id)
+      if (activeTab === 'product-categories') {
+        // Delete all products with this category
+        const { error } = await supabase
+          .from('profile_products')
+          .delete()
+          .eq('category', id)
+        
+        if (error) throw error
+      } else {
+        const table = activeTab === 'categories' ? 'categories' : 'locations'
+        const { error } = await supabase
+          .from(table)
+          .delete()
+          .eq('id', id)
+        
+        if (error) throw error
+      }
       
-      if (error) throw error
       fetchData()
       
     } catch (err: any) {
@@ -249,319 +315,572 @@ export function AdminCategoriesLocations() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Categories & Locations</h2>
-          <p className="text-gray-600">Manage business categories and locations</p>
+      <motion.div 
+        className="bg-gradient-to-r from-purple-400 to-pink-500 p-6 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transform -rotate-1"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.4 }}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-black text-white uppercase">CATEGORIES & LOCATIONS</h2>
+            <p className="text-white font-bold bg-black px-3 py-1 rounded border-2 border-white inline-block mt-2">
+              MANAGE BUSINESS CATEGORIES & LOCATIONS
+            </p>
+          </div>
+          <motion.button
+            onClick={fetchData}
+            className="bg-white text-black px-4 py-2 rounded-lg border-2 border-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center gap-2"
+            whileHover={{ 
+              scale: 1.05,
+              y: -2,
+              transition: { duration: 0.2 }
+            }}
+            whileTap={{ 
+              scale: 0.95,
+              transition: { duration: 0.1 }
+            }}
+          >
+            <motion.div
+              whileHover={{ 
+                rotate: 360,
+                transition: { duration: 0.6 }
+              }}
+            >
+              <RefreshCw className="w-4 h-4" />
+            </motion.div>
+            REFRESH
+          </motion.button>
         </div>
-        <Button onClick={fetchData} variant="outline" size="sm">
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
+      </motion.div>
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab('categories')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'categories'
-                ? 'border-emerald-500 text-emerald-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+      <div className="flex gap-4 justify-center">
+        <motion.button
+          onClick={() => setActiveTab('categories')}
+          className={`px-6 py-3 rounded-xl border-4 border-black font-black text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 ${
+            activeTab === 'categories'
+              ? 'bg-green-500 text-white'
+              : 'bg-white text-black hover:bg-gray-100'
+          }`}
+          whileHover={{ 
+            scale: 1.05,
+            y: -2,
+            transition: { duration: 0.2 }
+          }}
+          whileTap={{ 
+            scale: 0.95,
+            transition: { duration: 0.1 }
+          }}
+        >
+          <motion.div
+            whileHover={{ 
+              rotate: 360,
+              transition: { duration: 0.6 }
+            }}
           >
-            <Tag className="w-5 h-5 inline mr-2" />
-            Categories ({categories.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('locations')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'locations'
-                ? 'border-emerald-500 text-emerald-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            <Tag className="w-5 h-5" />
+          </motion.div>
+          CATEGORIES ({categories.length})
+        </motion.button>
+        
+        <motion.button
+          onClick={() => setActiveTab('locations')}
+          className={`px-6 py-3 rounded-xl border-4 border-black font-black text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 ${
+            activeTab === 'locations'
+              ? 'bg-blue-500 text-white'
+              : 'bg-white text-black hover:bg-gray-100'
+          }`}
+          whileHover={{ 
+            scale: 1.05,
+            y: -2,
+            transition: { duration: 0.2 }
+          }}
+          whileTap={{ 
+            scale: 0.95,
+            transition: { duration: 0.1 }
+          }}
+        >
+          <motion.div
+            whileHover={{ 
+              rotate: 360,
+              transition: { duration: 0.6 }
+            }}
           >
-            <MapPin className="w-5 h-5 inline mr-2" />
-            Locations ({locations.length})
-          </button>
-        </nav>
+            <MapPin className="w-5 h-5" />
+          </motion.div>
+          LOCATIONS ({locations.length})
+        </motion.button>
+        
+        <motion.button
+          onClick={() => setActiveTab('product-categories')}
+          className={`px-6 py-3 rounded-xl border-4 border-black font-black text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 ${
+            activeTab === 'product-categories'
+              ? 'bg-purple-500 text-white'
+              : 'bg-white text-black hover:bg-gray-100'
+          }`}
+          whileHover={{ 
+            scale: 1.05,
+            y: -2,
+            transition: { duration: 0.2 }
+          }}
+          whileTap={{ 
+            scale: 0.95,
+            transition: { duration: 0.1 }
+          }}
+        >
+          <motion.div
+            whileHover={{ 
+              rotate: 360,
+              transition: { duration: 0.6 }
+            }}
+          >
+            <Tag className="w-5 h-5" />
+          </motion.div>
+          PRODUCT CATEGORIES ({productCategories.length})
+        </motion.button>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-          <p className="text-sm text-red-700">{error}</p>
-        </div>
+        <motion.div 
+          className="bg-red-400 border-4 border-black rounded-xl p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <p className="text-black font-black">⚠️ {error}</p>
+        </motion.div>
       )}
 
       {/* Add Button */}
-      <div className="flex justify-end">
-        <Button onClick={handleAdd} className="bg-emerald-600 hover:bg-emerald-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Add {activeTab === 'categories' ? 'Category' : 'Location'}
-        </Button>
+      <div className="flex justify-center">
+        <motion.button
+          onClick={handleAdd}
+          className="bg-yellow-400 hover:bg-yellow-500 text-black px-6 py-3 rounded-xl border-4 border-black font-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center gap-2"
+          whileHover={{ 
+            scale: 1.05,
+            y: -2,
+            transition: { duration: 0.2 }
+          }}
+          whileTap={{ 
+            scale: 0.95,
+            transition: { duration: 0.1 }
+          }}
+        >
+          <motion.div
+            whileHover={{ 
+              rotate: 180,
+              transition: { duration: 0.3 }
+            }}
+          >
+            <Plus className="w-5 h-5" />
+          </motion.div>
+          ADD {activeTab === 'categories' ? 'CATEGORY' : activeTab === 'locations' ? 'LOCATION' : 'PRODUCT CATEGORY'}
+        </motion.button>
       </div>
 
       {/* Add/Edit Form */}
       {(showAddForm || editingItem) && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-4">
-            {editingItem ? 'Edit' : 'Add'} {activeTab === 'categories' ? 'Category' : 'Location'}
+        <motion.div 
+          className="bg-gradient-to-r from-orange-300 to-yellow-300 border-4 border-black rounded-xl p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transform rotate-1"
+          initial={{ scale: 0.9, opacity: 0, rotate: 0 }}
+          animate={{ scale: 1, opacity: 1, rotate: 1 }}
+          transition={{ duration: 0.4, type: "spring" }}
+        >
+          <h3 className="text-2xl font-black text-black mb-6 uppercase">
+            {editingItem ? 'EDIT' : 'ADD'} {activeTab === 'categories' ? 'CATEGORY' : activeTab === 'locations' ? 'LOCATION' : 'PRODUCT CATEGORY'}
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {activeTab === 'categories' ? (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                  <label className="block text-sm font-black text-black mb-2 uppercase">NAME *</label>
                   <input
                     type="text"
                     value={formData.name || ''}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                    placeholder="e.g., Restaurants"
+                    className="w-full p-3 border-2 border-black rounded-lg font-bold bg-white placeholder-gray-500"
+                    placeholder="E.G., RESTAURANTS"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Slug *</label>
+                  <label className="block text-sm font-black text-black mb-2 uppercase">SLUG *</label>
                   <input
                     type="text"
                     value={formData.slug || ''}
                     onChange={(e) => setFormData({...formData, slug: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                    placeholder="e.g., restaurants"
+                    className="w-full p-3 border-2 border-black rounded-lg font-bold bg-white placeholder-gray-500"
+                    placeholder="E.G., RESTAURANTS"
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <label className="block text-sm font-black text-black mb-2 uppercase">DESCRIPTION</label>
                   <textarea
                     value={formData.description || ''}
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                    rows={2}
-                    placeholder="Category description..."
+                    className="w-full p-3 border-2 border-black rounded-lg font-bold bg-white placeholder-gray-500"
+                    rows={3}
+                    placeholder="CATEGORY DESCRIPTION..."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
+                  <label className="block text-sm font-black text-black mb-2 uppercase">ICON</label>
                   <input
                     type="text"
                     value={formData.icon || ''}
                     onChange={(e) => setFormData({...formData, icon: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                    placeholder="e.g., utensils"
+                    className="w-full p-3 border-2 border-black rounded-lg font-bold bg-white placeholder-gray-500"
+                    placeholder="E.G., UTENSILS"
                   />
                 </div>
               </>
-            ) : (
+            ) : activeTab === 'locations' ? (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                  <label className="block text-sm font-black text-black mb-2 uppercase">CITY *</label>
                   <input
                     type="text"
                     value={formData.city || ''}
                     onChange={(e) => setFormData({...formData, city: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                    placeholder="e.g., Cape Town"
+                    className="w-full p-3 border-2 border-black rounded-lg font-bold bg-white placeholder-gray-500"
+                    placeholder="E.G., CAPE TOWN"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Slug *</label>
+                  <label className="block text-sm font-black text-black mb-2 uppercase">SLUG *</label>
                   <input
                     type="text"
                     value={formData.slug || ''}
                     onChange={(e) => setFormData({...formData, slug: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                    placeholder="e.g., cape-town"
+                    className="w-full p-3 border-2 border-black rounded-lg font-bold bg-white placeholder-gray-500"
+                    placeholder="E.G., CAPE-TOWN"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Province</label>
+                  <label className="block text-sm font-black text-black mb-2 uppercase">PROVINCE</label>
                   <input
                     type="text"
                     value={formData.province || ''}
                     onChange={(e) => setFormData({...formData, province: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                    placeholder="e.g., Western Cape"
+                    className="w-full p-3 border-2 border-black rounded-lg font-bold bg-white placeholder-gray-500"
+                    placeholder="E.G., WESTERN CAPE"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                  <label className="block text-sm font-black text-black mb-2 uppercase">COUNTRY</label>
                   <input
                     type="text"
                     value={formData.country || 'South Africa'}
                     onChange={(e) => setFormData({...formData, country: e.target.value})}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    className="w-full p-3 border-2 border-black rounded-lg font-bold bg-white"
                   />
                 </div>
               </>
-            )}
+            ) : activeTab === 'product-categories' ? (
+              <>
+                <div>
+                  <label className="block text-sm font-black text-black mb-2 uppercase">CATEGORY NAME *</label>
+                  <input
+                    type="text"
+                    value={formData.category || ''}
+                    onChange={(e) => setFormData({...formData, category: e.target.value})}
+                    className="w-full p-3 border-2 border-black rounded-lg font-bold bg-white placeholder-gray-500"
+                    placeholder="E.G., SERVICES"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-black text-black mb-2 uppercase">TYPE</label>
+                  <select
+                    value={formData.type || 'product'}
+                    onChange={(e) => setFormData({...formData, type: e.target.value})}
+                    className="w-full p-3 border-2 border-black rounded-lg font-bold bg-white"
+                  >
+                    <option value="product">PRODUCT</option>
+                    <option value="service">SERVICE</option>
+                    <option value="food">FOOD & DRINKS</option>
+                    <option value="retail">RETAIL ITEMS</option>
+                  </select>
+                </div>
+              </>
+            ) : null}
             
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="is_active"
-                checked={formData.is_active || false}
-                onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
-                className="mr-2"
-              />
-              <label htmlFor="is_active" className="text-sm font-medium text-gray-700">Active</label>
-            </div>
+            {(activeTab === 'categories' || activeTab === 'locations') && (
+              <div className="flex items-center bg-white p-3 rounded-lg border-2 border-black">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  checked={formData.is_active || false}
+                  onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
+                  className="mr-3 w-5 h-5"
+                />
+                <label htmlFor="is_active" className="font-black text-black uppercase">ACTIVE</label>
+              </div>
+            )}
           </div>
 
-          <div className="flex gap-2 mt-6">
-            <Button onClick={handleSave} className="bg-emerald-600 hover:bg-emerald-700">
-              <Save className="w-4 h-4 mr-2" />
-              Save
-            </Button>
-            <Button onClick={handleCancel} variant="outline">
-              <X className="w-4 h-4 mr-2" />
-              Cancel
-            </Button>
+          <div className="flex gap-4 mt-8">
+            <motion.button
+              onClick={handleSave}
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg border-2 border-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] flex items-center justify-center gap-2"
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Save className="w-5 h-5" />
+              SAVE
+            </motion.button>
+            <motion.button
+              onClick={handleCancel}
+              className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg border-2 border-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] flex items-center justify-center gap-2"
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <X className="w-5 h-5" />
+              CANCEL
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Data Table */}
-      <div className="bg-white rounded-lg border overflow-hidden">
+      <motion.div 
+        className="bg-white rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] overflow-hidden transform -rotate-1"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+      >
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-gradient-to-r from-cyan-400 to-blue-500 border-b-4 border-black">
               <tr>
                 {activeTab === 'categories' ? (
                   <>
-                    <th className="text-left p-4 font-medium text-gray-900">Name</th>
-                    <th className="text-left p-4 font-medium text-gray-900">Slug</th>
-                    <th className="text-left p-4 font-medium text-gray-900">Description</th>
-                    <th className="text-left p-4 font-medium text-gray-900">Icon</th>
-                    <th className="text-left p-4 font-medium text-gray-900">Status</th>
-                    <th className="text-left p-4 font-medium text-gray-900">Actions</th>
+                    <th className="text-left p-4 font-black text-black uppercase">NAME</th>
+                    <th className="text-left p-4 font-black text-black uppercase">SLUG</th>
+                    <th className="text-left p-4 font-black text-black uppercase">DESCRIPTION</th>
+                    <th className="text-left p-4 font-black text-black uppercase">ICON</th>
+                    <th className="text-left p-4 font-black text-black uppercase">STATUS</th>
+                    <th className="text-left p-4 font-black text-black uppercase">ACTIONS</th>
+                  </>
+                ) : activeTab === 'locations' ? (
+                  <>
+                    <th className="text-left p-4 font-black text-black uppercase">CITY</th>
+                    <th className="text-left p-4 font-black text-black uppercase">SLUG</th>
+                    <th className="text-left p-4 font-black text-black uppercase">PROVINCE</th>
+                    <th className="text-left p-4 font-black text-black uppercase">COUNTRY</th>
+                    <th className="text-left p-4 font-black text-black uppercase">STATUS</th>
+                    <th className="text-left p-4 font-black text-black uppercase">ACTIONS</th>
                   </>
                 ) : (
                   <>
-                    <th className="text-left p-4 font-medium text-gray-900">City</th>
-                    <th className="text-left p-4 font-medium text-gray-900">Slug</th>
-                    <th className="text-left p-4 font-medium text-gray-900">Province</th>
-                    <th className="text-left p-4 font-medium text-gray-900">Country</th>
-                    <th className="text-left p-4 font-medium text-gray-900">Status</th>
-                    <th className="text-left p-4 font-medium text-gray-900">Actions</th>
+                    <th className="text-left p-4 font-black text-black uppercase">CATEGORY</th>
+                    <th className="text-left p-4 font-black text-black uppercase">TYPE</th>
+                    <th className="text-left p-4 font-black text-black uppercase">PRODUCT COUNT</th>
+                    <th className="text-left p-4 font-black text-black uppercase">ACTIONS</th>
                   </>
                 )}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="bg-white divide-y-4 divide-black">
               {activeTab === 'categories' ? (
-                categories.map((category) => (
-                  <tr key={category.id} className="border-b hover:bg-gray-50">
-                    <td className="p-4 font-medium">{category.name}</td>
-                    <td className="p-4 text-gray-600">{category.slug}</td>
-                    <td className="p-4 text-gray-600">{category.description || '-'}</td>
-                    <td className="p-4 text-gray-600">{category.icon || '-'}</td>
+                categories.map((category, index) => (
+                  <motion.tr 
+                    key={category.id} 
+                    className="hover:bg-yellow-100 transition-colors"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <td className="p-4 font-black text-black">{category.name}</td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      <div className="font-bold text-gray-600 bg-gray-200 px-2 py-1 rounded border border-black inline-block">
+                        {category.slug}
+                      </div>
+                    </td>
+                    <td className="p-4 font-bold text-black">{category.description || '-'}</td>
+                    <td className="p-4 font-bold text-black">{category.icon || '-'}</td>
+                    <td className="p-4">
+                      <div className={`px-3 py-1 rounded-lg border-2 border-black font-black text-sm uppercase ${
                         category.is_active 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
+                          ? 'bg-green-500 text-white' 
+                          : 'bg-red-500 text-white'
                       }`}>
-                        {category.is_active ? 'Active' : 'Inactive'}
-                      </span>
+                        {category.is_active ? 'ACTIVE' : 'INACTIVE'}
+                      </div>
                     </td>
                     <td className="p-4">
                       <div className="flex gap-2">
-                        <Button
+                        <motion.button
                           onClick={() => toggleActive(category.id, category.is_active)}
-                          variant="outline"
-                          size="sm"
+                          className={`p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] ${
+                            category.is_active 
+                              ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                              : 'bg-green-500 hover:bg-green-600 text-white'
+                          }`}
                           title={category.is_active ? 'Deactivate' : 'Activate'}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
                         >
                           {category.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </Button>
-                        <Button
+                        </motion.button>
+                        <motion.button
                           onClick={() => handleEdit(category)}
-                          variant="outline"
-                          size="sm"
+                          className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
                         >
                           <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
+                        </motion.button>
+                        <motion.button
                           onClick={() => handleDelete(category.id)}
-                          variant="outline"
-                          size="sm"
-                          className="text-red-600 hover:text-red-700"
+                          className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
                         >
                           <Trash2 className="w-4 h-4" />
-                        </Button>
+                        </motion.button>
                       </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))
-              ) : (
-                locations.map((location) => (
-                  <tr key={location.id} className="border-b hover:bg-gray-50">
-                    <td className="p-4 font-medium">{location.city}</td>
-                    <td className="p-4 text-gray-600">{location.slug}</td>
-                    <td className="p-4 text-gray-600">{location.province || '-'}</td>
-                    <td className="p-4 text-gray-600">{location.country}</td>
+              ) : activeTab === 'locations' ? (
+                locations.map((location, index) => (
+                  <motion.tr 
+                    key={location.id} 
+                    className="hover:bg-yellow-100 transition-colors"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <td className="p-4 font-black text-black">{location.city}</td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      <div className="font-bold text-gray-600 bg-gray-200 px-2 py-1 rounded border border-black inline-block">
+                        {location.slug}
+                      </div>
+                    </td>
+                    <td className="p-4 font-bold text-black">{location.province || '-'}</td>
+                    <td className="p-4 font-bold text-black">{location.country}</td>
+                    <td className="p-4">
+                      <div className={`px-3 py-1 rounded-lg border-2 border-black font-black text-sm uppercase ${
                         location.is_active 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
+                          ? 'bg-green-500 text-white' 
+                          : 'bg-red-500 text-white'
                       }`}>
-                        {location.is_active ? 'Active' : 'Inactive'}
-                      </span>
+                        {location.is_active ? 'ACTIVE' : 'INACTIVE'}
+                      </div>
                     </td>
                     <td className="p-4">
                       <div className="flex gap-2">
-                        <Button
+                        <motion.button
                           onClick={() => toggleActive(location.id, location.is_active)}
-                          variant="outline"
-                          size="sm"
+                          className={`p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] ${
+                            location.is_active 
+                              ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                              : 'bg-green-500 hover:bg-green-600 text-white'
+                          }`}
                           title={location.is_active ? 'Deactivate' : 'Activate'}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
                         >
                           {location.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </Button>
-                        <Button
+                        </motion.button>
+                        <motion.button
                           onClick={() => handleEdit(location)}
-                          variant="outline"
-                          size="sm"
+                          className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
                         >
                           <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
+                        </motion.button>
+                        <motion.button
                           onClick={() => handleDelete(location.id)}
-                          variant="outline"
-                          size="sm"
-                          className="text-red-600 hover:text-red-700"
+                          className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
                         >
                           <Trash2 className="w-4 h-4" />
-                        </Button>
+                        </motion.button>
                       </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))
-              )}
+              ) : activeTab === 'product-categories' ? (
+                productCategories.map((productCategory, index) => (
+                  <motion.tr 
+                    key={productCategory.id} 
+                    className="hover:bg-yellow-100 transition-colors"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                  >
+                    <td className="p-4 font-black text-black">{productCategory.category}</td>
+                    <td className="p-4">
+                      <div className="font-bold text-white bg-purple-500 px-3 py-1 rounded-lg border-2 border-black uppercase text-sm">
+                        {productCategory.type}
+                      </div>
+                    </td>
+                    <td className="p-4 font-bold text-black">
+                      <div className="bg-blue-100 px-3 py-1 rounded-lg border border-black inline-block">
+                        {/* We'll show a placeholder count for now */}
+                        Multiple Products
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex gap-2">
+                        <motion.button
+                          onClick={() => handleDelete(productCategory.id)}
+                          className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          title="Delete all products in this category"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </motion.button>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))
+              ) : null}
             </tbody>
           </table>
         </div>
-      </div>
+      </motion.div>
 
       {/* Empty State */}
       {((activeTab === 'categories' && categories.length === 0) || 
-        (activeTab === 'locations' && locations.length === 0)) && (
-        <div className="text-center py-12">
-          {activeTab === 'categories' ? (
-            <Tag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          ) : (
-            <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          )}
-          <p className="text-gray-600">
-            No {activeTab} found. Click "Add {activeTab === 'categories' ? 'Category' : 'Location'}" to get started.
+        (activeTab === 'locations' && locations.length === 0) ||
+        (activeTab === 'product-categories' && productCategories.length === 0)) && (
+        <motion.div 
+          className="text-center py-12 bg-gray-100 border-4 border-black rounded-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <motion.div
+            className="bg-white p-4 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] inline-block mb-4"
+            whileHover={{ 
+              rotate: 5,
+              transition: { duration: 0.3 }
+            }}
+          >
+            {activeTab === 'categories' ? (
+              <Tag className="h-12 w-12 text-black" />
+            ) : activeTab === 'locations' ? (
+              <MapPin className="h-12 w-12 text-black" />
+            ) : (
+              <Tag className="h-12 w-12 text-black" />
+            )}
+          </motion.div>
+          <p className="text-black font-black uppercase text-lg">
+            NO {activeTab.replace('-', ' ').toUpperCase()} FOUND!
           </p>
-        </div>
+          <p className="text-black font-bold mt-2">
+            CLICK "ADD {activeTab === 'categories' ? 'CATEGORY' : activeTab === 'locations' ? 'LOCATION' : 'PRODUCT CATEGORY'}" TO GET STARTED
+          </p>
+        </motion.div>
       )}
     </div>
   )

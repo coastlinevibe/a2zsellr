@@ -302,30 +302,6 @@ export default function HomePage() {
                 transition={{ duration: 0.6, delay: 1.0 }}
               >
                 <motion.div 
-                  className="flex items-center gap-2 bg-blue-400 border-2 border-black px-4 py-2 rounded-lg text-black text-sm font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ duration: 0.4, delay: 1.1 }}
-                  whileHover={{ scale: 1.05, x: 2, transition: { duration: 0.2 } }}
-                >
-                  <motion.div whileHover={{ rotate: 360, transition: { duration: 0.5 } }}>
-                    <Search className="h-4 w-4" />
-                  </motion.div>
-                  DIRECTORY
-                </motion.div>
-                <motion.div 
-                  className="flex items-center gap-2 bg-green-400 border-2 border-black px-4 py-2 rounded-lg text-black text-sm font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ duration: 0.4, delay: 1.2 }}
-                  whileHover={{ scale: 1.05, x: 2, transition: { duration: 0.2 } }}
-                >
-                  <motion.div whileHover={{ rotate: 360, transition: { duration: 0.6 } }}>
-                    <ShoppingBag className="h-4 w-4" />
-                  </motion.div>
-                  PRODUCTS
-                </motion.div>
-                <motion.div 
                   className="flex items-center gap-2 bg-yellow-400 border-2 border-black px-4 py-2 rounded-lg text-black text-sm font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
                   initial={{ x: -20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
@@ -570,48 +546,30 @@ export default function HomePage() {
                 <div className="lg:col-span-3" ref={locationDropdownRef}>
                   <label className="block text-sm font-black text-black mb-2">LOCATION</label>
                   <div className="relative">
-                    <motion.div whileHover={{ rotate: 360, transition: { duration: 0.5 } }}>
-                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black z-10" />
-                    </motion.div>
-                    <motion.button
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black z-10" />
+                    <button
                       onClick={() => setShowLocationDropdown(!showLocationDropdown)}
-                      className="w-full pl-10 pr-4 py-3 border-2 border-black rounded-lg bg-white font-bold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] text-left"
-                      whileHover={{ 
-                        scale: 1.02,
-                        rotate: 1,
-                        boxShadow: "6px 6px 0px 0px rgba(0,0,0,0.9)",
-                        x: 2,
-                        y: -2
-                      }}
-                      whileTap={{ 
-                        scale: 0.98,
-                        rotate: -1,
-                        transition: { duration: 0.1 }
-                      }}
+                      className="w-full pl-10 pr-4 py-3 border-2 border-black rounded-lg bg-white font-bold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] text-left hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]"
                     >
                       {locations.find(l => (l.slug || l.city) === selectedLocation)?.city || 'All Locations'}
-                    </motion.button>
+                    </button>
                     {showLocationDropdown && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      <div
                         className="absolute top-full left-0 right-0 mt-2 bg-white border-4 border-black rounded-lg shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] z-20 max-h-60 overflow-y-auto"
                       >
                         {locations.map((location) => (
-                          <motion.button
+                          <button
                             key={location.slug || location.city}
                             onClick={() => {
                               setSelectedLocation(location.slug || location.city)
                               setShowLocationDropdown(false)
                             }}
                             className="w-full px-4 py-3 text-left font-bold text-black hover:bg-yellow-300 border-b-2 border-black last:border-b-0 transition-colors"
-                            whileHover={{ x: 4, backgroundColor: '#fde047' }}
                           >
                             {location.city || location}
-                          </motion.button>
+                          </button>
                         ))}
-                      </motion.div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -620,48 +578,30 @@ export default function HomePage() {
                 <div className="lg:col-span-3" ref={categoryDropdownRef}>
                   <label className="block text-sm font-black text-black mb-2">CATEGORY</label>
                   <div className="relative">
-                    <motion.div whileHover={{ rotate: 360, transition: { duration: 0.5 } }}>
-                      <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black z-10" />
-                    </motion.div>
-                    <motion.button
+                    <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black z-10" />
+                    <button
                       onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                      className="w-full pl-10 pr-4 py-3 border-2 border-black rounded-lg bg-white font-bold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] text-left"
-                      whileHover={{ 
-                        scale: 1.02,
-                        rotate: -1,
-                        boxShadow: "6px 6px 0px 0px rgba(0,0,0,0.9)",
-                        x: 2,
-                        y: -2
-                      }}
-                      whileTap={{ 
-                        scale: 0.98,
-                        rotate: 1,
-                        transition: { duration: 0.1 }
-                      }}
+                      className="w-full pl-10 pr-4 py-3 border-2 border-black rounded-lg bg-white font-bold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] text-left hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]"
                     >
                       {categories.find(c => (c.slug || c.name) === selectedCategory)?.name || 'All Categories'}
-                    </motion.button>
+                    </button>
                     {showCategoryDropdown && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      <div
                         className="absolute top-full left-0 right-0 mt-2 bg-white border-4 border-black rounded-lg shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] z-20 max-h-60 overflow-y-auto"
                       >
                         {categories.map((category) => (
-                          <motion.button
+                          <button
                             key={category.slug || category.name}
                             onClick={() => {
                               setSelectedCategory(category.slug || category.name)
                               setShowCategoryDropdown(false)
                             }}
                             className="w-full px-4 py-3 text-left font-bold text-black hover:bg-blue-300 border-b-2 border-black last:border-b-0 transition-colors"
-                            whileHover={{ x: 4, backgroundColor: '#93c5fd' }}
                           >
                             {category.name || category}
-                          </motion.button>
+                          </button>
                         ))}
-                      </motion.div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -701,7 +641,7 @@ export default function HomePage() {
       </motion.section>
 
       {/* Search Results - Brutalist Style */}
-      <section className="py-12 relative">
+      <section className="py-6 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Loading State */}
           {isSearching && (
@@ -713,26 +653,12 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Results Header */}
-          {!isSearching && businesses.length > 0 && (
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-black text-black mb-2 bg-white p-4 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] inline-block">
-                PREMIUM DIRECTORY
-              </h2>
-              <p className="text-black text-lg bg-yellow-300 p-3 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold inline-block">
-                FOUND {businesses.length} PROFILE{businesses.length !== 1 ? 'S' : ''} 
-                {searchQuery && ` MATCHING "${searchQuery.toUpperCase()}"`}
-                {selectedCategory !== 'all' && ` IN ${categories.find(c => c.slug === selectedCategory)?.name?.toUpperCase()}`}
-                {selectedLocation !== 'all' && ` IN ${locations.find(l => l.slug === selectedLocation)?.city?.toUpperCase()}`}
-              </p>
-            </div>
-          )}
-          
           {/* Business Cards Carousel */}
           {!isSearching && businesses.length > 0 && (
             <div className="relative">
               {/* Carousel Header */}
               <div className="flex items-center justify-between mb-8">
+                {/* Featured Businesses - Left */}
                 <motion.h3 
                   className="text-2xl font-black text-black bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] inline-block"
                   initial={{ x: -50, opacity: 0 }}
@@ -742,54 +668,43 @@ export default function HomePage() {
                   FEATURED BUSINESSES
                 </motion.h3>
                 
-                {/* Navigation Buttons */}
-                <div className="flex gap-3">
-                  <motion.button
-                    onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
-                    disabled={currentSlide === 0}
-                    className={`p-3 rounded-lg border-2 border-black font-black transition-all ${
-                      currentSlide === 0 
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                        : 'bg-blue-500 text-white hover:bg-blue-600 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]'
-                    }`}
-                    whileHover={{ 
-                      scale: currentSlide === 0 ? 1 : 1.05,
-                      x: currentSlide === 0 ? 0 : -2,
-                      transition: { duration: 0.2 }
-                    }}
-                    whileTap={{ 
-                      scale: currentSlide === 0 ? 1 : 0.95,
-                      transition: { duration: 0.1 }
-                    }}
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </motion.button>
-                  
-                  <motion.button
-                    onClick={() => setCurrentSlide(Math.min(businesses.length - 3, currentSlide + 1))}
-                    disabled={currentSlide >= businesses.length - 3}
-                    className={`p-3 rounded-lg border-2 border-black font-black transition-all ${
-                      currentSlide >= businesses.length - 3
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                        : 'bg-green-500 text-white hover:bg-green-600 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]'
-                    }`}
-                    whileHover={{ 
-                      scale: currentSlide >= businesses.length - 3 ? 1 : 1.05,
-                      x: currentSlide >= businesses.length - 3 ? 0 : 2,
-                      transition: { duration: 0.2 }
-                    }}
-                    whileTap={{ 
-                      scale: currentSlide >= businesses.length - 3 ? 1 : 0.95,
-                      transition: { duration: 0.1 }
-                    }}
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </motion.button>
-                </div>
+                {/* Premium Directory - Center (Large) */}
+                <h2 className="text-4xl font-black text-black bg-white p-6 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]">
+                  PREMIUM DIRECTORY
+                </h2>
+                
+                {/* Found Profiles - Right */}
+                <p className="text-black text-lg bg-yellow-300 p-3 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold">
+                  FOUND {businesses.length} PROFILE{businesses.length !== 1 ? 'S' : ''} 
+                  {searchQuery && ` MATCHING "${searchQuery.toUpperCase()}"`}
+                  {selectedCategory !== 'all' && ` IN ${categories.find(c => c.slug === selectedCategory)?.name?.toUpperCase()}`}
+                  {selectedLocation !== 'all' && ` IN ${locations.find(l => l.slug === selectedLocation)?.city?.toUpperCase()}`}
+                </p>
               </div>
+              
+              {/* Carousel Container with Side Navigation */}
+              <div className="flex items-center gap-4">
+                {/* Left Navigation Button */}
+                <motion.button
+                  onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
+                  disabled={currentSlide === 0}
+                  className={`p-4 rounded-lg border-2 border-black font-black transition-all ${
+                    currentSlide === 0 
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'bg-blue-500 text-white hover:bg-blue-600 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]'
+                  }`}
+                  whileHover={{ 
+                    scale: currentSlide === 0 ? 1 : 1.05,
+                    rotate: currentSlide === 0 ? 0 : -2,
+                    transition: { duration: 0.2 }
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </motion.button>
 
-              {/* Carousel Container */}
-              <div className="overflow-hidden rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] bg-white p-6">
+                {/* Carousel Container */}
+                <div className="flex-1 overflow-hidden rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] bg-white p-6">
                 <motion.div 
                   className="flex gap-6"
                   animate={{ x: -currentSlide * (320 + 24) }} // 320px card width + 24px gap
@@ -833,23 +748,43 @@ export default function HomePage() {
                     )
                   })}
                 </motion.div>
-              </div>
+                
+                {/* Slide Indicators */}
+                <div className="flex justify-center gap-2 mt-6">
+                  {Array.from({ length: Math.max(1, businesses.length - 2) }).map((_, index) => (
+                    <motion.button
+                      key={index}
+                      onClick={() => setCurrentSlide(index)}
+                      className={`w-4 h-4 rounded-full border-2 border-black transition-all ${
+                        currentSlide === index 
+                          ? 'bg-yellow-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]' 
+                          : 'bg-white hover:bg-gray-200'
+                      }`}
+                      whileHover={{ scale: 1.2 }}
+                      whileTap={{ scale: 0.9 }}
+                    />
+                  ))}
+                </div>
+                </div>
 
-              {/* Slide Indicators */}
-              <div className="flex justify-center gap-2 mt-6">
-                {Array.from({ length: Math.max(1, businesses.length - 2) }).map((_, index) => (
-                  <motion.button
-                    key={index}
-                    onClick={() => setCurrentSlide(index)}
-                    className={`w-4 h-4 rounded-full border-2 border-black transition-all ${
-                      currentSlide === index 
-                        ? 'bg-yellow-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]' 
-                        : 'bg-white hover:bg-gray-200'
-                    }`}
-                    whileHover={{ scale: 1.2 }}
-                    whileTap={{ scale: 0.9 }}
-                  />
-                ))}
+                {/* Right Navigation Button */}
+                <motion.button
+                  onClick={() => setCurrentSlide(Math.min(Math.max(0, businesses.length - 3), currentSlide + 1))}
+                  disabled={currentSlide >= Math.max(0, businesses.length - 3)}
+                  className={`p-4 rounded-lg border-2 border-black font-black transition-all ${
+                    currentSlide >= Math.max(0, businesses.length - 3)
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'bg-blue-500 text-white hover:bg-blue-600 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]'
+                  }`}
+                  whileHover={{ 
+                    scale: currentSlide >= Math.max(0, businesses.length - 3) ? 1 : 1.05,
+                    rotate: currentSlide >= Math.max(0, businesses.length - 3) ? 0 : 2,
+                    transition: { duration: 0.2 }
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </motion.button>
               </div>
             </div>
           )}

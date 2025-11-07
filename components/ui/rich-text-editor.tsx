@@ -100,12 +100,14 @@ export default function RichTextEditor({
     return tempDiv.innerHTML
   }, [])
 
-  // Sync value with contentEditable div
+  // Sync value with contentEditable div (only when not actively editing)
   useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
-      // Clean the value before setting it
-      const cleanedValue = value ? cleanHTML(value) : value
-      editorRef.current.innerHTML = cleanedValue
+    if (editorRef.current && document.activeElement !== editorRef.current) {
+      // Only update if the editor is not focused (prevents cursor jumping during typing)
+      if (editorRef.current.innerHTML !== value) {
+        const cleanedValue = value ? cleanHTML(value) : value
+        editorRef.current.innerHTML = cleanedValue
+      }
     }
   }, [value, cleanHTML])
 
@@ -129,12 +131,12 @@ export default function RichTextEditor({
 
   const handleInput = useCallback(() => {
     if (editorRef.current) {
-      let content = editorRef.current.innerHTML
+      const content = editorRef.current.innerHTML
       const textContent = editorRef.current.textContent || ''
       
       if (textContent.length <= maxLength) {
-        // Clean the HTML before saving
-        content = cleanHTML(content)
+        // Pass content directly without cleaning on every keystroke
+        // Cleaning will happen on blur or when needed
         onChange(content)
       } else {
         // Prevent further input if too long
@@ -151,7 +153,19 @@ export default function RichTextEditor({
         }
       }
     }
-  }, [onChange, maxLength, value, cleanHTML])
+  }, [onChange, maxLength, value])
+
+  const handleBlur = useCallback(() => {
+    if (editorRef.current) {
+      // Clean the HTML when user finishes editing
+      const content = editorRef.current.innerHTML
+      const cleanedContent = cleanHTML(content)
+      if (cleanedContent !== content) {
+        editorRef.current.innerHTML = cleanedContent
+        onChange(cleanedContent)
+      }
+    }
+  }, [onChange, cleanHTML])
 
   const insertLink = () => {
     if (linkUrl && savedSelection && editorRef.current) {
@@ -315,6 +329,7 @@ export default function RichTextEditor({
           ref={editorRef}
           contentEditable
           onInput={handleInput}
+          onBlur={handleBlur}
           onClick={handleClick}
           className="min-h-[120px] p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-inset"
           style={{ 

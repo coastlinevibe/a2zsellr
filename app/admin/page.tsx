@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Shield, Users, Search, Edit, CheckCircle, X, CreditCard, Settings } from 'lucide-react'
+import { Shield, Users, Search, Edit, CheckCircle, X, CreditCard, Settings, LogOut } from 'lucide-react'
 import { AdminPaymentDashboard } from '@/components/AdminPaymentDashboard'
 import { AdminCategoriesLocations } from '@/components/AdminCategoriesLocations'
+import { motion } from 'framer-motion'
 
 interface UserProfile {
   id: string
@@ -120,6 +121,19 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      
+      // Redirect to homepage after logout
+      router.push('/')
+    } catch (error) {
+      console.error('Error logging out:', error)
+      alert('❌ Failed to log out')
+    }
+  }
+
   const filteredUsers = users.filter(user => 
     user.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -153,108 +167,250 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-gradient-to-r from-yellow-300 via-green-300 to-blue-300 border-b-4 border-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Shield className="h-8 w-8 text-emerald-600" />
+              <motion.div 
+                className="bg-white p-3 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
+                whileHover={{ 
+                  rotate: 360,
+                  transition: { duration: 0.6 }
+                }}
+              >
+                <Shield className="h-8 w-8 text-green-600" />
+              </motion.div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                <p className="text-sm text-gray-600">Manage users, subscriptions, and payments</p>
+                <h1 className="text-3xl font-black text-black uppercase">ADMIN DASHBOARD</h1>
+                <p className="text-sm font-bold text-black bg-white px-2 py-1 rounded border-2 border-black inline-block">
+                  MANAGE USERS, SUBSCRIPTIONS & PAYMENTS
+                </p>
               </div>
             </div>
-            <Button onClick={() => router.push('/dashboard')} variant="outline">
-              GoTo Profile Dash
-            </Button>
+            
+            <div className="flex items-center gap-3">
+              <motion.button
+                onClick={() => router.push('/dashboard')}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg border-2 border-black font-black text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all uppercase"
+                whileHover={{ 
+                  scale: 1.05,
+                  y: -2,
+                  transition: { duration: 0.2 }
+                }}
+                whileTap={{ 
+                  scale: 0.95,
+                  transition: { duration: 0.1 }
+                }}
+              >
+                PROFILE DASH
+              </motion.button>
+              
+              <motion.button
+                onClick={handleLogout}
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg border-2 border-black font-black text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 uppercase"
+                whileHover={{ 
+                  scale: 1.05,
+                  y: -2,
+                  transition: { duration: 0.2 }
+                }}
+                whileTap={{ 
+                  scale: 0.95,
+                  transition: { duration: 0.1 }
+                }}
+              >
+                <motion.div
+                  whileHover={{ 
+                    rotate: 180,
+                    transition: { duration: 0.3 }
+                  }}
+                >
+                  <LogOut className="h-4 w-4" />
+                </motion.div>
+                LOGOUT
+              </motion.button>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <motion.div 
+            className="bg-blue-400 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] p-6 transform rotate-1"
+            whileHover={{ 
+              scale: 1.05,
+              rotate: 2,
+              transition: { duration: 0.2 }
+            }}
+          >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{users.length}</p>
+                <p className="text-sm font-black text-black uppercase">TOTAL USERS</p>
+                <p className="text-4xl font-black text-white">{users.length}</p>
               </div>
-              <Users className="h-8 w-8 text-gray-400" />
+              <motion.div 
+                className="bg-white p-2 rounded-lg border-2 border-black"
+                whileHover={{ 
+                  rotate: 360,
+                  transition: { duration: 0.6 }
+                }}
+              >
+                <Users className="h-6 w-6 text-blue-600" />
+              </motion.div>
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          </motion.div>
+          
+          <motion.div 
+            className="bg-gray-400 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] p-6 transform -rotate-1"
+            whileHover={{ 
+              scale: 1.05,
+              rotate: -2,
+              transition: { duration: 0.2 }
+            }}
+          >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Free Tier</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-black text-black uppercase">FREE TIER</p>
+                <p className="text-4xl font-black text-white">
                   {users.filter(u => u.subscription_tier === 'free').length}
                 </p>
               </div>
-              <Badge className="bg-gray-100 text-gray-700">Free</Badge>
+              <div className="bg-white px-3 py-1 rounded-lg border-2 border-black">
+                <span className="text-black font-black text-sm">FREE</span>
+              </div>
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          </motion.div>
+          
+          <motion.div 
+            className="bg-purple-400 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] p-6 transform rotate-1"
+            whileHover={{ 
+              scale: 1.05,
+              rotate: 2,
+              transition: { duration: 0.2 }
+            }}
+          >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Premium</p>
-                <p className="text-2xl font-bold text-purple-600">
+                <p className="text-sm font-black text-black uppercase">PREMIUM</p>
+                <p className="text-4xl font-black text-white">
                   {users.filter(u => u.subscription_tier === 'premium').length}
                 </p>
               </div>
-              <Badge className="bg-purple-100 text-purple-700">Premium</Badge>
+              <div className="bg-white px-3 py-1 rounded-lg border-2 border-black">
+                <span className="text-purple-600 font-black text-sm">PREMIUM</span>
+              </div>
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          </motion.div>
+          
+          <motion.div 
+            className="bg-green-400 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] p-6 transform -rotate-1"
+            whileHover={{ 
+              scale: 1.05,
+              rotate: -2,
+              transition: { duration: 0.2 }
+            }}
+          >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Business</p>
-                <p className="text-2xl font-bold text-emerald-600">
+                <p className="text-sm font-black text-black uppercase">BUSINESS</p>
+                <p className="text-4xl font-black text-white">
                   {users.filter(u => u.subscription_tier === 'business').length}
                 </p>
               </div>
-              <Badge className="bg-emerald-100 text-emerald-700">Business</Badge>
+              <div className="bg-white px-3 py-1 rounded-lg border-2 border-black">
+                <span className="text-green-600 font-black text-sm">BUSINESS</span>
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
-              <button
-                onClick={() => setActiveTab('users')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'users'
-                    ? 'border-emerald-500 text-emerald-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+        <div className="mb-8">
+          <div className="flex gap-4 justify-center">
+            <motion.button
+              onClick={() => setActiveTab('users')}
+              className={`px-6 py-3 rounded-xl border-4 border-black font-black text-sm uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 ${
+                activeTab === 'users'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white text-black hover:bg-gray-100'
+              }`}
+              whileHover={{ 
+                scale: 1.05,
+                y: -2,
+                transition: { duration: 0.2 }
+              }}
+              whileTap={{ 
+                scale: 0.95,
+                transition: { duration: 0.1 }
+              }}
+            >
+              <motion.div
+                whileHover={{ 
+                  rotate: 360,
+                  transition: { duration: 0.6 }
+                }}
               >
-                <Users className="w-5 h-5 inline mr-2" />
-                User Management
-              </button>
-              <button
-                onClick={() => setActiveTab('payments')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'payments'
-                    ? 'border-emerald-500 text-emerald-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                <Users className="w-5 h-5" />
+              </motion.div>
+              USER MANAGEMENT
+            </motion.button>
+            
+            <motion.button
+              onClick={() => setActiveTab('payments')}
+              className={`px-6 py-3 rounded-xl border-4 border-black font-black text-sm uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 ${
+                activeTab === 'payments'
+                  ? 'bg-green-500 text-white'
+                  : 'bg-white text-black hover:bg-gray-100'
+              }`}
+              whileHover={{ 
+                scale: 1.05,
+                y: -2,
+                transition: { duration: 0.2 }
+              }}
+              whileTap={{ 
+                scale: 0.95,
+                transition: { duration: 0.1 }
+              }}
+            >
+              <motion.div
+                whileHover={{ 
+                  rotate: 360,
+                  transition: { duration: 0.6 }
+                }}
               >
-                <CreditCard className="w-5 h-5 inline mr-2" />
-                Payment Management
-              </button>
-              <button
-                onClick={() => setActiveTab('categories')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'categories'
-                    ? 'border-emerald-500 text-emerald-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                <CreditCard className="w-5 h-5" />
+              </motion.div>
+              PAYMENT MANAGEMENT
+            </motion.button>
+            
+            <motion.button
+              onClick={() => setActiveTab('categories')}
+              className={`px-6 py-3 rounded-xl border-4 border-black font-black text-sm uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 ${
+                activeTab === 'categories'
+                  ? 'bg-purple-500 text-white'
+                  : 'bg-white text-black hover:bg-gray-100'
+              }`}
+              whileHover={{ 
+                scale: 1.05,
+                y: -2,
+                transition: { duration: 0.2 }
+              }}
+              whileTap={{ 
+                scale: 0.95,
+                transition: { duration: 0.1 }
+              }}
+            >
+              <motion.div
+                whileHover={{ 
+                  rotate: 360,
+                  transition: { duration: 0.6 }
+                }}
               >
-                <Settings className="w-5 h-5 inline mr-2" />
-                Categories & Locations
-              </button>
-            </nav>
+                <Settings className="w-5 h-5" />
+              </motion.div>
+              CATEGORIES & LOCATIONS
+            </motion.button>
           </div>
         </div>
 
@@ -262,146 +418,198 @@ export default function AdminDashboard() {
         {activeTab === 'users' ? (
           <div>
             {/* Search */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-          <div className="flex items-center gap-2">
-            <Search className="h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by name, email, or ID..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 outline-none text-gray-900"
-            />
-          </div>
-        </div>
-
-        {/* Users Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tier
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Joined
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {user.display_name || 'No name'}
-                          </div>
-                          <div className="text-xs text-gray-500">{user.id.slice(0, 8)}...</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{user.email || 'No email'}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {editingUser === user.id ? (
-                        <div className="flex items-center gap-2">
-                          <select
-                            value={selectedTier}
-                            onChange={(e) => setSelectedTier(e.target.value as any)}
-                            className="text-sm border border-gray-300 rounded px-2 py-1"
-                          >
-                            <option value="free">Free</option>
-                            <option value="premium">Premium</option>
-                            <option value="business">Business</option>
-                          </select>
-                          <Button
-                            size="sm"
-                            onClick={() => updateUserTier(user.id, selectedTier)}
-                            className="bg-emerald-600 hover:bg-emerald-700 h-8"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setEditingUser(null)}
-                            className="h-8"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <Badge className={getTierColor(user.subscription_tier)}>
-                          {user.subscription_tier}
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-1">
-                        {user.is_admin && (
-                          <Badge className="bg-red-100 text-red-700 text-xs w-fit">Admin</Badge>
-                        )}
-                        {user.verified_seller && (
-                          <Badge className="bg-blue-100 text-blue-700 text-xs w-fit">Verified</Badge>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setEditingUser(user.id)
-                            setSelectedTier(user.subscription_tier)
-                          }}
-                          disabled={editingUser === user.id}
-                          className="h-8"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => toggleVerifiedSeller(user.id, user.verified_seller)}
-                          className="h-8"
-                          title={user.verified_seller ? 'Remove verified status' : 'Mark as verified'}
-                        >
-                          {user.verified_seller ? '✓' : '○'}
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-            {filteredUsers.length === 0 && (
-              <div className="text-center py-12">
-                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No users found</p>
+            <motion.div 
+              className="bg-yellow-300 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] p-6 mb-8 transform -rotate-1"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex items-center gap-4">
+                <motion.div 
+                  className="bg-white p-3 rounded-lg border-2 border-black"
+                  whileHover={{ 
+                    rotate: 360,
+                    transition: { duration: 0.6 }
+                  }}
+                >
+                  <Search className="h-6 w-6 text-black" />
+                </motion.div>
+                <input
+                  type="text"
+                  placeholder="SEARCH BY NAME, EMAIL, OR ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 outline-none text-black font-bold placeholder-black bg-transparent text-lg"
+                />
               </div>
-            )}
+            </motion.div>
+
+            {/* Users Table */}
+            <motion.div 
+              className="bg-white rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] overflow-hidden transform rotate-1"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-blue-400 to-purple-400 border-b-4 border-black">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-sm font-black text-black uppercase tracking-wider">
+                        USER
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-black text-black uppercase tracking-wider">
+                        EMAIL
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-black text-black uppercase tracking-wider">
+                        TIER
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-black text-black uppercase tracking-wider">
+                        STATUS
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-black text-black uppercase tracking-wider">
+                        JOINED
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-black text-black uppercase tracking-wider">
+                        ACTIONS
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y-4 divide-black">
+                    {filteredUsers.map((user, index) => (
+                      <motion.tr 
+                        key={user.id} 
+                        className="hover:bg-yellow-100 transition-colors"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <div>
+                              <div className="text-sm font-black text-black">
+                                {user.display_name || 'NO NAME'}
+                              </div>
+                              <div className="text-xs font-bold text-gray-600 bg-gray-200 px-2 py-1 rounded border border-black">
+                                {user.id.slice(0, 8)}...
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-bold text-black">{user.email || 'NO EMAIL'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {editingUser === user.id ? (
+                            <div className="flex items-center gap-2">
+                              <select
+                                value={selectedTier}
+                                onChange={(e) => setSelectedTier(e.target.value as any)}
+                                className="text-sm border-2 border-black rounded-lg px-3 py-2 font-bold bg-white"
+                              >
+                                <option value="free">FREE</option>
+                                <option value="premium">PREMIUM</option>
+                                <option value="business">BUSINESS</option>
+                              </select>
+                              <motion.button
+                                onClick={() => updateUserTier(user.id, selectedTier)}
+                                className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </motion.button>
+                              <motion.button
+                                onClick={() => setEditingUser(null)}
+                                className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                              >
+                                <X className="h-4 w-4" />
+                              </motion.button>
+                            </div>
+                          ) : (
+                            <div className={`px-3 py-1 rounded-lg border-2 border-black font-black text-sm ${
+                              user.subscription_tier === 'free' ? 'bg-gray-400 text-black' :
+                              user.subscription_tier === 'premium' ? 'bg-purple-400 text-white' :
+                              'bg-green-400 text-black'
+                            }`}>
+                              {user.subscription_tier.toUpperCase()}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-col gap-1">
+                            {user.is_admin && (
+                              <div className="bg-red-500 text-white px-2 py-1 rounded border-2 border-black text-xs font-black w-fit">
+                                ADMIN
+                              </div>
+                            )}
+                            {user.verified_seller && (
+                              <div className="bg-blue-500 text-white px-2 py-1 rounded border-2 border-black text-xs font-black w-fit">
+                                VERIFIED
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-black">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <div className="flex items-center gap-2">
+                            <motion.button
+                              onClick={() => {
+                                setEditingUser(user.id)
+                                setSelectedTier(user.subscription_tier)
+                              }}
+                              disabled={editingUser === user.id}
+                              className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] disabled:opacity-50"
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </motion.button>
+                            <motion.button
+                              onClick={() => toggleVerifiedSeller(user.id, user.verified_seller)}
+                              className={`p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-black ${
+                                user.verified_seller 
+                                  ? 'bg-green-500 hover:bg-green-600 text-white' 
+                                  : 'bg-gray-300 hover:bg-gray-400 text-black'
+                              }`}
+                              title={user.verified_seller ? 'Remove verified status' : 'Mark as verified'}
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                            >
+                              {user.verified_seller ? '✓' : '○'}
+                            </motion.button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {filteredUsers.length === 0 && (
+                <motion.div 
+                  className="text-center py-12 bg-gray-100 border-t-4 border-black"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <motion.div
+                    className="bg-white p-4 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] inline-block"
+                    whileHover={{ 
+                      rotate: 5,
+                      transition: { duration: 0.3 }
+                    }}
+                  >
+                    <Users className="h-12 w-12 text-black mx-auto mb-4" />
+                    <p className="text-black font-black uppercase">NO USERS FOUND</p>
+                  </motion.div>
+                </motion.div>
+              )}
+            </motion.div>
           </div>
         ) : activeTab === 'payments' ? (
           /* Payment Management Tab */

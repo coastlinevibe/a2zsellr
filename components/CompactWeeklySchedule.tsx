@@ -144,7 +144,7 @@ export default function CompactWeeklySchedule({
                             type="time"
                             value={daySchedule.open}
                             onChange={(e) => updateDaySchedule(day.key, 'open', e.target.value)}
-                            className="w-16 px-1 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                            className="w-20 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
                           />
                         </div>
                         <div className="flex items-center gap-1">
@@ -153,7 +153,7 @@ export default function CompactWeeklySchedule({
                             type="time"
                             value={daySchedule.close}
                             onChange={(e) => updateDaySchedule(day.key, 'close', e.target.value)}
-                            className="w-16 px-1 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                            className="w-20 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
                           />
                         </div>
                       </motion.div>
@@ -179,13 +179,30 @@ export default function CompactWeeklySchedule({
           })}
         </div>
 
-        {/* Quick Actions - Compact */}
-        <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
+        {/* Quick Actions - Enhanced */}
+        <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 border-t border-gray-200">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-600">Quick setup:</span>
-            <div className="flex gap-2">
+            <span className="text-xs font-medium text-gray-700">Quick setup:</span>
+            <div className="flex gap-2 flex-wrap">
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, y: -1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  const mondaySchedule = weeklySchedule.monday
+                  daysOfWeek.forEach(day => {
+                    if (day.key !== 'monday') {
+                      updateDaySchedule(day.key, 'closed', mondaySchedule.closed)
+                      updateDaySchedule(day.key, 'open', mondaySchedule.open)
+                      updateDaySchedule(day.key, 'close', mondaySchedule.close)
+                    }
+                  })
+                }}
+                className="px-3 py-1.5 text-xs font-medium bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-md transition-all shadow-sm border border-purple-200"
+              >
+                Copy Monday to All
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05, y: -1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   daysOfWeek.forEach(day => {
@@ -194,12 +211,12 @@ export default function CompactWeeklySchedule({
                     updateDaySchedule(day.key, 'close', '17:00')
                   })
                 }}
-                className="px-2 py-1 text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded transition-colors"
+                className="px-3 py-1.5 text-xs font-medium bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-md transition-all shadow-sm border border-emerald-200"
               >
                 9-5 Daily
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, y: -1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].forEach(day => {
@@ -212,7 +229,7 @@ export default function CompactWeeklySchedule({
                   updateDaySchedule('saturday', 'close', '14:00')
                   updateDaySchedule('sunday', 'closed', true)
                 }}
-                className="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition-colors"
+                className="px-3 py-1.5 text-xs font-medium bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-all shadow-sm border border-blue-200"
               >
                 Weekdays + Sat AM
               </motion.button>

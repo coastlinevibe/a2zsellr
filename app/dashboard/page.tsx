@@ -87,6 +87,7 @@ export default function DashboardPage() {
   // Marketing tab state (properly at top level)
   const [marketingActiveView, setMarketingActiveView] = useState('builder')
   const [marketingProducts, setMarketingProducts] = useState<any[]>([])
+  
 
   // Redirect free tier users away from premium tabs
   useEffect(() => {
@@ -149,11 +150,10 @@ export default function DashboardPage() {
           .limit(10)
 
         if (error) throw error
-        console.log('Fetched marketing products:', data?.length || 0, 'products')
         setMarketingProducts(data || [])
       } catch (error) {
         console.error('Error fetching marketing products:', error)
-        setMarketingProducts([]) // Ensure empty array on error
+        setMarketingProducts([])
       }
     }
 
@@ -161,6 +161,30 @@ export default function DashboardPage() {
       fetchMarketingProducts()
     }
   }, [profile?.id])
+
+  // Also fetch products when marketing tab becomes active
+  useEffect(() => {
+    if (activeTab === 'marketing' && marketingActiveView === 'builder' && profile?.id && marketingProducts.length === 0) {
+      // Trigger a re-fetch by updating the dependency
+      const fetchProducts = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('profile_products')
+            .select('*')
+            .eq('profile_id', profile.id)
+            .eq('is_active', true)
+            .order('created_at', { ascending: false })
+            .limit(10)
+
+          if (error) throw error
+          setMarketingProducts(data || [])
+        } catch (error) {
+          console.error('Error fetching products on tab switch:', error)
+        }
+      }
+      fetchProducts()
+    }
+  }, [activeTab, marketingActiveView, profile?.id])
 
   const fetchProfile = async () => {
     try {

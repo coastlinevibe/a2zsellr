@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Image } from 'lucide-react'
+import { Image, X, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface MediaItem {
   id: string
@@ -29,6 +29,31 @@ export const HoverCardsLayout: React.FC<HoverCardsLayoutProps> = ({
   businessName
 }) => {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+
+  const openLightbox = (index: number) => {
+    setCurrentImageIndex(index)
+    setLightboxOpen(true)
+  }
+
+  const closeLightbox = () => {
+    setLightboxOpen(false)
+  }
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % items.length)
+  }
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + items.length) % items.length)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') closeLightbox()
+    if (e.key === 'ArrowRight') nextImage()
+    if (e.key === 'ArrowLeft') prevImage()
+  }
 
   return (
     <>
@@ -84,7 +109,7 @@ export const HoverCardsLayout: React.FC<HoverCardsLayoutProps> = ({
                 return (
                   <div
                     key={item.id}
-                    className="relative group transition-all duration-500 ease-in-out rounded-lg overflow-hidden h-full"
+                    className="relative group transition-all duration-500 ease-in-out rounded-lg overflow-hidden h-full cursor-pointer"
                     style={{ 
                       flexBasis,
                       flexGrow,
@@ -95,6 +120,7 @@ export const HoverCardsLayout: React.FC<HoverCardsLayoutProps> = ({
                     }}
                     onMouseEnter={() => setHoveredCard(item.id)}
                     onMouseLeave={() => setHoveredCard(null)}
+                    onClick={() => item.url && openLightbox(index)}
                   >
                   {item.url ? (
                     <img
@@ -154,6 +180,75 @@ export const HoverCardsLayout: React.FC<HoverCardsLayoutProps> = ({
         </div>
       </div>
     </div>
+
+    {/* Lightbox Modal */}
+    {lightboxOpen && items[currentImageIndex] && (
+      <div 
+        className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+        onClick={closeLightbox}
+        onKeyDown={handleKeyDown}
+        tabIndex={0}
+      >
+        {/* Close button */}
+        <button
+          onClick={closeLightbox}
+          className="absolute top-4 right-4 z-60 bg-white/20 hover:bg-white/30 rounded-full p-2 transition-colors"
+        >
+          <X className="w-6 h-6 text-white" />
+        </button>
+
+        {/* Navigation buttons */}
+        {items.length > 1 && (
+          <>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                prevImage()
+              }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-60 bg-white/20 hover:bg-white/30 rounded-full p-2 transition-colors"
+            >
+              <ChevronLeft className="w-6 h-6 text-white" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                nextImage()
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-60 bg-white/20 hover:bg-white/30 rounded-full p-2 transition-colors"
+            >
+              <ChevronRight className="w-6 h-6 text-white" />
+            </button>
+          </>
+        )}
+
+        {/* Main image */}
+        <div 
+          className="relative max-w-full max-h-full"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <img
+            src={items[currentImageIndex].url}
+            alt={items[currentImageIndex].name}
+            className="max-w-full max-h-[90vh] object-contain rounded-lg"
+          />
+          
+          {/* Image info overlay */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 rounded-b-lg">
+            <div className="text-white">
+              <h3 className="font-semibold text-lg">{items[currentImageIndex].name}</h3>
+              {items[currentImageIndex].price && (
+                <p className="text-blue-400 font-bold text-xl">
+                  R{items[currentImageIndex].price.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                </p>
+              )}
+              <p className="text-sm text-gray-300 mt-1">
+                {currentImageIndex + 1} of {items.length}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
     </>
   )
 }

@@ -432,7 +432,12 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
     { id: 'hover-cards', name: 'Hover Cards', description: 'Interactive card layout' },
     { id: 'vertical-slider', name: 'Vertical Slider', description: 'Vertical scrolling layout' },
     { id: 'horizontal-slider', name: 'Horizontal Slider', description: 'Horizontal scrolling layout' },
-    { id: 'before-after', name: 'Before & After', description: 'Comparison layout' },
+    { 
+      id: 'before-after', 
+      name: userTier === 'free' ? 'Before & After (Premium Only)' : 'Before & After', 
+      description: 'Comparison layout',
+      disabled: userTier === 'free'
+    },
     { 
       id: 'video-spotlight', 
       name: userTier === 'free' ? 'Video Spotlight (Premium Only)' : 'Video Spotlight', 
@@ -571,6 +576,10 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
               onChange={(e) => {
                 if (e.target.value === 'video-spotlight' && userTier === 'free') {
                   alert('🎥 Video Spotlight is available for Premium and Business users only.\n\nUpgrade your plan to unlock video features!')
+                  return
+                }
+                if (e.target.value === 'before-after' && userTier === 'free') {
+                  alert('📸 Before & After layout is available for Premium and Business users only.\n\nUpgrade your plan to unlock comparison features!')
                   return
                 }
                 setSelectedLayout(e.target.value)
