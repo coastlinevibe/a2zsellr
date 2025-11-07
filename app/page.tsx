@@ -82,25 +82,73 @@ export default function HomePage() {
   // Fetch recent activities for success ticker
   const fetchRecentActivities = async () => {
     try {
+      console.log('🔍 Fetching recent activities...')
+      
+      // First, let's try a simple query without joins to see all products
+      const { data: allProducts, error: allError } = await supabase
+        .from('profile_products')
+        .select('id, name, created_at, profile_id')
+        .order('created_at', { ascending: false })
+        .limit(15)
+
+      console.log('📦 All products query result:', allProducts?.length, 'items:', allProducts)
+      
+      if (allError) {
+        console.error('❌ Error fetching all products:', allError)
+      }
+
+      // Now try the join query
       const { data, error } = await supabase
         .from('profile_products')
         .select(`
           id,
           name,
           created_at,
-          profiles!inner(display_name)
+          profile_id,
+          profiles(display_name)
         `)
         .order('created_at', { ascending: false })
         .limit(15)
 
+      console.log('🔗 Join query result:', data?.length, 'items:', data)
+
       if (error) {
-        console.error('Error fetching recent activities:', error)
+        console.error('❌ Error fetching recent activities with join:', error)
+        // Fallback to products without profile names if join fails
+        if (allProducts && allProducts.length > 0) {
+          console.log('🔄 Using fallback data without profile names')
+          const fallbackActivities = allProducts.filter(activity => 
+            activity.name && activity.name.trim().length > 0
+          ).map(activity => ({
+            ...activity,
+            profiles: { display_name: `User ${activity.profile_id?.slice(-4)}` }
+          }))
+          setRecentActivities(fallbackActivities)
+        }
         return
       }
 
-      setRecentActivities(data || [])
+      // Filter out any items that might have null/undefined names
+      const validActivities = (data || []).filter(activity => 
+        activity.name && activity.name.trim().length > 0
+      )
+      
+      console.log('✅ Valid activities after filtering:', validActivities.length, validActivities)
+      
+      // Let's see the first few items in detail
+      validActivities.slice(0, 5).forEach((activity, index) => {
+        console.log(`📋 Activity ${index + 1}:`, {
+          name: activity.name,
+          profile_name: Array.isArray(activity.profiles) ? activity.profiles[0]?.display_name : activity.profiles?.display_name,
+          profile_id: activity.profile_id,
+          created_at: activity.created_at,
+          full_profiles: activity.profiles
+        })
+      })
+      
+      setRecentActivities(validActivities)
     } catch (error) {
-      console.error('Error fetching recent activities:', error)
+      console.error('💥 Catch block error:', error)
     }
   }
 
@@ -477,24 +525,44 @@ export default function HomePage() {
               >
                 <motion.div 
                   className="flex whitespace-nowrap py-2 px-4"
-                  animate={{ x: [0, -100] }}
+                  animate={{ x: ["0%", "-50%"] }}
                   transition={{ 
-                    duration: 20, 
+                    duration: 35, 
                     repeat: Infinity, 
                     ease: "linear" 
                   }}
                 >
                   <span className="text-yellow-800 font-bold text-sm mr-8">
-                    {recentActivities.length > 0 ? (
-                      recentActivities.map((activity, index) => (
-                        `🎉 ${activity.profiles?.display_name || 'Someone'} added "${activity.name}" to their shop • `
-                      )).join('') + 
-                      recentActivities.map((activity, index) => (
-                        `🎉 ${activity.profiles?.display_name || 'Someone'} added "${activity.name}" to their shop • `
-                      )).join('')
-                    ) : (
-                      '🎉 Sarah just added "baie lekke steen" to their shop • Jan added "WE SELL BURGERS" to their shop • Candys added "sandye" to their shop • '
-                    )}
+                    {(() => {
+                      console.log('🎯 Ticker rendering with activities:', recentActivities.length, recentActivities)
+                      
+                      if (recentActivities.length > 0) {
+                        // Let's see what we're actually mapping
+                        const mappedItems = recentActivities.map((activity, index) => {
+                          const profileName = Array.isArray(activity.profiles) 
+                            ? activity.profiles[0]?.display_name 
+                            : activity.profiles?.display_name
+                          const item = `🎉 ${profileName || activity.profile_id || 'Someone'} added "${activity.name}" to their shop • `
+                          console.log(`🎯 Mapping item ${index + 1}:`, item)
+                          return item
+                        })
+                        
+                        const singleLoop = mappedItems.join('')
+                        console.log('🔄 Single loop content:', singleLoop.substring(0, 200) + '...')
+                        
+                        // Create a longer string by repeating the activities multiple times for smooth scrolling
+                        const tickerContent = Array(Math.max(3, Math.ceil(20 / recentActivities.length))).fill(singleLoop).join('')
+                        
+                        console.log('📝 Final ticker content length:', tickerContent.length)
+                        console.log('📝 First 300 chars:', tickerContent.substring(0, 300))
+                        return tickerContent
+                      } else {
+                        // Fallback content with multiple repeated items for smooth scrolling
+                        const fallbackContent = Array(4).fill('🎉 Sarah just added "baie lekke steen" to their shop • Jan added "WE SELL BURGERS" to their shop • Candys added "sandye" to their shop • ').join('')
+                        console.log('🔄 Using fallback content')
+                        return fallbackContent
+                      }
+                    })()}
                   </span>
                 </motion.div>
               </motion.div>
