@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import ShareLinkBuilder from '@/components/ui/share-link-builder'
 import CampaignScheduler from '@/components/ui/campaign-scheduler'
 import AnalyticsDashboard from '@/components/ui/analytics-dashboard'
+import TemplateEditor from '@/components/ui/template-editor'
 import {
   AlertTriangle,
   Building2,
@@ -26,7 +27,8 @@ import {
   Users,
   X,
   Clipboard,
-  Shield
+  Shield,
+  Package
 } from 'lucide-react'
 
 import { useAuth } from '@/lib/auth'
@@ -283,6 +285,7 @@ export default function DashboardPage() {
     const marketingViews = [
       { id: 'builder', label: 'Listing Builder', icon: Plus },
       { id: 'campaigns', label: 'My Listings', icon: MessageSquare },
+      { id: 'templates', label: 'My Templates', icon: Clipboard },
       { id: 'scheduler', label: 'Scheduler', icon: Calendar, premium: true },
       { id: 'analytics', label: 'Analytics', icon: TrendingUp, premium: true }
     ]
@@ -294,12 +297,13 @@ export default function DashboardPage() {
         )}
 
         {/* Marketing Tools */}
-        <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 overflow-hidden">
-          <div className="border-b border-gray-200">
-            <div className="flex">
+        <div className="bg-white rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] overflow-hidden">
+          <div className="border-b-2 border-black">
+            <div className="flex gap-1 p-2">
               {marketingViews.map((view) => {
                 const IconComponent = view.icon
                 const isDisabled = userTier === 'free' && isPremiumFeature(view.id)
+                const isActive = marketingActiveView === view.id && !isDisabled
                 
                 return (
                   <button
@@ -311,17 +315,17 @@ export default function DashboardPage() {
                       }
                       setMarketingActiveView(view.id)
                     }}
-                    className={`flex-1 py-4 px-6 text-center font-medium transition-colors flex items-center justify-center gap-2 relative ${
-                      marketingActiveView === view.id && !isDisabled
-                        ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                    className={`flex-1 py-3 px-4 rounded-[6px] border-2 border-black font-bold transition-all flex items-center justify-center gap-2 relative ${
+                      isActive
+                        ? 'bg-blue-500 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]'
                         : isDisabled
-                        ? 'text-gray-400 cursor-not-allowed bg-gray-50'
-                        : 'text-gray-500 hover:text-gray-700'
+                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed shadow-[1px_1px_0px_0px_rgba(0,0,0,0.3)]'
+                        : 'bg-white text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-gray-100'
                     }`}
                     disabled={isDisabled}
                   >
                     <IconComponent className="w-4 h-4" />
-                    {view.label}
+                    <span className="text-sm">{view.label}</span>
                     {isDisabled && (
                       <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
                         Premium
@@ -341,6 +345,126 @@ export default function DashboardPage() {
 
             {marketingActiveView === 'campaigns' && (
               <MarketingCampaignsTab onCreateNew={() => setMarketingActiveView('builder')} userTier={profile?.subscription_tier || 'free'} />
+            )}
+
+            {marketingActiveView === 'templates' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold text-gray-900">My Templates</h3>
+                  <button 
+                    onClick={() => setMarketingActiveView('builder')}
+                    className="bg-blue-500 text-white px-6 py-3 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:bg-blue-600 transition-all"
+                  >
+                    <Plus className="w-4 h-4 mr-2 inline" />
+                    Create New Template
+                  </button>
+                </div>
+                
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Health Insurance Template */}
+                  <div className="bg-blue-100 border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all">
+                    <div className="flex items-center mb-4">
+                      <div className="bg-blue-600 p-2 rounded-full border-2 border-black mr-3">
+                        <Shield className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-black text-black">Health Insurance</h4>
+                        <p className="text-sm font-bold text-black">Professional service template</p>
+                      </div>
+                    </div>
+                    <p className="text-black text-sm mb-4 font-medium">
+                      Complete health insurance landing page with plan comparisons, testimonials, and trust indicators.
+                    </p>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => window.open('/template-preview/health-insurance', '_blank')}
+                        className="flex-1 bg-white text-black px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-sm hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all"
+                      >
+                        <Eye className="w-4 h-4 mr-1 inline" />
+                        Preview
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setMarketingActiveView('template_editor')
+                        }}
+                        className="flex-1 bg-blue-500 text-white px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-sm hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-blue-600 transition-all"
+                      >
+                        Use Template
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Coming Soon Templates */}
+                  <div className="bg-gray-100 border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="bg-gray-600 p-2 rounded-full border-2 border-black mr-3">
+                        <Package className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-black text-black">Product Showcase</h4>
+                        <p className="text-sm font-bold text-black">Coming soon</p>
+                      </div>
+                    </div>
+                    <p className="text-black text-sm mb-4 font-medium">
+                      Perfect for retail businesses showcasing multiple products with pricing and features.
+                    </p>
+                    <button disabled className="w-full bg-gray-300 text-gray-600 px-4 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] font-bold text-sm cursor-not-allowed">
+                      Coming Soon
+                    </button>
+                  </div>
+
+                  <div className="bg-gray-100 border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="bg-gray-600 p-2 rounded-full border-2 border-black mr-3">
+                        <Users className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-black text-black">Service Business</h4>
+                        <p className="text-sm font-bold text-black">Coming soon</p>
+                      </div>
+                    </div>
+                    <p className="text-black text-sm mb-4 font-medium">
+                      Ideal for salons, consultants, and service providers with booking capabilities.
+                    </p>
+                    <button disabled className="w-full bg-gray-300 text-gray-600 px-4 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] font-bold text-sm cursor-not-allowed">
+                      Coming Soon
+                    </button>
+                  </div>
+                </div>
+
+                {userTier === 'free' && (
+                  <div className="bg-amber-100 border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6">
+                    <div className="flex items-center mb-3">
+                      <div className="bg-amber-500 rounded-full p-2 border-2 border-black mr-3">
+                        <Crown className="w-5 h-5 text-white" />
+                      </div>
+                      <h4 className="font-black text-black">Unlock More Templates</h4>
+                    </div>
+                    <p className="text-black mb-4 font-medium">
+                      Free tier includes 3 basic templates. Upgrade to Premium for 15+ professional templates and Business tier for unlimited custom templates.
+                    </p>
+                    <button 
+                      onClick={() => router.push('/choose-plan')}
+                      className="bg-amber-500 text-white px-6 py-3 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:bg-amber-600 transition-all"
+                    >
+                      Upgrade Now
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {marketingActiveView === 'template_editor' && (
+              <TemplateEditor 
+                templateId="health-insurance"
+                onSave={(data) => {
+                  console.log('Template saved:', data)
+                }}
+                onShare={(url) => {
+                  console.log('Template shared:', url)
+                  alert(`🎉 Template is now live! Share this URL: ${url}`)
+                }}
+              />
             )}
 
             {marketingActiveView === 'scheduler' && (
@@ -508,47 +632,55 @@ export default function DashboardPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-          <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 p-3">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-blue-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-600">Profile Views</p>
-                <p className="text-lg font-bold text-gray-900">1,234</p>
+                <p className="text-sm font-black text-black">Profile Views</p>
+                <p className="text-2xl font-black text-black">1,234</p>
               </div>
-              <Eye className="h-4 w-4 text-blue-600" />
+              <div className="bg-blue-600 rounded-full p-2 border-2 border-black">
+                <Eye className="h-5 w-5 text-white" />
+              </div>
             </div>
           </div>
-          <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 p-3">
+          <div className="bg-emerald-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-600">Active Listings</p>
-                <p className="text-lg font-bold text-gray-900">0</p>
+                <p className="text-sm font-black text-black">Active Listings</p>
+                <p className="text-2xl font-black text-black">0</p>
               </div>
-              <Building2 className="h-4 w-4 text-emerald-600" />
+              <div className="bg-emerald-600 rounded-full p-2 border-2 border-black">
+                <Building2 className="h-5 w-5 text-white" />
+              </div>
             </div>
           </div>
-          <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 p-3">
+          <div className="bg-purple-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-600">Conversion Clicks</p>
-                <p className="text-lg font-bold text-gray-900">567</p>
+                <p className="text-sm font-black text-black">Conversion Clicks</p>
+                <p className="text-2xl font-black text-black">567</p>
               </div>
-              <TrendingUp className="h-4 w-4 text-purple-600" />
+              <div className="bg-purple-600 rounded-full p-2 border-2 border-black">
+                <TrendingUp className="h-5 w-5 text-white" />
+              </div>
             </div>
           </div>
-          <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 p-3">
+          <div className="bg-yellow-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-600">Store Rating</p>
-                <p className="text-lg font-bold text-gray-900">4.8</p>
+                <p className="text-sm font-black text-black">Store Rating</p>
+                <p className="text-2xl font-black text-black">4.8</p>
               </div>
-              <Star className="h-4 w-4 text-yellow-600" />
+              <div className="bg-yellow-600 rounded-full p-2 border-2 border-black">
+                <Star className="h-5 w-5 text-white" />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-3 mb-8">
+        <div className="flex flex-wrap gap-4 mb-8">
           {dashboardTabs.map((tab) => {
             const IconComponent = tab.icon
             const isActive = activeTab === tab.key
@@ -557,13 +689,13 @@ export default function DashboardPage() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-[9px] border transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 ${
+                className={`flex items-center gap-2 px-6 py-3 rounded-[9px] border-2 border-black font-bold transition-all hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] ${
                   isActive
-                    ? 'border-emerald-600 bg-emerald-50 text-emerald-700 shadow-sm'
-                    : 'border-gray-200 text-gray-600 hover:bg-gray-100'
+                    ? 'bg-emerald-500 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]'
+                    : 'bg-white text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:bg-gray-100'
                 }`}
               >
-                <IconComponent className="w-4 h-4" />
+                <IconComponent className="w-5 h-5" />
                 {tab.label}
               </button>
             )

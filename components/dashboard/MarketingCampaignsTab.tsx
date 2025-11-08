@@ -225,10 +225,13 @@ export function MarketingCampaignsTab({ onCreateNew, userTier = 'free' }: Market
             Free tier: Create up to {currentLimit} listings
           </p>
         )}
-        <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
+        <button 
+          onClick={handleCreateNew} 
+          className="bg-blue-500 text-white px-6 py-3 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:bg-blue-600 transition-all"
+        >
+          <Plus className="w-5 h-5 mr-2 inline" />
           Create First Listing
-        </Button>
+        </button>
       </div>
     )
   }
@@ -247,24 +250,30 @@ export function MarketingCampaignsTab({ onCreateNew, userTier = 'free' }: Market
             size="md"
           />
         </div>
-        <Button 
+        <button 
           onClick={handleCreateNew} 
-          className="bg-blue-600 hover:bg-blue-700"
           disabled={isAtLimit}
+          className={`px-6 py-3 rounded-[9px] border-2 border-black font-bold transition-all ${
+            isAtLimit 
+              ? 'bg-gray-300 text-gray-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] cursor-not-allowed'
+              : 'bg-blue-500 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:bg-blue-600'
+          }`}
         >
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus className="w-5 h-5 mr-2 inline" />
           {isAtLimit ? 'Limit Reached' : 'New Listing'}
-        </Button>
+        </button>
       </div>
 
       {/* Free Tier Limit Warning */}
       {userTier === 'free' && isAtLimit && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-amber-600" />
+        <div className="bg-amber-100 border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6">
+          <div className="flex items-center gap-3">
+            <div className="bg-amber-500 rounded-full p-2 border-2 border-black">
+              <MessageSquare className="w-5 h-5 text-white" />
+            </div>
             <div>
-              <h4 className="font-semibold text-amber-900">Listing Limit Reached</h4>
-              <p className="text-sm text-amber-700 mt-1">
+              <h4 className="font-black text-black">Listing Limit Reached</h4>
+              <p className="text-sm font-bold text-black mt-1">
                 You've reached the {currentLimit}-listing limit for free accounts. Upgrade to Premium for unlimited listings.
               </p>
             </div>
@@ -275,7 +284,7 @@ export function MarketingCampaignsTab({ onCreateNew, userTier = 'free' }: Market
       {/* Listings Grid */}
       <div className="grid gap-4">
         {listings.map((listing) => (
-          <div key={listing.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+          <div key={listing.id} className="bg-white border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-start gap-3">
                 <div className="text-2xl">{getLayoutIcon(listing.layout_type)}</div>
@@ -304,54 +313,47 @@ export function MarketingCampaignsTab({ onCreateNew, userTier = 'free' }: Market
               </div>
               
               <div className="flex items-center gap-2 flex-wrap">
-                <Button 
-                  size="sm" 
-                  variant="outline"
+                <button 
                   onClick={() => window.open(getListingUrl(listing), '_blank')}
+                  className="bg-white text-black px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-xs hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all"
                 >
-                  <Eye className="w-3 h-3 mr-1" />
+                  <Eye className="w-3 h-3 mr-1 inline" />
                   Preview
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-300"
+                </button>
+                <button 
                   onClick={() => copyListingLink(listing)}
                   title="Copy link to clipboard"
+                  className="bg-blue-100 text-blue-700 px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-xs hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-blue-200 transition-all"
                 >
-                  <Copy className="w-3 h-3 mr-1" />
+                  <Copy className="w-3 h-3 mr-1 inline" />
                   Copy Link
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
+                </button>
+                <button 
                   onClick={() => shareListing(listing)}
                   title="Share this listing"
+                  className="bg-green-100 text-green-700 px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-xs hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-green-200 transition-all"
                 >
-                  <Share2 className="w-3 h-3 mr-1" />
+                  <Share2 className="w-3 h-3 mr-1 inline" />
                   Share
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
+                </button>
+                <button 
                   onClick={() => {
                     // Switch to listing builder and load listing for editing
                     // For now, just switch to builder tab
                     onCreateNew()
                     alert('📝 Edit functionality coming soon! For now, create a new listing or duplicate this one.')
                   }}
+                  className="bg-yellow-100 text-yellow-700 px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-xs hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-yellow-200 transition-all"
                 >
-                  <Edit className="w-3 h-3 mr-1" />
+                  <Edit className="w-3 h-3 mr-1 inline" />
                   Edit
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="text-red-600 hover:text-red-700"
+                </button>
+                <button 
                   onClick={() => deleteListing(listing.id)}
+                  className="bg-red-100 text-red-700 px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-xs hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-red-200 transition-all"
                 >
                   <Trash2 className="w-3 h-3" />
-                </Button>
+                </button>
               </div>
             </div>
 
@@ -391,41 +393,49 @@ export function MarketingCampaignsTab({ onCreateNew, userTier = 'free' }: Market
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-6 border-t">
-        <div className="bg-white p-4 rounded-lg border">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-6 border-t-2 border-black">
+        <div className="bg-blue-100 p-4 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]">
           <div className="flex items-center gap-2 mb-2">
-            <MessageSquare className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-medium text-gray-600">Total Listings</span>
+            <div className="bg-blue-600 rounded-full p-1 border-2 border-black">
+              <MessageSquare className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-sm font-black text-black">Total Listings</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{listings.length}</p>
+          <p className="text-2xl font-black text-black">{listings.length}</p>
         </div>
         
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-green-100 p-4 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]">
           <div className="flex items-center gap-2 mb-2">
-            <BarChart3 className="w-4 h-4 text-green-600" />
-            <span className="text-sm font-medium text-gray-600">Active</span>
+            <div className="bg-green-600 rounded-full p-1 border-2 border-black">
+              <BarChart3 className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-sm font-black text-black">Active</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-2xl font-black text-black">
             {listings.filter(c => c.status === 'active').length}
           </p>
         </div>
         
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-gray-100 p-4 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]">
           <div className="flex items-center gap-2 mb-2">
-            <Edit className="w-4 h-4 text-gray-600" />
-            <span className="text-sm font-medium text-gray-600">Drafts</span>
+            <div className="bg-gray-600 rounded-full p-1 border-2 border-black">
+              <Edit className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-sm font-black text-black">Drafts</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-2xl font-black text-black">
             {listings.filter(c => c.status === 'draft').length}
           </p>
         </div>
         
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="bg-purple-100 p-4 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]">
           <div className="flex items-center gap-2 mb-2">
-            <Calendar className="w-4 h-4 text-purple-600" />
-            <span className="text-sm font-medium text-gray-600">Scheduled</span>
+            <div className="bg-purple-600 rounded-full p-1 border-2 border-black">
+              <Calendar className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-sm font-black text-black">Scheduled</span>
           </div>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-2xl font-black text-black">
             {listings.filter(c => c.scheduled_for).length}
           </p>
         </div>

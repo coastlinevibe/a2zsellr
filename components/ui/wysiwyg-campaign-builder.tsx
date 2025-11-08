@@ -20,8 +20,13 @@ import {
   ExternalLink,
   AlertTriangle,
   CheckCircle,
-  Info
+  Info,
+  Loader2,
+  Play,
+  Plus,
+  CheckCircle2
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabaseClient'
 import { useAuth } from '@/lib/auth'
 import { useGlobalNotifications } from '@/contexts/NotificationContext'
@@ -645,7 +650,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
                           <img src={product.image_url} alt={product.name} className="w-8 h-8 object-cover rounded" />
                         ) : (
                           <div className="w-8 h-8 bg-blue-300 rounded flex items-center justify-center">
-                            <Image className="w-4 h-4 text-blue-600" />
+                            <ImageIcon className="w-4 h-4 text-blue-600" />
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
@@ -779,7 +784,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
                             <img src={product.image_url} alt={product.name} className="w-10 h-10 object-cover rounded" />
                           ) : (
                             <div className="w-10 h-10 bg-blue-300 rounded flex items-center justify-center">
-                              <Image className="w-5 h-5 text-blue-600" />
+                              <ImageIcon className="w-5 h-5 text-blue-600" />
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
