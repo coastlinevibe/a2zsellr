@@ -6,9 +6,22 @@ import HealthInsuranceTemplate from '@/components/ui/health-insurance-template'
 import { supabase } from '@/lib/supabaseClient'
 import { Loader2 } from 'lucide-react'
 
+interface TemplateData {
+  id: string
+  customized_data: {
+    businessName: string
+    businessDescription: string
+    contactPhone: string
+    contactEmail: string
+    plans: any[]
+    testimonials: any[]
+    ctaPrimary: string
+  }
+}
+
 export default function SharedTemplatePage() {
   const params = useParams()
-  const [templateData, setTemplateData] = useState(null)
+  const [templateData, setTemplateData] = useState<TemplateData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -51,7 +64,7 @@ export default function SharedTemplatePage() {
     )
   }
 
-  if (error || !templateData) {
+  if (error || !templateData || !templateData.customized_data) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
