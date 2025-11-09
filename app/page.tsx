@@ -263,8 +263,7 @@ export default function HomePage() {
 
   // Fetch initial data
   useEffect(() => {
-    fetchCategories()
-    fetchLocations()
+    fetchCategoriesAndLocations()
     fetchBusinesses()
     fetchRecentActivities()
   }, [])
@@ -366,6 +365,7 @@ export default function HomePage() {
           { city: 'Pretoria', slug: 'pretoria' }
         ])
       } else {
+        // Use the fetched data directly (includes "All Locations" from database)
         setLocations(locationsData || [])
       }
     } catch (error) {
@@ -617,21 +617,23 @@ export default function HomePage() {
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              <motion.div 
-                className="inline-flex items-center px-4 py-2 bg-green-400 border-2 border-black rounded-lg text-black text-sm font-black mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ duration: 0.6, delay: 0.4, type: "spring", stiffness: 200 }}
-                whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
-              >
+              <div className="flex items-center gap-4 mb-6">
                 <motion.div 
-                  className="mr-2"
-                  whileHover={{ rotate: 360, transition: { duration: 0.8 } }}
+                  className="inline-flex items-center px-4 py-2 bg-green-400 border-2 border-black rounded-lg text-black text-sm font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ duration: 0.6, delay: 0.4, type: "spring", stiffness: 200 }}
+                  whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
                 >
-                  <Rocket className="h-4 w-4" />
+                  <motion.div 
+                    className="mr-2"
+                    whileHover={{ rotate: 360, transition: { duration: 0.8 } }}
+                  >
+                    <Rocket className="h-4 w-4" />
+                  </motion.div>
+                  BOOST YOUR REVENUE BY 80%
                 </motion.div>
-                BOOST YOUR REVENUE BY 80%
-              </motion.div>
+              </div>
               <div className="bg-white rounded-2xl p-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]">
                 <div className="bg-yellow-300 rounded-xl p-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] mb-4">
                   <div className="flex items-center gap-3 mb-4">
@@ -729,6 +731,7 @@ export default function HomePage() {
       
       {/* Directory Search Section - Brutalist Style */}
       <motion.section 
+        id="directory"
         className="py-16 relative"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -834,16 +837,26 @@ export default function HomePage() {
                       <div
                         className="absolute top-full left-0 right-0 mt-2 bg-white border-4 border-black rounded-lg shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] z-20 max-h-60 overflow-y-auto"
                       >
-                        {categories.map((category) => (
+                        {categories
+                          .slice()
+                          .sort((a, b) => {
+                            const aName = a.name || a
+                            const bName = b.name || b
+                            if (aName === 'All Categories') return -1
+                            if (bName === 'All Categories') return 1
+                            return aName.localeCompare(bName)
+                          })
+                          .map((category) => (
                           <button
-                            key={category.slug || category.name}
+                            key={(category as any).slug || (category as any).name || category}
                             onClick={() => {
-                              setSelectedCategory(category.slug || category.name)
+                              const slug = (category as any).slug || (category as any).name || category
+                              setSelectedCategory(slug)
                               setShowCategoryDropdown(false)
                             }}
                             className="w-full px-4 py-3 text-left font-bold text-black hover:bg-blue-300 border-b-2 border-black last:border-b-0 transition-colors"
                           >
-                            {category.name || category}
+                            {(category as any).name || category}
                           </button>
                         ))}
                       </div>
@@ -1420,7 +1433,7 @@ export default function HomePage() {
       </motion.section>
 
       {/* Animated Pricing Section */}
-      <section className="py-0">
+      <section id="pricing" className="py-0">
         <PricingContainer
           title="Choose Your Perfect Plan"
           plans={pricingPlans}
@@ -1564,12 +1577,13 @@ export default function HomePage() {
                   START FREE TRIAL
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
-                <Link
-                  href="/choose-plan"
+                <a
+                  href="#pricing"
                   className="inline-flex items-center justify-center px-8 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-black rounded-lg transition-colors border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-1 hover:translate-y-1"
                 >
                   VIEW PRICING
-                </Link>
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </a>
               </div>
             </div>
           </div>
@@ -1695,10 +1709,10 @@ export default function HomePage() {
                   transition: { duration: 0.1 }
                 }}
               >
-                <Link href="/choose-plan" className="bg-blue-500 hover:bg-blue-600 text-white font-black px-4 py-2 rounded-lg border-2 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.9)] transition-all flex items-center gap-2 inline-flex">
+                <a href="#pricing" className="bg-blue-500 hover:bg-blue-600 text-white font-black px-4 py-2 rounded-lg border-2 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.9)] transition-all flex items-center gap-2 inline-flex">
                   <Crown className="h-4 w-4" />
                   PRICING
-                </Link>
+                </a>
               </motion.div>
               <motion.div
                 whileHover={{ 
@@ -1713,10 +1727,10 @@ export default function HomePage() {
                   transition: { duration: 0.1 }
                 }}
               >
-                <Link href="/directory" className="bg-yellow-500 hover:bg-yellow-600 text-black font-black px-4 py-2 rounded-lg border-2 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.9)] transition-all flex items-center gap-2 inline-flex">
+                <a href="#directory" className="bg-yellow-500 hover:bg-yellow-600 text-black font-black px-4 py-2 rounded-lg border-2 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.9)] transition-all flex items-center gap-2 inline-flex">
                   <Grid className="h-4 w-4" />
                   DIRECTORY
-                </Link>
+                </a>
               </motion.div>
               <motion.button 
                 onClick={() => setShowAdminModal(true)}

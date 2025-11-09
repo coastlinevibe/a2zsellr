@@ -27,6 +27,7 @@ import {
   CheckCircle2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { supabase } from '@/lib/supabaseClient'
 import { useAuth } from '@/lib/auth'
 import { useGlobalNotifications } from '@/contexts/NotificationContext'
@@ -40,6 +41,7 @@ import {
   type MediaItem
 } from '@/components/ui/campaign-layouts'
 import { uploadFileToStorage, type UploadResult } from '@/lib/uploadUtils'
+import RichTextEditor from '@/components/ui/rich-text-editor'
 
 interface Product {
   id: string
@@ -62,6 +64,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
   const [messageTemplate, setMessageTemplate] = useState('Hey there! We just launched new services tailored for you. Tap to explore what\'s hot this week.')
   const [ctaLabel, setCtaLabel] = useState('View Offers')
   const [scheduleDate, setScheduleDate] = useState('')
+  const [deliveryAvailable, setDeliveryAvailable] = useState(false)
   // IMPORTANT: selectedProducts should ALWAYS start empty - no auto-selection
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([])
   
@@ -368,7 +371,8 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
           storage_path: m.storagePath
         })),
       // Only save products that were explicitly selected by user (never auto-select)
-      selected_products: selectedProducts.length > 0 ? selectedProducts.map(p => p.id) : []
+      selected_products: selectedProducts.length > 0 ? selectedProducts.map(p => p.id) : [],
+      delivery_available: deliveryAvailable
     }
     
     // Debug: Log what we're saving to catch any unwanted auto-selection
@@ -513,7 +517,10 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
       message: messageTemplate,
       ctaLabel: ctaLabel,
       ctaUrl: ctaUrl,
-      businessName: businessName
+      businessName: businessName,
+      ratingAverage: businessProfile?.average_rating ?? null,
+      ratingCount: businessProfile?.review_count ?? 0,
+      deliveryAvailable
     }
 
     switch (selectedLayout) {
@@ -610,13 +617,13 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
 
           {/* Message Template */}
           <div>
-            <label className="block text-sm font-medium text-blue-100 mb-2">Message template</label>
-            <textarea
+            <label className="block text-sm font-medium text-blue-100 mb-3">Message template</label>
+            <RichTextEditor
               value={messageTemplate}
-              onChange={(e) => setMessageTemplate(e.target.value)}
-              rows={4}
-              className="w-full p-3 bg-blue-500 border border-blue-400 rounded-[9px] text-white placeholder-blue-200 focus:ring-2 focus:ring-blue-300 focus:border-blue-300 resize-none"
-              placeholder="Enter your message template"
+              onChange={(value) => setMessageTemplate(value)}
+              placeholder="Craft a compelling message with rich formatting, links, and highlights..."
+              maxLength={1000}
+              className="bg-blue-500/60 border border-blue-400 rounded-[9px] text-white placeholder-blue-200 focus-within:ring-2 focus-within:ring-blue-300 focus-within:border-blue-300"
             />
           </div>
 
@@ -803,6 +810,22 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Delivery Options */}
+          <div>
+            <label className="block text-sm font-medium text-blue-100 mb-2">Delivery options</label>
+            <div className="flex items-center justify-between bg-blue-500/60 border border-blue-400 rounded-[9px] px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-white">Delivery available</p>
+                <p className="text-xs text-blue-200">Highlight that customers can get this item delivered.</p>
+              </div>
+              <Switch
+                checked={deliveryAvailable}
+                onCheckedChange={setDeliveryAvailable}
+                className="data-[state=checked]:bg-emerald-500"
+              />
             </div>
           </div>
 

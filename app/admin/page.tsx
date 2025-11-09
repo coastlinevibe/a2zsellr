@@ -28,7 +28,72 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('')
   const [editingUser, setEditingUser] = useState<string | null>(null)
   const [selectedTier, setSelectedTier] = useState<'free' | 'premium' | 'business'>('free')
-  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'categories'>('users')
+  const [activeTab, setActiveTab] = useState<'users' | 'payments' | 'categories' | 'payment-settings'>('users')
+  const [paymentEnabled, setPaymentEnabled] = useState(true)
+  const [sandboxMode, setSandboxMode] = useState(false)
+  const [savingSettings, setSavingSettings] = useState(false)
+
+  // Load payment settings on component mount
+  useEffect(() => {
+    if (isAdmin) {
+      loadPaymentSettings()
+    }
+  }, [isAdmin])
+
+  const loadPaymentSettings = async () => {
+    try {
+      const { data: paymentSetting } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'payment_enabled')
+        .single()
+
+      const { data: sandboxSetting } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'sandbox_mode')
+        .single()
+
+      if (paymentSetting) {
+        setPaymentEnabled(paymentSetting.value === 'true')
+      }
+      if (sandboxSetting) {
+        setSandboxMode(sandboxSetting.value === 'true')
+      }
+    } catch (error) {
+      console.error('Error loading payment settings:', error)
+    }
+  }
+
+  const savePaymentSettings = async () => {
+    setSavingSettings(true)
+    try {
+      // Update payment_enabled setting
+      await supabase
+        .from('system_settings')
+        .upsert({
+          key: 'payment_enabled',
+          value: paymentEnabled.toString(),
+          description: 'Enable or disable payment processing system'
+        })
+
+      // Update sandbox_mode setting
+      await supabase
+        .from('system_settings')
+        .upsert({
+          key: 'sandbox_mode',
+          value: sandboxMode.toString(),
+          description: 'Enable sandbox mode for testing payments'
+        })
+
+      alert('Payment settings saved successfully!')
+    } catch (error) {
+      console.error('Error saving payment settings:', error)
+      alert('Error saving payment settings. Please try again.')
+    } finally {
+      setSavingSettings(false)
+    }
+  }
 
   useEffect(() => {
     checkAdminStatus()
@@ -411,6 +476,34 @@ export default function AdminDashboard() {
               </motion.div>
               CATEGORIES & LOCATIONS
             </motion.button>
+            
+            <motion.button
+              onClick={() => setActiveTab('payment-settings')}
+              className={`px-6 py-3 rounded-xl border-4 border-black font-black text-sm uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center gap-2 ${
+                activeTab === 'payment-settings'
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-white text-black hover:bg-gray-100'
+              }`}
+              whileHover={{ 
+                scale: 1.05,
+                y: -2,
+                transition: { duration: 0.2 }
+              }}
+              whileTap={{ 
+                scale: 0.95,
+                transition: { duration: 0.1 }
+              }}
+            >
+              <motion.div
+                whileHover={{ 
+                  rotate: 360,
+                  transition: { duration: 0.6 }
+                }}
+              >
+                <CreditCard className="w-5 h-5" />
+              </motion.div>
+              PAYMENT SETTINGS
+            </motion.button>
           </div>
         </div>
 
@@ -614,6 +707,144 @@ export default function AdminDashboard() {
         ) : activeTab === 'payments' ? (
           /* Payment Management Tab */
           <AdminPaymentDashboard />
+        ) : activeTab === 'payment-settings' ? (
+          /* Payment Settings Tab */
+          <div className="space-y-8">
+            {/* Header */}
+            <motion.div 
+              className="bg-gradient-to-r from-orange-400 to-red-400 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] p-6 transform -rotate-1"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-2xl font-black text-black mb-2 uppercase">PAYMENT SETTINGS</h2>
+              <p className="text-black font-bold">Configure payment system settings and sandbox mode</p>
+            </motion.div>
+
+            {/* Payment Settings Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Payment System Toggle */}
+              <motion.div 
+                className="bg-white rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] p-6"
+                initial={{ x: -50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-xl font-black text-black mb-2">PAYMENT SYSTEM</h3>
+                    <p className="text-sm text-gray-600 font-bold">Enable or disable payment processing</p>
+                  </div>
+                  <div className={`w-16 h-8 rounded-full border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] cursor-pointer transition-all ${
+                    paymentEnabled ? 'bg-green-500' : 'bg-red-500'
+                  }`} onClick={() => setPaymentEnabled(!paymentEnabled)}>
+                    <div className={`w-6 h-6 bg-white border-2 border-black rounded-full shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)] transition-transform ${
+                      paymentEnabled ? 'translate-x-8' : 'translate-x-0'
+                    }`} />
+                  </div>
+                </div>
+                <div className={`p-3 rounded-lg border-2 border-black ${
+                  paymentEnabled ? 'bg-green-100' : 'bg-red-100'
+                }`}>
+                  <p className="text-sm font-black text-black">
+                    Status: {paymentEnabled ? '✅ ENABLED' : '❌ DISABLED'}
+                  </p>
+                  <p className="text-xs text-gray-600 font-bold mt-1">
+                    {paymentEnabled 
+                      ? 'Users can make payments and upgrade subscriptions' 
+                      : 'Payment processing is disabled - sandbox mode will be used'
+                    }
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Sandbox Mode Toggle */}
+              <motion.div 
+                className="bg-white rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] p-6"
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-xl font-black text-black mb-2">SANDBOX MODE</h3>
+                    <p className="text-sm text-gray-600 font-bold">Test payments without real transactions</p>
+                  </div>
+                  <div className={`w-16 h-8 rounded-full border-4 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] cursor-pointer transition-all ${
+                    sandboxMode || !paymentEnabled ? 'bg-yellow-500' : 'bg-gray-400'
+                  }`} onClick={() => setSandboxMode(!sandboxMode)}>
+                    <div className={`w-6 h-6 bg-white border-2 border-black rounded-full shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)] transition-transform ${
+                      sandboxMode || !paymentEnabled ? 'translate-x-8' : 'translate-x-0'
+                    }`} />
+                  </div>
+                </div>
+                <div className={`p-3 rounded-lg border-2 border-black ${
+                  sandboxMode || !paymentEnabled ? 'bg-yellow-100' : 'bg-gray-100'
+                }`}>
+                  <p className="text-sm font-black text-black">
+                    Status: {sandboxMode || !paymentEnabled ? '🧪 SANDBOX' : '🔒 PRODUCTION'}
+                  </p>
+                  <p className="text-xs text-gray-600 font-bold mt-1">
+                    {sandboxMode || !paymentEnabled
+                      ? 'Test mode - no real money will be processed'
+                      : 'Live mode - real payments will be processed'
+                    }
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Save Settings Button */}
+            <motion.div 
+              className="flex justify-center"
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              <button
+                onClick={savePaymentSettings}
+                disabled={savingSettings}
+                className="px-8 py-4 bg-blue-500 text-white font-black rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-1 hover:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingSettings ? 'SAVING...' : 'SAVE SETTINGS'}
+              </button>
+            </motion.div>
+
+            {/* Current Configuration Display */}
+            <motion.div 
+              className="bg-gray-100 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] p-6"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+            >
+              <h3 className="text-lg font-black text-black mb-4">CURRENT CONFIGURATION</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white p-4 rounded-lg border-2 border-black">
+                  <p className="text-sm font-black text-black">Payment System</p>
+                  <p className={`text-lg font-black ${paymentEnabled ? 'text-green-600' : 'text-red-600'}`}>
+                    {paymentEnabled ? 'ENABLED' : 'DISABLED'}
+                  </p>
+                </div>
+                <div className="bg-white p-4 rounded-lg border-2 border-black">
+                  <p className="text-sm font-black text-black">Environment</p>
+                  <p className={`text-lg font-black ${sandboxMode || !paymentEnabled ? 'text-yellow-600' : 'text-blue-600'}`}>
+                    {sandboxMode || !paymentEnabled ? 'SANDBOX' : 'PRODUCTION'}
+                  </p>
+                </div>
+                <div className="bg-white p-4 rounded-lg border-2 border-black">
+                  <p className="text-sm font-black text-black">Auto-Sandbox</p>
+                  <p className={`text-lg font-black ${!paymentEnabled ? 'text-green-600' : 'text-gray-600'}`}>
+                    {!paymentEnabled ? 'ACTIVE' : 'INACTIVE'}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 p-3 bg-blue-100 rounded-lg border-2 border-black">
+                <p className="text-xs font-bold text-black">
+                  💡 <strong>Note:</strong> When payment system is disabled, sandbox mode is automatically enabled for testing purposes.
+                </p>
+              </div>
+            </motion.div>
+          </div>
         ) : (
           /* Categories & Locations Management Tab */
           <AdminCategoriesLocations />

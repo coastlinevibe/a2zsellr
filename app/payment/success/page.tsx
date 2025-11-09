@@ -13,6 +13,7 @@ export default function PaymentSuccessPage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [paymentDetails, setPaymentDetails] = useState<any>(null)
+  const paymentMethod = searchParams?.get('method') || 'payfast'
 
   useEffect(() => {
     if (user) {
@@ -74,11 +75,14 @@ export default function PaymentSuccessPage() {
 
         {/* Success Message */}
         <h1 className="text-2xl font-bold text-gray-900 mb-4">
-          Payment Successful! 🎉
+          {paymentMethod === 'eft' ? 'Payment Submitted! 📧' : 'Payment Successful! 🎉'}
         </h1>
         
         <p className="text-gray-600 mb-6">
-          Thank you for upgrading your account. Your subscription has been activated and you now have access to all premium features.
+          {paymentMethod === 'eft' 
+            ? 'Your payment proof has been submitted successfully. Your account will be activated as soon as your payment is verified. We will notify you by email.'
+            : 'Thank you for upgrading your account. Your subscription has been activated! Please sign in to access your profile and premium features.'
+          }
         </p>
 
         {/* Payment Details */}
@@ -103,7 +107,9 @@ export default function PaymentSuccessPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Status:</span>
-                <span className="font-medium text-emerald-600">Active</span>
+                <span className={`font-medium ${paymentMethod === 'eft' ? 'text-yellow-600' : 'text-emerald-600'}`}>
+                  {paymentMethod === 'eft' ? 'Pending Verification' : 'Active'}
+                </span>
               </div>
             </div>
           </div>
@@ -111,15 +117,27 @@ export default function PaymentSuccessPage() {
 
         {/* Action Buttons */}
         <div className="space-y-3">
-          <Button
-            onClick={() => router.push('/dashboard')}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3"
-          >
-            <div className="flex items-center justify-center gap-2">
-              Go to Dashboard
-              <ArrowRight className="w-4 h-4" />
-            </div>
-          </Button>
+          {paymentMethod === 'eft' ? (
+            <Button
+              onClick={() => router.push('/')}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3"
+            >
+              <div className="flex items-center justify-center gap-2">
+                Back to Home
+                <ArrowRight className="w-4 h-4" />
+              </div>
+            </Button>
+          ) : (
+            <Button
+              onClick={() => router.push('/auth/login-animated')}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3"
+            >
+              <div className="flex items-center justify-center gap-2">
+                Sign In to Access Profile
+                <ArrowRight className="w-4 h-4" />
+              </div>
+            </Button>
+          )}
           
           <Button
             onClick={() => router.push('/')}
@@ -134,7 +152,10 @@ export default function PaymentSuccessPage() {
         <div className="mt-6 p-4 bg-blue-50 rounded-lg">
           <p className="text-sm text-blue-800">
             <strong>What's next?</strong><br />
-            Explore your new features in the dashboard and start boosting your sales with our premium tools!
+            {paymentMethod === 'eft' 
+              ? 'We will review your payment within 24 hours and notify you by email once your account is activated.'
+              : 'Sign in with your email and password to access your premium profile and features!'
+            }
           </p>
         </div>
       </div>

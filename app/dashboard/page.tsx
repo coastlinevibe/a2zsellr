@@ -296,7 +296,7 @@ export default function DashboardPage() {
         <ResetCountdownBanner
           profileCreatedAt={profile.created_at || new Date().toISOString()}
           subscriptionTier={profile.subscription_tier}
-          onUpgradeClick={() => router.push('/choose-plan')}
+          onUpgradeClick={() => router.push('/dashboard')}
         />
       )}
       
@@ -356,7 +356,7 @@ export default function DashboardPage() {
     return (
       <div className="space-y-8" id="whatsapp-builder">
         {profile?.subscription_tier === 'free' && (
-          <FreeAccountNotifications onUpgrade={() => router.push('/choose-plan')} />
+          <FreeAccountNotifications onUpgrade={() => router.push('/dashboard')} />
         )}
 
         {/* Marketing Tools */}
@@ -407,7 +407,11 @@ export default function DashboardPage() {
             )}
 
             {marketingActiveView === 'campaigns' && (
-              <MarketingCampaignsTab onCreateNew={() => setMarketingActiveView('builder')} userTier={profile?.subscription_tier || 'free'} />
+              <MarketingCampaignsTab 
+                onCreateNew={() => setMarketingActiveView('builder')} 
+                userTier={profile?.subscription_tier || 'free'} 
+                businessProfile={profile || undefined}
+              />
             )}
 
             {marketingActiveView === 'templates' && (
@@ -507,7 +511,7 @@ export default function DashboardPage() {
                       Free tier includes 3 basic templates. Upgrade to Premium for 15+ professional templates and Business tier for unlimited custom templates.
                     </p>
                     <button 
-                      onClick={() => router.push('/choose-plan')}
+                      onClick={() => router.push('/#pricing')}
                       className="bg-amber-500 text-white px-6 py-3 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:bg-amber-600 transition-all"
                     >
                       Upgrade Now
@@ -541,7 +545,7 @@ export default function DashboardPage() {
                     Schedule your marketing campaigns for optimal engagement times. Only available on Premium and Business tiers.
                   </p>
                   <button
-                    onClick={() => router.push('/choose-plan')}
+                    onClick={() => router.push('/#pricing')}
                     className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 transition-all"
                   >
                     Upgrade to Premium
@@ -566,7 +570,7 @@ export default function DashboardPage() {
                     Track your campaign performance with detailed analytics and insights. Only available on Premium and Business tiers.
                   </p>
                   <button
-                    onClick={() => router.push('/choose-plan')}
+                    onClick={() => router.push('/#pricing')}
                     className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all"
                   >
                     Upgrade to Premium
@@ -635,7 +639,7 @@ export default function DashboardPage() {
           profileCreatedAt={profile.created_at || new Date().toISOString()}
           lastResetAt={null}
           subscriptionTier={profile.subscription_tier}
-          onUpgrade={() => router.push('/choose-plan')}
+          onUpgrade={() => router.push('/#pricing')}
         />
       )}
 
@@ -687,7 +691,11 @@ export default function DashboardPage() {
                 </Button>
               )}
               <CartButton />
-              <UserProfileDropdown />
+              <UserProfileDropdown
+                displayName={profile?.display_name}
+                avatarUrl={profile?.avatar_url || undefined}
+                subscriptionTier={profile?.subscription_tier}
+              />
             </div>
           </div>
         </div>

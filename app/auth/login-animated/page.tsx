@@ -33,7 +33,22 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        router.push('/dashboard')
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('subscription_tier')
+            .eq('id', data.user.id)
+            .single()
+
+          if (profile && profile.subscription_tier && profile.subscription_tier !== 'free') {
+            router.push('/profile')
+          } else {
+            router.push('/dashboard')
+          }
+        } catch (profileError) {
+          console.warn('Profile lookup failed after login:', profileError)
+          router.push('/dashboard')
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred')

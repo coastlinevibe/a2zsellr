@@ -6,7 +6,9 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabaseClient'
 import { AnimatedForm, AnimatedInput, AnimatedPasswordInput, AnimatedButton } from '@/components/ui/AnimatedForm'
+import { PaymentModal } from '@/components/PaymentModal'
 import { Home, Crown, Users, Check, Star, CheckCircle2, AlertTriangle, Info } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { formatPrice, TIER_PRICING } from '@/lib/subscription'
 
 export default function AnimatedSignupPage() {
@@ -21,6 +23,10 @@ export default function AnimatedSignupPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; title: string; description?: string } | null>(null)
+  const [paymentEnabled, setPaymentEnabled] = useState(true)
+  const [sandboxMode, setSandboxMode] = useState(false)
+  const [justRegistered, setJustRegistered] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const { signUp, user } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -29,14 +35,61 @@ export default function AnimatedSignupPage() {
   const selectedPlan = searchParams?.get('plan') || 'free'
 
   useEffect(() => {
-    if (user) {
-      // Create username handle from email (e.g., @alfbear)
+    if (user && !success && !justRegistered && !loading) {
+      // Only redirect if user exists, we're not in success state, and user didn't just register
+      // This prevents automatic redirect after registration
       const userHandle = '@' + (user.email?.split('@')[0] || 'user')
       
       // Redirect to profile page
       router.push('/profile')
     }
-  }, [user, router, selectedPlan])
+  }, [user, router, selectedPlan, success, justRegistered, loading])
+
+  // Check payment settings on component mount
+  useEffect(() => {
+    checkPaymentSettings()
+  }, [])
+
+  const checkPaymentSettings = async () => {
+    try {
+      // Fetch both payment_enabled and sandbox_mode settings
+      const { data: paymentSetting, error: paymentError } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'payment_enabled')
+        .single()
+
+      const { data: sandboxSetting, error: sandboxError } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'sandbox_mode')
+        .single()
+
+      if (paymentError) {
+        // If no settings table exists, default to enabled (fallback)
+        console.log('No payment settings found, defaulting to enabled')
+        setPaymentEnabled(true)
+      } else {
+        const isEnabled = paymentSetting.value === 'true' || paymentSetting.value === true
+        console.log('Payment setting loaded:', paymentSetting.value, '-> enabled:', isEnabled)
+        setPaymentEnabled(isEnabled)
+      }
+
+      if (sandboxError) {
+        console.log('No sandbox settings found, defaulting to disabled')
+        setSandboxMode(false)
+      } else {
+        const isSandbox = sandboxSetting.value === 'true' || sandboxSetting.value === true
+        console.log('Sandbox setting loaded:', sandboxSetting.value, '-> sandbox:', isSandbox)
+        setSandboxMode(isSandbox)
+      }
+    } catch (error) {
+      console.error('Error checking payment settings:', error)
+      // Default to enabled payments, disabled sandbox if there's an error
+      setPaymentEnabled(true)
+      setSandboxMode(false)
+    }
+  }
 
   useEffect(() => {
     if (!notification) return
@@ -282,18 +335,39 @@ export default function AnimatedSignupPage() {
         description: error.message,
       })
     } else {
+      // Set flags to prevent auto-redirect and show success page
+      setJustRegistered(true)
       setSuccess(true)
-      setNotification({
-        type: 'success',
-        title: 'Registration done!',
-        description: `Email confirmation link sent to ${email}. Please verify to finish setting up your account.`,
-      })
+      
+      console.log('Registration successful, payment settings:', { paymentEnabled, sandboxMode, selectedPlan })
+      
+      // For premium/business plans with payments enabled, show payment modal immediately
+      if (selectedPlan !== 'free' && paymentEnabled && !sandboxMode) {
+        setNotification({
+          type: 'success',
+          title: 'Account created! Complete payment to activate.',
+          description: `Registration successful! Now complete your ${selectedPlan} subscription payment to activate your account.`,
+        })
+        // Show payment modal immediately for premium/business plans
+        setTimeout(() => setShowPaymentModal(true), 1000)
+      } else {
+        setNotification({
+          type: 'success',
+          title: 'Registration complete!',
+          description: selectedPlan !== 'free' && (sandboxMode || !paymentEnabled)
+            ? `Your ${selectedPlan} account has been created and is ready to use! (${sandboxMode ? 'sandbox mode enabled' : 'payments currently disabled'})`
+            : `Your account has been created successfully! You can now sign in and start using A2Z Sellr.`,
+        })
+      }
     }
     
     setLoading(false)
   }
 
+  console.log('Render state:', { success, user, justRegistered, selectedPlan, paymentEnabled, sandboxMode })
+  
   if (success) {
+    console.log('Showing success page!')
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-300 via-blue-300 to-purple-300 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         {/* Background Pattern */}
@@ -312,38 +386,123 @@ export default function AnimatedSignupPage() {
         </Link>
         
         <div className="relative z-10 w-full px-4 flex items-center justify-center">
-          <div className="w-full max-w-md bg-white rounded-2xl border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,0.9)] p-8 text-center transform rotate-1">
+          <motion.div 
+            className="w-full max-w-md bg-white rounded-2xl border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,0.9)] p-8 text-center transform rotate-1"
+            initial={{ scale: 0.8, opacity: 0, rotate: 0 }}
+            animate={{ scale: 1, opacity: 1, rotate: 1 }}
+            transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
+          >
             <NotificationAlert />
             
             {/* Success Header */}
-            <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] mb-6 transform -rotate-1">
-              <div className="text-4xl mb-2">🎉</div>
-              <h2 className="text-2xl font-black uppercase mb-2">CHECK YOUR EMAIL!</h2>
-              <p className="text-sm font-bold">REGISTRATION ALMOST COMPLETE!</p>
-            </div>
+            <motion.div 
+              className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] mb-6 transform -rotate-1"
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              <div className="text-4xl mb-2">{selectedPlan !== 'free' && paymentEnabled && !sandboxMode ? '💳' : '🎉'}</div>
+              <h2 className="text-2xl font-black uppercase mb-2">ACCOUNT CREATED!</h2>
+              <p className="text-sm font-bold">
+                {selectedPlan !== 'free' && paymentEnabled && !sandboxMode
+                  ? 'PAYMENT REQUIRED TO ACTIVATE' 
+                  : selectedPlan !== 'free' && (sandboxMode || !paymentEnabled)
+                  ? 'ACCOUNT READY TO USE'
+                  : 'REGISTRATION COMPLETE!'
+                }
+              </p>
+            </motion.div>
             
-            <div className="bg-yellow-300 p-4 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] mb-6">
+            <motion.div 
+              className="bg-yellow-300 p-4 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] mb-6"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+            >
               <p className="text-black font-bold text-sm mb-2">
-                📧 CONFIRMATION LINK SENT TO:
+                📧 ACCOUNT CREATED FOR:
               </p>
               <p className="text-black font-black text-lg break-all">
                 {email}
               </p>
-            </div>
+            </motion.div>
             
-            <div className="text-center">
-              <p className="text-black font-bold text-sm mb-4">
-                ALREADY CONFIRMED?
-              </p>
-              <Link 
-                href="/auth/login-animated" 
-                className="bg-blue-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all inline-block"
-              >
-                SIGN IN HERE
-              </Link>
-            </div>
-          </div>
+            <motion.div 
+              className="text-center"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+            >
+              {selectedPlan !== 'free' && paymentEnabled && !sandboxMode ? (
+                <>
+                  <p className="text-black font-bold text-sm mb-4">
+                    PAYMENT REQUIRED TO ACTIVATE YOUR {selectedPlan.toUpperCase()} ACCOUNT
+                  </p>
+                  <div className="bg-yellow-100 p-3 rounded-lg border-2 border-black mb-4">
+                    <p className="text-black font-bold text-xs">
+                      ⚠️ Your account is created but not active yet. Complete payment to access your profile and premium features.
+                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    <button 
+                      onClick={() => setShowPaymentModal(true)}
+                      className="bg-green-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all inline-block w-full"
+                    >
+                      PAY NOW TO ACTIVATE
+                    </button>
+                    <Link 
+                      href="/auth/login-animated" 
+                      className="bg-gray-500 text-white px-6 py-2 rounded-lg border-2 border-black font-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all inline-block text-sm"
+                    >
+                      SIGN IN LATER
+                    </Link>
+                  </div>
+                </>
+              ) : selectedPlan !== 'free' && (sandboxMode || !paymentEnabled) ? (
+                <>
+                  <p className="text-black font-bold text-sm mb-4">
+                    YOUR {selectedPlan.toUpperCase()} ACCOUNT IS READY!
+                  </p>
+                  <div className="space-y-3">
+                    <div className="bg-green-100 p-3 rounded-lg border-2 border-black mb-3">
+                      <p className="text-black font-bold text-sm">
+                        🎉 No payment required - {sandboxMode ? 'sandbox mode is enabled for testing' : 'payments are currently disabled by admin'}
+                      </p>
+                    </div>
+                    <Link 
+                      href="/dashboard" 
+                      className="bg-blue-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all inline-block w-full"
+                    >
+                      GO TO DASHBOARD
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-black font-bold text-sm mb-4">
+                    READY TO START SELLING?
+                  </p>
+                  <Link 
+                    href="/auth/login-animated" 
+                    className="bg-blue-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all inline-block"
+                  >
+                    SIGN IN HERE
+                  </Link>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
         </div>
+        
+        {/* Payment Modal */}
+        {selectedPlan !== 'free' && (
+          <PaymentModal
+            isOpen={showPaymentModal}
+            onClose={() => setShowPaymentModal(false)}
+            selectedTier={selectedPlan as 'premium' | 'business'}
+            billingCycle="monthly"
+          />
+        )}
       </div>
     )
   }
@@ -366,26 +525,46 @@ export default function AnimatedSignupPage() {
       </Link>
       
       <div className="relative z-10 w-full px-4 flex items-center justify-center">
-        <div className="w-full max-w-md bg-white rounded-2xl border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,0.9)] p-8 transform -rotate-1">
+        <motion.div 
+          className="w-full max-w-md bg-white rounded-2xl border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,0.9)] p-8 transform -rotate-1"
+          initial={{ scale: 0.8, opacity: 0, rotate: 0 }}
+          animate={{ scale: 1, opacity: 1, rotate: -1 }}
+          transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
+        >
           <NotificationAlert />
           
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-4 rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] mb-4 transform rotate-1">
+            <motion.div 
+              className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-4 rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] mb-4 transform rotate-1"
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
               <h1 className="text-3xl font-black uppercase">REGISTER</h1>
               <p className="text-sm font-bold mt-1">JOIN THE A2Z SELLR COMMUNITY!</p>
-            </div>
-            <p className="text-black font-bold text-sm bg-yellow-300 p-3 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]">
+            </motion.div>
+            <motion.p 
+              className="text-black font-bold text-sm bg-yellow-300 p-3 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+            >
               🚀 JOIN 10,000+ SELLERS GROWING WITH A2Z SELLR 🚀
-            </p>
+            </motion.p>
           </div>
 
           {/* Plan Confirmation */}
-          <div className={`mb-6 p-4 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] ${
-            planConfig.color === 'emerald' ? 'bg-green-400' :
-            planConfig.color === 'blue' ? 'bg-blue-400' :
-            'bg-gray-400'
-          }`}>
+          <motion.div 
+            className={`mb-6 p-4 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] ${
+              planConfig.color === 'emerald' ? 'bg-green-400' :
+              planConfig.color === 'blue' ? 'bg-blue-400' :
+              'bg-gray-400'
+            }`}
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+          >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <div className="bg-white p-2 rounded-lg border-2 border-black">
@@ -431,17 +610,22 @@ export default function AnimatedSignupPage() {
 
             <div className="text-center">
               <Link 
-                href="/choose-plan" 
+                href="/#pricing"
                 className="bg-white text-black px-4 py-2 rounded-lg border-2 border-black font-black text-xs hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] transition-all inline-block"
               >
                 CHANGE PLAN?
               </Link>
             </div>
-          </div>
+          </motion.div>
 
 
           {/* Value Proposition */}
-          <div className="mb-6 p-4 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transform rotate-1">
+          <motion.div 
+            className="mb-6 p-4 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transform rotate-1"
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.8, duration: 0.5 }}
+          >
             <div className="text-center">
               <div className="flex items-center justify-center gap-1 mb-2">
                 <Star className="w-5 h-5 text-black fill-current" />
@@ -457,9 +641,15 @@ export default function AnimatedSignupPage() {
                 JOIN 10,000+ SELLERS ALREADY GROWING!
               </p>
             </div>
-          </div>
+          </motion.div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <motion.form 
+            onSubmit={handleSubmit} 
+            className="space-y-4"
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 1.0, duration: 0.5 }}
+          >
           <div className="relative">
             <AnimatedInput
               label="Display Name - Check Availability"
@@ -539,24 +729,36 @@ export default function AnimatedSignupPage() {
             </div>
           )}
 
-          <AnimatedButton type="submit" disabled={loading}>
-            {loading ? 'Creating account...' : 'Submit'}
+          <AnimatedButton 
+            type="submit" 
+            disabled={loading || !displayNameAvailable}
+            className="w-full"
+          >
+            {loading ? 'Creating Account...' : 'Create Account'}
           </AnimatedButton>
 
-            <div className="text-center mt-6">
-              <p className="text-black font-bold text-sm">
-                ALREADY HAVE AN ACCOUNT?{' '}
-                <Link 
-                  href={`/auth/login-animated${selectedPlan ? `?plan=${selectedPlan}` : ''}`} 
-                  className="bg-blue-500 text-white px-3 py-1 rounded border-2 border-black font-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] transition-all inline-block ml-2"
-                >
-                  SIGN IN
-                </Link>
-              </p>
-            </div>
-          </form>
-        </div>
+          <div className="text-center mt-6">
+            <p className="text-black font-bold text-sm">
+              ALREADY HAVE AN ACCOUNT?{' '}
+              <Link 
+                href={`/auth/login-animated${selectedPlan ? `?plan=${selectedPlan}` : ''}`} 
+                className="bg-blue-500 text-white px-3 py-1 rounded border-2 border-black font-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] transition-all inline-block ml-2"
+              >
+                SIGN IN
+              </Link>
+            </p>
+          </div>
+        </motion.form>
+        </motion.div>
       </div>
+      
+      {/* Payment Modal - Also available on main signup form for testing */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        selectedTier={selectedPlan === 'business' ? 'business' : 'premium'}
+        billingCycle="monthly"
+      />
     </div>
   )
 }

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { Image, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ListingMeta } from './ListingMeta'
 
 interface MediaItem {
   id: string
@@ -18,6 +19,9 @@ interface HoverCardsLayoutProps {
   ctaLabel: string
   ctaUrl: string
   businessName: string
+  ratingAverage?: number | null
+  ratingCount?: number
+  deliveryAvailable?: boolean
 }
 
 export const HoverCardsLayout: React.FC<HoverCardsLayoutProps> = ({
@@ -26,7 +30,10 @@ export const HoverCardsLayout: React.FC<HoverCardsLayoutProps> = ({
   message,
   ctaLabel,
   ctaUrl,
-  businessName
+  businessName,
+  ratingAverage,
+  ratingCount,
+  deliveryAvailable
 }) => {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const [lightboxOpen, setLightboxOpen] = useState(false)
@@ -71,6 +78,12 @@ export const HoverCardsLayout: React.FC<HoverCardsLayoutProps> = ({
         </div>
         
         <div className="mb-4">
+          <ListingMeta
+            ratingAverage={ratingAverage}
+            ratingCount={ratingCount}
+            deliveryAvailable={deliveryAvailable}
+            className="mb-2"
+          />
           <h3 className="font-bold text-gray-900 mb-2 text-lg md:text-xl lg:text-2xl">{title}</h3>
           <p className="text-gray-700 text-sm md:text-base lg:text-lg leading-relaxed">{message}</p>
         </div>

@@ -71,7 +71,12 @@ export function LocationCategorySelector({
       if (catError) {
         console.error('Error fetching categories:', catError)
       } else {
-        setCategories(categoriesData || [])
+        const sortedCategories = (categoriesData || []).sort((a, b) => {
+          if (a.name === 'All Categories') return -1
+          if (b.name === 'All Categories') return 1
+          return a.name.localeCompare(b.name)
+        })
+        setCategories(sortedCategories)
       }
     } catch (error) {
       console.error('Error fetching data:', error)

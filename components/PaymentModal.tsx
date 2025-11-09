@@ -67,10 +67,14 @@ export function PaymentModal({ isOpen, onClose, selectedTier, billingCycle }: Pa
         .single()
 
       // PayFast payment data
+      const returnUrl = new URL(`${window.location.origin}/payment/success`)
+      returnUrl.searchParams.set('method', 'payfast')
+      returnUrl.searchParams.set('transaction_id', transaction.id)
+
       const paymentData = {
         merchant_id: "10000100", // Replace with your PayFast merchant ID
         merchant_key: "46f0cd694581a", // Replace with your PayFast merchant key
-        return_url: `${window.location.origin}/payment/success`,
+        return_url: returnUrl.toString(),
         cancel_url: `${window.location.origin}/payment/cancel`,
         notify_url: `${window.location.origin}/api/payfast/webhook`,
         
@@ -195,8 +199,8 @@ export function PaymentModal({ isOpen, onClose, selectedTier, billingCycle }: Pa
         })
         .eq('id', user.id)
 
-      alert('✅ Proof of payment uploaded successfully! Your payment will be verified by our admin team.')
-      onClose()
+      // Redirect to success page with EFT method
+      window.location.href = `/payment/success?method=eft`
       
     } catch (err) {
       console.error('Proof upload error:', err)

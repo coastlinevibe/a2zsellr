@@ -78,9 +78,9 @@ export function BusinessCard({ business, categoryName, locationName, index = 0 }
     >
       {/* Tier Badge - Positioned at top right corner */}
       <motion.div 
-        className="absolute -top-2 -right-2 z-10"
+        className="absolute top-2 right-2 z-10"
         initial={{ scale: 0, rotate: -180 }}
-        animate={{ scale: 1, rotate: 12 }}
+        animate={{ scale: 1, rotate: 0 }}
         transition={{ delay: index * 0.1 + 0.3, type: "spring", stiffness: 200 }}
       >
         <div className={`${tierBadge.className} px-3 py-1 rounded-lg text-xs font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)]`}>

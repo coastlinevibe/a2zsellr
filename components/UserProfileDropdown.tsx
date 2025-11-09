@@ -4,19 +4,36 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
-import { User, Settings, Star, Gift, HelpCircle, LogOut, Crown } from 'lucide-react'
+import { User, Settings, Star, Gift, HelpCircle, LogOut } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
-export function UserProfileDropdown() {
+type SubscriptionTier = 'free' | 'premium' | 'business' | string
+
+interface UserProfileDropdownProps {
+  displayName?: string | null
+  avatarUrl?: string | null
+  subscriptionTier?: SubscriptionTier | null
+}
+
+export function UserProfileDropdown({
+  displayName: displayNameProp,
+  avatarUrl,
+  subscriptionTier: subscriptionTierProp
+}: UserProfileDropdownProps) {
   const { user, signOut } = useAuth()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
 
   if (!user) return null
 
-  const displayName = user.user_metadata?.display_name || user.email?.split('@')[0] || 'User'
-  const initials = displayName.charAt(0).toUpperCase()
+  const derivedDisplayName = displayNameProp || user.user_metadata?.display_name || user.email?.split('@')[0] || 'User'
+  const initials = derivedDisplayName.charAt(0).toUpperCase()
   const userHandle = '@' + (user.email?.split('@')[0] || 'user')
+  const tierValue = subscriptionTierProp || user.user_metadata?.subscription_tier || 'free'
+  const tierLabel = typeof tierValue === 'string' && tierValue.length > 0
+    ? tierValue.charAt(0).toUpperCase() + tierValue.slice(1)
+    : 'Free'
 
   const handleSignOut = async () => {
     await signOut()
@@ -32,7 +49,7 @@ export function UserProfileDropdown() {
         router.push('/settings')
         break
       case 'upgrade':
-        router.push('/choose-plan')
+        router.push('/#pricing')
         break
       case 'referrals':
         router.push('/referrals')
@@ -52,11 +69,17 @@ export function UserProfileDropdown() {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
       >
-        <div className="w-8 h-8 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-semibold text-sm">
-          {initials}
-        </div>
+        <Avatar className="h-8 w-8 border border-emerald-100">
+          {avatarUrl ? (
+            <AvatarImage src={avatarUrl} alt={derivedDisplayName} />
+          ) : (
+            <AvatarFallback className="bg-emerald-100 text-emerald-700 font-semibold text-sm">
+              {initials}
+            </AvatarFallback>
+          )}
+        </Avatar>
         <span className="text-sm font-medium text-gray-700 hidden sm:block">
-          {displayName}
+          {derivedDisplayName}
         </span>
       </button>
 
@@ -70,14 +93,20 @@ export function UserProfileDropdown() {
             {/* User Info */}
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-semibold">
-                  {initials}
-                </div>
+                <Avatar className="h-12 w-12 border border-emerald-100">
+                  {avatarUrl ? (
+                    <AvatarImage src={avatarUrl} alt={derivedDisplayName} />
+                  ) : (
+                    <AvatarFallback className="bg-emerald-100 text-emerald-700 font-semibold text-lg">
+                      {initials}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
                 <div>
-                  <h3 className="font-semibold text-gray-900">{displayName}</h3>
+                  <h3 className="font-semibold text-gray-900">{derivedDisplayName}</h3>
                   <p className="text-sm text-gray-500">{userHandle}</p>
                   <Badge className="bg-gray-100 text-gray-700 text-xs mt-1">
-                    Free
+                    {tierLabel}
                   </Badge>
                 </div>
               </div>

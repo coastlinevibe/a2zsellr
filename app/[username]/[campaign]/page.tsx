@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/campaign-layouts'
 import { MessageCircle, Share2, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { MarketingActionBar } from '@/components/ui/MarketingActionBar'
 
 interface CampaignPageProps {
   params: {
@@ -42,6 +43,7 @@ interface Listing {
     storage_path?: string
   }>
   selected_products?: string[]
+  delivery_available?: boolean | null
 }
 
 interface Profile {
@@ -66,10 +68,37 @@ export default function CampaignPage({ params }: CampaignPageProps) {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [reviewSummary, setReviewSummary] = useState<{ average: number; count: number } | null>(null)
 
   useEffect(() => {
     fetchListingData()
   }, [params.username, params.campaign])
+
+  const loadReviewSummary = async (profileId: string) => {
+    try {
+      const { data: reviewsData, error: reviewsError } = await supabase
+        .from('profile_reviews')
+        .select('rating')
+        .eq('profile_id', profileId)
+
+      if (reviewsError) {
+        console.error('Error loading reviews:', reviewsError)
+        setReviewSummary(null)
+        return
+      }
+
+      if (reviewsData && reviewsData.length > 0) {
+        const total = reviewsData.reduce((sum, review) => sum + (review?.rating ?? 0), 0)
+        const average = total / reviewsData.length
+        setReviewSummary({ average, count: reviewsData.length })
+      } else {
+        setReviewSummary({ average: 0, count: 0 })
+      }
+    } catch (reviewErr) {
+      console.error('Unexpected error loading reviews:', reviewErr)
+      setReviewSummary(null)
+    }
+  }
 
   const fetchListingData = async () => {
     try {
@@ -104,6 +133,7 @@ export default function CampaignPage({ params }: CampaignPageProps) {
         throw new Error('Business not found')
       }
       setProfile(profileData)
+      await loadReviewSummary(profileData.id)
 
       // Get listing by profile and title/slug - try multiple matches
       const listingVariations = [
@@ -185,6 +215,7 @@ export default function CampaignPage({ params }: CampaignPageProps) {
           console.log('Found matching listing via fallback:', matchingListing)
           setListing(matchingListing)
           setProfile(matchingListing.profiles)
+          await loadReviewSummary(matchingListing.profiles.id)
           
           // Get products that were specifically selected for this listing
           const selectedProductIds = matchingListing.selected_products || []
@@ -263,7 +294,10 @@ export default function CampaignPage({ params }: CampaignPageProps) {
       message: listing.message_template,
       ctaLabel: listing.cta_label || 'Learn More',
       ctaUrl: listing.cta_url,
-      businessName: profile.display_name
+      businessName: profile.display_name,
+      ratingAverage: reviewSummary && reviewSummary.count > 0 ? reviewSummary.average : null,
+      ratingCount: reviewSummary?.count ?? 0,
+      deliveryAvailable: Boolean(listing.delivery_available)
     }
 
     switch (listing.layout_type) {
@@ -490,21 +524,19 @@ export default function CampaignPage({ params }: CampaignPageProps) {
         {renderLayout()}
 
         {/* Footer Actions */}
-        <div className="mt-8 space-y-4">
-          {/* Contact Shop Button - Prominent */}
-          {profile?.phone_number && (
-            <div className="flex justify-center">
-              <Button
-                onClick={handleContactShop}
-                size="lg"
-                className="bg-green-600 hover:bg-green-700 text-white px-8 py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
-              >
-                <MessageCircle className="w-5 h-5 mr-2" />
-                Contact Shop on WhatsApp
-              </Button>
-            </div>
+        <div className="mt-10 space-y-6">
+          {profile && listing && (
+            <MarketingActionBar
+              onContactShop={handleContactShop}
+              onWhatsAppShare={handleWhatsAppShare}
+              onShare={handleShare}
+              onViewProfile={() => router.push(`/profile/${params.username}`)}
+              shareUrl={pageUrl}
+              businessName={profile.display_name}
+              listingTitle={listing.title}
+            />
           )}
-          
+
           <div className="text-center">
             <Button
               onClick={() => router.push(`/profile/${params.username}`)}
@@ -514,7 +546,7 @@ export default function CampaignPage({ params }: CampaignPageProps) {
               <ExternalLink className="w-4 h-4 mr-2" />
               View Full Business Profile
             </Button>
-            
+
             <p className="text-sm text-gray-500">
               Powered by <span className="font-semibold text-blue-600">A2Z Business Directory</span>
             </p>

@@ -294,8 +294,8 @@ const PricingCard = ({
             {/* CTA Button */}
             <Link
                 href={plan.name === 'Free' ? '/auth/signup-animated?plan=free' : 
-                      plan.name === 'Premium' ? '/choose-plan?plan=premium' : 
-                      '/choose-plan?plan=business'}
+                      plan.name === 'Premium' ? '/auth/signup-animated?plan=premium' : 
+                      '/auth/signup-animated?plan=business'}
                 className="block w-full"
             >
                 <motion.div

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { Image, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ListingMeta } from './ListingMeta'
 
 interface MediaItem {
   id: string
@@ -18,6 +19,9 @@ interface GalleryMosaicLayoutProps {
   ctaLabel: string
   ctaUrl: string
   businessName: string
+  ratingAverage?: number | null
+  ratingCount?: number
+  deliveryAvailable?: boolean
 }
 
 export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
@@ -26,7 +30,10 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
   message,
   ctaLabel,
   ctaUrl,
-  businessName
+  businessName,
+  ratingAverage,
+  ratingCount,
+  deliveryAvailable
 }) => {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -69,6 +76,12 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
         </div>
         
         <div className="mb-4">
+          <ListingMeta
+            ratingAverage={ratingAverage}
+            ratingCount={ratingCount}
+            deliveryAvailable={deliveryAvailable}
+            className="mb-2"
+          />
           <h3 className="font-bold text-gray-900 mb-2 text-lg md:text-xl lg:text-2xl">{title}</h3>
           <p className="text-gray-700 text-sm md:text-base lg:text-lg leading-relaxed">{message}</p>
         </div>

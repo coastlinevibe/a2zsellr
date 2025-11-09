@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     })
     
-    // If signup successful, create profile manually
+    // If signup successful, create profile manually and sign out to prevent auto-login
     if (!error && data.user) {
       try {
         // Wait a moment for user to be fully created
@@ -64,23 +64,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert({
-            id: data.user.id,
-            display_name: metadata?.display_name || email.split('@')[0],
-            email: email,
-            subscription_tier: metadata?.selected_plan || 'free',
-            subscription_status: 'active',
-            verified_seller: false,
-            is_active: true,
-            current_listings: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
+          .upsert(
+            {
+              id: data.user.id,
+              display_name: metadata?.display_name || email.split('@')[0],
+              email: email,
+              subscription_tier: metadata?.selected_plan || 'free',
+              subscription_status: 'active',
+              verified_seller: false,
+              is_active: true,
+              current_listings: 0,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            },
+            { onConflict: 'id' }
+          )
         
         if (profileError) {
           console.warn('Profile creation failed:', profileError.message)
           // Don't fail the signup, just log the warning
         }
+
       } catch (profileErr) {
         console.warn('Profile creation error:', profileErr)
       }

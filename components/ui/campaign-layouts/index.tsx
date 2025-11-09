@@ -21,6 +21,9 @@ export interface LayoutProps {
   ctaLabel: string
   ctaUrl: string
   businessName: string
+  ratingAverage?: number | null
+  ratingCount?: number
+  deliveryAvailable?: boolean
 }
 
 // Layout component mapping

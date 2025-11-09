@@ -494,23 +494,25 @@ export default function ProfilePage() {
   }
 
   // Update schedule for a specific day
+  const applyScheduleUpdate = (
+    updater: (prev: typeof weeklySchedule) => typeof weeklySchedule
+  ) => {
+    setWeeklySchedule((prev) => {
+      const updated = updater(prev)
+      setBusinessHours(JSON.stringify(updated))
+      setTodayHours(getTodayHoursFromSchedule(updated))
+      return updated
+    })
+  }
+
   const updateDaySchedule = (day: string, field: string, value: string | boolean) => {
-    const newSchedule = {
-      ...weeklySchedule,
+    applyScheduleUpdate((prev) => ({
+      ...prev,
       [day]: {
-        ...weeklySchedule[day as keyof typeof weeklySchedule],
+        ...prev[day as keyof typeof prev],
         [field]: value
       }
-    }
-    setWeeklySchedule(newSchedule)
-    
-    // Update business hours with JSON format
-    const scheduleJson = JSON.stringify(newSchedule)
-    setBusinessHours(scheduleJson)
-    
-    // Update today's hours display
-    const todayHours = getTodayHoursFromSchedule(newSchedule)
-    setTodayHours(todayHours)
+    }))
   }
 
   // Get today's hours from schedule object

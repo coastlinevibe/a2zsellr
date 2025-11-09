@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { ChevronUp, ChevronDown, Image, MoreVertical } from 'lucide-react'
+import { ListingMeta } from './ListingMeta'
 
 interface MediaItem {
   id: string
@@ -18,6 +19,9 @@ interface VerticalSliderLayoutProps {
   ctaLabel: string
   ctaUrl: string
   businessName: string
+  ratingAverage?: number | null
+  ratingCount?: number
+  deliveryAvailable?: boolean
 }
 
 export const VerticalSliderLayout: React.FC<VerticalSliderLayoutProps> = ({
@@ -26,7 +30,10 @@ export const VerticalSliderLayout: React.FC<VerticalSliderLayoutProps> = ({
   message,
   ctaLabel,
   ctaUrl,
-  businessName
+  businessName,
+  ratingAverage,
+  ratingCount,
+  deliveryAvailable
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
@@ -72,6 +79,12 @@ export const VerticalSliderLayout: React.FC<VerticalSliderLayoutProps> = ({
         </div>
         
         <div className="mb-4">
+          <ListingMeta
+            ratingAverage={ratingAverage}
+            ratingCount={ratingCount}
+            deliveryAvailable={deliveryAvailable}
+            className="mb-2"
+          />
           <h3 className="font-bold text-gray-900 mb-2 text-lg md:text-xl lg:text-2xl">{title}</h3>
           <p className="text-gray-700 text-sm md:text-base lg:text-lg leading-relaxed">{message}</p>
         </div>
