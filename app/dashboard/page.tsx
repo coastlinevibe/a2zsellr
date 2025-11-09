@@ -90,6 +90,15 @@ export default function DashboardPage() {
   const [marketingActiveView, setMarketingActiveView] = useState('builder')
   const [marketingProducts, setMarketingProducts] = useState<any[]>([])
   
+  // Dashboard metrics state
+  const [dashboardMetrics, setDashboardMetrics] = useState({
+    profileViews: 0,
+    activeListings: 0,
+    conversionClicks: 0,
+    storeRating: 0
+  })
+  const [metricsLoading, setMetricsLoading] = useState(true)
+  
 
   // Redirect free tier users away from premium tabs
   useEffect(() => {
@@ -188,6 +197,13 @@ export default function DashboardPage() {
     }
   }, [activeTab, marketingActiveView, profile?.id])
 
+  // Fetch dashboard metrics when profile is loaded
+  useEffect(() => {
+    if (profile?.id) {
+      fetchDashboardMetrics()
+    }
+  }, [profile?.id])
+
   const fetchProfile = async () => {
     try {
       if (!user?.id) {
@@ -211,6 +227,53 @@ export default function DashboardPage() {
       console.error('Error:', error)
     } finally {
       setProfileLoading(false)
+    }
+  }
+
+  const fetchDashboardMetrics = async () => {
+    if (!profile?.id) return
+    
+    setMetricsLoading(true)
+    try {
+      // Fetch profile views from profile_analytics
+      const { data: analyticsData } = await supabase
+        .from('profile_analytics')
+        .select('views, clicks')
+        .eq('profile_id', profile.id)
+      
+      // Sum up all views and clicks
+      const totalViews = analyticsData?.reduce((sum, record) => sum + record.views, 0) || 0
+      const totalClicks = analyticsData?.reduce((sum, record) => sum + record.clicks, 0) || 0
+      
+      // Fetch active listings
+      const { data: activeListingsData } = await supabase
+        .from('profile_products')
+        .select('id')
+        .eq('profile_id', profile.id)
+        .eq('is_active', true)
+      
+      // Fetch store rating
+      const { data: reviewsData } = await supabase
+        .from('profile_reviews')
+        .select('rating')
+        .eq('profile_id', profile.id)
+      
+      // Calculate average rating
+      const avgRating = reviewsData && reviewsData.length > 0 
+        ? reviewsData.reduce((sum, review) => sum + review.rating, 0) / reviewsData.length
+        : 0
+      
+      setDashboardMetrics({
+        profileViews: totalViews,
+        activeListings: activeListingsData?.length || 0,
+        conversionClicks: totalClicks,
+        storeRating: Number(avgRating.toFixed(1))
+      })
+      
+    } catch (error) {
+      console.error('Error fetching dashboard metrics:', error)
+    } finally {
+      setMetricsLoading(false)
     }
   }
 
@@ -637,7 +700,13 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-black text-black">Profile Views</p>
-                <p className="text-2xl font-black text-black">1,234</p>
+                <p className="text-2xl font-black text-black">
+                  {metricsLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    dashboardMetrics.profileViews.toLocaleString()
+                  )}
+                </p>
               </div>
               <div className="bg-blue-600 rounded-full p-2 border-2 border-black">
                 <Eye className="h-5 w-5 text-white" />
@@ -648,7 +717,13 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-black text-black">Active Listings</p>
-                <p className="text-2xl font-black text-black">0</p>
+                <p className="text-2xl font-black text-black">
+                  {metricsLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    dashboardMetrics.activeListings
+                  )}
+                </p>
               </div>
               <div className="bg-emerald-600 rounded-full p-2 border-2 border-black">
                 <Building2 className="h-5 w-5 text-white" />
@@ -659,7 +734,13 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-black text-black">Conversion Clicks</p>
-                <p className="text-2xl font-black text-black">567</p>
+                <p className="text-2xl font-black text-black">
+                  {metricsLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    dashboardMetrics.conversionClicks.toLocaleString()
+                  )}
+                </p>
               </div>
               <div className="bg-purple-600 rounded-full p-2 border-2 border-black">
                 <TrendingUp className="h-5 w-5 text-white" />
@@ -670,7 +751,13 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-black text-black">Store Rating</p>
-                <p className="text-2xl font-black text-black">4.8</p>
+                <p className="text-2xl font-black text-black">
+                  {metricsLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    dashboardMetrics.storeRating === 0 ? '0.0' : dashboardMetrics.storeRating
+                  )}
+                </p>
               </div>
               <div className="bg-yellow-600 rounded-full p-2 border-2 border-black">
                 <Star className="h-5 w-5 text-white" />

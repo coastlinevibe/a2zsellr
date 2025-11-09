@@ -18,7 +18,7 @@ interface Campaign {
   max_groups_per_day: number
   max_members_per_group_per_day: number
   total_groups_targeted: number
-  total_posts_sent: number
+  total_messages_sent: number
   created_at: string
 }
 
@@ -145,9 +145,9 @@ export function CampaignDashboard() {
             <div className="bg-white rounded-lg border p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Posts</p>
+                  <p className="text-sm text-gray-600">Total Messages</p>
                   <p className="text-2xl font-bold text-blue-600">
-                    {campaigns.reduce((sum, c) => sum + c.total_posts_sent, 0)}
+                    {campaigns.reduce((sum, c) => sum + c.total_messages_sent, 0)}
                   </p>
                 </div>
                 <BarChart3 className="h-8 w-8 text-blue-400" />
@@ -206,7 +206,7 @@ export function CampaignDashboard() {
                         </div>
                       </td>
                       <td className="p-4 text-gray-600">{campaign.total_groups_targeted}</td>
-                      <td className="p-4 text-gray-600">{campaign.total_posts_sent}</td>
+                      <td className="p-4 text-gray-600">{campaign.total_messages_sent}</td>
                       <td className="p-4">
                         <div className="flex gap-2">
                           <Button 

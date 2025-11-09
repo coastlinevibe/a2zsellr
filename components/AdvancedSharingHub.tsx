@@ -31,7 +31,7 @@ interface SharingSchedule {
   platform: string
   date: string
   time: string
-  status: 'scheduled' | 'posted' | 'failed'
+  status: 'scheduled' | 'sent' | 'failed'
   reach?: number
   engagement?: number
 }
@@ -110,7 +110,7 @@ export function AdvancedSharingHub({ content, onScheduleShare, onShareNow }: Adv
       platform: 'whatsapp',
       date: '2025-11-06',
       time: '14:30',
-      status: 'posted',
+      status: 'sent',
       reach: 45,
       engagement: 12
     }
@@ -255,7 +255,7 @@ export function AdvancedSharingHub({ content, onScheduleShare, onShareNow }: Adv
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'posted': return 'bg-green-100 text-green-800'
+      case 'sent': return 'bg-green-100 text-green-800'
       case 'scheduled': return 'bg-blue-100 text-blue-800'
       case 'failed': return 'bg-red-100 text-red-800'
       default: return 'bg-gray-100 text-gray-800'
@@ -477,7 +477,7 @@ export function AdvancedSharingHub({ content, onScheduleShare, onShareNow }: Adv
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  {schedule.status === 'posted' && (
+                  {schedule.status === 'sent' && (
                     <div className="text-sm text-gray-600">
                       <div className="flex items-center gap-1">
                         <Eye className="w-3 h-3" />

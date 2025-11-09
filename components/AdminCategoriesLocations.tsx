@@ -60,7 +60,15 @@ export function AdminCategoriesLocations() {
           .order('name')
         
         if (error) throw error
-        setCategories(data || [])
+        
+        // Sort categories with "All Categories" always first
+        const sortedCategories = (data || []).sort((a, b) => {
+          if (a.name === 'All Categories') return -1
+          if (b.name === 'All Categories') return 1
+          return a.name.localeCompare(b.name)
+        })
+        
+        setCategories(sortedCategories)
       } else if (activeTab === 'locations') {
         const { data, error } = await supabase
           .from('locations')
@@ -146,11 +154,42 @@ export function AdminCategoriesLocations() {
   const handleSave = async () => {
     setError('')
     
+    // Basic validation
+    if (activeTab === 'categories' && !formData.name?.trim()) {
+      setError('Category name is required')
+      return
+    }
+    
+    if (activeTab === 'locations' && !formData.city?.trim()) {
+      setError('City name is required')
+      return
+    }
+    
     try {
       if (activeTab === 'categories') {
         // Auto-generate slug if empty
         if (!formData.slug && formData.name) {
           formData.slug = generateSlug(formData.name)
+        }
+
+        // Check for duplicate name/slug when adding new category
+        if (!editingItem) {
+          const { data: existingCategories } = await supabase
+            .from('categories')
+            .select('id, name, slug')
+            .or(`name.ilike.${formData.name.trim()},slug.eq.${formData.slug}`)
+          
+          if (existingCategories && existingCategories.length > 0) {
+            const duplicate = existingCategories[0]
+            if (duplicate.name.toLowerCase() === formData.name.trim().toLowerCase()) {
+              setError(`Category "${formData.name}" already exists`)
+              return
+            }
+            if (duplicate.slug === formData.slug) {
+              setError(`Category slug "${formData.slug}" already exists`)
+              return
+            }
+          }
         }
 
         if (editingItem) {
@@ -173,10 +212,10 @@ export function AdminCategoriesLocations() {
           const { error } = await supabase
             .from('categories')
             .insert({
-              name: formData.name,
+              name: formData.name.trim(),
               slug: formData.slug,
-              description: formData.description || null,
-              icon: formData.icon || null,
+              description: formData.description?.trim() || null,
+              icon: formData.icon?.trim() || null,
               is_active: formData.is_active
             })
           
@@ -245,7 +284,30 @@ export function AdminCategoriesLocations() {
       
     } catch (err: any) {
       console.error('Error saving:', err)
-      setError(err.message || 'Failed to save')
+      
+      // Handle specific database errors with user-friendly messages
+      if (err.message?.includes('duplicate key value violates unique constraint')) {
+        if (err.message.includes('categories_name_key')) {
+          setError(`A category with the name "${formData.name}" already exists. Please choose a different name.`)
+        } else if (err.message.includes('categories_slug_key')) {
+          setError(`A category with the slug "${formData.slug}" already exists. Please choose a different slug.`)
+        } else if (err.message.includes('locations_city_key')) {
+          setError(`A location with the city "${formData.city}" already exists. Please choose a different city.`)
+        } else if (err.message.includes('locations_slug_key')) {
+          setError(`A location with the slug "${formData.slug}" already exists. Please choose a different slug.`)
+        } else {
+          setError('This item already exists. Please check your input and try again.')
+        }
+      } else if (err.message?.includes('violates row-level security policy')) {
+        setError('You do not have permission to perform this action.')
+      } else if (err.message?.includes('violates not-null constraint')) {
+        setError('Please fill in all required fields.')
+      } else if (err.message?.includes('violates check constraint')) {
+        setError('Please check your input values and try again.')
+      } else {
+        // Generic user-friendly message for other errors
+        setError(`Unable to save ${activeTab === 'categories' ? 'category' : activeTab === 'locations' ? 'location' : 'product category'}. Please check your input and try again.`)
+      }
     }
   }
 
@@ -275,7 +337,11 @@ export function AdminCategoriesLocations() {
       
     } catch (err: any) {
       console.error('Error deleting:', err)
-      setError(err.message || 'Failed to delete')
+      if (err.message?.includes('violates foreign key constraint')) {
+        setError(`Cannot delete this ${activeTab === 'categories' ? 'category' : 'location'} because it is being used by existing businesses.`)
+      } else {
+        setError(`Unable to delete ${activeTab === 'categories' ? 'category' : 'location'}. Please try again.`)
+      }
     }
   }
 
@@ -443,15 +509,21 @@ export function AdminCategoriesLocations() {
         </motion.button>
       </div>
 
-      {/* Error Message */}
+      {/* Notification Message */}
       {error && (
         <motion.div 
-          className="bg-red-400 border-4 border-black rounded-xl p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
+          className="bg-orange-300 border-4 border-black rounded-xl p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <p className="text-black font-black">⚠️ {error}</p>
+          <div className="flex items-center gap-3">
+            <div className="text-2xl">💡</div>
+            <div>
+              <p className="text-black font-black text-sm uppercase">Heads up!</p>
+              <p className="text-black font-bold">{error}</p>
+            </div>
+          </div>
         </motion.div>
       )}
 

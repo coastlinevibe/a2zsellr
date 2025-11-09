@@ -376,11 +376,11 @@ Best regards`
   }
 
   const increaseQuantity = () => {
-    setQuantity(quantity + 1)
+    setQuantity(prev => prev + 1)
   }
 
   const decreaseQuantity = () => {
-    if (quantity > 1) setQuantity(quantity - 1)
+    setQuantity(prev => prev > 1 ? prev - 1 : 1)
   }
 
   const renderStars = (rating: number) => {
@@ -823,9 +823,16 @@ Best regards`
 
                   <div className="mb-6">
                     {selectedProduct.price_cents ? (
-                      <span className="text-3xl font-bold text-emerald-600">
-                        R{(selectedProduct.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
+                      <div>
+                        <span className="text-3xl font-bold text-emerald-600">
+                          R{((selectedProduct.price_cents * quantity) / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                        {quantity > 1 && (
+                          <div className="text-sm text-gray-500 mt-1">
+                            {quantity} × R{(selectedProduct.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} each
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-2xl text-gray-500">Contact for price</span>
                     )}

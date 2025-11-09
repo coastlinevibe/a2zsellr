@@ -53,14 +53,14 @@ export async function POST(request: NextRequest) {
       // Get current counts first
       const { data: currentGroup } = await supabase
         .from('campaign_groups')
-        .select('posts_sent_today, total_posts_sent')
+        .select('messages_sent_today, total_messages_sent')
         .eq('campaign_id', campaign_id)
         .eq('group_id', group_id)
         .single()
 
       const { data: currentCampaign } = await supabase
         .from('marketing_campaigns')
-        .select('total_posts_sent')
+        .select('total_messages_sent')
         .eq('id', campaign_id)
         .single()
 
@@ -69,9 +69,9 @@ export async function POST(request: NextRequest) {
         await supabase
           .from('campaign_groups')
           .update({
-            last_posted_at: new Date().toISOString(),
-            posts_sent_today: (currentGroup.posts_sent_today || 0) + 1,
-            total_posts_sent: (currentGroup.total_posts_sent || 0) + 1
+            last_message_sent_at: new Date().toISOString(),
+            messages_sent_today: (currentGroup.messages_sent_today || 0) + 1,
+            total_messages_sent: (currentGroup.total_messages_sent || 0) + 1
           })
           .eq('campaign_id', campaign_id)
           .eq('group_id', group_id)
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
         await supabase
           .from('marketing_campaigns')
           .update({
-            total_posts_sent: (currentCampaign.total_posts_sent || 0) + 1,
+            total_messages_sent: (currentCampaign.total_messages_sent || 0) + 1,
             updated_at: new Date().toISOString()
           })
           .eq('id', campaign_id)
@@ -172,7 +172,7 @@ async function getCampaignData(campaignId: string) {
   })
 }
 
-// Helper function to get next groups to post to
+// Helper function to get next groups to send messages to
 async function getNextGroupsToPost(campaignId: string) {
   try {
     // Get campaign limits
@@ -186,7 +186,7 @@ async function getNextGroupsToPost(campaignId: string) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 })
     }
 
-    // Check how many groups we've posted to today
+    // Check how many groups we've sent messages to today
     const { data: todayExecutions } = await supabase
       .from('campaign_executions')
       .select('group_id')
@@ -194,8 +194,8 @@ async function getNextGroupsToPost(campaignId: string) {
       .eq('execution_date', new Date().toISOString().split('T')[0])
       .eq('status', 'sent')
 
-    const postedGroupsToday = new Set(todayExecutions?.map(e => e.group_id) || [])
-    const remainingGroupsToday = campaign.max_groups_per_day - postedGroupsToday.size
+    const messagesSentToGroupsToday = new Set(todayExecutions?.map(e => e.group_id) || [])
+    const remainingGroupsToday = campaign.max_groups_per_day - messagesSentToGroupsToday.size
 
     if (remainingGroupsToday <= 0) {
       return NextResponse.json({
@@ -205,7 +205,7 @@ async function getNextGroupsToPost(campaignId: string) {
       })
     }
 
-    // Get available groups that haven't been posted to today
+    // Get available groups that haven't received messages today
     const { data: availableGroups } = await supabase
       .from('campaign_groups')
       .select(`
@@ -214,7 +214,7 @@ async function getNextGroupsToPost(campaignId: string) {
       `)
       .eq('campaign_id', campaignId)
       .eq('is_active', true)
-      .not('group_id', 'in', `(${Array.from(postedGroupsToday).join(',')})`)
+      .not('group_id', 'in', `(${Array.from(messagesSentToGroupsToday).join(',')})`)
       .order('priority')
       .limit(remainingGroupsToday)
 
@@ -248,15 +248,15 @@ async function getNextGroupsToPost(campaignId: string) {
 async function checkDailyLimits(campaignId: string) {
   try {
     const { data: limits } = await supabase
-      .rpc('check_daily_posting_limits', {
+      .rpc('check_daily_messaging_limits', {
         p_campaign_id: campaignId,
         p_target_date: new Date().toISOString().split('T')[0]
       })
 
     if (!limits || limits.length === 0) {
       return NextResponse.json({
-        can_post: false,
-        groups_posted_today: 0,
+        can_send: false,
+        groups_messaged_today: 0,
         max_groups_per_day: 0,
         remaining_groups: 0
       })

@@ -449,7 +449,7 @@ const AnalyticsDashboard = () => {
               </li>
               <li className="flex items-start gap-2">
                 <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2"></div>
-                <span>Adding emojis to Facebook posts increases engagement by 28%</span>
+                <span>Adding emojis to Facebook messages increases engagement by 28%</span>
               </li>
               <li className="flex items-start gap-2">
                 <div className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-2"></div>

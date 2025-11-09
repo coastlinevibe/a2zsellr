@@ -96,7 +96,7 @@ export function PremiumFeaturesHub({ userTier, onUpgrade }: PremiumFeaturesHubPr
         'Campaign creation & scheduling',
         'WhatsApp & Facebook targeting',
         'n8n automation integration',
-        'Daily posting limits',
+        'Daily messaging limits',
         'Group management'
       ]
     },
