@@ -32,7 +32,7 @@ export function PremiumBadge({
   if (tier === 'premium') {
     return (
       <div className={`inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full font-semibold ${sizeClasses[size]} ${className}`}>
-        {showIcon && <Crown className={iconSizes[size]} />}
+        {showIcon && <Sparkles className={iconSizes[size]} />}
         <span>Premium</span>
       </div>
     )
@@ -40,9 +40,9 @@ export function PremiumBadge({
 
   if (tier === 'business') {
     return (
-      <div className={`inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-semibold ${sizeClasses[size]} ${className}`}>
-        {showIcon && <Sparkles className={iconSizes[size]} />}
-        <span>Business</span>
+      <div className={`inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-bold shadow-lg border-2 border-white ${sizeClasses[size]} ${className}`}>
+        {showIcon && <Crown className={`${iconSizes[size]} text-yellow-300`} />}
+        <span>PRO</span>
       </div>
     )
   }

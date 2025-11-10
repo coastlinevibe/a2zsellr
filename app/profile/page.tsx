@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabaseClient'
 import { Button } from '@/components/ui/button'
-import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Heart, Check, Truck, Shield, FileText, User, CheckCircle2, AlertTriangle, Building2, Tag, Upload, ArrowLeft, HelpCircle, Image as ImageIcon } from 'lucide-react'
+import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Heart, Check, Truck, Shield, FileText, User, CheckCircle2, AlertTriangle, Building2, Tag, Upload, ArrowLeft, HelpCircle, Image as ImageIcon, ChevronDown, ChevronUp } from 'lucide-react'
 import EmojiPicker from '@/components/ui/emoji-picker'
 import { Badge } from '@/components/ui/badge'
 import ProfileCompletenessIndicator from '@/components/ProfileCompletenessIndicator'
@@ -49,6 +49,9 @@ export default function ProfilePage() {
   const [showWizard, setShowWizard] = useState(false)
   const [focusedField, setFocusedField] = useState<string | null>(null)
   const [fieldValidations, setFieldValidations] = useState<Record<string, any>>({})
+  
+  // Operating Hours collapsible state
+  const [operatingHoursExpanded, setOperatingHoursExpanded] = useState(false)
   
   // Availability checking states
   const [checkingDisplayName, setCheckingDisplayName] = useState(false)
@@ -455,8 +458,8 @@ export default function ProfilePage() {
   const getTierBadge = () => {
     const badges = {
       free: { text: 'Free', className: 'bg-gray-100 text-gray-700' },
-      premium: { text: 'Premium', className: 'bg-emerald-100 text-emerald-700' },
-      business: { text: 'Business', className: 'bg-blue-100 text-blue-700' }
+      premium: { text: 'Premium', className: 'bg-orange-100 text-orange-700' },
+      business: { text: 'PRO', className: 'bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold shadow-lg' }
     }
     return badges[profile?.subscription_tier || 'free']
   }
@@ -776,19 +779,41 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Bottom Section - Operating Hours */}
+            {/* Bottom Section - Operating Hours (Collapsible) */}
             <div className="pt-6 border-t border-gray-200">
               <div id="business_hours">
-                <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-4">
-                  <Clock className="w-5 h-5" />
-                  Operating Hours
-                  <span className="text-red-500">*</span>
-                </h4>
-                <CompactWeeklySchedule
-                  weeklySchedule={weeklySchedule}
-                  updateDaySchedule={updateDaySchedule}
-                  getTodayHoursFromSchedule={getTodayHoursFromSchedule}
-                />
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-gray-700" />
+                    <h4 className="text-lg font-semibold text-gray-900">
+                      Operating Hours
+                    </h4>
+                    <span className="text-red-500">*</span>
+                  </div>
+                  <button
+                    onClick={() => setOperatingHoursExpanded(!operatingHoursExpanded)}
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition-all duration-200 font-medium text-sm border border-emerald-300 hover:border-emerald-400 shadow-sm hover:shadow-md"
+                  >
+                    <span>
+                      {operatingHoursExpanded ? 'Hide' : 'Show'} Schedule
+                    </span>
+                    {operatingHoursExpanded ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+                
+                {operatingHoursExpanded && (
+                  <div className="animate-in slide-in-from-top-2 duration-200">
+                    <CompactWeeklySchedule
+                      weeklySchedule={weeklySchedule}
+                      updateDaySchedule={updateDaySchedule}
+                      getTodayHoursFromSchedule={getTodayHoursFromSchedule}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>

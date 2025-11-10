@@ -283,7 +283,7 @@ export default function DashboardPage() {
     const badges = {
       free: { text: 'Free', className: 'bg-gray-100 text-gray-700' },
       premium: { text: 'Premium', className: 'bg-orange-100 text-orange-700' },
-      business: { text: 'Pro', className: 'bg-blue-100 text-blue-700' }
+      business: { text: 'PRO', className: 'bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold shadow-lg' }
     }
 
     return badges[profile.subscription_tier] || badges.free

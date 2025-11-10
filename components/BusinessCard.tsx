@@ -31,8 +31,8 @@ export function BusinessCard({ business, categoryName, locationName, index = 0 }
   const getTierBadge = () => {
     const badges = {
       free: { text: 'FREE', className: 'bg-gray-500 text-white border-2 border-black' },
-      premium: { text: 'PREMIUM', className: 'bg-green-500 text-white border-2 border-black' },
-      business: { text: 'BUSINESS', className: 'bg-blue-500 text-white border-2 border-black' }
+      premium: { text: 'PREMIUM', className: 'bg-orange-500 text-white border-2 border-black' },
+      business: { text: 'PRO', className: 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-2 border-yellow-400 shadow-lg font-black' }
     }
     return badges[business.subscription_tier] || badges.free
   }

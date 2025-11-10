@@ -135,6 +135,14 @@ export default function ProfileCompletenessIndicator({ profile, userEmail }: Pro
   }
 
   const getCompletionMessage = () => {
+    if (completionPercentage === 100) {
+      return {
+        title: "🎉 Profile Complete!",
+        description: "Your business profile is now optimized for maximum customer engagement",
+        icon: CheckCircle2,
+        color: "text-emerald-600"
+      }
+    }
     if (completionPercentage >= 80) {
       return {
         title: "Great job! Your profile is nearly complete",
@@ -256,16 +264,6 @@ export default function ProfileCompletenessIndicator({ profile, userEmail }: Pro
         </div>
       )}
 
-      {/* Completion Celebration */}
-      {completionPercentage === 100 && (
-        <div className="text-center p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-          <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
-          <h4 className="text-lg font-semibold text-emerald-900">🎉 Profile Complete!</h4>
-          <p className="text-sm text-emerald-700">
-            Your business profile is now optimized for maximum customer engagement
-          </p>
-        </div>
-      )}
 
       {/* Free Tier Reminder */}
       {profile?.subscription_tier === 'free' && completionPercentage >= 80 && (

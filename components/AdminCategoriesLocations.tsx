@@ -5,6 +5,8 @@ import { Plus, Edit, Trash2, Save, X, MapPin, Tag, RefreshCw, Eye, EyeOff } from
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabaseClient'
 import { motion } from 'framer-motion'
+import IconPicker from '@/components/ui/icon-picker'
+import SuccessNotification from '@/components/ui/success-notification'
 
 interface Category {
   id: number
@@ -45,6 +47,7 @@ export function AdminCategoriesLocations() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [formData, setFormData] = useState<any>({})
   const [error, setError] = useState('')
+  const [successNotification, setSuccessNotification] = useState({ show: false, message: '' })
 
   useEffect(() => {
     fetchData()
@@ -276,6 +279,16 @@ export function AdminCategoriesLocations() {
         // Note: We don't allow editing product categories directly as they're derived from products
       }
 
+      // Show success notification
+      const itemType = activeTab === 'categories' ? 'Category' : activeTab === 'locations' ? 'Location' : 'Product Category'
+      const actionType = editingItem ? 'updated' : 'created'
+      const itemName = formData.name || formData.city || formData.category
+      
+      setSuccessNotification({
+        show: true,
+        message: `${itemType} "${itemName}" ${actionType} successfully!`
+      })
+
       // Reset form and refresh data
       setEditingItem(null)
       setShowAddForm(false)
@@ -382,6 +395,12 @@ export function AdminCategoriesLocations() {
 
   return (
     <div className="space-y-8">
+      {/* Success Notification */}
+      <SuccessNotification
+        message={successNotification.message}
+        isVisible={successNotification.show}
+        onClose={() => setSuccessNotification({ show: false, message: '' })}
+      />
       {/* Header */}
       <motion.div 
         className="bg-gradient-to-r from-purple-400 to-pink-500 p-6 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transform -rotate-1"
@@ -601,12 +620,9 @@ export function AdminCategoriesLocations() {
                 </div>
                 <div>
                   <label className="block text-sm font-black text-black mb-2 uppercase">ICON</label>
-                  <input
-                    type="text"
-                    value={formData.icon || ''}
-                    onChange={(e) => setFormData({...formData, icon: e.target.value})}
-                    className="w-full p-3 border-2 border-black rounded-lg font-bold bg-white placeholder-gray-500"
-                    placeholder="E.G., UTENSILS"
+                  <IconPicker
+                    selectedIcon={formData.icon || ''}
+                    onIconSelect={(iconName) => setFormData({...formData, icon: iconName})}
                   />
                 </div>
               </>
@@ -773,7 +789,18 @@ export function AdminCategoriesLocations() {
                       </div>
                     </td>
                     <td className="p-4 font-bold text-black">{category.description || '-'}</td>
-                    <td className="p-4 font-bold text-black">{category.icon || '-'}</td>
+                    <td className="p-4 font-bold text-black">
+                      {category.icon ? (
+                        <div className="flex items-center gap-2">
+                          <div className="bg-gray-100 p-2 rounded border border-black">
+                            {/* We'll display the icon name for now, but you could import and render the actual icon */}
+                            <span className="text-xs font-mono">{category.icon}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
                     <td className="p-4">
                       <div className={`px-3 py-1 rounded-lg border-2 border-black font-black text-sm uppercase ${
                         category.is_active 
