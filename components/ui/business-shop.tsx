@@ -262,7 +262,7 @@ export default function BusinessShop({
 
     // Tier-based image limits per product
     const tierImageLimits = {
-      free: 5,
+      free: 1,
       premium: 20,
       business: 50
     }
@@ -752,7 +752,7 @@ export default function BusinessShop({
                 <div className="flex items-center justify-between mb-3">
                   <label className="block text-sm font-semibold text-gray-800 flex items-center gap-2">
                     <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                    Product Images ({productImages.length + imageFiles.length}/{userTier === 'free' ? 5 : userTier === 'premium' ? 20 : 50})
+                    Product Images ({productImages.length + imageFiles.length}/{userTier === 'free' ? 1 : userTier === 'premium' ? 20 : 50})
                   </label>
                   <div className="flex items-center gap-2">
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
@@ -809,7 +809,7 @@ export default function BusinessShop({
                 )}
 
                 {/* Upload Button - Compact */}
-                {(productImages.length + imageFiles.length) < (userTier === 'free' ? 5 : userTier === 'premium' ? 20 : 50) && (
+                {(productImages.length + imageFiles.length) < (userTier === 'free' ? 1 : userTier === 'premium' ? 20 : 50) && (
                   <label className="flex items-center justify-center gap-2 w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-colors">
                     <Upload className="h-4 w-4 text-gray-400" />
                     <span className="text-xs text-gray-600">
