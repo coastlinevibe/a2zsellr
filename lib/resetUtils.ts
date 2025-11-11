@@ -1,4 +1,4 @@
-// Utility functions for 7-day reset automation for free tier users
+// Utility functions for DAILY reset automation for free tier users (TESTING MODE)
 
 export interface ResetInfo {
   daysRemaining: number
@@ -9,7 +9,7 @@ export interface ResetInfo {
 
 /**
  * Calculate days remaining until reset for free tier users
- * Free tier profiles reset every 7 days (products and listings are cleared)
+ * TESTING MODE: Free tier profiles reset every 24 hours (daily) for testing
  */
 export function calculateResetInfo(createdAt: string | Date, subscriptionTier: string): ResetInfo {
   // Premium and business users never reset
@@ -24,7 +24,7 @@ export function calculateResetInfo(createdAt: string | Date, subscriptionTier: s
 
   const created = new Date(createdAt)
   const now = new Date()
-  const resetDate = new Date(created.getTime() + 7 * 24 * 60 * 60 * 1000) // 7 days from creation
+  const resetDate = new Date(created.getTime() + 1 * 24 * 60 * 60 * 1000) // TESTING: 1 day (24 hours) from creation
   
   const msRemaining = resetDate.getTime() - now.getTime()
   const daysRemaining = Math.floor(msRemaining / (24 * 60 * 60 * 1000))
@@ -58,20 +58,20 @@ export function getResetMessage(resetInfo: ResetInfo): string {
 }
 
 /**
- * Check if user should see reset warning (3 days, 1 day, or 1 hour before reset)
+ * Check if user should see reset warning (TESTING: 12 hours, 6 hours, or 1 hour before reset)
  */
 export function shouldShowResetWarning(resetInfo: ResetInfo): boolean {
   if (resetInfo.shouldReset) return true
-  if (resetInfo.daysRemaining <= 3) return true
+  if (resetInfo.hoursRemaining <= 12) return true // Show warning in last 12 hours
   return false
 }
 
 /**
- * Get warning severity level
+ * Get warning severity level (TESTING: adjusted for daily resets)
  */
 export function getWarningSeverity(resetInfo: ResetInfo): 'info' | 'warning' | 'danger' {
   if (resetInfo.shouldReset) return 'danger'
-  if (resetInfo.daysRemaining <= 1 || resetInfo.hoursRemaining <= 24) return 'danger'
-  if (resetInfo.daysRemaining <= 3) return 'warning'
+  if (resetInfo.hoursRemaining <= 2) return 'danger'  // Critical: less than 2 hours
+  if (resetInfo.hoursRemaining <= 6) return 'warning' // Warning: less than 6 hours
   return 'info'
 }
