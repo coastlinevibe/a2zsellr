@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
-import { User, Settings, Star, Gift, HelpCircle, LogOut } from 'lucide-react'
+import { User, Settings, Star, Gift, HelpCircle, LogOut, Crown, CheckCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
@@ -105,7 +105,14 @@ export function UserProfileDropdown({
                 <div>
                   <h3 className="font-semibold text-gray-900">{derivedDisplayName}</h3>
                   <p className="text-sm text-gray-500">{userHandle}</p>
-                  <Badge className="bg-gray-100 text-gray-700 text-xs mt-1">
+                  <Badge className={`text-xs mt-1 rounded-[9px] ${
+                    tierValue === 'business' 
+                      ? 'bg-blue-100 text-blue-700' 
+                      : tierValue === 'premium' 
+                      ? 'bg-orange-100 text-orange-700' 
+                      : 'bg-gray-100 text-gray-700'
+                  }`}>
+                    {tierValue !== 'free' && <Crown className="w-3 h-3 mr-1 inline" />}
                     {tierLabel}
                   </Badge>
                 </div>
@@ -125,20 +132,20 @@ export function UserProfileDropdown({
                 </button>
               </div>
 
-              <div className="border-t border-gray-200 pt-2 mb-2">
-                {/* Upgrade */}
-                <button
-                  onClick={() => handleAction('upgrade')}
-                  className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors text-left"
-                >
-                  <div className="flex items-center gap-3">
-                    <Star className="w-5 h-5 text-amber-600" />
-                    <span className="font-medium">Upgrade to Premium</span>
+              <div className="border-t border-gray-200 pt-3 mb-2">
+                {/* Upgrade - Only show for free tier users */}
+                {tierValue === 'free' && (
+                  <div className="mb-2">
+                    <button
+                      onClick={() => handleAction('upgrade')}
+                      className="w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-3 px-4 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3"
+                    >
+                      <Crown className="w-5 h-5" />
+                      <span>UPGRADE TO PREMIUM</span>
+                      <Star className="w-4 h-4" />
+                    </button>
                   </div>
-                  <Badge className="bg-amber-600 text-white text-xs">
-                    Early Adopter
-                  </Badge>
-                </button>
+                )}
 
                 {/* Referrals */}
                 <button

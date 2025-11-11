@@ -40,6 +40,7 @@ interface Product {
   profile_id: string
   name: string
   description: string | null
+  product_details: string | null
   price_cents: number | null
   category: string | null
   image_url: string | null
@@ -79,6 +80,7 @@ export default function BusinessShop({
   const [productForm, setProductForm] = useState({
     name: '',
     description: '',
+    product_details: '',
     price_cents: '',
     category: '',
     image_url: ''
@@ -355,6 +357,7 @@ export default function BusinessShop({
         profile_id: businessId,
         name: productForm.name,
         description: productForm.description || null,
+        product_details: productForm.product_details || null,
         price_cents: productForm.price_cents ? Math.round(parseFloat(productForm.price_cents) * 100) : null,
         category: productForm.category,
         image_url: productForm.image_url || (allImages.length > 0 ? allImages[0].url : null),
@@ -686,6 +689,22 @@ export default function BusinessShop({
                   placeholder="Describe your product with rich formatting - add bullet points, bold text, links, and more..."
                   maxLength={1000}
                   className="border-gray-300 focus-within:ring-2 focus-within:ring-emerald-500"
+                />
+              </div>
+              
+              {/* Product Details - Bullet Points */}
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <label className="block text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                  Product Details
+                  <span className="text-xs text-gray-500 font-normal">(Optional - one detail per line for bullet points)</span>
+                </label>
+                <textarea
+                  value={productForm.product_details}
+                  onChange={(e) => setProductForm({...productForm, product_details: e.target.value})}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-vertical"
+                  placeholder="High quality materials&#10;Carefully crafted&#10;Satisfaction guaranteed&#10;&#10;Enter each detail on a new line"
+                  rows={4}
                 />
               </div>
               

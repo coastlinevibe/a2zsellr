@@ -200,7 +200,7 @@ export function GalleryTab({
         <FramerThumbnailCarousel items={images} />
         
         {/* Gallery Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <div className="flex items-center gap-2 mb-2">
               <ImageIcon className="w-5 h-5 text-emerald-600" />
@@ -213,14 +213,6 @@ export function GalleryTab({
               itemName="images"
               size="md"
             />
-          </div>
-          
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
-            <div className="flex items-center gap-2">
-              <Eye className="w-5 h-5 text-blue-600" />
-              <span className="text-sm font-medium text-gray-600">Gallery Views</span>
-            </div>
-            <p className="text-2xl font-bold text-gray-900 mt-1">1,234</p>
           </div>
           
           <div className="bg-white p-4 rounded-lg border border-gray-200">

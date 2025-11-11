@@ -19,16 +19,22 @@ interface UserProfile {
   business_location: string | null
   phone_number: string | null
   website_url: string | null
-  subscription_tier: 'free' | 'premium' | 'business'
-  verified_seller: boolean
-  early_adopter: boolean
+  business_hours: string | null
+  subscription_tier: string | null
+  verified_seller: boolean | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  title: string | null
+  description: string | null
+  type: 'image' | 'video'
 }
 
 interface GalleryItem {
   id: string
   url: string
-  title: string | null
-  description: string | null
+  title: string
+  description: string
   type: 'image' | 'video'
 }
 
@@ -36,6 +42,7 @@ interface Product {
   id: string
   name: string
   description: string | null
+  product_details: string | null
   category: string | null
   image_url: string | null
   price_cents: number | null
@@ -61,6 +68,7 @@ export default function ProfilePage() {
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [showContactOptions, setShowContactOptions] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [tierBadge, setTierBadge] = useState({ text: '', className: '' })
   const [metaTags, setMetaTags] = useState({
     title: '',
     description: '',
@@ -233,6 +241,12 @@ Best regards`
     }
   }, [username])
 
+  useEffect(() => {
+    if (profile) {
+      setTierBadge(getTierBadge())
+    }
+  }, [profile])
+
   const fetchProfile = async () => {
     try {
       setLoading(true)
@@ -240,17 +254,20 @@ Best regards`
       // Clean username (remove @ if present)
       const cleanUsername = username.replace('@', '')
       
-      // Fetch profile by display_name
+      // Fetch profile by display_name (case-insensitive)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('display_name', cleanUsername)
+        .ilike('display_name', cleanUsername)
         .eq('is_active', true)
         .single()
 
       if (profileError) throw profileError
 
       setProfile(profileData)
+      
+      // Track profile view
+      await trackProfileView(profileData.id)
       
       // Parse today's hours if available
       if (profileData.business_hours) {
@@ -315,6 +332,45 @@ Best regards`
     }
   }
 
+  const trackProfileView = async (profileId: string) => {
+    try {
+      const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+
+      // Check if today's analytics record exists
+      const { data: existing, error: selectError } = await supabase
+        .from('profile_analytics')
+        .select('views')
+        .eq('profile_id', profileId)
+        .eq('date', today)
+        .single()
+
+      if (existing && !selectError) {
+        // Update today's record
+        await supabase
+          .from('profile_analytics')
+          .update({ views: existing.views + 1 })
+          .eq('profile_id', profileId)
+          .eq('date', today)
+      } else {
+        // Insert new record for today
+        await supabase
+          .from('profile_analytics')
+          .insert({
+            profile_id: profileId,
+            date: today,
+            views: 1,
+            clicks: 0,
+            orders: 0,
+            revenue_cents: 0,
+            new_customers: 0,
+            returning_customers: 0
+          })
+      }
+    } catch (error) {
+      console.error('Error tracking profile view:', error)
+    }
+  }
+
   const getTodayHours = (hoursString: string) => {
     if (!hoursString) return 'Hours not available'
     
@@ -350,14 +406,15 @@ Best regards`
   }
 
   const getTierBadge = () => {
-    if (!profile) return { text: 'Free', className: 'bg-gray-100 text-gray-700' }
+    if (!profile) return { text: 'Free', className: 'bg-gray-100 text-gray-700 rounded-[9px]' }
     
     const badges = {
-      free: { text: 'Free', className: 'bg-gray-100 text-gray-700' },
-      premium: { text: 'Premium', className: 'bg-orange-100 text-orange-700' },
-      business: { text: 'PRO', className: 'bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold shadow-lg border-2 border-white' }
+      free: { text: 'Free', className: 'bg-gray-100 text-gray-700 rounded-[9px]' },
+      premium: { text: 'Business', className: 'bg-blue-100 text-blue-700 rounded-[9px]' },
+      business: { text: 'Business', className: 'bg-blue-100 text-blue-700 rounded-[9px]' }
     }
-    return badges[profile.subscription_tier] || badges.free
+    const tier = (profile.subscription_tier || 'free') as keyof typeof badges
+    return badges[tier]
   }
 
   const nextImage = () => {
@@ -415,12 +472,10 @@ Best regards`
     )
   }
 
-  const tierBadge = getTierBadge()
-
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Gallery Slider */}
-      <div className="relative h-64 bg-gray-100 overflow-hidden">
+      <div className="relative bg-gray-100 overflow-hidden" style={{ height: '320px', maxWidth: '1500px', margin: '0 auto' }}>
         {galleryItems.length > 0 ? (
           <>
             <img
@@ -537,8 +592,8 @@ Best regards`
       <div className="bg-white px-4 py-3 border-b border-gray-100">
         <div className="grid grid-cols-4 gap-3">
           {profile.phone_number && (
-            <Button 
-              className="bg-green-500 hover:bg-green-600 text-white flex-col h-auto py-3 px-2 rounded-[9px]"
+            <button 
+              className="styled-action-button"
               onClick={() => {
                 const phoneNumber = profile.phone_number?.replace(/\D/g, '')
                 const message = `Hi ${profile.display_name}, I found your profile on A2Z Business Directory and would like to get in touch!`
@@ -548,27 +603,25 @@ Best regards`
             >
               <MessageCircle className="h-5 w-5 mb-1" />
               <span className="text-xs">WhatsApp</span>
-            </Button>
+            </button>
           )}
           
           {profile.business_location && (
-            <Button 
-              variant="outline" 
-              className="flex-col h-auto py-3 px-2 rounded-[9px] border-gray-200"
+            <button 
+              className="styled-action-button"
               onClick={() => {
                 const locationQuery = profile.business_location || ''
                 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`
                 window.open(mapsUrl, '_blank')
               }}
             >
-              <MapPin className="h-5 w-5 mb-1 text-blue-600" />
-              <span className="text-xs text-gray-700">Directions</span>
-            </Button>
+              <MapPin className="h-5 w-5 mb-1" />
+              <span className="text-xs">Directions</span>
+            </button>
           )}
           
-          <Button 
-            variant="outline" 
-            className="flex-col h-auto py-3 px-2 rounded-[9px] border-gray-200"
+          <button 
+            className="styled-action-button"
             onClick={() => {
               const shareUrl = `https://www.a2zsellr.life/profile/${profile.display_name}`
               const shareText = `Check out ${profile.display_name}'s business profile on A2Z Business Directory!`
@@ -588,22 +641,233 @@ Best regards`
               }
             }}
           >
-            <Share2 className="h-5 w-5 mb-1 text-gray-600" />
-            <span className="text-xs text-gray-700">Share</span>
-          </Button>
+            <Share2 className="h-5 w-5 mb-1" />
+            <span className="text-xs">Share</span>
+          </button>
           
           {profile.website_url && (
-            <Button 
-              variant="outline" 
-              className="flex-col h-auto py-3 px-2 rounded-[9px] border-gray-200"
+            <button 
+              className="styled-action-button"
               onClick={() => window.open(profile.website_url || '', '_blank')}
             >
-              <Globe className="h-5 w-5 mb-1 text-purple-600" />
-              <span className="text-xs text-gray-700">Website</span>
-            </Button>
+              <Globe className="h-5 w-5 mb-1" />
+              <span className="text-xs">Website</span>
+            </button>
           )}
         </div>
       </div>
+
+      <style jsx>{`
+        .styled-action-button {
+          padding: 15px 30px;
+          font-size: 18px;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          font-weight: 500;
+          color: #ffffff;
+          background-color: #4a4a4a;
+          border: none;
+          border-radius: 9px;
+          box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+          transition: all 0.3s ease 0s;
+          cursor: pointer;
+          outline: none;
+          position: relative;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: auto;
+          min-height: 80px;
+        }
+
+        .styled-action-button::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-image: linear-gradient(
+              45deg,
+              #ffffff 25%,
+              transparent 25%,
+              transparent 75%,
+              #ffffff 75%,
+              #ffffff
+            ),
+            linear-gradient(
+              45deg,
+              #ffffff 25%,
+              transparent 25%,
+              transparent 75%,
+              #ffffff 75%,
+              #ffffff
+            );
+          background-size: 10px 10px;
+          background-position:
+            0 0,
+            5px 5px;
+          opacity: 0.1;
+          transition: opacity 0.3s ease;
+        }
+
+        .styled-action-button:before {
+          content: "";
+          position: absolute;
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
+          background: rgba(255, 255, 255, 0.2);
+          transform: rotate(45deg);
+          transition: all 0.5s ease;
+          opacity: 0;
+        }
+
+        .styled-action-button:hover {
+          background-color: #2ee59d;
+          box-shadow: 0 15px 20px rgba(46, 229, 157, 0.4);
+          color: #fff;
+          transform: translateY(-7px);
+        }
+
+        .styled-action-button:hover::after {
+          opacity: 0.2;
+        }
+
+        .styled-action-button:hover:before {
+          opacity: 1;
+          top: -75%;
+          left: -75%;
+        }
+
+        .styled-action-button:active {
+          transform: translateY(-3px);
+        }
+
+        .styled-action-button.active {
+          background-color: #2ee59d;
+          box-shadow: 0 15px 20px rgba(46, 229, 157, 0.4);
+          transform: translateY(-7px);
+        }
+
+        .styled-action-button.active::after {
+          opacity: 0.2;
+        }
+
+        .styled-action-button.active::before {
+          opacity: 1;
+          top: -75%;
+          left: -75%;
+        }
+
+        .styled-category-button {
+          padding: 8px 16px;
+          font-size: 14px;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          font-weight: 500;
+          color: #ffffff;
+          background-color: #4a4a4a;
+          border: none;
+          border-radius: 9px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          transition: all 0.3s ease 0s;
+          cursor: pointer;
+          outline: none;
+          position: relative;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: auto;
+          min-height: 40px;
+        }
+
+        .styled-category-button::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-image: linear-gradient(
+              45deg,
+              #ffffff 25%,
+              transparent 25%,
+              transparent 75%,
+              #ffffff 75%,
+              #ffffff
+            ),
+            linear-gradient(
+              45deg,
+              #ffffff 25%,
+              transparent 25%,
+              transparent 75%,
+              #ffffff 75%,
+              #ffffff
+            );
+          background-size: 10px 10px;
+          background-position:
+            0 0,
+            5px 5px;
+          opacity: 0.1;
+          transition: opacity 0.3s ease;
+        }
+
+        .styled-category-button:before {
+          content: "";
+          position: absolute;
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
+          background: rgba(255, 255, 255, 0.2);
+          transform: rotate(45deg);
+          transition: all 0.5s ease;
+          opacity: 0;
+        }
+
+        .styled-category-button:hover {
+          background-color: #2ee59d;
+          box-shadow: 0 8px 12px rgba(46, 229, 157, 0.4);
+          color: #fff;
+          transform: translateY(-4px);
+        }
+
+        .styled-category-button:hover::after {
+          opacity: 0.2;
+        }
+
+        .styled-category-button:hover:before {
+          opacity: 1;
+          top: -75%;
+          left: -75%;
+        }
+
+        .styled-category-button:active {
+          transform: translateY(-2px);
+        }
+
+        .styled-category-button.active {
+          background-color: #2ee59d;
+          box-shadow: 0 8px 12px rgba(46, 229, 157, 0.4);
+          transform: translateY(-4px);
+        }
+
+        .styled-category-button.active::after {
+          opacity: 0.2;
+        }
+
+        .styled-category-button.active::before {
+          opacity: 1;
+          top: -75%;
+          left: -75%;
+        }
+      `}</style>
 
       {/* Products Section */}
       <div className="bg-white">
@@ -614,54 +878,34 @@ Best regards`
           </div>
           
           {/* Category Filter Buttons */}
-          <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-2 pt-2 scrollbar-hide">
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-[9px] whitespace-nowrap transition-colors ${
-                selectedCategory === 'all'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`styled-category-button ${selectedCategory === 'all' ? 'active' : ''}`}
             >
               All Products
             </button>
             <button
               onClick={() => setSelectedCategory('products')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-[9px] whitespace-nowrap transition-colors ${
-                selectedCategory === 'products'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`styled-category-button ${selectedCategory === 'products' ? 'active' : ''}`}
             >
               Products
             </button>
             <button
               onClick={() => setSelectedCategory('services')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-[9px] whitespace-nowrap transition-colors ${
-                selectedCategory === 'services'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`styled-category-button ${selectedCategory === 'services' ? 'active' : ''}`}
             >
               Services
             </button>
             <button
               onClick={() => setSelectedCategory('food')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-[9px] whitespace-nowrap transition-colors ${
-                selectedCategory === 'food'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`styled-category-button ${selectedCategory === 'food' ? 'active' : ''}`}
             >
               Food & Drinks
             </button>
             <button
               onClick={() => setSelectedCategory('retail')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-[9px] whitespace-nowrap transition-colors ${
-                selectedCategory === 'retail'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`styled-category-button ${selectedCategory === 'retail' ? 'active' : ''}`}
             >
               Retail Items
             </button>
@@ -842,7 +1086,11 @@ Best regards`
                   {/* Tabs */}
                   <div className="mb-6 border-b border-gray-200">
                     <nav className="flex space-x-8">
-                      {['description', 'details', 'contact'].map((tab) => (
+                      {[
+                        'description',
+                        ...(selectedProduct.product_details ? ['details'] : []),
+                        'contact'
+                      ].map((tab) => (
                         <button
                           key={tab}
                           onClick={() => setProductModalTab(tab)}
@@ -884,20 +1132,18 @@ Best regards`
                       <div className="space-y-4">
                         <div>
                           <h3 className="font-medium text-gray-900 mb-2">Product Details</h3>
-                          <ul className="space-y-2 text-gray-700">
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" />
-                              High quality materials
-                            </li>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" />
-                              Carefully crafted
-                            </li>
-                            <li className="flex items-center">
-                              <Check className="w-4 h-4 text-green-500 mr-2" />
-                              Satisfaction guaranteed
-                            </li>
-                          </ul>
+                          {selectedProduct.product_details ? (
+                            <ul className="space-y-2 text-gray-700">
+                              {selectedProduct.product_details.split('\n').filter((detail: string) => detail.trim()).map((detail: string, index: number) => (
+                                <li key={index} className="flex items-start">
+                                  <Check className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                                  <span>{detail.trim()}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-gray-500 italic">No additional details available.</p>
+                          )}
                         </div>
                       </div>
                     )}

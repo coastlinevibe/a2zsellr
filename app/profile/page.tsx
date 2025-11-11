@@ -459,7 +459,7 @@ export default function ProfilePage() {
     const badges = {
       free: { text: 'Free', className: 'bg-gray-100 text-gray-700' },
       premium: { text: 'Premium', className: 'bg-orange-100 text-orange-700' },
-      business: { text: 'PRO', className: 'bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold shadow-lg' }
+      business: { text: 'Business', className: 'bg-blue-100 text-blue-700' }
     }
     return badges[profile?.subscription_tier || 'free']
   }
@@ -893,16 +893,17 @@ export default function ProfilePage() {
                   {user?.email}
                 </p>
                 <div className="flex items-center gap-1.5 mt-1.5">
-                  <Badge className={`${tierBadge.className} border-0 text-xs py-0.5`}>
+                  <Badge className={`${tierBadge.className} border-0 text-xs py-0.5 rounded-[9px]`}>
+                    {profile?.subscription_tier !== 'free' && <Crown className="h-3 w-3 mr-1" />}
                     {tierBadge.text}
                   </Badge>
                   {profile?.verified_seller && (
-                    <Badge className="bg-blue-100 text-blue-700 border-0 text-xs py-0.5">
+                    <Badge className="bg-blue-100 text-blue-700 border-0 text-xs py-0.5 rounded-[9px]">
                       Verified Seller
                     </Badge>
                   )}
                   {profile?.early_adopter && (
-                    <Badge className="bg-amber-100 text-amber-700 border-0 text-xs py-0.5">
+                    <Badge className="bg-amber-100 text-amber-700 border-0 text-xs py-0.5 rounded-[9px]">
                       Early Adopter
                     </Badge>
                   )}

@@ -46,7 +46,7 @@ export default function ResetTimer({
 
   const getTimeDisplay = () => {
     if (resetInfo.shouldReset) {
-      return { text: 'EXPIRED', color: 'text-red-600', bgColor: 'bg-red-100' }
+      return { text: 'RESET DONE', color: 'text-green-600', bgColor: 'bg-green-100' }
     }
 
     const days = resetInfo.daysRemaining

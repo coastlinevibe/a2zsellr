@@ -28,6 +28,7 @@ export default function HomePage() {
   const [locations, setLocations] = useState<any[]>([])
   const [businesses, setBusinesses] = useState<any[]>([])
   const [isSearching, setIsSearching] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [showAdminModal, setShowAdminModal] = useState(false)
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
@@ -263,6 +264,7 @@ export default function HomePage() {
 
   // Fetch initial data
   useEffect(() => {
+    setMounted(true)
     fetchCategoriesAndLocations()
     fetchBusinesses()
     fetchRecentActivities()
@@ -460,6 +462,19 @@ export default function HomePage() {
       setIsSearching(false)
     }
   }
+  
+  // Show loading state on first mount
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-[#f0f0f0] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <motion.div 
       className="min-h-screen bg-[#f0f0f0] relative overflow-hidden" 
@@ -473,7 +488,7 @@ export default function HomePage() {
     >
       {/* Hero Section - Brutalist Style */}
       <motion.section 
-        className="pt-20 pb-16 lg:pt-24 lg:pb-20 relative"
+        className="pt-10 pb-16 lg:pt-20 lg:pb-20 relative"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
@@ -498,7 +513,7 @@ export default function HomePage() {
                 <span className="text-green-600 block">ALL IN ONE</span>
               </motion.h1>
               <motion.p 
-                className="text-lg text-black mb-8 leading-relaxed max-w-lg bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold"
+                className="text-lg text-black mb-0 leading-relaxed max-w-lg bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold"
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
@@ -513,51 +528,6 @@ export default function HomePage() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 1.0 }}
               >
-              </motion.div>
-
-              {/* Social Proof Counter */}
-              <motion.div 
-                className="mb-6"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 1.2 }}
-              >
-                <div className="bg-green-100 border-2 border-green-500 rounded-lg p-3 inline-flex items-center gap-2 shadow-[2px_2px_0px_0px_rgba(34,197,94,0.9)]">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-green-800 font-bold text-sm">
-                    Join <motion.span 
-                      key={Math.floor(Date.now() / 10000)} // Changes every 10 seconds
-                      initial={{ scale: 1.2 }}
-                      animate={{ scale: 1 }}
-                      transition={{ duration: 0.3 }}
-                      className="font-black"
-                    >
-                      1,247
-                    </motion.span> members selling today
-                  </span>
-                </div>
-              </motion.div>
-
-              {/* Success Stories Ticker */}
-              <motion.div 
-                className="mb-8 overflow-hidden bg-yellow-100 border-2 border-yellow-500 rounded-lg shadow-[2px_2px_0px_0px_rgba(234,179,8,0.9)]"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 1.4 }}
-              >
-                <motion.div 
-                  className="flex whitespace-nowrap py-2 px-4"
-                  animate={{ x: ["0%", "-50%"] }}
-                  transition={{ 
-                    duration: 32, 
-                    repeat: Infinity, 
-                    ease: "linear" 
-                  }}
-                >
-                  <span className="text-yellow-800 font-bold text-sm mr-8">
-                    {tickerContent}
-                  </span>
-                </motion.div>
               </motion.div>
 
               {/* CTA Buttons */}
@@ -617,6 +587,27 @@ export default function HomePage() {
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
+              {/* Success Stories Ticker */}
+              <motion.div 
+                className="mb-6 overflow-hidden bg-green-100 border-2 border-green-500 rounded-lg shadow-[2px_2px_0px_0px_rgba(34,197,94,0.9)]"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 1.4 }}
+              >
+                <motion.div 
+                  className="flex whitespace-nowrap py-2 px-4"
+                  animate={{ x: ["0%", "-50%"] }}
+                  transition={{ 
+                    duration: 32, 
+                    repeat: Infinity, 
+                    ease: "linear" 
+                  }}
+                >
+                  <span className="text-green-800 font-bold text-sm mr-8">
+                    {tickerContent}
+                  </span>
+                </motion.div>
+              </motion.div>
               <div className="flex items-center gap-4 mb-6">
                 <motion.div 
                   className="inline-flex items-center px-4 py-2 bg-green-400 border-2 border-black rounded-lg text-black text-sm font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
@@ -633,9 +624,23 @@ export default function HomePage() {
                   </motion.div>
                   BOOST YOUR REVENUE BY 80%
                 </motion.div>
+                <div className="bg-green-100 border-2 border-green-500 rounded-lg p-3 inline-flex items-center gap-2 shadow-[2px_2px_0px_0px_rgba(34,197,94,0.9)]">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-green-800 font-bold text-sm">
+                    Join <motion.span 
+                      key={Math.floor(Date.now() / 10000)} // Changes every 10 seconds
+                      initial={{ scale: 1.2 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                      className="font-black"
+                    >
+                      1,247
+                    </motion.span> members selling today
+                  </span>
+                </div>
               </div>
               <div className="bg-white rounded-2xl p-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]">
-                <div className="bg-yellow-300 rounded-xl p-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] mb-4">
+                <div className="bg-green-300 rounded-xl p-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] mb-4">
                   <div className="flex items-center gap-3 mb-4">
                     <motion.div 
                       className="w-12 h-12 bg-green-500 rounded-lg border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
@@ -756,7 +761,7 @@ export default function HomePage() {
               FIND LOCAL BUSINESSES
             </motion.h2>
             <motion.p 
-              className="text-lg text-black max-w-2xl mx-auto bg-yellow-300 p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold"
+              className="text-lg text-black max-w-2xl mx-auto bg-green-300 p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold"
               initial={{ y: 20, opacity: 0 }}
               whileInView={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.6 }}
@@ -812,7 +817,7 @@ export default function HomePage() {
                               setSelectedLocation(location.slug || location.city)
                               setShowLocationDropdown(false)
                             }}
-                            className="w-full px-4 py-3 text-left font-bold text-black hover:bg-yellow-300 border-b-2 border-black last:border-b-0 transition-colors"
+                            className="w-full px-4 py-3 text-left font-bold text-black hover:bg-green-300 border-b-2 border-black last:border-b-0 transition-colors"
                           >
                             {location.city || location}
                           </button>
@@ -932,7 +937,7 @@ export default function HomePage() {
                 </h2>
                 
                 {/* Found Profiles - Right */}
-                <p className="text-black text-lg bg-yellow-300 p-3 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold">
+                <p className="text-black text-lg bg-green-300 p-3 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold">
                   FOUND {businesses.length} PROFILE{businesses.length !== 1 ? 'S' : ''} 
                   {searchQuery && ` MATCHING "${searchQuery.toUpperCase()}"`}
                   {selectedCategory !== 'all' && ` IN ${categories.find(c => c.slug === selectedCategory)?.name?.toUpperCase()}`}

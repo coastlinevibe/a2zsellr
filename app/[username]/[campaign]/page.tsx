@@ -11,6 +11,7 @@ import {
   VideoSpotlightLayout,
   HorizontalSliderLayout,
   VerticalSliderLayout,
+  CustomTemplateLayout,
   type MediaItem
 } from '@/components/ui/campaign-layouts'
 import { MessageCircle, Share2, ExternalLink } from 'lucide-react'
@@ -44,6 +45,19 @@ interface Listing {
   }>
   selected_products?: string[]
   delivery_available?: boolean | null
+  template_data?: {
+    backgroundImage?: string
+    interactions?: Array<{
+      id: string
+      x: number
+      y: number
+      type: string
+      action: string
+      data?: any
+      width?: number
+      height?: number
+    }>
+  }
 }
 
 interface Profile {
@@ -313,6 +327,21 @@ export default function CampaignPage({ params }: CampaignPageProps) {
         return <HorizontalSliderLayout {...commonProps} />
       case 'vertical-slider':
         return <VerticalSliderLayout {...commonProps} />
+      case 'custom-template':
+        // For custom template, we need to get the template data from the listing
+        const customTemplate = listing.template_data ? {
+          id: `custom-${listing.id}`,
+          name: 'Custom Template',
+          category: 'custom',
+          backgroundImage: listing.template_data.backgroundImage,
+          interactions: listing.template_data.interactions || []
+        } : undefined
+        
+        return <CustomTemplateLayout 
+          {...commonProps} 
+          selectedTemplate={customTemplate as any}
+          isEditMode={false}
+        />
       default:
         return <GalleryMosaicLayout {...commonProps} />
     }

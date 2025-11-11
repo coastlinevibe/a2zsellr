@@ -24,7 +24,18 @@ import {
   Loader2,
   Play,
   Plus,
-  CheckCircle2
+  CheckCircle2,
+  Trash2,
+  EyeOff,
+  Star,
+  MapPin,
+  Phone,
+  Globe,
+  Mail,
+  MessageCircle,
+  Share2,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -32,14 +43,16 @@ import { supabase } from '@/lib/supabaseClient'
 import { useAuth } from '@/lib/auth'
 import { useGlobalNotifications } from '@/contexts/NotificationContext'
 import { 
-  GalleryMosaicLayout,
-  HoverCardsLayout,
-  BeforeAfterLayout,
+  GalleryMosaicLayout, 
+  HoverCardsLayout, 
+  BeforeAfterLayout, 
   VideoSpotlightLayout,
   HorizontalSliderLayout,
   VerticalSliderLayout,
+  CustomTemplateLayout,
   type MediaItem
-} from '@/components/ui/campaign-layouts'
+} from './campaign-layouts'
+import TemplateStorageManager from '@/lib/templateStorage'
 import { uploadFileToStorage, type UploadResult } from '@/lib/uploadUtils'
 import RichTextEditor from '@/components/ui/rich-text-editor'
 
@@ -65,6 +78,54 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
   const [ctaLabel, setCtaLabel] = useState('View Offers')
   const [scheduleDate, setScheduleDate] = useState('')
   const [deliveryAvailable, setDeliveryAvailable] = useState(false)
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null)
+  const [isTemplateEditMode, setIsTemplateEditMode] = useState(false)
+
+  // Handle template image upload
+  const handleTemplateImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      // Use the existing sharelinks bucket with template-uploads subfolder
+      const fileName = `template-${Date.now()}-${file.name}`
+      const filePath = `template-uploads/${businessProfile?.id}/${fileName}`
+      
+      // Upload to Supabase storage using the sharelinks bucket
+      const { data, error } = await supabase.storage
+        .from('sharelinks')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        })
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('sharelinks')
+        .getPublicUrl(filePath)
+
+      if (publicUrl) {
+        // Create template object with uploaded image
+        setSelectedTemplate({
+          id: `custom-${Date.now()}`,
+          name: 'Custom Template',
+          backgroundImage: publicUrl,
+          interactions: []
+        })
+        
+        showSuccess('Template image uploaded successfully!')
+      } else {
+        throw new Error('Failed to get public URL')
+      }
+    } catch (error: any) {
+      console.error('Template image upload error:', error)
+      showError('Failed to upload template image: ' + error.message)
+    }
+  }
   // IMPORTANT: selectedProducts should ALWAYS start empty - no auto-selection
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([])
   
@@ -372,15 +433,23 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
         })),
       // Only save products that were explicitly selected by user (never auto-select)
       selected_products: selectedProducts.length > 0 ? selectedProducts.map(p => p.id) : [],
-      delivery_available: deliveryAvailable
+      delivery_available: deliveryAvailable,
+      // Save template data for custom templates
+      template_data: selectedLayout === 'custom-template' && selectedTemplate ? {
+        backgroundImage: selectedTemplate.backgroundImage,
+        interactions: selectedTemplate.interactions || []
+      } : null
     }
     
     // Debug: Log what we're saving to catch any unwanted auto-selection
     console.log('Saving listing with:', {
       title: campaignData.title,
+      layout_type: campaignData.layout_type,
       selected_products_count: selectedProducts.length,
       selected_product_ids: campaignData.selected_products,
-      uploaded_media_count: uploadedMedia.length
+      uploaded_media_count: uploadedMedia.length,
+      template_data: campaignData.template_data,
+      selectedTemplate: selectedTemplate
     })
 
     try {
@@ -536,6 +605,36 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
         return <HorizontalSliderLayout {...commonProps} />
       case 'vertical-slider':
         return <VerticalSliderLayout {...commonProps} />
+      case 'custom-template':
+        console.log('Rendering CustomTemplateLayout with:', { 
+          selectedTemplate, 
+          backgroundImage: selectedTemplate?.backgroundImage,
+          isEditMode: isTemplateEditMode 
+        })
+        
+        // Fallback if no template
+        if (!selectedTemplate) {
+          return (
+            <div className="w-full h-[500px] bg-red-100 flex items-center justify-center">
+              <div className="text-center text-red-600">
+                <p className="font-bold">No Template Selected</p>
+                <p className="text-sm">Please upload a template image</p>
+              </div>
+            </div>
+          )
+        }
+        
+        return <CustomTemplateLayout 
+          {...commonProps} 
+          selectedTemplate={selectedTemplate}
+          isEditMode={isTemplateEditMode}
+          onInteractionAdd={(element) => {
+            console.log('Adding interaction:', element)
+          }}
+          onInteractionEdit={(id, element) => {
+            console.log('Editing interaction:', id, element)
+          }}
+        />
       default:
         return <GalleryMosaicLayout {...commonProps} />
     }
@@ -602,30 +701,96 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
               }}
               className="w-full p-3 bg-blue-500 border border-blue-400 rounded-[9px] text-white focus:ring-2 focus:ring-blue-300 focus:border-blue-300"
             >
-              {layouts.map((layout) => (
-                <option 
-                  key={layout.id} 
-                  value={layout.id} 
-                  className="bg-blue-600"
-                  disabled={layout.disabled}
-                >
-                  {layout.name}
-                </option>
-              ))}
+              <option value="gallery-mosaic">Gallery Mosaic</option>
+              <option value="hover-cards">Hover Cards</option>
+              <option value="horizontal-slider">Horizontal Slider</option>
+              <option value="vertical-slider">Vertical Slider</option>
+              {userTier !== 'free' && <option value="before-after">Before & After</option>}
+              {userTier !== 'free' && <option value="video-spotlight">Video Spotlight</option>}
+              {userTier !== 'free' && <option value="custom-template">🎨 Custom Template</option>}
             </select>
           </div>
 
-          {/* Message Template */}
-          <div>
-            <label className="block text-sm font-medium text-blue-100 mb-3">Message template</label>
-            <RichTextEditor
-              value={messageTemplate}
-              onChange={(value) => setMessageTemplate(value)}
-              placeholder="Craft a compelling message with rich formatting, links, and highlights..."
-              maxLength={1000}
-              className="bg-blue-500/60 border border-blue-400 rounded-[9px] text-white placeholder-blue-200 focus-within:ring-2 focus-within:ring-blue-300 focus-within:border-blue-300"
-            />
-          </div>
+          {/* Template Image Upload - Only show when custom-template is selected */}
+          {selectedLayout === 'custom-template' && (
+            <div>
+              <label className="block text-sm font-medium text-blue-100 mb-3">Upload Template Image</label>
+              <div className="bg-blue-500 border border-blue-400 rounded-[9px] p-4">
+                <div className="mb-4">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleTemplateImageUpload}
+                    className="hidden"
+                    id="template-image-upload"
+                  />
+                  <label
+                    htmlFor="template-image-upload"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg border-2 border-blue-300 font-bold cursor-pointer transition-all flex items-center justify-center gap-2"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {selectedTemplate?.backgroundImage ? 'Change Template Image' : 'Upload Template Image'}
+                  </label>
+                  
+                  {selectedTemplate?.backgroundImage && (
+                    <div className="mt-3 p-3 bg-blue-400 rounded-lg">
+                      <div className="text-white text-sm font-bold mb-2">Template Image Uploaded ✓</div>
+                      <img 
+                        src={selectedTemplate.backgroundImage} 
+                        alt="Template background"
+                        className="w-full h-20 object-cover rounded"
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsTemplateEditMode(!isTemplateEditMode)}
+                    disabled={!selectedTemplate?.backgroundImage}
+                    className={`px-3 py-2 rounded text-xs font-bold transition-all ${
+                      isTemplateEditMode
+                        ? 'bg-yellow-500 text-black'
+                        : selectedTemplate?.backgroundImage
+                        ? 'bg-green-600 text-white hover:bg-green-500'
+                        : 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                    }`}
+                  >
+                    {isTemplateEditMode ? '✏️ Exit Edit Mode' : '✏️ Add Buttons (Click X,Y)'}
+                  </button>
+                  
+                  {selectedTemplate?.backgroundImage && (
+                    <button 
+                      onClick={() => setSelectedTemplate(null)}
+                      className="px-3 py-2 bg-red-600 text-white rounded text-xs font-bold hover:bg-red-500"
+                    >
+                      🗑️ Remove Image
+                    </button>
+                  )}
+                </div>
+                
+                {isTemplateEditMode && selectedTemplate?.backgroundImage && (
+                  <div className="mt-3 p-3 bg-yellow-100 text-yellow-800 rounded-lg text-xs">
+                    <strong>Edit Mode Active:</strong> Click anywhere on the template image to add interactive buttons (products, contact, info)
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Message Template - Hide when using custom template */}
+          {selectedLayout !== 'custom-template' && (
+            <div>
+              <label className="block text-sm font-medium text-blue-100 mb-3">Message template</label>
+              <RichTextEditor
+                value={messageTemplate}
+                onChange={(value) => setMessageTemplate(value)}
+                placeholder="Craft a compelling message with rich formatting, links, and highlights..."
+                maxLength={1000}
+                className="bg-blue-500/60 border border-blue-400 rounded-[9px] text-white placeholder-blue-200 focus-within:ring-2 focus-within:ring-blue-300 focus-within:border-blue-300"
+              />
+            </div>
+          )}
 
           {/* Media Selection */}
           <div>
@@ -887,28 +1052,38 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
       </div>
 
       {/* Right Panel - Live Preview */}
-      <div className="bg-blue-600 rounded-[9px] p-6 text-white">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold mb-2">Live Preview</h2>
-          <p className="text-blue-100 text-sm">See how your campaign renders with the selected layout.</p>
-        </div>
-
-        {/* Layout Preview */}
-        <div className="bg-white rounded-[9px] p-4">
+      {selectedLayout === 'custom-template' ? (
+        // Full template view - ABSOLUTE NO SPACING
+        <div className="w-full h-full">
           {renderLayoutPreview()}
-          
-          <div className="text-center mt-4">
-            <Button
-              className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-[9px] text-xs"
-            >
-              <Calendar className="w-3 h-3" />
-              Send instantly or add a schedule above
-            </Button>
-          </div>
-          
-          <p className="text-xs text-blue-200 mt-4">Listing draft autosaves every few minutes.</p>
         </div>
-      </div>
+      ) : (
+        // Regular preview with header and UI elements
+        <div className="bg-blue-600 rounded-[9px] p-6 text-white">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold mb-2">Live Preview</h2>
+            <p className="text-blue-100 text-sm">See how your campaign renders with the selected layout.</p>
+          </div>
+
+          {/* Layout Preview */}
+          <div className="bg-white rounded-[9px] p-4">
+            <div>
+              {renderLayoutPreview()}
+            </div>
+            
+            <div className="text-center mt-4">
+              <Button
+                className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-[9px] text-xs"
+              >
+                <Calendar className="w-3 h-3" />
+                Send instantly or add a schedule above
+              </Button>
+            </div>
+            
+            <p className="text-xs text-blue-200 mt-4">Listing draft autosaves every few minutes.</p>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   )

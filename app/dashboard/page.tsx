@@ -13,6 +13,7 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
+  Copy,
   Crown,
   Edit,
   Eye,
@@ -204,6 +205,35 @@ export default function DashboardPage() {
     }
   }, [profile?.id])
 
+  const completePendingReferrals = async (userId: string) => {
+    try {
+      // Find any pending referrals where this user was referred
+      const { data: pendingReferrals } = await supabase
+        .from('referrals')
+        .select('id, referrer_id')
+        .eq('referred_user_id', userId)
+        .eq('status', 'pending')
+
+      if (pendingReferrals && pendingReferrals.length > 0) {
+        // Mark referrals as completed and set earnings
+        for (const referral of pendingReferrals) {
+          await supabase
+            .from('referrals')
+            .update({
+              status: 'completed',
+              earnings_cents: 5000, // R50.00
+              completed_at: new Date().toISOString()
+            })
+            .eq('id', referral.id)
+        }
+        
+        console.log(`Completed ${pendingReferrals.length} referrals for user ${userId}`)
+      }
+    } catch (error) {
+      console.error('Error completing pending referrals:', error)
+    }
+  }
+
   const fetchProfile = async () => {
     try {
       if (!user?.id) {
@@ -222,6 +252,9 @@ export default function DashboardPage() {
         console.error('Error fetching profile:', error)
       } else {
         setProfile(data as UserProfile)
+        
+        // Complete any pending referrals for this user
+        completePendingReferrals(data.id)
       }
     } catch (error) {
       console.error('Error:', error)
@@ -283,7 +316,7 @@ export default function DashboardPage() {
     const badges = {
       free: { text: 'Free', className: 'bg-gray-100 text-gray-700' },
       premium: { text: 'Premium', className: 'bg-orange-100 text-orange-700' },
-      business: { text: 'PRO', className: 'bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold shadow-lg' }
+      business: { text: 'Business', className: 'bg-blue-100 text-blue-700' }
     }
 
     return badges[profile.subscription_tier] || badges.free
@@ -327,9 +360,24 @@ export default function DashboardPage() {
       {profile && (
         <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center gap-2">
-              <Eye className="w-5 h-5 text-emerald-600" />
-              <h2 className="text-lg font-semibold text-gray-900">Public Profile Preview</h2>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Eye className="w-5 h-5 text-emerald-600" />
+                <h2 className="text-lg font-semibold text-gray-900">Public Profile Preview</h2>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const profileUrl = `https://www.a2zsellr.life/profile/${profile.display_name}`
+                  navigator.clipboard.writeText(profileUrl)
+                  alert('Profile link copied to clipboard!')
+                }}
+                className="flex items-center gap-2"
+              >
+                <Copy className="w-4 h-4" />
+                Copy Profile Link
+              </Button>
             </div>
             <p className="text-sm text-gray-600 mt-1">This is how visitors see your profile when they click on your listing card</p>
           </div>

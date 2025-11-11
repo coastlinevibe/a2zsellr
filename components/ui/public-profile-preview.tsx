@@ -137,7 +137,7 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
     const mapping: Record<UserProfile['subscription_tier'], { text: string; className: string }> = {
       free: { text: 'Free', className: 'bg-gray-100 text-gray-700' },
       premium: { text: 'Premium', className: 'bg-orange-100 text-orange-700' },
-      business: { text: 'Pro', className: 'bg-blue-100 text-blue-700' }
+      business: { text: 'Business', className: 'bg-blue-100 text-blue-700' }
     }
 
     return mapping[profile.subscription_tier ?? 'free']

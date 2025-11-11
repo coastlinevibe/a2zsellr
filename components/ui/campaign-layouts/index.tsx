@@ -4,6 +4,7 @@ export { BeforeAfterLayout } from './BeforeAfterLayout'
 export { VideoSpotlightLayout } from './VideoSpotlightLayout'
 export { HorizontalSliderLayout } from './HorizontalSliderLayout'
 export { VerticalSliderLayout } from './VerticalSliderLayout'
+export { CustomTemplateLayout } from './CustomTemplateLayout'
 
 // Layout type definitions
 export interface MediaItem {
@@ -33,7 +34,8 @@ export const LAYOUT_COMPONENTS = {
   'before-after': 'BeforeAfterLayout',
   'video-spotlight': 'VideoSpotlightLayout',
   'horizontal-slider': 'HorizontalSliderLayout',
-  'vertical-slider': 'VerticalSliderLayout'
+  'vertical-slider': 'VerticalSliderLayout',
+  'custom-template': 'CustomTemplateLayout'
 } as const
 
 export type LayoutType = keyof typeof LAYOUT_COMPONENTS

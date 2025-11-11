@@ -8,14 +8,14 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   signOut: () => Promise<void>
-  signUp: (email: string, password: string, metadata?: any) => Promise<{ error: any }>
+  signUp: (email: string, password: string, metadata?: any) => Promise<{ data: any; error: any }>
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   signOut: async () => {},
-  signUp: async () => ({ error: null })
+  signUp: async () => ({ data: null, error: null })
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     
-    return { error }
+    return { data, error }
   }
 
   return (

@@ -76,12 +76,12 @@ export default function ResetCountdownBanner({
         <Icon className={`w-5 h-5 ${style.iconColor} flex-shrink-0 mt-0.5`} />
         <div className="flex-1">
           <h4 className={`font-semibold ${style.text}`}>
-            {resetInfo.shouldReset ? '⚠️ Free Tier Reset Required' : `⏰ ${message}`}
+            {resetInfo.shouldReset ? '✅ Reset Done' : `⏰ ${message}`}
           </h4>
           <p className={`text-sm ${style.subtext} mt-1`}>
             {resetInfo.shouldReset ? (
               <>
-                Your free tier has expired. All products and listings have been cleared. 
+                Your free tier content has been reset. All products and listings have been cleared. 
                 Create new content or upgrade to Premium to keep your data permanently.
               </>
             ) : (

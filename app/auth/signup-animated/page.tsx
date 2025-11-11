@@ -33,6 +33,18 @@ export default function AnimatedSignupPage() {
   
   // Get selected plan from URL params
   const selectedPlan = searchParams?.get('plan') || 'free'
+  const referralParam = searchParams?.get('ref')
+
+  // Store referral code persistently during signup process
+  useEffect(() => {
+    if (referralParam) {
+      // Store referral code in sessionStorage so it persists across plan changes
+      sessionStorage.setItem('signup_referral_code', referralParam)
+    }
+  }, [referralParam])
+
+  // Get referral code from URL or stored session
+  const referralCode = referralParam || sessionStorage.getItem('signup_referral_code')
 
   useEffect(() => {
     if (user && !success && !justRegistered && !loading) {
@@ -322,7 +334,7 @@ export default function AnimatedSignupPage() {
       description: 'Hang tight while we create your account.',
     })
 
-    const { error } = await signUp(email, password, { 
+    const { error, data } = await signUp(email, password, { 
       display_name: displayName.trim(),
       selected_plan: selectedPlan
     })
@@ -335,6 +347,48 @@ export default function AnimatedSignupPage() {
         description: error.message,
       })
     } else {
+      // Get the user ID from the signup response
+      const userId = data?.user?.id
+      
+      // Generate referral code and handle referral tracking
+      try {
+        // Generate unique referral code for new user
+        const newUserReferralCode = `${displayName.trim().toLowerCase().replace(/\s+/g, '')}_${Math.random().toString(36).substring(2, 8)}`
+        
+        // Update profile with referral code
+        await supabase
+          .from('profiles')
+          .update({ referral_code: newUserReferralCode })
+          .eq('display_name', displayName.trim())
+        
+        // Handle referral tracking if referral code was provided
+        if (referralCode && userId) {
+          const { data: referrer } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('referral_code', referralCode)
+            .single()
+          
+          if (referrer) {
+            // Create referral record with referred_user_id
+            await supabase
+              .from('referrals')
+              .insert({
+                referrer_id: referrer.id,
+                referred_user_id: userId,
+                referral_code: referralCode,
+                status: 'pending'
+              })
+          }
+        }
+      } catch (referralError) {
+        console.error('Error setting up referral:', referralError)
+        // Don't fail registration for referral errors
+      }
+      
+      // Clear stored referral code after successful registration
+      sessionStorage.removeItem('signup_referral_code')
+      
       // Set flags to prevent auto-redirect and show success page
       setJustRegistered(true)
       setSuccess(true)
