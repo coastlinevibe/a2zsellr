@@ -743,6 +743,7 @@ export default function DashboardPage() {
                 displayName={profile?.display_name}
                 avatarUrl={profile?.avatar_url || undefined}
                 subscriptionTier={profile?.subscription_tier}
+                userProfile={profile}
               />
             </div>
           </div>

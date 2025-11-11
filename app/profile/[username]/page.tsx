@@ -49,6 +49,13 @@ interface Product {
   is_active: boolean
 }
 
+// Helper function to create consistent profile URLs
+const createProfileUrl = (displayName: string, productSlug?: string) => {
+  // Use the display_name as-is for URLs to maintain compatibility
+  const baseUrl = `https://www.a2zsellr.life/profile/${encodeURIComponent(displayName)}`
+  return productSlug ? `${baseUrl}?product=${encodeURIComponent(productSlug)}` : baseUrl
+}
+
 export default function ProfilePage() {
   const params = useParams()
   const searchParams = useSearchParams()
@@ -93,13 +100,14 @@ export default function ProfilePage() {
       title = `${product.name} - ${profile.display_name} | A2Z Business Directory`
       description = `${product.description || product.name} - ${priceText}. Available from ${profile.display_name} on A2Z Business Directory.`
       image = product.image_url || 'https://www.a2zsellr.life/default-product-image.jpg'
-      url = `https://www.a2zsellr.life/profile/${profile.display_name}?product=${encodeURIComponent(product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''))}`
+      const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+      url = createProfileUrl(profile.display_name, productSlug)
     } else if (profile) {
       // Profile-specific meta tags
       title = `${profile.display_name} | A2Z Business Directory`
       description = `${profile.bio || `Check out ${profile.display_name}'s business profile`} - ${profile.business_category || 'Business'} in ${profile.business_location || 'South Africa'}`
       image = profile.avatar_url || 'https://www.a2zsellr.life/default-avatar.jpg'
-      url = `https://www.a2zsellr.life/profile/${profile.display_name}`
+      url = createProfileUrl(profile.display_name)
     }
     
     // Update document title
@@ -152,7 +160,7 @@ export default function ProfilePage() {
     
     // Create URL with product parameter to open the product modal
     const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-    const shareUrl = `https://www.a2zsellr.life/profile/${profile.display_name}?product=${encodeURIComponent(productSlug)}`
+    const shareUrl = createProfileUrl(profile.display_name, productSlug)
     const shareText = `Check out "${product.name}" from ${profile.display_name} on A2Z Business Directory!`
     
     if (navigator.share) {
@@ -251,16 +259,51 @@ Best regards`
     try {
       setLoading(true)
       
-      // Clean username (remove @ if present)
-      const cleanUsername = username.replace('@', '')
+      // Clean username (remove @ if present and normalize)
+      const cleanUsername = username.replace('@', '').trim()
       
-      // Fetch profile by display_name (case-insensitive)
-      const { data: profileData, error: profileError } = await supabase
+      // Try multiple lookup strategies to handle different display_name formats
+      let profileData = null
+      let profileError = null
+      
+      // Strategy 1: Exact match (for backward compatibility)
+      const { data: exactMatch, error: exactError } = await supabase
         .from('profiles')
         .select('*')
-        .ilike('display_name', cleanUsername)
+        .eq('display_name', cleanUsername)
         .eq('is_active', true)
         .single()
+      
+      if (exactMatch && !exactError) {
+        profileData = exactMatch
+      } else {
+        // Strategy 2: Case-insensitive match
+        const { data: iLikeMatch, error: iLikeError } = await supabase
+          .from('profiles')
+          .select('*')
+          .ilike('display_name', cleanUsername)
+          .eq('is_active', true)
+          .single()
+        
+        if (iLikeMatch && !iLikeError) {
+          profileData = iLikeMatch
+        } else {
+          // Strategy 3: Handle URL-encoded spaces and special characters
+          const decodedUsername = decodeURIComponent(cleanUsername).replace(/[-_]/g, ' ')
+          const { data: decodedMatch, error: decodedError } = await supabase
+            .from('profiles')
+            .select('*')
+            .ilike('display_name', decodedUsername)
+            .eq('is_active', true)
+            .single()
+          
+          if (decodedMatch && !decodedError) {
+            profileData = decodedMatch
+          } else {
+            profileError = decodedError || iLikeError || exactError
+          }
+        }
+      }
 
       if (profileError) throw profileError
 
@@ -623,7 +666,7 @@ Best regards`
           <button 
             className="styled-action-button"
             onClick={() => {
-              const shareUrl = `https://www.a2zsellr.life/profile/${profile.display_name}`
+              const shareUrl = createProfileUrl(profile.display_name)
               const shareText = `Check out ${profile.display_name}'s business profile on A2Z Business Directory!`
               
               if (navigator.share) {

@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth'
 import { User, Settings, Star, Gift, HelpCircle, LogOut, Crown, CheckCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { SubscriptionUpgradeModal } from '@/components/SubscriptionUpgradeModal'
 
 type SubscriptionTier = 'free' | 'premium' | 'business' | string
 
@@ -14,16 +15,19 @@ interface UserProfileDropdownProps {
   displayName?: string | null
   avatarUrl?: string | null
   subscriptionTier?: SubscriptionTier | null
+  userProfile?: any
 }
 
 export function UserProfileDropdown({
   displayName: displayNameProp,
   avatarUrl,
-  subscriptionTier: subscriptionTierProp
+  subscriptionTier: subscriptionTierProp,
+  userProfile
 }: UserProfileDropdownProps) {
   const { user, signOut } = useAuth()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
   if (!user) return null
 
@@ -49,7 +53,7 @@ export function UserProfileDropdown({
         router.push('/settings')
         break
       case 'upgrade':
-        router.push('/#pricing')
+        setShowUpgradeModal(true)
         break
       case 'referrals':
         router.push('/referrals')
@@ -61,6 +65,12 @@ export function UserProfileDropdown({
         handleSignOut()
         break
     }
+  }
+
+  const handleUpgradeSuccess = (newTier: string) => {
+    setShowUpgradeModal(false)
+    // Refresh the page to update the user's tier display
+    window.location.reload()
   }
 
   return (
@@ -179,6 +189,17 @@ export function UserProfileDropdown({
             </div>
           </div>
         </>
+      )}
+
+      {/* Subscription Upgrade Modal */}
+      {showUpgradeModal && userProfile && (
+        <SubscriptionUpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          currentTier={tierValue as 'free' | 'premium' | 'business'}
+          userProfile={userProfile}
+          onUpgradeSuccess={handleUpgradeSuccess}
+        />
       )}
     </div>
   )
