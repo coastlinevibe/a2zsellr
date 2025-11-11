@@ -193,7 +193,7 @@ export default function ReferralsPage() {
                   <ol className="text-sm text-green-700 space-y-1 list-decimal list-inside">
                     <li>Share your referral link with friends</li>
                     <li>When they sign up and complete their profile, you earn R50</li>
-                    <li>Get paid out monthly when you reach R500 minimum</li>
+                    <li>Get paid out monthly</li>
                     <li>Track all your referrals and earnings here</li>
                   </ol>
                 </div>

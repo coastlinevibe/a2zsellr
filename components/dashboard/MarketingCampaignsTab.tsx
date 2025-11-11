@@ -43,6 +43,7 @@ interface Listing {
 
 interface MarketingCampaignsTabProps {
   onCreateNew: () => void
+  onEditListing?: (listing: Listing) => void
   userTier?: 'free' | 'premium' | 'business'
   businessProfile?: {
     display_name: string | null
@@ -50,7 +51,7 @@ interface MarketingCampaignsTabProps {
   }
 }
 
-export function MarketingCampaignsTab({ onCreateNew, userTier = 'free', businessProfile }: MarketingCampaignsTabProps) {
+export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = 'free', businessProfile }: MarketingCampaignsTabProps) {
   const { user } = useAuth()
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
@@ -397,14 +398,6 @@ export function MarketingCampaignsTab({ onCreateNew, userTier = 'free', business
                   Preview
                 </button>
                 <button 
-                  onClick={() => copyListingLink(listing)}
-                  title="Copy link to clipboard"
-                  className="bg-blue-100 text-blue-700 px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-xs hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-blue-200 transition-all"
-                >
-                  <Copy className="w-3 h-3 mr-1 inline" />
-                  Copy Link
-                </button>
-                <button 
                   onClick={() => shareListing(listing)}
                   title="Share this listing"
                   className="bg-green-100 text-green-700 px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-xs hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-green-200 transition-all"
@@ -414,10 +407,13 @@ export function MarketingCampaignsTab({ onCreateNew, userTier = 'free', business
                 </button>
                 <button 
                   onClick={() => {
-                    // Switch to listing builder and load listing for editing
-                    // For now, just switch to builder tab
-                    onCreateNew()
-                    alert('📝 Edit functionality coming soon! For now, create a new listing or duplicate this one.')
+                    if (onEditListing) {
+                      onEditListing(listing)
+                    } else {
+                      // Fallback: switch to builder tab
+                      onCreateNew()
+                      alert('📝 Edit functionality: Please implement onEditListing prop to enable editing.')
+                    }
                   }}
                   className="bg-yellow-100 text-yellow-700 px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-xs hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-yellow-200 transition-all"
                 >

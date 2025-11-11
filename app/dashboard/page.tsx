@@ -457,6 +457,12 @@ export default function DashboardPage() {
             {marketingActiveView === 'campaigns' && (
               <MarketingCampaignsTab 
                 onCreateNew={() => setMarketingActiveView('builder')} 
+                onEditListing={(listing) => {
+                  // Switch to builder and load listing for editing
+                  setMarketingActiveView('builder')
+                  // TODO: Pass listing data to ShareLinkBuilder for editing
+                  console.log('Editing listing:', listing)
+                }}
                 userTier={profile?.subscription_tier || 'free'} 
                 businessProfile={profile || undefined}
               />

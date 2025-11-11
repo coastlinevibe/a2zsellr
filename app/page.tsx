@@ -226,21 +226,28 @@ export default function HomePage() {
         .from('profiles')
         .select(`
           *,
-          categories(name),
-          locations(name)
+          gallery_images:profile_gallery(
+            id,
+            image_url,
+            caption
+          )
         `)
+        .eq('is_active', true) // Only active profiles
+        .in('subscription_tier', ['free', 'premium', 'business']) // All subscription tiers
+        .not('display_name', 'is', null) // Only profiles with display names
 
       // Apply search filters
       if (searchQuery && searchQuery.trim() !== '') {
-        query = query.or(`display_name.ilike.%${searchQuery}%,bio.ilike.%${searchQuery}%`)
+        const searchTerm = searchQuery.trim()
+        query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
       }
 
       if (selectedCategory && selectedCategory !== 'all') {
-        query = query.eq('category_id', selectedCategory)
+        query = query.eq('business_category', selectedCategory)
       }
 
       if (selectedLocation && selectedLocation !== 'all') {
-        query = query.eq('location_id', selectedLocation)
+        query = query.eq('business_location', selectedLocation)
       }
 
       const { data, error } = await query

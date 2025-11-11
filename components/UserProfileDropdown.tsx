@@ -7,7 +7,8 @@ import { useAuth } from '@/lib/auth'
 import { User, Settings, Star, Gift, HelpCircle, LogOut, Crown, CheckCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { SubscriptionUpgradeModal } from '@/components/SubscriptionUpgradeModal'
+import { PlanSelectionModal } from '@/components/PlanSelectionModal'
+import { PaymentMethodModal } from '@/components/PaymentMethodModal'
 
 type SubscriptionTier = 'free' | 'premium' | 'business' | string
 
@@ -27,7 +28,9 @@ export function UserProfileDropdown({
   const { user, signOut } = useAuth()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [showPlanModal, setShowPlanModal] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<'premium' | 'business'>('premium')
 
   if (!user) return null
 
@@ -45,7 +48,7 @@ export function UserProfileDropdown({
     setIsOpen(false)
   }
 
-  const handleAction = (action: string) => {
+  const handleAction = async (action: string) => {
     setIsOpen(false)
     
     switch (action) {
@@ -53,7 +56,7 @@ export function UserProfileDropdown({
         router.push('/settings')
         break
       case 'upgrade':
-        setShowUpgradeModal(true)
+        setShowPlanModal(true)
         break
       case 'referrals':
         router.push('/referrals')
@@ -67,11 +70,22 @@ export function UserProfileDropdown({
     }
   }
 
-  const handleUpgradeSuccess = (newTier: string) => {
-    setShowUpgradeModal(false)
-    // Refresh the page to update the user's tier display
-    window.location.reload()
+  const handlePlanSelection = (plan: 'premium' | 'business') => {
+    setSelectedPlan(plan)
+    setShowPlanModal(false)
+    setShowPaymentModal(true)
   }
+
+  const handleBackToPlanSelection = () => {
+    setShowPaymentModal(false)
+    setShowPlanModal(true)
+  }
+
+  const handleCloseModals = () => {
+    setShowPlanModal(false)
+    setShowPaymentModal(false)
+  }
+
 
   return (
     <div className="relative">
@@ -191,16 +205,23 @@ export function UserProfileDropdown({
         </>
       )}
 
-      {/* Subscription Upgrade Modal */}
-      {showUpgradeModal && userProfile && (
-        <SubscriptionUpgradeModal
-          isOpen={showUpgradeModal}
-          onClose={() => setShowUpgradeModal(false)}
-          currentTier={tierValue as 'free' | 'premium' | 'business'}
-          userProfile={userProfile}
-          onUpgradeSuccess={handleUpgradeSuccess}
-        />
-      )}
+      {/* Plan Selection Modal */}
+      <PlanSelectionModal
+        isOpen={showPlanModal}
+        onClose={handleCloseModals}
+        onSelectPlan={handlePlanSelection}
+        currentTier={tierValue as 'free' | 'premium' | 'business'}
+      />
+
+      {/* Payment Method Modal */}
+      <PaymentMethodModal
+        isOpen={showPaymentModal}
+        onClose={handleCloseModals}
+        onBack={handleBackToPlanSelection}
+        selectedPlan={selectedPlan}
+        userProfile={userProfile}
+      />
+
     </div>
   )
 }
