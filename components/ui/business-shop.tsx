@@ -171,6 +171,7 @@ export default function BusinessShop({
     setProductForm({
       name: '',
       description: '',
+      product_details: '',
       price_cents: '',
       category: 'products',
       image_url: ''
@@ -190,6 +191,7 @@ export default function BusinessShop({
     setProductForm({
       name: product.name,
       description: product.description || '',
+      product_details: product.product_details || '',
       price_cents: product.price_cents ? (product.price_cents / 100).toString() : '',
       category: product.category || 'products',
       image_url: product.image_url || ''
