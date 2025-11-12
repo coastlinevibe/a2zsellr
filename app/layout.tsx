@@ -4,6 +4,7 @@ import './globals.css'
 import { AuthProvider } from '@/lib/auth'
 import { CartProvider } from '@/contexts/CartContext'
 import { NotificationProvider } from '@/contexts/NotificationContext'
+import { PopupProvider } from '@/components/providers/PopupProvider'
 import { Header } from '@/components/Header'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -24,10 +25,12 @@ export default function RootLayout({
         <AuthProvider>
           <CartProvider>
             <NotificationProvider>
-              <Header />
-              <main className="relative">
-                {children}
-              </main>
+              <PopupProvider>
+                <Header />
+                <main className="relative">
+                  {children}
+                </main>
+              </PopupProvider>
             </NotificationProvider>
           </CartProvider>
         </AuthProvider>

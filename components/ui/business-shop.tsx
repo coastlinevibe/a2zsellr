@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { TierLimitDisplay } from '@/components/ui/premium-badge'
 import { useCart } from '@/contexts/CartContext'
 import { supabase } from '@/lib/supabaseClient'
+import { usePopup } from '@/components/providers/PopupProvider'
 import EmojiPicker from '@/components/ui/emoji-picker'
 import RichTextEditor from '@/components/ui/rich-text-editor'
 import { 
@@ -58,7 +59,7 @@ interface BusinessShopProps {
 // Tier limits constant
 const TIER_LIMITS = {
   free: 5,
-  premium: 999,
+  premium: 20,
   business: 999
 }
 
@@ -68,6 +69,7 @@ export default function BusinessShop({
   userTier = 'free'
 }: BusinessShopProps) {
   const { addItem } = useCart()
+  const { showError, showWarning } = usePopup()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -142,7 +144,7 @@ export default function BusinessShop({
 
   const handleAddToCart = (product: Product) => {
     if (!product.price_cents) {
-      alert('This product does not have a price set')
+      showError('This product does not have a price set', 'No Price Available')
       return
     }
 
@@ -155,15 +157,18 @@ export default function BusinessShop({
       businessName: businessName
     })
 
-    alert(`✅ ${product.name} added to cart!`)
+    showSuccess(`${product.name} added to cart!`, 'Added to Cart')
   }
 
   const handleAddProduct = () => {
     // Enforce tier limits
     const currentLimit = TIER_LIMITS[userTier]
     
-    if (products.length >= currentLimit && userTier === 'free') {
-      setError(`Free tier is limited to ${currentLimit} products. You currently have ${products.length}. Please upgrade to add more products.`)
+    if (products.length >= currentLimit && (userTier === 'free' || userTier === 'premium')) {
+      const upgradeMessage = userTier === 'free' 
+        ? 'Please upgrade to Premium to add more products.'
+        : 'Please upgrade to Business tier for unlimited products.'
+      setError(`${userTier === 'free' ? 'Free' : 'Premium'} tier is limited to ${currentLimit} products. You currently have ${products.length}. ${upgradeMessage}`)
       return
     }
     
@@ -216,7 +221,7 @@ export default function BusinessShop({
       fetchProducts()
     } catch (error) {
       console.error('Error deleting product:', error)
-      alert('Failed to delete product')
+      showError('Failed to delete product. Please try again.', 'Delete Failed')
     }
   }
 
@@ -245,7 +250,7 @@ export default function BusinessShop({
       } else {
         // Fallback: Copy to clipboard
         navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
-          alert('Product link copied to clipboard!')
+          showSuccess('Product link copied to clipboard!', 'Link Copied')
         }).catch(() => {
           // Fallback: Show share dialog with the link
           prompt('Copy this link to share:', shareUrl)
@@ -263,7 +268,7 @@ export default function BusinessShop({
     // Tier-based image limits per product
     const tierImageLimits = {
       free: 1,
-      premium: 20,
+      premium: 8,
       business: 50
     }
     
@@ -272,12 +277,18 @@ export default function BusinessShop({
     const remainingSlots = maxImagesPerProduct - currentTotalImages
     
     if (files.length > remainingSlots) {
-      alert(`You can only add ${remainingSlots} more image(s). Maximum ${maxImagesPerProduct} images per product for ${userTier} tier.`)
+      showWarning(
+        `You can only add ${remainingSlots} more image(s).\n\nMaximum ${maxImagesPerProduct} images per product for ${userTier} tier.`,
+        'Image Limit Reached'
+      )
       return
     }
     
     if (currentTotalImages + files.length > maxImagesPerProduct) {
-      alert(`Maximum ${maxImagesPerProduct} images per product for ${userTier} tier. You currently have ${currentTotalImages} images.`)
+      showWarning(
+        `Maximum ${maxImagesPerProduct} images per product for ${userTier} tier.\n\nYou currently have ${currentTotalImages} images.`,
+        'Image Limit Exceeded'
+      )
       return
     }
 
@@ -327,7 +338,7 @@ export default function BusinessShop({
       return [...productImages, ...uploadedImages]
     } catch (error) {
       console.error('Error uploading images:', error)
-      alert('Failed to upload some images. Please try again.')
+      showError('Failed to upload some images. Please try again.', 'Upload Failed')
       return productImages
     } finally {
       setUploadingImages(false)
@@ -340,14 +351,20 @@ export default function BusinessShop({
     // Enforce tier limits on save (server-side validation)
     const tierLimits = {
       free: 5,
-      premium: 999,
+      premium: 20,
       business: 999
     }
     
     const currentLimit = tierLimits[userTier]
     
-    if (!editingProduct && products.length >= currentLimit && userTier === 'free') {
-      alert(`Free tier is limited to ${currentLimit} products. Please upgrade to add more.`)
+    if (!editingProduct && products.length >= currentLimit && (userTier === 'free' || userTier === 'premium')) {
+      const upgradeMessage = userTier === 'free' 
+        ? 'Please upgrade to Premium to add more products.'
+        : 'Please upgrade to Business tier for unlimited products.'
+      showWarning(
+        `${userTier === 'free' ? 'Free' : 'Premium'} tier is limited to ${currentLimit} products.\n\n${upgradeMessage}`,
+        'Product Limit Reached'
+      )
       return
     }
 
@@ -386,7 +403,7 @@ export default function BusinessShop({
       setProductImages([])
     } catch (error) {
       console.error('Error saving product:', error)
-      alert('Failed to save product')
+      showError('Failed to save product. Please try again.', 'Save Failed')
     }
   }
 
@@ -752,7 +769,7 @@ export default function BusinessShop({
                 <div className="flex items-center justify-between mb-3">
                   <label className="block text-sm font-semibold text-gray-800 flex items-center gap-2">
                     <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                    Product Images ({productImages.length + imageFiles.length}/{userTier === 'free' ? 1 : userTier === 'premium' ? 20 : 50})
+                    Product Images ({productImages.length + imageFiles.length}/{userTier === 'free' ? 1 : userTier === 'premium' ? 8 : 50})
                   </label>
                   <div className="flex items-center gap-2">
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
@@ -809,7 +826,7 @@ export default function BusinessShop({
                 )}
 
                 {/* Upload Button - Compact */}
-                {(productImages.length + imageFiles.length) < (userTier === 'free' ? 1 : userTier === 'premium' ? 20 : 50) && (
+                {(productImages.length + imageFiles.length) < (userTier === 'free' ? 1 : userTier === 'premium' ? 8 : 50) && (
                   <label className="flex items-center justify-center gap-2 w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-colors">
                     <Upload className="h-4 w-4 text-gray-400" />
                     <span className="text-xs text-gray-600">

@@ -102,8 +102,18 @@ export function TierLimitDisplay({
     lg: 'text-base'
   }
 
-  // Premium/business users see "Unlimited"
-  if (tier !== 'free') {
+  // Business users see "Unlimited", Premium users see limits for products/gallery
+  if (tier === 'business') {
+    return (
+      <div className={`flex items-center gap-2 ${sizeClasses[size]}`}>
+        <span className="text-gray-600 font-medium">{current} {itemName}</span>
+        <UnlimitedBadge size={size === 'lg' ? 'md' : 'sm'} />
+      </div>
+    )
+  }
+  
+  // Premium users see "Unlimited" only for listings
+  if (tier === 'premium' && itemName === 'listings') {
     return (
       <div className={`flex items-center gap-2 ${sizeClasses[size]}`}>
         <span className="text-gray-600 font-medium">{current} {itemName}</span>

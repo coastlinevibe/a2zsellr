@@ -23,7 +23,7 @@ interface ImageUploadGalleryProps {
 // Tier limits based on A2Z_DATA_MODELS.md
 const TIER_LIMITS = {
   free: 3,
-  premium: 999, // Effectively unlimited
+  premium: 8,
   business: 999 // Effectively unlimited
 }
 
@@ -35,8 +35,8 @@ const TIER_FEATURES = {
   },
   premium: {
     name: 'Premium',
-    limit: 999,
-    description: 'Gallery slider showcase with unlimited images'
+    limit: 8,
+    description: 'Gallery slider showcase with up to 8 images'
   },
   business: {
     name: 'Business',

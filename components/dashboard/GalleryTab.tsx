@@ -66,7 +66,7 @@ export function GalleryTab({
       // Enforce tier limits
       const tierLimits = {
         free: 3,
-        premium: 999, // Effectively unlimited
+        premium: 8,
         business: 999 // Effectively unlimited
       }
       
@@ -74,7 +74,10 @@ export function GalleryTab({
       const totalAfterUpload = images.length + uploadedImages.length
       
       if (totalAfterUpload > currentLimit) {
-        setUploadError(`Free tier is limited to ${currentLimit} images. You currently have ${images.length}. Please upgrade to add more images.`)
+        const upgradeMessage = userTier === 'free' 
+          ? 'Please upgrade to Premium to add more images.'
+          : 'Please upgrade to Business tier for unlimited images.'
+        setUploadError(`${userTier === 'free' ? 'Free' : 'Premium'} tier is limited to ${currentLimit} images. You currently have ${images.length}. ${upgradeMessage}`)
         setUploading(false)
         return
       }
@@ -150,11 +153,11 @@ export function GalleryTab({
   // Tier limits
   const tierLimits = {
     free: 3,
-    premium: 999,
+    premium: 8,
     business: 999
   }
   const currentLimit = tierLimits[userTier]
-  const isAtLimit = images.length >= currentLimit && userTier === 'free'
+  const isAtLimit = images.length >= currentLimit && (userTier === 'free' || userTier === 'premium')
 
   if (galleryLoading) {
     return (

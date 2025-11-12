@@ -254,8 +254,15 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
 
     const fileArray = Array.from(files)
     const currentMediaCount = uploadedMedia.length + selectedProducts.length
-    const LISTING_MEDIA_LIMIT = 5
     const userTier = businessProfile?.subscription_tier || 'free'
+    
+    // Tier-based listing media limits
+    const tierMediaLimits = {
+      free: 3,
+      premium: 8,
+      business: 999
+    }
+    const LISTING_MEDIA_LIMIT = tierMediaLimits[userTier as keyof typeof tierMediaLimits] || 3
 
     // Check for video files and user tier
     const hasVideoFiles = fileArray.some(file => file.type.startsWith('video/'))
@@ -418,7 +425,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
     if (!editListing) {
       const tierLimits = {
         free: 3,
-        premium: 999,
+        premium: 999, // Keep unlimited for listings
         business: 999
       }
       
@@ -876,7 +883,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
                   📐 1200×800px
                 </span>
                 <span className="text-xs bg-blue-400 text-blue-100 px-2 py-1 rounded-full">
-                  {uploadedMedia.length + selectedProducts.length}/5 items
+                  {uploadedMedia.length + selectedProducts.length}/{userTier === 'free' ? 3 : userTier === 'premium' ? 8 : 999} items
                 </span>
                 {businessProfile?.subscription_tier === 'free' && (
                   <span className="text-xs bg-yellow-500 text-yellow-900 px-2 py-1 rounded-full">
@@ -961,7 +968,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
                   onClick={() => setShowMediaSelector(!showMediaSelector)}
                   variant="outline"
                   className="border-blue-300 text-blue-100 hover:bg-blue-500 rounded-[9px] flex-1"
-                  disabled={(uploadedMedia.length + selectedProducts.length) >= 5}
+                  disabled={(uploadedMedia.length + selectedProducts.length) >= (userTier === 'free' ? 3 : userTier === 'premium' ? 8 : 999)}
                 >
                   <ShoppingBag className="w-4 h-4 mr-2" />
                   Select from Shop ({products.length} items)
@@ -969,7 +976,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
                 <Button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingFiles.length > 0 || (uploadedMedia.length + selectedProducts.length) >= 5}
+                  disabled={uploadingFiles.length > 0 || (uploadedMedia.length + selectedProducts.length) >= (userTier === 'free' ? 3 : userTier === 'premium' ? 8 : 999)}
                   className="bg-blue-500 hover:bg-blue-400 text-white border border-blue-400 rounded-[9px] flex-1 disabled:opacity-50"
                 >
                   {uploadingFiles.length > 0 ? (
@@ -1011,7 +1018,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
                               setSelectedProducts(prev => prev.filter(p => p.id !== product.id))
                             } else {
                               const currentMediaCount = uploadedMedia.length + selectedProducts.length
-                              const LISTING_MEDIA_LIMIT = 5
+                              const LISTING_MEDIA_LIMIT = userTier === 'free' ? 3 : userTier === 'premium' ? 8 : 999
                               
                               if (currentMediaCount >= LISTING_MEDIA_LIMIT) {
                                 alert(`You can only have up to ${LISTING_MEDIA_LIMIT} media items in a listing. You currently have ${currentMediaCount} items.`)
