@@ -54,6 +54,16 @@ export function PaymentMethodModal({ isOpen, onClose, onBack, selectedPlan, user
 
       if (transactionError) throw transactionError
 
+      // Update profile payment status for PayFast (different from EFT)
+      await supabase
+        .from('profiles')
+        .update({
+          payment_method: 'payfast',
+          payment_reference: reference,
+          payment_status: 'pending' // Will be updated to 'paid' by webhook
+        })
+        .eq('id', userProfile.id)
+
       // PayFast payment data (same as registration)
       const returnUrl = new URL(`${window.location.origin}/payment/success`)
       returnUrl.searchParams.set('method', 'payfast')

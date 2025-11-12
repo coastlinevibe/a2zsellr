@@ -75,7 +75,63 @@ export default function SettingsPage() {
 
       if (historyError) console.warn('Error deleting order history:', historyError)
 
-      // 2. Delete order items for orders where user is customer or business
+      // 2. Delete campaign media first (before campaigns)
+      const { error: campaignMediaError } = await supabase
+        .from('campaign_media')
+        .delete()
+        .eq('profile_id', user.id)
+
+      if (campaignMediaError) console.warn('Error deleting campaign media:', campaignMediaError)
+
+      // 3. Delete campaign executions (before campaigns)
+      const { error: executionsError } = await supabase
+        .from('campaign_executions')
+        .delete()
+        .eq('profile_id', user.id)
+
+      if (executionsError) console.warn('Error deleting campaign executions:', executionsError)
+
+      // 4. Delete whatsapp campaigns
+      const { error: whatsappError } = await supabase
+        .from('whatsapp_campaigns')
+        .delete()
+        .eq('profile_id', user.id)
+
+      if (whatsappError) console.warn('Error deleting whatsapp campaigns:', whatsappError)
+
+      // 5. Delete marketing campaigns
+      const { error: campaignsError } = await supabase
+        .from('marketing_campaigns')
+        .delete()
+        .eq('profile_id', user.id)
+
+      if (campaignsError) console.warn('Error deleting marketing campaigns:', campaignsError)
+
+      // 6. Delete social media groups
+      const { error: groupsError } = await supabase
+        .from('social_media_groups')
+        .delete()
+        .eq('created_by', user.id)
+
+      if (groupsError) console.warn('Error deleting social media groups:', groupsError)
+
+      // 7. Delete analytics data
+      const { error: analyticsError } = await supabase
+        .from('profile_analytics')
+        .delete()
+        .eq('profile_id', user.id)
+
+      if (analyticsError) console.warn('Error deleting analytics:', analyticsError)
+
+      // 8. Delete reviews
+      const { error: reviewsError } = await supabase
+        .from('profile_reviews')
+        .delete()
+        .eq('profile_id', user.id)
+
+      if (reviewsError) console.warn('Error deleting reviews:', reviewsError)
+
+      // 9. Delete order items for orders where user is customer or business
       const { error: itemsError } = await supabase
         .from('order_items')
         .delete()
@@ -83,7 +139,7 @@ export default function SettingsPage() {
 
       if (itemsError) console.warn('Error deleting order items:', itemsError)
 
-      // 3. Delete orders where user is customer
+      // 10. Delete orders where user is customer
       const { error: customerOrdersError } = await supabase
         .from('orders')
         .delete()
@@ -91,7 +147,7 @@ export default function SettingsPage() {
 
       if (customerOrdersError) console.warn('Error deleting customer orders:', customerOrdersError)
 
-      // 4. Delete orders where user is business (this will cascade to order_items)
+      // 11. Delete orders where user is business (this will cascade to order_items)
       const { error: businessOrdersError } = await supabase
         .from('orders')
         .delete()
@@ -99,15 +155,7 @@ export default function SettingsPage() {
 
       if (businessOrdersError) console.warn('Error deleting business orders:', businessOrdersError)
 
-      // 5. Delete user's WhatsApp campaigns (this will cascade to layouts and executions)
-      const { error: campaignsError } = await supabase
-        .from('whatsapp_campaigns')
-        .delete()
-        .eq('profile_id', user.id)
-
-      if (campaignsError) console.warn('Error deleting campaigns:', campaignsError)
-
-      // 6. Delete user's listings
+      // 12. Delete user's listings
       const { error: listingsError } = await supabase
         .from('profile_listings')
         .delete()
@@ -115,7 +163,7 @@ export default function SettingsPage() {
 
       if (listingsError) console.warn('Error deleting listings:', listingsError)
 
-      // 7. Delete user's gallery items
+      // 13. Delete user's gallery items
       const { error: galleryError } = await supabase
         .from('profile_gallery')
         .delete()
@@ -123,7 +171,7 @@ export default function SettingsPage() {
 
       if (galleryError) console.warn('Error deleting gallery:', galleryError)
 
-      // 8. Delete user's products
+      // 14. Delete user's products
       const { error: productsError } = await supabase
         .from('profile_products')
         .delete()
@@ -131,7 +179,7 @@ export default function SettingsPage() {
 
       if (productsError) console.warn('Error deleting products:', productsError)
 
-      // 9. Delete referral records (both as referrer and referred)
+      // 15. Delete referral records (both as referrer and referred)
       const { error: referralsError } = await supabase
         .from('referrals')
         .delete()
@@ -139,7 +187,46 @@ export default function SettingsPage() {
 
       if (referralsError) console.warn('Error deleting referrals:', referralsError)
 
-      // 10. Delete user's profile (this should cascade to other related data)
+      // 16. Delete payment transactions
+      const { error: paymentsError } = await supabase
+        .from('payment_transactions')
+        .delete()
+        .eq('user_id', user.id)
+
+      if (paymentsError) console.warn('Error deleting payment transactions:', paymentsError)
+
+      // 17. Delete subscription data
+      const { error: subscriptionsError } = await supabase
+        .from('user_subscriptions')
+        .delete()
+        .eq('user_id', user.id)
+
+      if (subscriptionsError) console.warn('Error deleting subscriptions:', subscriptionsError)
+
+      // 18. Delete profile pictures/avatars from storage
+      // Get profile to find avatar URL
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .single()
+
+      if (profileData?.avatar_url) {
+        // Extract file path from URL and delete from storage
+        const urlParts = profileData.avatar_url.split('/')
+        const bucket = urlParts[urlParts.length - 2] // 'avatars' or similar
+        const fileName = urlParts[urlParts.length - 1]
+
+        if (bucket && fileName) {
+          const { error: avatarError } = await supabase.storage
+            .from(bucket)
+            .remove([fileName])
+
+          if (avatarError) console.warn('Error deleting avatar file:', avatarError)
+        }
+      }
+
+      // 19. Delete user profile (this should be last as other tables reference it)
       const { error: profileError } = await supabase
         .from('profiles')
         .delete()
@@ -149,7 +236,14 @@ export default function SettingsPage() {
         throw new Error(`Failed to delete profile: ${profileError.message}`)
       }
 
-      // 11. Sign out and redirect
+      // 20. Delete auth user (this should be done by Supabase trigger, but let's try)
+      // Note: This might not work if there are RLS policies preventing it
+      const { error: authError } = await supabase.auth.admin.deleteUser(user.id)
+      if (authError) {
+        console.warn('Could not delete auth user (this might be expected):', authError)
+      }
+
+      // Sign out and redirect
       await signOut()
       router.push('/')
 
@@ -194,7 +288,14 @@ export default function SettingsPage() {
 
         <div className="space-y-6">
           {/* Notification Settings */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
+            {/* Blur Overlay */}
+            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
+              <div className="bg-amber-400 text-black font-black py-3 px-6 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200">
+                Features COMING SOON
+              </div>
+            </div>
+
             <div className="px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <Bell className="w-5 h-5" />

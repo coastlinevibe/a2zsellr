@@ -52,6 +52,7 @@ import {
   CustomTemplateLayout,
   type MediaItem
 } from './campaign-layouts'
+import DateTimePicker from '@/components/ui/date-time-picker'
 import TemplateStorageManager from '@/lib/templateStorage'
 import { uploadFileToStorage, type UploadResult } from '@/lib/uploadUtils'
 import RichTextEditor from '@/components/ui/rich-text-editor'
@@ -69,15 +70,28 @@ interface WYSIWYGCampaignBuilderProps {
   products: Product[]
   selectedPlatforms: string[]
   businessProfile: any
+  editListing?: any // Optional listing data for editing
 }
 
-const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }: WYSIWYGCampaignBuilderProps) => {
-  const [campaignTitle, setCampaignTitle] = useState('Mid-Month Growth Blast')
-  const [selectedLayout, setSelectedLayout] = useState('gallery-mosaic')
-  const [messageTemplate, setMessageTemplate] = useState('Hey there! We just launched new services tailored for you. Tap to explore what\'s hot this week.')
-  const [ctaLabel, setCtaLabel] = useState('View Offers')
-  const [scheduleDate, setScheduleDate] = useState('')
-  const [deliveryAvailable, setDeliveryAvailable] = useState(false)
+const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, editListing }: WYSIWYGCampaignBuilderProps) => {
+  const [campaignTitle, setCampaignTitle] = useState(editListing?.title || 'Mid-Month Growth Blast')
+  const [selectedLayout, setSelectedLayout] = useState(editListing?.layout_type || 'gallery-mosaic')
+  const [messageTemplate, setMessageTemplate] = useState(editListing?.message_template || 'Hey there! We just launched new services tailored for you. Tap to explore what\'s hot this week.')
+  const [ctaLabel, setCtaLabel] = useState(editListing?.cta_label || 'View Offers')
+  const [scheduleDate, setScheduleDate] = useState(() => {
+    if (editListing?.scheduled_for) {
+      const date = new Date(editListing.scheduled_for)
+      // Convert to YYYY-MM-DDTHH:mm format expected by DateTimePicker
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      return `${year}-${month}-${day}T${hours}:${minutes}`
+    }
+    return ''
+  })
+  const [deliveryAvailable, setDeliveryAvailable] = useState(editListing?.delivery_available || false)
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null)
   const [isTemplateEditMode, setIsTemplateEditMode] = useState(false)
 
@@ -139,6 +153,27 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
       setSelectedProducts([])
     }
   }, []) // Run only on mount
+
+  // Initialize edit data when editListing is provided
+  React.useEffect(() => {
+    if (editListing) {
+      console.log('Editing listing:', editListing)
+      
+      // Initialize selected products
+      if (editListing.selected_products && editListing.selected_products.length > 0) {
+        const selectedProductIds = editListing.selected_products
+        const matchingProducts = products.filter(p => selectedProductIds.includes(p.id))
+        setSelectedProducts(matchingProducts)
+        console.log('Loaded selected products:', matchingProducts)
+      }
+      
+      // Initialize uploaded media
+      if (editListing.uploaded_media && editListing.uploaded_media.length > 0) {
+        setUploadedMedia(editListing.uploaded_media)
+        console.log('Loaded uploaded media:', editListing.uploaded_media)
+      }
+    }
+  }, [editListing, products])
   const [showMediaSelector, setShowMediaSelector] = useState(false)
   const [uploadedMedia, setUploadedMedia] = useState<{id: string, name: string, url: string, type: string, storagePath?: string}[]>([])
   const [uploadingFiles, setUploadingFiles] = useState<string[]>([])
@@ -199,10 +234,8 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
       .replace(/[^a-zA-Z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
     
-    // Use localhost for development, production domain for live
-    const baseUrl = window.location.hostname === 'localhost' 
-      ? `http://localhost:${window.location.port}`
-      : 'https://a2z-sellr.life'
+    // Always use production domain for preview URLs
+    const baseUrl = 'https://a2zsellr.life'
     
     return `${baseUrl}/${cleanDisplayName}/${cleanTitle}`
   }
@@ -380,35 +413,39 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
       return
     }
 
-    // Enforce tier limits
-    const tierLimits = {
-      free: 3,
-      premium: 999,
-      business: 999
-    }
-    
-    const currentLimit = tierLimits[userTier as keyof typeof tierLimits]
-    
-    // Check existing listings count
-    const { data: existingListings, error: countError } = await supabase
-      .from('profile_listings')
-      .select('id')
-      .eq('profile_id', businessProfile?.id)
-    
-    if (!countError && existingListings && existingListings.length >= currentLimit && userTier === 'free') {
-      alert(`⚠️ Free tier is limited to ${currentLimit} listings.\n\nYou currently have ${existingListings.length} listings.\n\nPlease upgrade to Premium to create more listings.`)
-      return
+    // Enforce tier limits (only for new listings)
+    if (!editListing) {
+      const tierLimits = {
+        free: 3,
+        premium: 999,
+        business: 999
+      }
+      
+      const currentLimit = tierLimits[userTier as keyof typeof tierLimits]
+      
+      // Check existing listings count
+      const { data: existingListings, error: countError } = await supabase
+        .from('profile_listings')
+        .select('id')
+        .eq('profile_id', businessProfile?.id)
+      
+      if (!countError && existingListings && existingListings.length >= currentLimit && userTier === 'free') {
+        alert(`⚠️ Free tier is limited to ${currentLimit} listings.\n\nYou currently have ${existingListings.length} listings.\n\nPlease upgrade to Premium to create more listings.`)
+        return
+      }
     }
 
-    // Check for duplicate title
-    const isDuplicate = await checkDuplicateTitle(campaignTitle.trim())
-    if (isDuplicate) {
-      const shouldContinue = confirm(
-        `⚠️ A listing with the title "${campaignTitle}" already exists.\n\n` +
-        `Do you want to create it anyway? This will create a duplicate listing.`
-      )
-      if (!shouldContinue) {
-        return
+    // Check for duplicate title (only for new listings)
+    if (!editListing) {
+      const isDuplicate = await checkDuplicateTitle(campaignTitle.trim())
+      if (isDuplicate) {
+        const shouldContinue = confirm(
+          `⚠️ A listing with the title "${campaignTitle}" already exists.\n\n` +
+          `Do you want to create it anyway? This will create a duplicate listing.`
+        )
+        if (!shouldContinue) {
+          return
+        }
       }
     }
 
@@ -449,29 +486,54 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
       selected_product_ids: campaignData.selected_products,
       uploaded_media_count: uploadedMedia.length,
       template_data: campaignData.template_data,
-      selectedTemplate: selectedTemplate
+      selectedTemplate: selectedTemplate,
+      isEditing: !!editListing
     })
 
     try {
-      // Save listing to database - use profile_listings table
-      const { data: listing, error: listingError } = await supabase
-        .from('profile_listings')
-        .insert(campaignData)
-        .select('id, title, selected_products, uploaded_media')
-        .single()
+      if (editListing) {
+        // Update existing listing
+        const { data: listing, error: listingError } = await supabase
+          .from('profile_listings')
+          .update(campaignData)
+          .eq('id', editListing.id)
+          .eq('profile_id', businessProfile.id)
+          .select('id, title, selected_products, uploaded_media')
+          .single()
 
-      if (listingError) {
-        console.error('Database error:', listingError)
-        throw new Error(`Failed to save listing: ${listingError.message}`)
+        if (listingError) {
+          console.error('Database update error:', listingError)
+          throw new Error(`Failed to update listing: ${listingError.message}`)
+        }
+
+        console.log('Listing updated successfully:', listing)
+        
+        // Show success message
+        showSuccess(
+          `Listing "${campaignTitle}" updated successfully!`,
+          `• ${uploadedMedia.length} files • ${selectedProducts.length} products • ${selectedLayout} layout • View in Marketing > My Listings tab!`
+        )
+      } else {
+        // Create new listing
+        const { data: listing, error: listingError } = await supabase
+          .from('profile_listings')
+          .insert(campaignData)
+          .select('id, title, selected_products, uploaded_media')
+          .single()
+
+        if (listingError) {
+          console.error('Database error:', listingError)
+          throw new Error(`Failed to save listing: ${listingError.message}`)
+        }
+
+        console.log('Listing saved successfully:', listing)
+        
+        // Show success message
+        showSuccess(
+          `Listing "${campaignTitle}" saved successfully!`,
+          `• ${uploadedMedia.length} files • ${selectedProducts.length} products • ${selectedLayout} layout • View in Marketing > My Listings tab!`
+        )
       }
-
-      console.log('Listing saved successfully:', listing)
-      
-      // Show success message
-      showSuccess(
-        `Listing "${campaignTitle}" saved successfully!`,
-        `• ${uploadedMedia.length} files • ${selectedProducts.length} products • ${selectedLayout} layout • View in Marketing > My Listings tab!`
-      )
       
     } catch (error: any) {
       console.error('Error saving listing:', error)
@@ -667,7 +729,12 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
         <div className="bg-blue-600 rounded-[9px] p-6 text-white">
           <div className="mb-6">
             <h2 className="text-xl font-bold mb-2">Listing Builder</h2>
-            <p className="text-blue-100 text-sm">Create beautiful listings to showcase your products and services.</p>
+            <p className="text-blue-100 text-sm">{editListing ? 'Edit your existing listing' : 'Create beautiful listings to showcase your products and services.'}</p>
+            {editListing && (
+              <div className="mt-3 p-3 bg-yellow-500/20 border border-yellow-400 rounded-lg">
+                <p className="text-yellow-100 text-sm font-medium">✏️ Editing: {editListing.title}</p>
+              </div>
+            )}
           </div>
 
         <div className="space-y-6">
@@ -784,7 +851,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
               <label className="block text-sm font-medium text-blue-100 mb-3">Message template</label>
               <RichTextEditor
                 value={messageTemplate}
-                onChange={(value) => setMessageTemplate(value)}
+                onChange={(value: string) => setMessageTemplate(value)}
                 placeholder="Craft a compelling message with rich formatting, links, and highlights..."
                 maxLength={1000}
                 className="bg-blue-500/60 border border-blue-400 rounded-[9px] text-white placeholder-blue-200 focus-within:ring-2 focus-within:ring-blue-300 focus-within:border-blue-300"
@@ -1018,11 +1085,10 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
           {/* Schedule */}
           <div>
             <label className="block text-sm font-medium text-blue-100 mb-2">Schedule (optional)</label>
-            <input
-              type="datetime-local"
+            <DateTimePicker
               value={scheduleDate}
-              onChange={(e) => setScheduleDate(e.target.value)}
-              className="w-full p-3 bg-blue-500 border border-blue-400 rounded-[9px] text-white focus:ring-2 focus:ring-blue-300 focus:border-blue-300"
+              onChange={setScheduleDate}
+              className="w-full"
             />
           </div>
 
@@ -1033,7 +1099,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile }
               className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-[9px] flex-1"
             >
               <Save className="w-4 h-4 mr-2" />
-              Save Listing Draft
+              {editListing ? 'Update Listing' : 'Save Listing Draft'}
             </Button>
             <Button
               onClick={handleBrowserPreview}

@@ -147,7 +147,7 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
   }
 
   const getListingUrl = (listing: Listing) => {
-    const baseUrl = window.location.origin
+    const baseUrl = 'https://a2zsellr.life'
     const displayName = businessProfile?.display_name || 'business'
     const usernameSlug = displayName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
     const listingSlug = listing.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')

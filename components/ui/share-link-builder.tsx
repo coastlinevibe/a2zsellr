@@ -20,7 +20,7 @@ interface Product {
   category: string | null
 }
 
-const ShareLinkBuilder = ({ products = [], businessProfile }: { products: Product[], businessProfile: any }) => {
+const ShareLinkBuilder = ({ products = [], businessProfile, editListing }: { products: Product[], businessProfile: any, editListing?: any }) => {
   const [activeTab, setActiveTab] = useState('create')
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['whatsapp'])
 
@@ -63,6 +63,7 @@ const ShareLinkBuilder = ({ products = [], businessProfile }: { products: Produc
                 products={products}
                 selectedPlatforms={selectedPlatforms}
                 businessProfile={businessProfile}
+                editListing={editListing}
               />
             </div>
           </div>

@@ -303,7 +303,7 @@ export function ImageUploadGallery({
                 PNG, JPG, GIF up to 5MB each • {tierLimit - totalImages} remaining
               </p>
               <p className="text-xs text-emerald-600 font-medium mt-2">
-                📐 Recommended: 1200×800px (landscape)
+                📐 Recommended: 1500×400px
               </p>
             </div>
             <Button 

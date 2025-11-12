@@ -33,6 +33,8 @@ import {
 } from 'lucide-react'
 
 import { useAuth } from '@/lib/auth'
+import { PlanSelectionModal } from '@/components/PlanSelectionModal'
+import { PaymentMethodModal } from '@/components/PaymentMethodModal'
 import { supabase } from '@/lib/supabaseClient'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -87,9 +89,14 @@ export default function DashboardPage() {
   const [galleryItems, setGalleryItems] = useState<any[]>([])
   const [galleryLoading, setGalleryLoading] = useState(false)
   
-  // Marketing tab state (properly at top level)
   const [marketingActiveView, setMarketingActiveView] = useState('builder')
   const [marketingProducts, setMarketingProducts] = useState<any[]>([])
+  const [editListing, setEditListing] = useState<any>(null)
+  
+  // Upgrade modal states
+  const [showPlanModal, setShowPlanModal] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<'premium' | 'business'>('premium')
   
   // Dashboard metrics state
   const [dashboardMetrics, setDashboardMetrics] = useState({
@@ -275,8 +282,8 @@ export default function DashboardPage() {
         .eq('profile_id', profile.id)
       
       // Sum up all views and clicks
-      const totalViews = analyticsData?.reduce((sum, record) => sum + record.views, 0) || 0
-      const totalClicks = analyticsData?.reduce((sum, record) => sum + record.clicks, 0) || 0
+      const totalViews = analyticsData?.reduce((sum: number, record: any) => sum + record.views, 0) || 0
+      const totalClicks = analyticsData?.reduce((sum: number, record: any) => sum + record.clicks, 0) || 0
       
       // Fetch active listings
       const { data: activeListingsData } = await supabase
@@ -293,7 +300,7 @@ export default function DashboardPage() {
       
       // Calculate average rating
       const avgRating = reviewsData && reviewsData.length > 0 
-        ? reviewsData.reduce((sum, review) => sum + review.rating, 0) / reviewsData.length
+        ? reviewsData.reduce((sum: number, review: any) => sum + review.rating, 0) / reviewsData.length
         : 0
       
       setDashboardMetrics({
@@ -320,6 +327,23 @@ export default function DashboardPage() {
     }
 
     return badges[profile.subscription_tier] || badges.free
+  }
+
+  // Upgrade modal handlers
+  const handlePlanSelection = (plan: 'premium' | 'business') => {
+    setSelectedPlan(plan)
+    setShowPlanModal(false)
+    setShowPaymentModal(true)
+  }
+
+  const handleBackToPlanSelection = () => {
+    setShowPaymentModal(false)
+    setShowPlanModal(true)
+  }
+
+  const handleCloseModals = () => {
+    setShowPlanModal(false)
+    setShowPaymentModal(false)
   }
 
   const renderProfileTab = () => (
@@ -391,7 +415,7 @@ export default function DashboardPage() {
 
   const renderMarketingTab = () => {
     const userTier = profile?.subscription_tier || 'free'
-    const isPremiumFeature = (viewId: string) => ['scheduler', 'analytics'].includes(viewId)
+    const isPremiumFeature = (viewId: string) => ['scheduler', 'analytics', 'templates'].includes(viewId)
     
     const marketingViews = [
       { id: 'builder', label: 'Listing Builder', icon: Plus },
@@ -404,7 +428,7 @@ export default function DashboardPage() {
     return (
       <div className="space-y-8" id="whatsapp-builder">
         {profile?.subscription_tier === 'free' && (
-          <FreeAccountNotifications onUpgrade={() => router.push('/dashboard')} />
+          <FreeAccountNotifications onUpgrade={() => setShowPlanModal(true)} />
         )}
 
         {/* Marketing Tools */}
@@ -451,16 +475,20 @@ export default function DashboardPage() {
           {/* Content */}
           <div className="p-6">
             {marketingActiveView === 'builder' && (
-              <ShareLinkBuilder products={marketingProducts} businessProfile={profile} />
+              <ShareLinkBuilder products={marketingProducts} businessProfile={profile} editListing={editListing} />
             )}
 
             {marketingActiveView === 'campaigns' && (
               <MarketingCampaignsTab 
-                onCreateNew={() => setMarketingActiveView('builder')} 
+                onCreateNew={() => {
+                  // Clear any existing edit data for new listing
+                  setEditListing(null)
+                  setMarketingActiveView('builder')
+                }} 
                 onEditListing={(listing) => {
                   // Switch to builder and load listing for editing
+                  setEditListing(listing)
                   setMarketingActiveView('builder')
-                  // TODO: Pass listing data to ShareLinkBuilder for editing
                   console.log('Editing listing:', listing)
                 }}
                 userTier={profile?.subscription_tier || 'free'} 
@@ -469,110 +497,108 @@ export default function DashboardPage() {
             )}
 
             {marketingActiveView === 'templates' && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold text-gray-900">My Templates</h3>
-                  <button 
-                    onClick={() => setMarketingActiveView('builder')}
-                    className="bg-blue-500 text-white px-6 py-3 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:bg-blue-600 transition-all"
+              userTier === 'free' ? (
+                <div className="text-center py-12">
+                  <div className="mx-auto w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center mb-6">
+                    <Clipboard className="w-12 h-12 text-purple-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Templates - Premium Feature</h3>
+                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                    Access professional templates to create stunning marketing pages. Only available on Premium and Business tiers.
+                  </p>
+                  <button
+                    onClick={() => setShowPlanModal(true)}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-pink-600 transition-all"
                   >
-                    <Plus className="w-4 h-4 mr-2 inline" />
-                    Create New Template
+                    Upgrade to Premium
                   </button>
                 </div>
-                
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Health Insurance Template */}
-                  <div className="bg-blue-100 border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all">
-                    <div className="flex items-center mb-4">
-                      <div className="bg-blue-600 p-2 rounded-full border-2 border-black mr-3">
-                        <Shield className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="font-black text-black">Health Insurance</h4>
-                        <p className="text-sm font-bold text-black">Professional service template</p>
-                      </div>
-                    </div>
-                    <p className="text-black text-sm mb-4 font-medium">
-                      Complete health insurance landing page with plan comparisons, testimonials, and trust indicators.
-                    </p>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => window.open('/template-preview/health-insurance', '_blank')}
-                        className="flex-1 bg-white text-black px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-sm hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all"
-                      >
-                        <Eye className="w-4 h-4 mr-1 inline" />
-                        Preview
-                      </button>
-                      <button 
-                        onClick={() => {
-                          setMarketingActiveView('template_editor')
-                        }}
-                        className="flex-1 bg-blue-500 text-white px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-sm hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-blue-600 transition-all"
-                      >
-                        Use Template
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Coming Soon Templates */}
-                  <div className="bg-gray-100 border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6">
-                    <div className="flex items-center mb-4">
-                      <div className="bg-gray-600 p-2 rounded-full border-2 border-black mr-3">
-                        <Package className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="font-black text-black">Product Showcase</h4>
-                        <p className="text-sm font-bold text-black">Coming soon</p>
-                      </div>
-                    </div>
-                    <p className="text-black text-sm mb-4 font-medium">
-                      Perfect for retail businesses showcasing multiple products with pricing and features.
-                    </p>
-                    <button disabled className="w-full bg-gray-300 text-gray-600 px-4 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] font-bold text-sm cursor-not-allowed">
-                      Coming Soon
+              ) : (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-semibold text-gray-900">My Templates</h3>
+                    <button 
+                      onClick={() => setMarketingActiveView('builder')}
+                      className="bg-blue-500 text-white px-6 py-3 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:bg-blue-600 transition-all"
+                    >
+                      <Plus className="w-4 h-4 mr-2 inline" />
+                      Create New Template
                     </button>
                   </div>
-
-                  <div className="bg-gray-100 border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6">
-                    <div className="flex items-center mb-4">
-                      <div className="bg-gray-600 p-2 rounded-full border-2 border-black mr-3">
-                        <Users className="w-6 h-6 text-white" />
+                  
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Health Insurance Template */}
+                    <div className="bg-blue-100 border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all">
+                      <div className="flex items-center mb-4">
+                        <div className="bg-blue-600 p-2 rounded-full border-2 border-black mr-3">
+                          <Shield className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="font-black text-black">Health Insurance</h4>
+                          <p className="text-sm font-bold text-black">Professional service template</p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-black text-black">Service Business</h4>
-                        <p className="text-sm font-bold text-black">Coming soon</p>
+                      <p className="text-black text-sm mb-4 font-medium">
+                        Complete health insurance landing page with plan comparisons, testimonials, and trust indicators.
+                      </p>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => window.open('/template-preview/health-insurance', '_blank')}
+                          className="flex-1 bg-white text-black px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-sm hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all"
+                        >
+                          <Eye className="w-4 h-4 mr-1 inline" />
+                          Preview
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setMarketingActiveView('template_editor')
+                          }}
+                          className="flex-1 bg-blue-500 text-white px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-sm hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-blue-600 transition-all"
+                        >
+                          Use Template
+                        </button>
                       </div>
                     </div>
-                    <p className="text-black text-sm mb-4 font-medium">
-                      Ideal for salons, consultants, and service providers with booking capabilities.
-                    </p>
-                    <button disabled className="w-full bg-gray-300 text-gray-600 px-4 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] font-bold text-sm cursor-not-allowed">
-                      Coming Soon
-                    </button>
+
+                    {/* Coming Soon Templates */}
+                    <div className="bg-gray-100 border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6">
+                      <div className="flex items-center mb-4">
+                        <div className="bg-gray-600 p-2 rounded-full border-2 border-black mr-3">
+                          <Package className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="font-black text-black">Product Showcase</h4>
+                          <p className="text-sm font-bold text-black">Coming soon</p>
+                        </div>
+                      </div>
+                      <p className="text-black text-sm mb-4 font-medium">
+                        Perfect for retail businesses showcasing multiple products with pricing and features.
+                      </p>
+                      <button disabled className="w-full bg-gray-300 text-gray-600 px-4 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] font-bold text-sm cursor-not-allowed">
+                        Coming Soon
+                      </button>
+                    </div>
+
+                    <div className="bg-gray-100 border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6">
+                      <div className="flex items-center mb-4">
+                        <div className="bg-gray-600 p-2 rounded-full border-2 border-black mr-3">
+                          <Users className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="font-black text-black">Service Business</h4>
+                          <p className="text-sm font-bold text-black">Coming soon</p>
+                        </div>
+                      </div>
+                      <p className="text-black text-sm mb-4 font-medium">
+                        Ideal for salons, consultants, and service providers with booking capabilities.
+                      </p>
+                      <button disabled className="w-full bg-gray-300 text-gray-600 px-4 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] font-bold text-sm cursor-not-allowed">
+                        Coming Soon
+                      </button>
+                    </div>
                   </div>
                 </div>
-
-                {userTier === 'free' && (
-                  <div className="bg-amber-100 border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6">
-                    <div className="flex items-center mb-3">
-                      <div className="bg-amber-500 rounded-full p-2 border-2 border-black mr-3">
-                        <Crown className="w-5 h-5 text-white" />
-                      </div>
-                      <h4 className="font-black text-black">Unlock More Templates</h4>
-                    </div>
-                    <p className="text-black mb-4 font-medium">
-                      Free tier includes 3 basic templates. Upgrade to Premium for 15+ professional templates and Business tier for unlimited custom templates.
-                    </p>
-                    <button 
-                      onClick={() => router.push('/#pricing')}
-                      className="bg-amber-500 text-white px-6 py-3 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:bg-amber-600 transition-all"
-                    >
-                      Upgrade Now
-                    </button>
-                  </div>
-                )}
-              </div>
+              )
             )}
 
             {marketingActiveView === 'template_editor' && (
@@ -696,6 +722,23 @@ export default function DashboardPage() {
           onUpgrade={() => router.push('/#pricing')}
         />
       )}
+
+      {/* Plan Selection Modal */}
+      <PlanSelectionModal
+        isOpen={showPlanModal}
+        onClose={handleCloseModals}
+        onSelectPlan={handlePlanSelection}
+        currentTier={profile?.subscription_tier as 'free' | 'premium' | 'business'}
+      />
+
+      {/* Payment Method Modal */}
+      <PaymentMethodModal
+        isOpen={showPaymentModal}
+        onClose={handleCloseModals}
+        onBack={handleBackToPlanSelection}
+        selectedPlan={selectedPlan}
+        userProfile={profile}
+      />
 
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

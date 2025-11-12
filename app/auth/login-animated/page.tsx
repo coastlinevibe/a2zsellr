@@ -163,8 +163,6 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-gray-200 p-1 rounded border border-black hover:bg-gray-300 transition-colors"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4 text-black" /> : <Eye className="h-4 w-4 text-black" />}
                 </motion.button>
@@ -204,13 +202,6 @@ export default function LoginPage() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.8, duration: 0.5 }}
           >
-            <Link
-              href="/auth/forgot-password"
-              className="block bg-orange-400 text-black px-4 py-2 rounded-lg border-2 border-black font-black text-sm hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] transition-all"
-            >
-              FORGOT PASSWORD?
-            </Link>
-            
             <div className="text-black font-bold text-sm">
               DON'T HAVE AN ACCOUNT?{' '}
               <Link

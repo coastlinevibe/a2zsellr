@@ -36,6 +36,57 @@ export default function PaymentSuccessPage() {
         console.error('Error fetching payment:', error)
       } else {
         setPaymentDetails(transaction)
+        
+        // If this is a PayFast payment and it's still pending, try to activate it
+        // This handles cases where PayFast webhook wasn't called (localhost, sandbox issues)
+        if (transaction.payment_method === 'payfast' && 
+            transaction.status === 'pending' && 
+            paymentMethod === 'payfast') {
+          
+          try {
+            // Call the activate_subscription function directly
+            const { error: activationError } = await supabase
+              .rpc('activate_subscription', {
+                p_profile_id: user?.id,
+                p_tier: transaction.tier_requested,
+                p_billing_cycle: 'monthly'
+              })
+
+            if (!activationError) {
+              // Update transaction status
+              await supabase
+                .from('payment_transactions')
+                .update({
+                  status: 'paid',
+                  payment_date: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', transaction.id)
+
+              // Update profile payment status
+              await supabase
+                .from('profiles')
+                .update({
+                  payment_status: 'paid',
+                  last_payment_date: new Date().toISOString()
+                })
+                .eq('id', user?.id)
+              
+              // Refresh transaction data
+              const { data: updatedTransaction } = await supabase
+                .from('payment_transactions')
+                .select('*')
+                .eq('id', transaction.id)
+                .single()
+              
+              if (updatedTransaction) {
+                setPaymentDetails(updatedTransaction)
+              }
+            }
+          } catch (manualError) {
+            console.error('PayFast activation error:', manualError)
+          }
+        }
       }
 
       // Get updated profile
@@ -45,7 +96,6 @@ export default function PaymentSuccessPage() {
         .eq('id', user?.id)
         .single()
 
-      console.log('Updated profile:', profile)
       
     } catch (error) {
       console.error('Payment status check error:', error)

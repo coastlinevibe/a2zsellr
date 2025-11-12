@@ -112,25 +112,23 @@ export default function FreeAccountNotifications({
 
       {/* Upgrade Offer */}
       <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-lg font-bold text-gray-900">R149/month</span>
-            <span className="text-sm text-gray-500 line-through">R299</span>
-            <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-medium">
-              50% OFF
-            </span>
+        <div className="flex items-center gap-2">
+          <Crown className="w-5 h-5 text-amber-500" />
+          <div className="text-xl font-black text-gray-900 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+            R149/month
           </div>
-          <p className="text-sm text-gray-600">Early Adopter Special - Limited Time</p>
+          <Star className="w-4 h-4 text-orange-500" />
         </div>
         
         {onUpgrade && (
-          <Button
+          <button
             onClick={onUpgrade}
-            className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white flex items-center gap-2"
+            className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-3 px-6 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3"
           >
-            <Crown className="w-4 h-4" />
-            Upgrade Now
-          </Button>
+            <Crown className="w-5 h-5" />
+            <span>Upgrade Now</span>
+            <Star className="w-4 h-4" />
+          </button>
         )}
       </div>
 

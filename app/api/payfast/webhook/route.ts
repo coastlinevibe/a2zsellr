@@ -45,25 +45,30 @@ export async function POST(request: NextRequest) {
       billingCycle
     })
 
-    // Update payment transaction
-    const { error: updateError } = await supabase
-      .from('payment_transactions')
-      .update({
-        status: payment_status === 'COMPLETE' ? 'paid' : 'failed',
-        payfast_payment_id: pf_payment_id,
-        payment_date: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', transactionId)
+    // Update payment transaction (if transaction ID is provided)
+    const isPaymentSuccessful = ['COMPLETE', 'PAID', 'SUCCESS'].includes(payment_status?.toUpperCase())
+    
+    if (transactionId) {
+      const { error: updateError } = await supabase
+        .from('payment_transactions')
+        .update({
+          status: isPaymentSuccessful ? 'paid' : 'failed',
+          payfast_payment_id: pf_payment_id,
+          payment_date: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', transactionId)
 
-    if (updateError) {
-      console.error('Error updating transaction:', updateError)
-      return NextResponse.json({ error: 'Database update failed' }, { status: 500 })
+      if (updateError) {
+        console.error('Error updating transaction:', updateError)
+        // Don't fail the webhook if transaction update fails - continue with activation
+      }
     }
 
     // If payment is successful, activate subscription
-    if (payment_status === 'COMPLETE') {
+    if (isPaymentSuccessful) {
       try {
+        
         // Call the activate_subscription function
         const { error: activationError } = await supabase
           .rpc('activate_subscription', {
@@ -76,6 +81,15 @@ export async function POST(request: NextRequest) {
           console.error('Error activating subscription:', activationError)
           return NextResponse.json({ error: 'Subscription activation failed' }, { status: 500 })
         }
+
+        // Also update profile payment status to 'paid'
+        await supabase
+          .from('profiles')
+          .update({
+            payment_status: 'paid',
+            last_payment_date: new Date().toISOString()
+          })
+          .eq('id', profileId)
 
         console.log(`✅ Subscription activated for user ${profileId} - ${tierRequested} tier`)
 

@@ -255,9 +255,9 @@ export default function AnimatedSignupPage() {
 
     const base = 'mb-6 rounded-xl px-4 py-3 border text-left'
     const variants = {
-      success: 'bg-emerald-500/10 border-emerald-400 text-emerald-100',
+      success: 'bg-emerald-500/10 border-emerald-400 text-emerald-900',
       error: 'bg-red-500/10 border-red-500 text-red-100',
-      info: 'bg-blue-500/10 border-blue-400 text-blue-100',
+      info: 'bg-blue-500/10 border-blue-400 text-blue-900',
     } as const
 
     const Icon = notification.type === 'success' ? CheckCircle2 : notification.type === 'error' ? AlertTriangle : Info
