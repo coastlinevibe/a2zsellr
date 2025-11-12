@@ -256,7 +256,7 @@ export default function AnimatedSignupPage() {
     const base = 'mb-6 rounded-xl px-4 py-3 border text-left'
     const variants = {
       success: 'bg-emerald-500/10 border-emerald-400 text-emerald-900',
-      error: 'bg-red-500/10 border-red-500 text-red-100',
+      error: 'bg-red-600 border-red-600 text-white',
       info: 'bg-blue-500/10 border-blue-400 text-blue-900',
     } as const
 
@@ -778,7 +778,7 @@ export default function AnimatedSignupPage() {
           />
 
           {error && !notification && (
-            <div className="text-red-400 text-sm text-center bg-red-900/20 border border-red-800 rounded-lg p-2">
+            <div className="text-white text-sm text-center bg-red-600 border border-red-600 rounded-lg p-2">
               {error}
             </div>
           )}

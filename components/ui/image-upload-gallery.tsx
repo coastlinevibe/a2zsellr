@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useCallback, memo } from 'react'
-import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react'
+import { Upload, X, Image as ImageIcon, AlertCircle, Crown, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface UploadedImage {
@@ -354,9 +354,11 @@ export function ImageUploadGallery({
           <p className="text-sm text-blue-700 mb-3">
             You've reached the limit for free accounts. Upgrade to Premium or Business for unlimited gallery images.
           </p>
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-            Upgrade Now
-          </Button>
+          <button className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-3 px-4 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3">
+            <Crown className="w-5 h-5" />
+            <span>UPGRADE TO PREMIUM</span>
+            <Star className="w-4 h-4" />
+          </button>
         </div>
       )}
     </div>

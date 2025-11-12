@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabaseClient'
 import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Heart, Check, Truck, Shield, MessageCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { useCart } from '@/contexts/CartContext'
+import CartButton from '@/components/CartButton'
 import Link from 'next/link'
 
 interface UserProfile {
@@ -59,13 +61,13 @@ const createProfileUrl = (displayName: string, productSlug?: string) => {
 export default function ProfilePage() {
   const params = useParams()
   const searchParams = useSearchParams()
-  const username = params.username as string
+  const username = params?.username as string
+  const productParam = searchParams?.get('product')
   
   const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([])
   const [products, setProducts] = useState<Product[]>([])
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState<string | null>(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [activeTab, setActiveTab] = useState('shop')
   const [todayHours, setTodayHours] = useState<string>('')
@@ -82,6 +84,9 @@ export default function ProfilePage() {
     image: '',
     url: ''
   })
+
+  // Cart functionality
+  const { addItem, isInCart, getCartItem } = useCart()
 
   const updateMetaTags = (product?: Product) => {
     if (typeof document === 'undefined') return // Skip on server-side
@@ -243,6 +248,31 @@ Best regards`
     setShowContactOptions(false)
   }
 
+  const handleAddToCart = (product: Product) => {
+    if (!profile || !product.price_cents) {
+      alert('Product price not available')
+      return
+    }
+
+    addItem({
+      productId: product.id,
+      name: product.name,
+      price: product.price_cents,
+      image: product.image_url || undefined,
+      businessId: profile.id,
+      businessName: profile.display_name,
+      quantity: quantity
+    })
+
+    alert(`✅ ${product.name} added to cart!`)
+    setQuantity(1) // Reset quantity
+  }
+
+  // Check if profile owner has Premium or Business tier (enables e-commerce)
+  const isEcommerceEnabled = () => {
+    return profile?.subscription_tier === 'premium' || profile?.subscription_tier === 'business'
+  }
+
   useEffect(() => {
     if (username) {
       fetchProfile()
@@ -377,37 +407,34 @@ Best regards`
 
   const trackProfileView = async (profileId: string) => {
     try {
-      const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+      // Check if we've already tracked a view for this profile in this session
+      const sessionKey = `profile_view_${profileId}`
+      const lastViewTime = sessionStorage.getItem(sessionKey)
+      const now = Date.now()
+      
+      // Only track if we haven't viewed this profile in the last 30 minutes
+      if (lastViewTime && (now - parseInt(lastViewTime)) < 30 * 60 * 1000) {
+        return
+      }
 
-      // Check if today's analytics record exists
-      const { data: existing, error: selectError } = await supabase
-        .from('profile_analytics')
-        .select('views')
-        .eq('profile_id', profileId)
-        .eq('date', today)
-        .single()
+      // Track the view via API endpoint (works for anonymous users)
+      const response = await fetch('/api/track-view', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          profileId,
+          type: 'view'
+        })
+      })
 
-      if (existing && !selectError) {
-        // Update today's record
-        await supabase
-          .from('profile_analytics')
-          .update({ views: existing.views + 1 })
-          .eq('profile_id', profileId)
-          .eq('date', today)
+      if (response.ok) {
+        // Store the view time in session storage
+        sessionStorage.setItem(sessionKey, now.toString())
+        console.log('✅ Profile view tracked successfully')
       } else {
-        // Insert new record for today
-        await supabase
-          .from('profile_analytics')
-          .insert({
-            profile_id: profileId,
-            date: today,
-            views: 1,
-            clicks: 0,
-            orders: 0,
-            revenue_cents: 0,
-            new_customers: 0,
-            returning_customers: 0
-          })
+        console.error('Failed to track profile view:', await response.text())
       }
     } catch (error) {
       console.error('Error tracking profile view:', error)
@@ -602,17 +629,20 @@ Best regards`
                   <p className="text-sm text-gray-600 mt-1">{profile.business_category}</p>
                 )}
               </div>
-              <div className="flex gap-1">
-                <Badge className={`${tierBadge.className} text-xs`}>
-                  {profile.subscription_tier !== 'free' && <Crown className="h-3 w-3 mr-1" />}
-                  {tierBadge.text}
-                </Badge>
-                {profile.verified_seller && (
-                  <Badge className="bg-blue-100 text-blue-700 text-xs">
-                    <Star className="h-3 w-3 mr-1" fill="currentColor" />
-                    Verified
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  <Badge className={`${tierBadge.className} text-xs`}>
+                    {profile.subscription_tier !== 'free' && <Crown className="h-3 w-3 mr-1" />}
+                    {tierBadge.text}
                   </Badge>
-                )}
+                  {profile.verified_seller && (
+                    <Badge className="bg-blue-100 text-blue-700 text-xs">
+                      <Star className="h-3 w-3 mr-1" fill="currentColor" />
+                      Verified
+                    </Badge>
+                  )}
+                </div>
+                {profile.subscription_tier !== 'free' && <CartButton />}
               </div>
             </div>
             
@@ -1021,6 +1051,14 @@ Best regards`
         <div className="bg-white rounded-[9px] border border-gray-200 p-4">
           <h3 className="font-medium text-gray-900 mb-3">Contact Information</h3>
           <div className="space-y-3">
+            {profile.email && (
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-100 rounded-[9px]">
+                  <Mail className="h-4 w-4 text-red-600" />
+                </div>
+                <span className="text-sm text-gray-700">{profile.email}</span>
+              </div>
+            )}
             {profile.business_location && (
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-emerald-100 rounded-[9px]">
@@ -1196,8 +1234,8 @@ Best regards`
                         <div className="flex items-center">
                           <Mail className="w-5 h-5 text-gray-500 mr-3" />
                           <div>
-                            <h3 className="font-medium text-gray-900">Contact Seller</h3>
-                            <p className="text-sm text-gray-500">Get in touch for more information</p>
+                            <h3 className="font-medium text-gray-900">Email</h3>
+                            <p className="text-sm text-gray-500">{profile?.email || 'Email not available'}</p>
                           </div>
                         </div>
                         {profile?.phone_number && (
@@ -1256,34 +1294,79 @@ Best regards`
                     </div>
 
                     <div className="space-y-3">
-                      <div className="relative">
-                        <button 
-                          onClick={handleContactSeller}
-                          className="w-full bg-emerald-600 text-white py-3 px-6 rounded-[9px] hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
-                        >
-                          <ShoppingBag className="w-5 h-5" />
-                          Contact Seller
-                        </button>
-                        
-                        {showContactOptions && (
-                          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-[9px] shadow-lg z-10 overflow-hidden">
-                            <button
-                              onClick={() => handleWhatsAppContact(selectedProduct!)}
-                              className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 border-b border-gray-100"
+                      {/* E-commerce enabled for Premium/Business tiers */}
+                      {isEcommerceEnabled() && selectedProduct.price_cents ? (
+                        <div className="space-y-3">
+                          <button 
+                            onClick={() => handleAddToCart(selectedProduct)}
+                            className="w-full bg-emerald-600 text-white py-3 px-6 rounded-[9px] hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 font-semibold"
+                          >
+                            <ShoppingBag className="w-5 h-5" />
+                            Add to Cart
+                          </button>
+                          
+                          {/* Secondary Contact Button for Premium/Business */}
+                          <div className="relative">
+                            <button 
+                              onClick={handleContactSeller}
+                              className="w-full bg-gray-600 text-white py-2 px-6 rounded-[9px] hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 text-sm"
                             >
-                              <MessageCircle className="w-5 h-5 text-green-600" />
-                              <span className="text-gray-700">WhatsApp</span>
+                              <MessageCircle className="w-4 h-4" />
+                              Contact Seller
                             </button>
-                            <button
-                              onClick={() => handleEmailContact(selectedProduct!)}
-                              className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
-                            >
-                              <Mail className="w-5 h-5 text-blue-600" />
-                              <span className="text-gray-700">Email</span>
-                            </button>
+                            
+                            {showContactOptions && (
+                              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-[9px] shadow-lg z-10 overflow-hidden">
+                                <button
+                                  onClick={() => handleWhatsAppContact(selectedProduct!)}
+                                  className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 border-b border-gray-100"
+                                >
+                                  <MessageCircle className="w-5 h-5 text-green-600" />
+                                  <span className="text-gray-700">WhatsApp</span>
+                                </button>
+                                <button
+                                  onClick={() => handleEmailContact(selectedProduct!)}
+                                  className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
+                                >
+                                  <Mail className="w-5 h-5 text-blue-600" />
+                                  <span className="text-gray-700">Email</span>
+                                </button>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      ) : (
+                        /* Contact Seller only for Free tier or products without price */
+                        <div className="relative">
+                          <button 
+                            onClick={handleContactSeller}
+                            className="w-full bg-emerald-600 text-white py-3 px-6 rounded-[9px] hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                          >
+                            <MessageCircle className="w-5 h-5" />
+                            Contact Seller
+                          </button>
+                          
+                          {showContactOptions && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-[9px] shadow-lg z-10 overflow-hidden">
+                              <button
+                                onClick={() => handleWhatsAppContact(selectedProduct!)}
+                                className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 border-b border-gray-100"
+                              >
+                                <MessageCircle className="w-5 h-5 text-green-600" />
+                                <span className="text-gray-700">WhatsApp</span>
+                              </button>
+                              <button
+                                onClick={() => handleEmailContact(selectedProduct!)}
+                                className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
+                              >
+                                <Mail className="w-5 h-5 text-blue-600" />
+                                <span className="text-gray-700">Email</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
                       <button 
                         onClick={() => handleShareProduct(selectedProduct!)}
                         className="w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-[9px] hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"

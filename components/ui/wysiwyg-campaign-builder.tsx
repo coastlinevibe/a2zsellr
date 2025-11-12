@@ -27,6 +27,7 @@ import {
   CheckCircle2,
   Trash2,
   EyeOff,
+  Crown,
   Star,
   MapPin,
   Phone,
@@ -709,17 +710,24 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
       {/* Day Restriction Warning for Free Tier */}
       {userTier === 'free' && isRestrictedDay() && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-red-600" />
-            <div>
-              <h4 className="font-semibold text-red-900">Listing Creation Restricted Today</h4>
-              <p className="text-sm text-red-700 mt-1">
-                Free tier users cannot create or share listings on {getRestrictedDayName()}s. Restricted days: Wednesday, Saturday, Sunday.
-              </p>
-              <p className="text-sm text-red-600 mt-2 font-medium">
-                ✅ Available days: Monday, Tuesday, Thursday, Friday • Upgrade to Premium to share any day!
-              </p>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-red-600" />
+              <div>
+                <h4 className="font-semibold text-red-900">Listing Creation Restricted Today</h4>
+                <p className="text-sm text-red-700 mt-1">
+                  Free tier users cannot create or share listings on {getRestrictedDayName()}s. Restricted days: Wednesday, Saturday, Sunday.
+                </p>
+                <p className="text-sm text-red-600 mt-2 font-medium">
+                  ✅ Available days: Monday, Tuesday, Thursday, Friday • Upgrade to Premium to share any day!
+                </p>
+              </div>
             </div>
+            <button className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-3 px-4 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3 whitespace-nowrap">
+              <Crown className="w-5 h-5" />
+              <span>UPGRADE TO PREMIUM</span>
+              <Star className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
