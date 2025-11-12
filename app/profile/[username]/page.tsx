@@ -40,6 +40,12 @@ interface GalleryItem {
   type: 'image' | 'video'
 }
 
+interface ProductImage {
+  url: string
+  alt?: string
+  order: number
+}
+
 interface Product {
   id: string
   name: string
@@ -47,6 +53,7 @@ interface Product {
   product_details: string | null
   category: string | null
   image_url: string | null
+  images?: ProductImage[]
   price_cents: number | null
   is_active: boolean
 }
@@ -76,6 +83,7 @@ export default function ProfilePage() {
   const [quantity, setQuantity] = useState(1)
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [showContactOptions, setShowContactOptions] = useState(false)
+  const [currentProductImageIndex, setCurrentProductImageIndex] = useState(0)
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [tierBadge, setTierBadge] = useState({ text: '', className: '' })
   const [metaTags, setMetaTags] = useState({
@@ -500,6 +508,7 @@ Best regards`
     setQuantity(1)
     setIsWishlisted(false)
     setProductModalTab('description')
+    setCurrentProductImageIndex(0)
   }
 
   const increaseQuantity = () => {
@@ -993,12 +1002,21 @@ Best regards`
                     className="bg-white border border-gray-200 rounded-[9px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex-shrink-0 w-48"
                     onClick={() => setSelectedProduct(product)}
                   >
-                    {product.image_url ? (
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="w-full h-32 object-cover"
-                      />
+                    {((product.images && product.images.length > 0) || product.image_url) ? (
+                      <div className="relative">
+                        <img
+                          src={product.images && product.images.length > 0 ? product.images[0].url : product.image_url!}
+                          alt={product.name}
+                          className="w-full h-32 object-cover"
+                        />
+                        {/* Image count indicator */}
+                        {product.images && product.images.length > 1 && (
+                          <div className="absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                            <Package className="h-3 w-3" />
+                            {product.images.length}
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <div className="w-full h-32 bg-gray-100 flex items-center justify-center">
                         <ShoppingBag className="w-8 h-8 text-gray-400" />
@@ -1119,17 +1137,78 @@ Best regards`
 
             <div className="p-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Product Image */}
-                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                  {selectedProduct.image_url ? (
-                    <img
-                      src={selectedProduct.image_url}
-                      alt={selectedProduct.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <Package className="w-16 h-16" />
+                {/* Product Image Gallery */}
+                <div className="space-y-4">
+                  {/* Main Image */}
+                  <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                    {((selectedProduct.images && selectedProduct.images.length > 0) || selectedProduct.image_url) ? (
+                      <>
+                        <img
+                          src={
+                            selectedProduct.images && selectedProduct.images.length > 0
+                              ? selectedProduct.images[currentProductImageIndex]?.url || selectedProduct.image_url!
+                              : selectedProduct.image_url!
+                          }
+                          alt={selectedProduct.name}
+                          className="w-full h-full object-cover"
+                        />
+                        
+                        {/* Navigation Arrows */}
+                        {selectedProduct.images && selectedProduct.images.length > 1 && (
+                          <>
+                            <button
+                              onClick={() => setCurrentProductImageIndex(prev => 
+                                prev === 0 ? selectedProduct.images!.length - 1 : prev - 1
+                              )}
+                              className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 hover:bg-opacity-80 text-white p-2 rounded-full transition-all"
+                            >
+                              <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => setCurrentProductImageIndex(prev => 
+                                prev === selectedProduct.images!.length - 1 ? 0 : prev + 1
+                              )}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 hover:bg-opacity-80 text-white p-2 rounded-full transition-all"
+                            >
+                              <ChevronRight className="w-5 h-5" />
+                            </button>
+                          </>
+                        )}
+                        
+                        {/* Image Counter */}
+                        {selectedProduct.images && selectedProduct.images.length > 1 && (
+                          <div className="absolute bottom-3 right-3 bg-black bg-opacity-60 text-white text-sm px-3 py-1 rounded-full">
+                            {currentProductImageIndex + 1} / {selectedProduct.images.length}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        <Package className="w-16 h-16" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Thumbnail Strip */}
+                  {selectedProduct.images && selectedProduct.images.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                      {selectedProduct.images.map((img, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentProductImageIndex(index)}
+                          className={`flex-shrink-0 w-20 h-20 rounded border-2 overflow-hidden transition-all ${
+                            currentProductImageIndex === index
+                              ? 'border-emerald-500 ring-2 ring-emerald-200'
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                        >
+                          <img
+                            src={img.url}
+                            alt={`${selectedProduct.name} ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
