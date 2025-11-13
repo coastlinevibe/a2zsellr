@@ -92,6 +92,7 @@ export default function ProfilePage() {
     image: '',
     url: ''
   })
+  const [showHoursModal, setShowHoursModal] = useState(false)
 
   // Cart functionality
   const { addItem, isInCart, getCartItem } = useCart()
@@ -483,12 +484,39 @@ Best regards`
     }
   }
 
+  const getAllHours = (hoursString: string) => {
+    if (!hoursString) return []
+    
+    try {
+      // Try to parse as JSON first (new format)
+      const schedule = JSON.parse(hoursString)
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+      return days.map(day => ({
+        day: day.charAt(0).toUpperCase() + day.slice(1),
+        hours: schedule[day]?.closed ? 'Closed' : `${schedule[day]?.open} - ${schedule[day]?.close}`
+      }))
+    } catch (error) {
+      // Fallback to old text format parsing
+      const lines = hoursString.split('\n')
+      return lines.map(line => {
+        const trimmed = line.trim()
+        const colonIndex = trimmed.indexOf(':')
+        if (colonIndex !== -1) {
+          const day = trimmed.substring(0, colonIndex).trim()
+          const hours = trimmed.substring(colonIndex + 1).trim()
+          return { day, hours }
+        }
+        return { day: trimmed, hours: '' }
+      }).filter(item => item.day && item.hours)
+    }
+  }
+
   const getTierBadge = () => {
     if (!profile) return { text: 'Free', className: 'bg-gray-100 text-gray-700 rounded-[9px]' }
     
     const badges = {
       free: { text: 'Free', className: 'bg-gray-100 text-gray-700 rounded-[9px]' },
-      premium: { text: 'Business', className: 'bg-blue-100 text-blue-700 rounded-[9px]' },
+      premium: { text: 'Premium', className: 'bg-orange-100 text-orange-700 rounded-[9px]' },
       business: { text: 'Business', className: 'bg-blue-100 text-blue-700 rounded-[9px]' }
     }
     const tier = (profile.subscription_tier || 'free') as keyof typeof badges
@@ -1007,7 +1035,7 @@ Best regards`
                         <img
                           src={product.images && product.images.length > 0 ? product.images[0].url : product.image_url!}
                           alt={product.name}
-                          className="w-full h-32 object-cover"
+                          className="w-full h-[146px] object-fill"
                         />
                         {/* Image count indicator */}
                         {product.images && product.images.length > 1 && (
@@ -1113,9 +1141,14 @@ Best regards`
             <div className="p-2 bg-orange-100 rounded-[9px]">
               <Clock className="h-4 w-4 text-orange-600" />
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-sm text-gray-700">Today: {todayHours || '9:00 AM - 6:00 PM'}</p>
-              <p className="text-xs text-gray-500">See all hours</p>
+              <button 
+                onClick={() => setShowHoursModal(true)}
+                className="text-xs text-emerald-600 hover:text-emerald-700 hover:underline"
+              >
+                See all hours
+              </button>
             </div>
           </div>
         </div>
@@ -1456,6 +1489,57 @@ Best regards`
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Business Hours Modal */}
+      {showHoursModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <h2 className="text-xl font-semibold text-gray-900">Business Hours</h2>
+              <button
+                onClick={() => setShowHoursModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="space-y-4">
+                {profile?.business_hours ? (
+                  getAllHours(profile.business_hours).map((item, index) => (
+                    <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                      <span className="font-medium text-gray-900">{item.day}</span>
+                      <span className="text-gray-600">{item.hours}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="space-y-4">
+                    <div className="text-center text-gray-500 mb-4">
+                      <p>Business hours not yet set by the owner.</p>
+                      <p className="text-sm">Default schedule shown below:</p>
+                    </div>
+                    {[
+                      { day: 'Monday', hours: '9:00 AM - 6:00 PM' },
+                      { day: 'Tuesday', hours: '9:00 AM - 6:00 PM' },
+                      { day: 'Wednesday', hours: '9:00 AM - 6:00 PM' },
+                      { day: 'Thursday', hours: '9:00 AM - 6:00 PM' },
+                      { day: 'Friday', hours: '9:00 AM - 6:00 PM' },
+                      { day: 'Saturday', hours: '9:00 AM - 6:00 PM' },
+                      { day: 'Sunday', hours: 'Closed' }
+                    ].map((item, index) => (
+                      <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+                        <span className="font-medium text-gray-900">{item.day}</span>
+                        <span className="text-gray-600">{item.hours}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

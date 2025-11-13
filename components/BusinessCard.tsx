@@ -32,7 +32,7 @@ export function BusinessCard({ business, categoryName, locationName, index = 0 }
     const badges = {
       free: { text: 'FREE', className: 'bg-gray-500 text-white border-2 border-black' },
       premium: { text: 'PREMIUM', className: 'bg-orange-500 text-white border-2 border-black' },
-      business: { text: 'PRO', className: 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-2 border-yellow-400 shadow-lg font-black' }
+      business: { text: 'BUSINESS', className: 'bg-blue-500 text-white border-2 border-black' }
     }
     return badges[business.subscription_tier] || badges.free
   }
@@ -42,7 +42,11 @@ export function BusinessCard({ business, categoryName, locationName, index = 0 }
 
   return (
     <motion.div 
-      className="relative bg-white rounded-2xl border-4 border-black overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
+      className={`relative rounded-2xl border-4 border-black overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] ${
+        business.subscription_tier === 'premium' ? 'bg-orange-50' :
+        business.subscription_tier === 'business' ? 'bg-blue-50' :
+        'bg-gray-50'
+      }`}
       initial={{ 
         opacity: 0, 
         y: 50,
@@ -90,8 +94,8 @@ export function BusinessCard({ business, categoryName, locationName, index = 0 }
       </motion.div>
       {/* Header with solid colors based on tier */}
       <div className={`h-20 relative ${
+        business.subscription_tier === 'premium' ? 'bg-orange-400' :
         business.subscription_tier === 'business' ? 'bg-blue-400' :
-        business.subscription_tier === 'premium' ? 'bg-green-400' :
         'bg-gray-400'
       } border-b-4 border-black`}>
         
@@ -216,11 +220,6 @@ export function BusinessCard({ business, categoryName, locationName, index = 0 }
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: index * 0.1 + 0.9, duration: 0.4 }}
-          whileHover={{ 
-            scale: 1.05,
-            rotate: 1,
-            transition: { duration: 0.2 }
-          }}
           whileTap={{ 
             scale: 0.95,
             rotate: -1,
@@ -229,9 +228,9 @@ export function BusinessCard({ business, categoryName, locationName, index = 0 }
         >
           <Link
             href={`/profile/${username}`}
-            className={`w-full py-3 px-4 rounded-lg text-center text-sm font-black transition-all block border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-1 hover:translate-y-1 ${
+            className={`w-full py-3 px-4 rounded-lg text-center text-sm font-black transition-all block border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] ${
               business.subscription_tier === 'business' ? 'bg-blue-500 hover:bg-blue-600 text-white' :
-              business.subscription_tier === 'premium' ? 'bg-green-500 hover:bg-green-600 text-white' :
+              business.subscription_tier === 'premium' ? 'bg-orange-500 hover:bg-orange-600 text-white' :
               'bg-gray-500 hover:bg-gray-600 text-white'
             }`}
           >

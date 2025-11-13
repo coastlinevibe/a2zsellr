@@ -300,7 +300,7 @@ function GalleryImage({ url, title, open, inPlace, id, onInPlace, total }: Galle
         </clipPath>
       </defs>
       <g clipPath={`url(#${id}${inPlace ? "_squareClip" : "_circleClip"})`}>
-        <image width={width} height={height} href={url} className="pointer-events-none"></image>
+        <image width={width} height={height} href={url} className="pointer-events-none" preserveAspectRatio="xMidYMid meet"></image>
       </g>
     </svg>
   )
@@ -344,7 +344,7 @@ function Tabs({ images, onSelect }: TabsProps) {
             href={image.url}
             clipPath={`url(#tab_${i}_clip)`}
             className="pointer-events-none"
-            preserveAspectRatio="xMidYMid slice"
+            preserveAspectRatio="xMidYMid meet"
           />
           <circle
             onClick={() => onSelect(i)}
