@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Shield, Users, MapPin, CreditCard, RotateCcw, AlertTriangle, CheckCircle } from 'lucide-react'
+import { Shield, Users, MapPin, CreditCard, RotateCcw, AlertTriangle, CheckCircle, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabaseClient'
 import { AdminPaymentDashboard } from '@/components/AdminPaymentDashboard'
@@ -20,6 +20,13 @@ export default function AdminDashboard() {
   const [resetStatus, setResetStatus] = useState<any>(null)
   const [resetting, setResetting] = useState(false)
   const [resetResult, setResetResult] = useState<any>(null)
+  const [systemStats, setSystemStats] = useState({
+    totalUsers: 0,
+    activeSubscriptions: 0,
+    businessListings: 0,
+    freeUsers: 0,
+    totalProducts: 0
+  })
 
   useEffect(() => {
     checkAdminAccess()
@@ -30,6 +37,12 @@ export default function AdminDashboard() {
       loadResetData()
     }
   }, [activeTab])
+
+  useEffect(() => {
+    if (isAdmin && activeTab === 'overview') {
+      loadSystemStats()
+    }
+  }, [isAdmin, activeTab])
 
   const checkAdminAccess = async () => {
     try {
@@ -112,6 +125,47 @@ export default function AdminDashboard() {
       alert(`❌ Reset failed: ${error}`)
     } finally {
       setResetting(false)
+    }
+  }
+
+  const loadSystemStats = async () => {
+    try {
+      // Get total users count
+      const { count: totalUsers } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+
+      // Get free users count
+      const { count: freeUsers } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('subscription_tier', 'free')
+
+      // Get active subscriptions (premium + business)
+      const { count: activeSubscriptions } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .in('subscription_tier', ['premium', 'business'])
+
+      // Get business listings count
+      const { count: businessListings } = await supabase
+        .from('business_listings')
+        .select('*', { count: 'exact', head: true })
+
+      // Get total products count
+      const { count: totalProducts } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true })
+
+      setSystemStats({
+        totalUsers: totalUsers || 0,
+        activeSubscriptions: activeSubscriptions || 0,
+        businessListings: businessListings || 0,
+        freeUsers: freeUsers || 0,
+        totalProducts: totalProducts || 0
+      })
+    } catch (error) {
+      console.error('Error loading system stats:', error)
     }
   }
 
@@ -214,26 +268,31 @@ export default function AdminDashboard() {
               transition={{ duration: 0.4 }}
             >
               <h2 className="text-3xl font-black text-black mb-6 uppercase">SYSTEM OVERVIEW</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 <div className="bg-blue-100 p-6 rounded-xl border-2 border-black">
                   <Users className="w-8 h-8 text-blue-600 mb-2" />
                   <h3 className="font-black text-black uppercase">Total Users</h3>
-                  <p className="text-2xl font-black text-blue-600">24</p>
+                  <p className="text-2xl font-black text-blue-600">{systemStats.totalUsers}</p>
                 </div>
                 <div className="bg-green-100 p-6 rounded-xl border-2 border-black">
                   <CreditCard className="w-8 h-8 text-green-600 mb-2" />
                   <h3 className="font-black text-black uppercase">Active Subscriptions</h3>
-                  <p className="text-2xl font-black text-green-600">11</p>
+                  <p className="text-2xl font-black text-green-600">{systemStats.activeSubscriptions}</p>
                 </div>
                 <div className="bg-purple-100 p-6 rounded-xl border-2 border-black">
                   <MapPin className="w-8 h-8 text-purple-600 mb-2" />
                   <h3 className="font-black text-black uppercase">Business Listings</h3>
-                  <p className="text-2xl font-black text-purple-600">24</p>
+                  <p className="text-2xl font-black text-purple-600">{systemStats.businessListings}</p>
                 </div>
                 <div className="bg-orange-100 p-6 rounded-xl border-2 border-black">
                   <RotateCcw className="w-8 h-8 text-orange-600 mb-2" />
                   <h3 className="font-black text-black uppercase">Free Users</h3>
-                  <p className="text-2xl font-black text-orange-600">13</p>
+                  <p className="text-2xl font-black text-orange-600">{systemStats.freeUsers}</p>
+                </div>
+                <div className="bg-yellow-100 p-6 rounded-xl border-2 border-black">
+                  <Package className="w-8 h-8 text-yellow-600 mb-2" />
+                  <h3 className="font-black text-black uppercase">Total Products</h3>
+                  <p className="text-2xl font-black text-yellow-600">{systemStats.totalProducts}</p>
                 </div>
               </div>
             </motion.div>

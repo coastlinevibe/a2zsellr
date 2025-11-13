@@ -100,8 +100,8 @@ export default function DashboardPage() {
   // Dashboard metrics state
   const [dashboardMetrics, setDashboardMetrics] = useState({
     profileViews: 0,
+    activeProducts: 0,
     activeListings: 0,
-    conversionClicks: 0,
     storeRating: 0
   })
   const [metricsLoading, setMetricsLoading] = useState(true)
@@ -284,9 +284,16 @@ export default function DashboardPage() {
       const totalViews = analyticsData?.reduce((sum: number, record: any) => sum + record.views, 0) || 0
       const totalClicks = analyticsData?.reduce((sum: number, record: any) => sum + record.clicks, 0) || 0
       
-      // Fetch active listings
-      const { data: activeListingsData } = await supabase
+      // Fetch active products
+      const { data: activeProductsData } = await supabase
         .from('profile_products')
+        .select('id')
+        .eq('profile_id', profile.id)
+        .eq('is_active', true)
+      
+      // Fetch active business listings
+      const { data: activeListingsData } = await supabase
+        .from('business_listings')
         .select('id')
         .eq('profile_id', profile.id)
         .eq('is_active', true)
@@ -304,8 +311,8 @@ export default function DashboardPage() {
       
       setDashboardMetrics({
         profileViews: totalViews,
+        activeProducts: activeProductsData?.length || 0,
         activeListings: activeListingsData?.length || 0,
-        conversionClicks: totalClicks,
         storeRating: Number(avgRating.toFixed(1))
       })
       
@@ -820,12 +827,12 @@ export default function DashboardPage() {
           <div className="bg-emerald-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-black text-black">Active Listings</p>
+                <p className="text-sm font-black text-black">Active Products</p>
                 <p className="text-2xl font-black text-black">
                   {metricsLoading ? (
                     <span className="animate-pulse">...</span>
                   ) : (
-                    dashboardMetrics.activeListings
+                    dashboardMetrics.activeProducts
                   )}
                 </p>
               </div>
@@ -837,12 +844,12 @@ export default function DashboardPage() {
           <div className="bg-purple-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-black text-black">Conversion Clicks</p>
+                <p className="text-sm font-black text-black">Active Listings</p>
                 <p className="text-2xl font-black text-black">
                   {metricsLoading ? (
                     <span className="animate-pulse">...</span>
                   ) : (
-                    dashboardMetrics.conversionClicks.toLocaleString()
+                    dashboardMetrics.activeListings
                   )}
                 </p>
               </div>
