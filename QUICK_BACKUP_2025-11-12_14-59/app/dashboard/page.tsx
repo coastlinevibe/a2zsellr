@@ -289,7 +289,6 @@ export default function DashboardPage() {
         .from('profile_products')
         .select('id')
         .eq('profile_id', profile.id)
-        .eq('is_active', true)
       
       // Fetch store rating
       const { data: reviewsData } = await supabase

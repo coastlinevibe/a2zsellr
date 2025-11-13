@@ -468,6 +468,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
         cta_label: ctaLabel.trim() || 'Learn More',
         cta_url: ctaUrl,
         scheduled_for: scheduleDate ? new Date(scheduleDate).toISOString() : null,
+        status: scheduleDate ? 'scheduled' : 'active',
         // Fix: Use 'uploaded_media' instead of 'media_items' to match database schema
         uploaded_media: uploadedMedia.map(m => ({
           id: m.id,
@@ -1114,7 +1115,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
               className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-[9px] flex-1"
             >
               <Save className="w-4 h-4 mr-2" />
-              {editListing ? 'Update Listing' : 'Save Listing Draft'}
+              {editListing ? 'Update Listing' : scheduleDate ? 'Schedule Listing' : 'Post Listing'}
             </Button>
             <Button
               onClick={handleBrowserPreview}
@@ -1127,7 +1128,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
           </div>
 
           <p className="text-xs text-blue-200 text-center">
-            Draft autosaves every few minutes.
+            {scheduleDate ? 'Listing will be scheduled for the selected date.' : 'Listing will be posted immediately to selected platforms.'}
           </p>
         </div>
       </div>
@@ -1161,7 +1162,9 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
               </Button>
             </div>
             
-            <p className="text-xs text-blue-200 mt-4">Listing draft autosaves every few minutes.</p>
+            <p className="text-xs text-blue-200 mt-4">
+              {scheduleDate ? 'Scheduled listing will be sent at the specified time.' : 'Ready to post immediately or add a schedule above.'}
+            </p>
           </div>
         </div>
       )}

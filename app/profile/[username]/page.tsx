@@ -197,6 +197,7 @@ export default function ProfilePage() {
 
   const handleContactSeller = () => {
     setShowContactOptions(!showContactOptions)
+    trackProfileClick(profile.id)
   }
 
   const handleWhatsAppContact = (product: Product) => {
@@ -224,6 +225,7 @@ Thank you!`
 
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, '_blank')
+    trackProfileClick(profile.id)
     setShowContactOptions(false)
   }
 
@@ -254,6 +256,7 @@ Best regards`
 
     const mailtoUrl = `mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
     window.open(mailtoUrl, '_blank')
+    trackProfileClick(profile.id)
     setShowContactOptions(false)
   }
 
@@ -274,6 +277,7 @@ Best regards`
     })
 
     alert(`✅ ${product.name} added to cart!`)
+    trackProfileClick(profile.id)
     setQuantity(1) // Reset quantity
   }
 
@@ -447,6 +451,29 @@ Best regards`
       }
     } catch (error) {
       console.error('Error tracking profile view:', error)
+    }
+  }
+
+  const trackProfileClick = async (profileId: string) => {
+    try {
+      const response = await fetch('/api/track-view', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          profileId,
+          type: 'click'
+        })
+      })
+
+      if (response.ok) {
+        console.log('✅ Profile click tracked successfully')
+      } else {
+        console.error('Failed to track profile click:', await response.text())
+      }
+    } catch (error) {
+      console.error('Error tracking profile click:', error)
     }
   }
 

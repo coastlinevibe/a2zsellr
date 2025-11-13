@@ -29,13 +29,15 @@ interface GalleryTabProps {
   galleryLoading?: boolean
   userTier?: 'free' | 'premium' | 'business'
   onRefresh?: () => void
+  onUpgrade?: () => void
 }
 
 export function GalleryTab({ 
   galleryItems = [], 
   galleryLoading = false, 
   userTier = 'free', 
-  onRefresh = () => {} 
+  onRefresh = () => {},
+  onUpgrade = () => {}
 }: GalleryTabProps) {
   const { user } = useAuth()
   const router = useRouter()
@@ -257,6 +259,7 @@ export function GalleryTab({
           onImagesChange={handleImageUpload}
           disabled={uploading}
           existingImagesCount={images.length}
+          onUpgrade={onUpgrade}
         />
         
         {uploading && (

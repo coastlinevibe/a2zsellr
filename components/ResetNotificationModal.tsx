@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { X, AlertTriangle, Clock, Crown, ArrowRight } from 'lucide-react'
+import { X, AlertTriangle, Clock, Crown, ArrowRight, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { calculateResetInfo } from '@/lib/resetUtils'
 
@@ -205,21 +205,15 @@ export default function ResetNotificationModal({
             {/* Actions */}
             <div className="flex gap-3">
               {onUpgrade && (
-                <Button
+                <button
                   onClick={onUpgrade}
-                  className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white"
+                  className="w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-3 px-4 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3"
                 >
-                  <Crown className="w-4 h-4 mr-2" />
-                  Upgrade to Premium
-                </Button>
+                  <Crown className="w-5 h-5" />
+                  <span>UPGRADE TO PREMIUM</span>
+                  <Star className="w-4 h-4" />
+                </button>
               )}
-              <Button
-                onClick={handleDismiss}
-                variant="outline"
-                className="flex-1"
-              >
-                Remind Me Later
-              </Button>
             </div>
 
             {/* Pricing reminder */}

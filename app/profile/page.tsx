@@ -13,6 +13,8 @@ import FormValidation, { validateField, validationRules, getInputBorderColor } f
 import CompactWeeklySchedule from '@/components/CompactWeeklySchedule'
 import AnimatedProfilePicture from '@/components/AnimatedProfilePicture'
 import Link from 'next/link'
+import { PlanSelectionModal } from '@/components/PlanSelectionModal'
+import { PaymentMethodModal } from '@/components/PaymentMethodModal'
 
 interface UserProfile {
   id: string
@@ -62,6 +64,11 @@ export default function ProfilePage() {
   // Categories and locations data
   const [categories, setCategories] = useState<any[]>([])
   const [locations, setLocations] = useState<any[]>([])
+
+  // Plan selection modal states
+  const [showPlanModal, setShowPlanModal] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<'premium' | 'business'>('premium')
 
   // Form fields
   const [displayName, setDisplayName] = useState('')
@@ -551,6 +558,23 @@ export default function ProfilePage() {
     setShowWizard(false)
   }
 
+  // Modal handlers
+  const handlePlanSelection = (plan: 'premium' | 'business') => {
+    setSelectedPlan(plan)
+    setShowPlanModal(false)
+    setShowPaymentModal(true)
+  }
+
+  const handleBackToPlanSelection = () => {
+    setShowPaymentModal(false)
+    setShowPlanModal(true)
+  }
+
+  const handleCloseModals = () => {
+    setShowPlanModal(false)
+    setShowPaymentModal(false)
+  }
+
   const renderTabContent = () => {
     return (
       <div className="space-y-6">
@@ -982,11 +1006,14 @@ export default function ProfilePage() {
                       >
                         Complete Profile
                       </Button>
-                      <Link href="/pricing">
-                        <Button className="bg-amber-600 hover:bg-amber-700 text-white">
-                          View Plans
-                        </Button>
-                      </Link>
+                      <button
+                        onClick={() => setShowPlanModal(true)}
+                        className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-3 px-4 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3"
+                      >
+                        <Crown className="w-5 h-5" />
+                        <span>UPGRADE TO PREMIUM</span>
+                        <Star className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1004,6 +1031,23 @@ export default function ProfilePage() {
           onFieldFocus={handleFieldFocus}
         />
       )}
+
+      {/* Plan Selection Modal */}
+      <PlanSelectionModal
+        isOpen={showPlanModal}
+        onClose={handleCloseModals}
+        onSelectPlan={handlePlanSelection}
+        currentTier={profileType as 'free' | 'premium' | 'business'}
+      />
+
+      {/* Payment Method Modal */}
+      <PaymentMethodModal
+        isOpen={showPaymentModal}
+        onClose={handleCloseModals}
+        onBack={handleBackToPlanSelection}
+        selectedPlan={selectedPlan}
+        userProfile={profile}
+      />
     </div>
   )
 }

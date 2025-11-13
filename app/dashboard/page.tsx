@@ -296,7 +296,6 @@ export default function DashboardPage() {
         .from('business_listings')
         .select('id')
         .eq('profile_id', profile.id)
-        .eq('is_active', true)
       
       // Fetch store rating
       const { data: reviewsData } = await supabase
@@ -696,6 +695,7 @@ export default function DashboardPage() {
                 })
             }
           }}
+          onUpgrade={() => setShowPlanModal(true)}
         />
       case 'shop':
         return <BusinessShop businessId={profile?.id || ''} isOwner={true} userTier={profile?.subscription_tier || 'free'} />
@@ -725,7 +725,7 @@ export default function DashboardPage() {
           profileCreatedAt={profile.created_at || new Date().toISOString()}
           lastResetAt={null}
           subscriptionTier={profile.subscription_tier}
-          onUpgrade={() => router.push('/#pricing')}
+          onUpgrade={() => setShowPlanModal(true)}
         />
       )}
 
