@@ -2,18 +2,19 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Shield, Users, MapPin, CreditCard, RotateCcw, AlertTriangle, CheckCircle, Package } from 'lucide-react'
+import { Shield, Users, MapPin, CreditCard, RotateCcw, AlertTriangle, CheckCircle, Package, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabaseClient'
 import { AdminPaymentDashboard } from '@/components/AdminPaymentDashboard'
 import { AdminCategoriesLocations } from '@/components/AdminCategoriesLocations'
 import { UserManagement } from '@/components/UserManagement'
+import { BulkUploadManager } from '@/components/BulkUploadManager'
 import { adminResetAllFreeUsers, previewReset, getResetStatus } from '@/lib/adminReset'
 import { motion } from 'framer-motion'
 
 export default function AdminDashboard() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'payments' | 'categories' | 'reset'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'payments' | 'categories' | 'bulk-upload' | 'reset'>('overview')
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [resetPreview, setResetPreview] = useState<any>(null)
@@ -225,6 +226,7 @@ export default function AdminDashboard() {
             { key: 'users', label: 'USERS', icon: Users, color: 'bg-green-500' },
             { key: 'payments', label: 'PAYMENTS', icon: CreditCard, color: 'bg-purple-500' },
             { key: 'categories', label: 'CATEGORIES', icon: MapPin, color: 'bg-orange-500' },
+            { key: 'bulk-upload', label: 'BULK UPLOAD', icon: Upload, color: 'bg-indigo-500' },
             { key: 'reset', label: 'RESET SYSTEM', icon: RotateCcw, color: 'bg-red-500' }
           ].map(({ key, label, icon: Icon, color }) => (
             <motion.button
@@ -303,6 +305,8 @@ export default function AdminDashboard() {
           {activeTab === 'payments' && <AdminPaymentDashboard />}
 
           {activeTab === 'categories' && <AdminCategoriesLocations />}
+
+          {activeTab === 'bulk-upload' && <BulkUploadManager />}
 
           {activeTab === 'reset' && (
             <motion.div 
