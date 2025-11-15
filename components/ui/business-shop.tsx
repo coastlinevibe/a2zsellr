@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from "@/components/ui/button"
 import { Badge } from '@/components/ui/badge'
 import { TierLimitDisplay } from '@/components/ui/premium-badge'
@@ -416,40 +415,17 @@ export default function BusinessShop({
 
   if (loading) {
     return (
-      <motion.div 
-        className="flex items-center justify-center min-h-64"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <motion.div 
-          className="rounded-full h-12 w-12 border-b-2 border-emerald-600"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-        />
-      </motion.div>
+      <div className="flex items-center justify-center min-h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600" />
+      </div>
     )
   }
 
   return (
-    <motion.div 
-      className="space-y-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
+    <div className="space-y-6">
       {/* Header */}
-      <motion.div 
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-      >
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Shop</h2>
           <TierLimitDisplay 
             current={products.length}
@@ -458,18 +434,10 @@ export default function BusinessShop({
             itemName="products"
             size="md"
           />
-        </motion.div>
+        </div>
         {isOwner && (
-          <motion.div 
-            className="flex gap-2"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
+          <div className="flex gap-2">
+            <div>
               <Button 
                 variant={manageMode ? "default" : "outline"} 
                 onClick={() => setManageMode(!manageMode)}
@@ -478,11 +446,8 @@ export default function BusinessShop({
                 <Edit className="h-4 w-4 mr-2" />
                 {manageMode ? 'Done Managing' : 'Manage Shop'}
               </Button>
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
+            </div>
+            <div>
               <Button 
                 onClick={handleAddProduct} 
                 className="bg-emerald-600 hover:bg-emerald-700 rounded-[9px]"
@@ -491,10 +456,10 @@ export default function BusinessShop({
                 <Plus className="h-4 w-4 mr-2" />
                 {userTier === 'free' && products.length >= 5 ? 'Limit Reached' : 'Add to Shop'}
               </Button>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </motion.div>
+      </div>
 
       {/* Error Message */}
       {error && (
