@@ -204,7 +204,9 @@ export default function ProfilePage() {
 
   const handleContactSeller = () => {
     setShowContactOptions(!showContactOptions)
-    trackProfileClick(profile.id)
+    if (profile?.id) {
+      trackProfileClick(profile.id)
+    }
   }
 
   const handleWhatsAppContact = (product: Product) => {
@@ -232,7 +234,9 @@ Thank you!`
 
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, '_blank')
-    trackProfileClick(profile.id)
+    if (profile?.id) {
+      trackProfileClick(profile.id)
+    }
     setShowContactOptions(false)
   }
 
