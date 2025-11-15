@@ -39,8 +39,10 @@ class ConnectionPool {
 
     if (this.connections.size >= this.maxConnections) {
       // Remove oldest connection
-      const firstKey = this.connections.keys().next().value
-      this.connections.delete(firstKey)
+      const firstKey = this.connections.keys().next().value as string | undefined
+      if (firstKey !== undefined) {
+        this.connections.delete(firstKey)
+      }
     }
 
     const connection = createClient(supabaseUrl, supabaseAnonKey, {
@@ -123,8 +125,10 @@ export async function cachedQuery(
       
       // Cleanup old cache entries
       if (queryCache.size > 100) {
-        const oldestKey = queryCache.keys().next().value
-        queryCache.delete(oldestKey)
+        const oldestKey = queryCache.keys().next().value as string | undefined
+        if (oldestKey !== undefined) {
+          queryCache.delete(oldestKey)
+        }
       }
     }
 

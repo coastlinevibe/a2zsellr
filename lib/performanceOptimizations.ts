@@ -60,11 +60,11 @@ class PerformanceCache {
 
   private cleanup(): void {
     const now = Date.now()
-    for (const [key, item] of this.cache.entries()) {
+    this.cache.forEach((item, key) => {
       if (now > item.expires) {
         this.cache.delete(key)
       }
-    }
+    })
   }
 
   getStats() {
@@ -132,13 +132,14 @@ export async function fastQuery<T = any>(
     }
 
     const { data, error } = await query
+    const typedData = (data ?? null) as T[] | null
 
     // Cache successful results
-    if (!error && data && !options.skipCache) {
-      performanceCache.set(cacheKey, data, options.cacheTTL)
+    if (!error && typedData && !options.skipCache) {
+      performanceCache.set(cacheKey, typedData, options.cacheTTL)
     }
 
-    return { data, error, fromCache: false }
+    return { data: typedData, error, fromCache: false }
   } catch (error) {
     console.error(`Query error for ${table}:`, error)
     return { data: null, error, fromCache: false }
@@ -274,7 +275,7 @@ export async function getRecentActivitiesFast(limit: number = 15) {
     }
 
     // Get profile names separately if needed
-    const profileIds = [...new Set(data.map(item => item.profile_id).filter(Boolean))]
+    const profileIds = Array.from(new Set(data.map(item => item.profile_id).filter(Boolean)))
     
     if (profileIds.length > 0) {
       const { data: profiles } = await fastQuery(
