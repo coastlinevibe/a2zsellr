@@ -350,50 +350,6 @@ export default function CampaignPage({ params }: CampaignPageProps) {
       </Head>
       
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {profile?.avatar_url ? (
-                <img 
-                  src={profile.avatar_url} 
-                  alt={profile.display_name}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-                  {profile?.display_name?.charAt(0).toUpperCase() || 'A'}
-                </div>
-              )}
-              <div>
-                <h1 className="font-bold text-gray-900">{profile?.display_name || 'Business'}</h1>
-                <p className="text-xs text-gray-500">Marketing Campaign</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={handleWhatsAppShare}
-                size="sm"
-                variant="outline"
-                className="text-green-600 border-green-200 hover:bg-green-50"
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                WhatsApp
-              </Button>
-              <Button
-                onClick={handleShare}
-                size="sm"
-                variant="outline"
-              >
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
 
       {/* Campaign Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

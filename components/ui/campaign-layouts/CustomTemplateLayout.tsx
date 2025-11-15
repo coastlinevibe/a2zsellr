@@ -297,12 +297,7 @@ export const CustomTemplateLayout: React.FC<CustomTemplateLayoutProps> = ({
             </div>
           )}
           
-          {/* Show image URL for debugging */}
-          {template.backgroundImage && (
-            <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs p-1 rounded max-w-xs truncate">
-              IMG: {template.backgroundImage}
-            </div>
-          )}
+
       {/* Optional HTML content overlay */}
       {template.content && (
         <div 
