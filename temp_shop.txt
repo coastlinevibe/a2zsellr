@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -812,7 +812,7 @@ export default function BusinessShop({
                   </label>
                   <div className="flex items-center gap-2">
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                      📐 800×800px recommended
+                      ðŸ“ 800Ã—800px recommended
                     </span>
                     <Badge variant={userTier === 'free' ? 'destructive' : 'default'} className="text-xs">
                       {userTier} tier
@@ -1043,3 +1043,4 @@ export default function BusinessShop({
     </div>
   )
 }
+
