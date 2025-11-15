@@ -98,8 +98,10 @@ export default function ProfilePage() {
   const [reviewText, setReviewText] = useState('')
   const [submittingReview, setSubmittingReview] = useState(false)
   const [reviews, setReviews] = useState<any[]>([])
-  const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 })
   const [scrollY, setScrollY] = useState(0)
+  const [lastScrollY, setLastScrollY] = useState(0)
+  const [isHeaderSticky, setIsHeaderSticky] = useState(false)
+  const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 })
 
   // Cart functionality
   const { addItem, isInCart, getCartItem } = useCart()
@@ -366,12 +368,28 @@ Best regards`
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrollY(window.scrollY)
+      const currentScrollY = window.scrollY
+      const heroHeight = 320 // Height of hero gallery
+      
+      // Stick header when scrolling down past hero
+      if (currentScrollY > heroHeight) {
+        // Only stick if scrolling down
+        if (currentScrollY > lastScrollY) {
+          setIsHeaderSticky(true)
+        } else {
+          // Unstick when scrolling up
+          setIsHeaderSticky(false)
+        }
+      } else {
+        setIsHeaderSticky(false)
+      }
+      
+      setLastScrollY(currentScrollY)
     }
     
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [lastScrollY])
 
   useEffect(() => {
     if (username) {
@@ -756,109 +774,95 @@ Best regards`
         </Link>
       </div>
 
-      {/* Business Info Card - Compact Layout */}
-      <div className="bg-white px-4 py-4 border-b border-gray-100">
-        {/* Top Row: Avatar, Name, Badges, Cart */}
-        <div className="flex items-start gap-3 mb-3">
-          {profile.avatar_url && (
-            <img 
-              src={profile.avatar_url} 
-              alt={profile.display_name} 
-              className="w-14 h-14 rounded-lg object-cover border border-gray-200 flex-shrink-0"
-            />
-          )}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-lg font-bold text-gray-900">{profile.display_name}</h1>
-              <div className="flex gap-1">
-                <Badge className={`${tierBadge.className} text-xs flex-shrink-0`}>
-                  {profile.subscription_tier !== 'free' && <Crown className="h-3 w-3 mr-1" />}
-                  {tierBadge.text}
-                </Badge>
-                {profile.verified_seller && (
-                  <Badge className="bg-blue-100 text-blue-700 text-xs flex-shrink-0">
-                    <Star className="h-3 w-3 mr-1" fill="currentColor" />
-                    Verified
-                  </Badge>
-                )}
-              </div>
-            </div>
-            
-            {/* Rating, Category, Hours in one line */}
-            <div className="flex items-center gap-2 text-sm flex-wrap mb-3">
-              {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
-                <div className="flex items-center gap-1">
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`w-3 h-3 ${i < Math.round(reviewStats.averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                    ))}
+      {/* Business Info Card - Sticky Compact Header */}
+      <div className={`transition-all duration-300 ${isHeaderSticky ? 'fixed top-0 left-0 right-0 z-40 shadow-md' : 'relative'} bg-white border-b border-gray-100`}>
+        <div className={`px-4 max-w-7xl mx-auto ${isHeaderSticky ? 'py-2' : 'py-3'}`}>
+          {/* Compact Row: Avatar, Name, Badges, Info, Buttons, Cart */}
+          <div className="flex items-center gap-3 justify-between">
+            {/* Left: Avatar + Name + Badges */}
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              {profile.avatar_url && (
+                <img 
+                  src={profile.avatar_url} 
+                  alt={profile.display_name} 
+                  className={`rounded-lg object-cover border border-gray-200 flex-shrink-0 ${isHeaderSticky ? 'w-10 h-10' : 'w-12 h-12'}`}
+                />
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className={`font-bold text-gray-900 ${isHeaderSticky ? 'text-base' : 'text-lg'}`}>{profile.display_name}</h1>
+                  <div className="flex gap-1 flex-shrink-0">
+                    <Badge className={`${tierBadge.className} text-xs`}>
+                      {profile.subscription_tier !== 'free' && <Crown className="h-2.5 w-2.5 mr-0.5" />}
+                      {tierBadge.text}
+                    </Badge>
+                    {profile.verified_seller && (
+                      <Badge className="bg-blue-100 text-blue-700 text-xs">
+                        <Star className="h-2.5 w-2.5 mr-0.5" fill="currentColor" />
+                        Verified
+                      </Badge>
+                    )}
                   </div>
-                  <span className="text-gray-600 font-medium">
-                    {reviewStats.totalReviews > 0 ? `${reviewStats.averageRating} (${reviewStats.totalReviews})` : 'No reviews'}
-                  </span>
                 </div>
-              )}
-              {profile.business_category && (
-                <>
+                
+                {/* Compact Info Line */}
+                <div className={`flex items-center gap-2 flex-wrap ${isHeaderSticky ? 'text-xs' : 'text-sm'} text-gray-600`}>
+                  {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-2.5 h-2.5 ${i < Math.round(reviewStats.averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                      ))}
+                      <span className="font-medium">{reviewStats.totalReviews > 0 ? `${reviewStats.averageRating}` : 'N/A'}</span>
+                    </div>
+                  )}
+                  {profile.business_category && (
+                    <>
+                      <span className="text-gray-400">•</span>
+                      <span>{profile.business_category}</span>
+                    </>
+                  )}
                   <span className="text-gray-400">•</span>
-                  <span className="text-gray-600">{profile.business_category}</span>
-                </>
-              )}
-              <span className="text-gray-400">•</span>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-green-600 font-medium">
-                  Open until {todayHours.split(' - ')[1] || '9:00 PM'}
-                </span>
+                  <div className="flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                    <span className="text-green-600 font-medium">Open</span>
+                  </div>
+                </div>
               </div>
             </div>
             
-            {/* Bio */}
-            {profile.bio && (
-              <p className="text-sm text-gray-600 mb-3">{profile.bio}</p>
-            )}
-            
-            {/* Action Buttons Row */}
-            <div className="flex justify-start items-center gap-6 flex-wrap">
+            {/* Right: Action Buttons Row (Compact) */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               {profile.phone_number && (
                 <button 
-                  className="action-btn"
+                  className={`p-2 rounded-lg transition-colors ${isHeaderSticky ? 'hover:bg-gray-100' : 'hover:bg-emerald-50'}`}
                   onClick={() => {
                     const phoneNumber = profile.phone_number?.replace(/\D/g, '')
                     const message = `Hi ${profile.display_name}, I found your profile on A2Z Business Directory and would like to get in touch!`
                     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
                     window.open(whatsappUrl, '_blank')
                   }}
+                  title="WhatsApp"
                 >
-                  <div>WhatsApp</div>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="25px" height="25px" viewBox="0 0 24 24" fill="none">
-                    <path d="M11.6801 14.62L14.2401 12.06L11.6801 9.5" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
-                    <path d="M4 12.0601H14.17" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
-                    <path d="M12 4C16.42 4 20 7 20 12C20 17 16.42 20 12 20" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
-                  </svg>
+                  <MessageCircle className="w-4 h-4 text-emerald-600" />
                 </button>
               )}
               
               {profile.business_location && (
                 <button 
-                  className="action-btn"
+                  className={`p-2 rounded-lg transition-colors ${isHeaderSticky ? 'hover:bg-gray-100' : 'hover:bg-emerald-50'}`}
                   onClick={() => {
                     const locationQuery = profile.business_location || ''
                     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`
                     window.open(mapsUrl, '_blank')
                   }}
+                  title="Directions"
                 >
-                  <div>Directions</div>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="25px" height="25px" viewBox="0 0 24 24" fill="none">
-                    <path d="M11.6801 14.62L14.2401 12.06L11.6801 9.5" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
-                    <path d="M4 12.0601H14.17" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
-                    <path d="M12 4C16.42 4 20 7 20 12C20 17 16.42 20 12 20" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
-                  </svg>
+                  <MapPin className="w-4 h-4 text-emerald-600" />
                 </button>
               )}
               
               <button 
-                className="action-btn"
+                className={`p-2 rounded-lg transition-colors ${isHeaderSticky ? 'hover:bg-gray-100' : 'hover:bg-emerald-50'}`}
                 onClick={() => {
                   const shareUrl = createProfileUrl(profile.display_name)
                   const shareText = `Check out ${profile.display_name}'s business profile on A2Z Business Directory!`
@@ -877,51 +881,39 @@ Best regards`
                     })
                   }
                 }}
+                title="Share"
               >
-                <div>Share</div>
-                <svg xmlns="http://www.w3.org/2000/svg" width="25px" height="25px" viewBox="0 0 24 24" fill="none">
-                  <path d="M11.6801 14.62L14.2401 12.06L11.6801 9.5" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
-                  <path d="M4 12.0601H14.17" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
-                  <path d="M12 4C16.42 4 20 7 20 12C20 17 16.42 20 12 20" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
-                </svg>
+                <Share2 className="w-4 h-4 text-emerald-600" />
               </button>
               
               {profile.website_url && (
                 <button 
-                  className="action-btn"
+                  className={`p-2 rounded-lg transition-colors ${isHeaderSticky ? 'hover:bg-gray-100' : 'hover:bg-emerald-50'}`}
                   onClick={() => window.open(profile.website_url || '', '_blank')}
+                  title="Website"
                 >
-                  <div>Website</div>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="25px" height="25px" viewBox="0 0 24 24" fill="none">
-                    <path d="M11.6801 14.62L14.2401 12.06L11.6801 9.5" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
-                    <path d="M4 12.0601H14.17" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
-                    <path d="M12 4C16.42 4 20 7 20 12C20 17 16.42 20 12 20" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
-                  </svg>
+                  <Globe className="w-4 h-4 text-emerald-600" />
                 </button>
               )}
 
               {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
                 <button 
-                  className="action-btn"
+                  className={`p-2 rounded-lg transition-colors ${isHeaderSticky ? 'hover:bg-gray-100' : 'hover:bg-emerald-50'}`}
                   onClick={() => setShowReviewModal(true)}
+                  title="Leave A Review"
                 >
-                  <div>Leave A Review</div>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="25px" height="25px" viewBox="0 0 24 24" fill="none">
-                    <path d="M11.6801 14.62L14.2401 12.06L11.6801 9.5" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
-                    <path d="M4 12.0601H14.17" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
-                    <path d="M12 4C16.42 4 20 7 20 12C20 17 16.42 20 12 20" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
-                  </svg>
+                  <Star className="w-4 h-4 text-emerald-600" />
                 </button>
+              )}
+              
+              {/* Cart Button */}
+              {profile.subscription_tier !== 'free' && (
+                <div className="ml-1">
+                  <CartButton />
+                </div>
               )}
             </div>
           </div>
-          
-          {/* Cart Button */}
-          {profile.subscription_tier !== 'free' && (
-            <div className="flex-shrink-0">
-              <CartButton />
-            </div>
-          )}
         </div>
       </div>
 
@@ -1106,23 +1098,43 @@ Best regards`
           transform: translateY(-4px);
         }
 
-        /* Category buttons - Simple text color change */
+        /* Category buttons - 3D gradient style */
         .cat-btn-wrapper {
           display: inline-block;
         }
 
         .cat-btn {
-          padding: 0.6em 1.2em;
-          border: none;
-          border-radius: 8px;
-          background: transparent;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          outline: none;
           cursor: pointer;
-          transition: all 0.3s ease;
+          min-width: 120px;
+          height: 42px;
+          padding: 0 20px;
+          background-image: linear-gradient(to top, #D8D9DB 0%, #fff 80%, #FDFDFD 100%);
+          border-radius: 9px;
+          border: 1px solid #8F9092;
+          transition: all 0.2s ease;
+          font-family: inherit;
+          font-size: 14px;
+          font-weight: 600;
+          color: #606060;
+          text-shadow: 0 1px #fff;
           position: relative;
         }
 
-        .cat-btn:active {
-          transform: scale(0.98);
+        .cat-btn:hover {
+          box-shadow: 0 4px 3px 1px #FCFCFC, 0 6px 8px #D6D7D9, 0 -4px 4px #CECFD1, 0 -6px 4px #FEFEFE, inset 0 0 3px 3px #CECFD1;
+        }
+
+        .cat-btn:active,
+        .cat-btn.active {
+          box-shadow: 0 4px 3px 1px #FCFCFC, 0 6px 8px #D6D7D9, 0 -4px 4px #CECFD1, 0 -6px 4px #FEFEFE, inset 0 0 5px 3px #999, inset 0 0 30px #aaa;
+        }
+
+        .cat-btn:focus {
+          box-shadow: 0 4px 3px 1px #FCFCFC, 0 6px 8px #D6D7D9, 0 -4px 4px #CECFD1, 0 -6px 4px #FEFEFE, inset 0 0 5px 3px #999, inset 0 0 30px #aaa;
         }
 
         .cat-btn > div {
@@ -1130,18 +1142,7 @@ Best regards`
           font-size: 12px;
           text-transform: uppercase;
           letter-spacing: 1px;
-          color: #6b7280;
           white-space: nowrap;
-          transition: color 0.3s ease;
-        }
-
-        .cat-btn:hover > div {
-          color: #37aa87;
-        }
-
-        .cat-btn.active > div {
-          color: #37aa87;
-          font-weight: 700;
         }
 
         /* Smaller variant for action buttons */
