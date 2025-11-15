@@ -151,7 +151,8 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
     const baseUrl = 'https://a2zsellr.life'
     const displayName = businessProfile?.display_name || 'business'
     const usernameSlug = displayName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-    const listingSlug = listing.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+    // Use url_slug if available, otherwise generate from title
+    const listingSlug = (listing as any).url_slug || listing.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
     return `${baseUrl}/${usernameSlug}/${listingSlug}`
   }
 

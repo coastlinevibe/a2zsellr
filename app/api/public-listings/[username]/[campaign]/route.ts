@@ -11,7 +11,7 @@ const slugify = (value: string) =>
 
 const getSupabaseAdminClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !serviceKey) {
     throw new Error('Supabase credentials are not configured')
@@ -31,123 +31,112 @@ export async function GET(
     const usernameSlug = slugify(params.username)
     const campaignSlug = slugify(params.campaign)
 
-    const titleVariations = unique([
-      params.campaign,
-      params.campaign.replace(/-/g, ' '),
-      params.campaign.replace(/-/g, ''),
-      campaignSlug
-    ])
+    console.log(`🔍 Searching for listing: username="${params.username}" (${usernameSlug}), campaign="${params.campaign}" (${campaignSlug})`)
 
     let foundListing: any = null
 
-    for (const titleVariant of titleVariations) {
-      const { data, error } = await adminClient
-        .from('profile_listings')
-        .select(
-          `*,
-          profiles:profiles!inner(id, display_name, avatar_url, bio, phone_number, subscription_tier, whatsapp_number)
-        `
-        )
-        .ilike('title', `%${titleVariant}%`)
-        .limit(25)
+    // Step 1: Get all listings (simple query without joins first)
+    console.log(`📋 Fetching all listings...`)
+    const { data: allListings, error: listingsError } = await adminClient
+      .from('profile_listings')
+      .select('*')
+      .limit(1000)
 
-      if (error) {
-        console.error('Error querying listings by title variation:', titleVariant, error)
-        continue
-      }
-
-      if (data) {
-        foundListing = data.find((listing) => {
-          const profileName = listing.profiles?.display_name || ''
-          return slugify(profileName) === usernameSlug && slugify(listing.title) === campaignSlug
-        })
-      }
-
-      if (foundListing) break
+    if (listingsError) {
+      console.error('Error fetching listings:', listingsError)
+      throw listingsError
     }
 
-    if (!foundListing) {
-      const { data, error } = await adminClient
-        .from('profile_listings')
-        .select(
-          `*,
-          profiles:profiles!inner(id, display_name, avatar_url, bio, phone_number, subscription_tier, whatsapp_number)
-        `
-        )
-        .limit(200)
+    console.log(`Found ${allListings?.length || 0} total listings`)
 
-      if (error) {
-        console.error('Fallback listing search failed:', error)
-      }
-
-      if (data) {
-        foundListing = data.find((listing) => {
-          const profileName = listing.profiles?.display_name || ''
-          return slugify(profileName) === usernameSlug && slugify(listing.title) === campaignSlug
-        })
-      }
-    }
-
-    if (!foundListing) {
+    if (!allListings || allListings.length === 0) {
       return NextResponse.json(
-        { error: 'Listing not found' },
+        { error: 'No listings found in database' },
+        { status: 404 }
+      )
+    }
+
+    // Step 2: Get all profiles
+    console.log(`👥 Fetching all profiles...`)
+    const { data: allProfiles, error: profilesError } = await adminClient
+      .from('profiles')
+      .select('id, display_name, avatar_url, bio, phone_number, subscription_tier')
+      .limit(1000)
+
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError)
+      throw profilesError
+    }
+
+    console.log(`Found ${allProfiles?.length || 0} total profiles`)
+
+    // Step 3: Match listing with profile
+    for (const listing of allListings) {
+      const profile = allProfiles?.find(p => p.id === listing.profile_id)
+      if (!profile) continue
+
+      const profileSlug = slugify(profile.display_name)
+      const titleSlug = slugify(listing.title)
+      const urlSlug = listing.url_slug ? slugify(listing.url_slug) : ''
+
+      // Check if this is our listing
+      if (profileSlug === usernameSlug && (titleSlug === campaignSlug || urlSlug === campaignSlug)) {
+        console.log(`✅ Found match: "${profile.display_name}" / "${listing.title}"`)
+        foundListing = { ...listing, profiles: profile }
+        break
+      }
+    }
+
+    if (!foundListing) {
+      console.error(`❌ No matching listing found`)
+      console.log(`Available listings:`)
+      allListings.slice(0, 10).forEach(l => {
+        const profile = allProfiles?.find(p => p.id === l.profile_id)
+        console.log(`  - ${profile?.display_name || 'unknown'} / ${l.title} (url_slug: ${l.url_slug})`)
+      })
+      
+      return NextResponse.json(
+        { 
+          error: 'Listing not found',
+          debug: {
+            searchedUsername: params.username,
+            searchedCampaign: params.campaign,
+            usernameSlug,
+            campaignSlug,
+            totalListings: allListings.length
+          }
+        },
         { status: 404 }
       )
     }
 
     const profile = foundListing.profiles
-    if (!profile) {
-      return NextResponse.json(
-        { error: 'Business profile not found for listing' },
-        { status: 404 }
-      )
-    }
-
     const listing = { ...foundListing }
     delete listing.profiles
 
+    // Fetch products if any are selected
+    let products: any[] = []
     const selectedProductIds: string[] = Array.isArray(listing.selected_products)
       ? listing.selected_products
       : []
 
-    let products: any[] = []
-
     if (selectedProductIds.length > 0) {
-      const { data: profileProducts, error: profileProductsError } = await adminClient
+      const { data: profileProducts } = await adminClient
         .from('profile_products')
         .select('id, name, image_url, price_cents')
         .in('id', selectedProductIds)
 
-      if (profileProductsError) {
-        console.error('Error fetching profile products:', profileProductsError)
-      }
-
       products = profileProducts || []
-
-      if (products.length === 0) {
-        const { data: fallbackProducts, error: fallbackProductsError } = await adminClient
-          .from('products')
-          .select('id, name, image_url, price_cents')
-          .in('id', selectedProductIds)
-
-        if (fallbackProductsError) {
-          console.error('Error fetching fallback products:', fallbackProductsError)
-        }
-
-        products = fallbackProducts || []
-      }
     }
 
+    // Fetch reviews
     let reviewSummary: { average: number; count: number } | null = null
-
-    const { data: reviews, error: reviewsError } = await adminClient
+    const { data: reviews } = await adminClient
       .from('profile_reviews')
       .select('rating')
       .eq('profile_id', profile.id)
 
-    if (reviewsError) {
-      console.error('Error fetching reviews:', reviewsError)
-    } else if (reviews && reviews.length > 0) {
+    if (reviews && reviews.length > 0) {
       const total = reviews.reduce((sum, review) => sum + (review?.rating ?? 0), 0)
       reviewSummary = {
         average: total / reviews.length,
@@ -161,7 +150,10 @@ export async function GET(
   } catch (error) {
     console.error('Unexpected error loading public listing:', error)
     return NextResponse.json(
-      { error: 'Failed to load listing' },
+      { 
+        error: 'Failed to load listing',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }
