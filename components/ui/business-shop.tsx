@@ -69,7 +69,7 @@ export default function BusinessShop({
   userTier = 'free'
 }: BusinessShopProps) {
   const { addItem } = useCart()
-  const { showError, showWarning } = usePopup()
+  const { showError, showWarning, showSuccess } = usePopup()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('all')
