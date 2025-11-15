@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Head from 'next/head'
 import { supabase } from '@/lib/supabaseClient'
-import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Heart, Check, Truck, Shield, MessageCircle } from 'lucide-react'
+import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Check, Truck, Shield, MessageCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/contexts/CartContext'
 import CartButton from '@/components/CartButton'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 
 interface UserProfile {
   id: string
@@ -81,7 +82,6 @@ export default function ProfilePage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [productModalTab, setProductModalTab] = useState('description')
   const [quantity, setQuantity] = useState(1)
-  const [isWishlisted, setIsWishlisted] = useState(false)
   const [showContactOptions, setShowContactOptions] = useState(false)
   const [currentProductImageIndex, setCurrentProductImageIndex] = useState(0)
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -93,6 +93,13 @@ export default function ProfilePage() {
     url: ''
   })
   const [showHoursModal, setShowHoursModal] = useState(false)
+  const [showReviewModal, setShowReviewModal] = useState(false)
+  const [reviewRating, setReviewRating] = useState(0)
+  const [reviewText, setReviewText] = useState('')
+  const [submittingReview, setSubmittingReview] = useState(false)
+  const [reviews, setReviews] = useState<any[]>([])
+  const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 })
+  const [scrollY, setScrollY] = useState(0)
 
   // Cart functionality
   const { addItem, isInCart, getCartItem } = useCart()
@@ -286,6 +293,82 @@ Best regards`
     return profile?.subscription_tier === 'premium' || profile?.subscription_tier === 'business'
   }
 
+  // Fetch reviews for the profile
+  const fetchReviews = async (profileId: string) => {
+    try {
+      const { data: reviewsData, error } = await supabase
+        .from('profile_reviews')
+        .select('*')
+        .eq('profile_id', profileId)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      setReviews(reviewsData || [])
+      
+      // Calculate review statistics
+      if (reviewsData && reviewsData.length > 0) {
+        const totalRating = reviewsData.reduce((sum, review) => sum + review.rating, 0)
+        const averageRating = totalRating / reviewsData.length
+        setReviewStats({
+          averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
+          totalReviews: reviewsData.length
+        })
+      } else {
+        setReviewStats({ averageRating: 0, totalReviews: 0 })
+      }
+    } catch (error) {
+      console.error('Error fetching reviews:', error)
+    }
+  }
+
+  // Handle review submission
+  const handleSubmitReview = async () => {
+    if (!profile || reviewRating === 0) {
+      alert('Please select a rating')
+      return
+    }
+
+    setSubmittingReview(true)
+    try {
+      const { error } = await supabase
+        .from('profile_reviews')
+        .insert({
+          profile_id: profile.id,
+          customer_id: null, // For now, anonymous reviews
+          rating: reviewRating,
+          review_text: reviewText.trim() || null,
+          is_verified: false,
+          is_active: true
+        })
+
+      if (error) throw error
+
+      alert('✅ Review submitted successfully!')
+      setShowReviewModal(false)
+      setReviewRating(0)
+      setReviewText('')
+      
+      // Refresh reviews display
+      await fetchReviews(profile.id)
+    } catch (error) {
+      console.error('Error submitting review:', error)
+      alert('❌ Failed to submit review. Please try again.')
+    } finally {
+      setSubmittingReview(false)
+    }
+  }
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY)
+    }
+    
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   useEffect(() => {
     if (username) {
       fetchProfile()
@@ -410,6 +493,9 @@ Best regards`
       } else {
         updateMetaTags() // Update meta tags for the profile even if no products
       }
+
+      // Fetch reviews for the profile
+      await fetchReviews(profileData.id)
 
     } catch (error) {
       console.error('Error fetching profile:', error)
@@ -561,7 +647,6 @@ Best regards`
   const closeProductModal = () => {
     setSelectedProduct(null)
     setQuantity(1)
-    setIsWishlisted(false)
     setProductModalTab('description')
     setCurrentProductImageIndex(0)
   }
@@ -667,129 +752,171 @@ Best regards`
         </Link>
       </div>
 
-      {/* Business Info Card */}
-      <div className="bg-white p-4 border-b border-gray-100">
-        <div className="flex items-start gap-3">
+      {/* Business Info Card - Compact Layout */}
+      <div className="bg-white px-4 py-4 border-b border-gray-100">
+        {/* Top Row: Avatar, Name, Badges, Cart */}
+        <div className="flex items-start gap-3 mb-3">
           {profile.avatar_url && (
             <img 
               src={profile.avatar_url} 
               alt={profile.display_name} 
-              className="w-12 h-12 rounded-[9px] object-cover border border-gray-200"
+              className="w-14 h-14 rounded-lg object-cover border border-gray-200 flex-shrink-0"
             />
           )}
-          <div className="flex-1">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">{profile.display_name}</h1>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <span className="text-sm text-gray-600">4.8 (124)</span>
-                </div>
-                {profile.business_category && (
-                  <p className="text-sm text-gray-600 mt-1">{profile.business_category}</p>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h1 className="text-lg font-bold text-gray-900">{profile.display_name}</h1>
+              <div className="flex gap-1">
+                <Badge className={`${tierBadge.className} text-xs flex-shrink-0`}>
+                  {profile.subscription_tier !== 'free' && <Crown className="h-3 w-3 mr-1" />}
+                  {tierBadge.text}
+                </Badge>
+                {profile.verified_seller && (
+                  <Badge className="bg-blue-100 text-blue-700 text-xs flex-shrink-0">
+                    <Star className="h-3 w-3 mr-1" fill="currentColor" />
+                    Verified
+                  </Badge>
                 )}
               </div>
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1">
-                  <Badge className={`${tierBadge.className} text-xs`}>
-                    {profile.subscription_tier !== 'free' && <Crown className="h-3 w-3 mr-1" />}
-                    {tierBadge.text}
-                  </Badge>
-                  {profile.verified_seller && (
-                    <Badge className="bg-blue-100 text-blue-700 text-xs">
-                      <Star className="h-3 w-3 mr-1" fill="currentColor" />
-                      Verified
-                    </Badge>
-                  )}
+            </div>
+            
+            {/* Rating, Category, Hours in one line */}
+            <div className="flex items-center gap-2 text-sm flex-wrap mb-3">
+              {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
+                <div className="flex items-center gap-1">
+                  <div className="flex items-center">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-3 h-3 ${i < Math.round(reviewStats.averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                    ))}
+                  </div>
+                  <span className="text-gray-600 font-medium">
+                    {reviewStats.totalReviews > 0 ? `${reviewStats.averageRating} (${reviewStats.totalReviews})` : 'No reviews'}
+                  </span>
                 </div>
-                {profile.subscription_tier !== 'free' && <CartButton />}
+              )}
+              {profile.business_category && (
+                <>
+                  <span className="text-gray-400">•</span>
+                  <span className="text-gray-600">{profile.business_category}</span>
+                </>
+              )}
+              <span className="text-gray-400">•</span>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-green-600 font-medium">
+                  Open until {todayHours.split(' - ')[1] || '9:00 PM'}
+                </span>
               </div>
             </div>
             
-            {/* Business Hours Status */}
-            <div className="flex items-center gap-2 mt-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-green-600 font-medium">
-                {todayHours ? `Open until ${todayHours.split(' - ')[1] || '9:00 PM'}` : 'Open now'}
-              </span>
-            </div>
-            
+            {/* Bio */}
             {profile.bio && (
-              <p className="text-sm text-gray-600 mt-2 line-clamp-2">{profile.bio}</p>
+              <p className="text-sm text-gray-600 mb-3">{profile.bio}</p>
             )}
-          </div>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="bg-white px-4 py-3 border-b border-gray-100">
-        <div className="grid grid-cols-4 gap-3">
-          {profile.phone_number && (
-            <button 
-              className="styled-action-button"
-              onClick={() => {
-                const phoneNumber = profile.phone_number?.replace(/\D/g, '')
-                const message = `Hi ${profile.display_name}, I found your profile on A2Z Business Directory and would like to get in touch!`
-                const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
-                window.open(whatsappUrl, '_blank')
-              }}
-            >
-              <MessageCircle className="h-5 w-5 mb-1" />
-              <span className="text-xs">WhatsApp</span>
-            </button>
-          )}
-          
-          {profile.business_location && (
-            <button 
-              className="styled-action-button"
-              onClick={() => {
-                const locationQuery = profile.business_location || ''
-                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`
-                window.open(mapsUrl, '_blank')
-              }}
-            >
-              <MapPin className="h-5 w-5 mb-1" />
-              <span className="text-xs">Directions</span>
-            </button>
-          )}
-          
-          <button 
-            className="styled-action-button"
-            onClick={() => {
-              const shareUrl = createProfileUrl(profile.display_name)
-              const shareText = `Check out ${profile.display_name}'s business profile on A2Z Business Directory!`
+            
+            {/* Action Buttons Row */}
+            <div className="flex justify-start items-center gap-6 flex-wrap">
+              {profile.phone_number && (
+                <button 
+                  className="action-btn"
+                  onClick={() => {
+                    const phoneNumber = profile.phone_number?.replace(/\D/g, '')
+                    const message = `Hi ${profile.display_name}, I found your profile on A2Z Business Directory and would like to get in touch!`
+                    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+                    window.open(whatsappUrl, '_blank')
+                  }}
+                >
+                  <div>WhatsApp</div>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="25px" height="25px" viewBox="0 0 24 24" fill="none">
+                    <path d="M11.6801 14.62L14.2401 12.06L11.6801 9.5" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
+                    <path d="M4 12.0601H14.17" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
+                    <path d="M12 4C16.42 4 20 7 20 12C20 17 16.42 20 12 20" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
+                  </svg>
+                </button>
+              )}
               
-              if (navigator.share) {
-                navigator.share({
-                  title: `${profile.display_name} - A2Z Business Directory`,
-                  text: shareText,
-                  url: shareUrl,
-                }).catch(console.error)
-              } else {
-                navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
-                  alert('Profile link copied to clipboard!')
-                }).catch(() => {
-                  prompt('Copy this link to share:', shareUrl)
-                })
-              }
-            }}
-          >
-            <Share2 className="h-5 w-5 mb-1" />
-            <span className="text-xs">Share</span>
-          </button>
+              {profile.business_location && (
+                <button 
+                  className="action-btn"
+                  onClick={() => {
+                    const locationQuery = profile.business_location || ''
+                    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`
+                    window.open(mapsUrl, '_blank')
+                  }}
+                >
+                  <div>Directions</div>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="25px" height="25px" viewBox="0 0 24 24" fill="none">
+                    <path d="M11.6801 14.62L14.2401 12.06L11.6801 9.5" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
+                    <path d="M4 12.0601H14.17" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
+                    <path d="M12 4C16.42 4 20 7 20 12C20 17 16.42 20 12 20" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
+                  </svg>
+                </button>
+              )}
+              
+              <button 
+                className="action-btn"
+                onClick={() => {
+                  const shareUrl = createProfileUrl(profile.display_name)
+                  const shareText = `Check out ${profile.display_name}'s business profile on A2Z Business Directory!`
+                  
+                  if (navigator.share) {
+                    navigator.share({
+                      title: `${profile.display_name} - A2Z Business Directory`,
+                      text: shareText,
+                      url: shareUrl,
+                    }).catch(console.error)
+                  } else {
+                    navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
+                      alert('Profile link copied to clipboard!')
+                    }).catch(() => {
+                      prompt('Copy this link to share:', shareUrl)
+                    })
+                  }
+                }}
+              >
+                <div>Share</div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="25px" height="25px" viewBox="0 0 24 24" fill="none">
+                  <path d="M11.6801 14.62L14.2401 12.06L11.6801 9.5" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
+                  <path d="M4 12.0601H14.17" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
+                  <path d="M12 4C16.42 4 20 7 20 12C20 17 16.42 20 12 20" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
+                </svg>
+              </button>
+              
+              {profile.website_url && (
+                <button 
+                  className="action-btn"
+                  onClick={() => window.open(profile.website_url || '', '_blank')}
+                >
+                  <div>Website</div>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="25px" height="25px" viewBox="0 0 24 24" fill="none">
+                    <path d="M11.6801 14.62L14.2401 12.06L11.6801 9.5" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
+                    <path d="M4 12.0601H14.17" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
+                    <path d="M12 4C16.42 4 20 7 20 12C20 17 16.42 20 12 20" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
+                  </svg>
+                </button>
+              )}
+
+              {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
+                <button 
+                  className="action-btn"
+                  onClick={() => setShowReviewModal(true)}
+                >
+                  <div>Leave A Review</div>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="25px" height="25px" viewBox="0 0 24 24" fill="none">
+                    <path d="M11.6801 14.62L14.2401 12.06L11.6801 9.5" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
+                    <path d="M4 12.0601H14.17" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
+                    <path d="M12 4C16.42 4 20 7 20 12C20 17 16.42 20 12 20" strokeWidth="2" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"></path>
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
           
-          {profile.website_url && (
-            <button 
-              className="styled-action-button"
-              onClick={() => window.open(profile.website_url || '', '_blank')}
-            >
-              <Globe className="h-5 w-5 mb-1" />
-              <span className="text-xs">Website</span>
-            </button>
+          {/* Cart Button */}
+          {profile.subscription_tier !== 'free' && (
+            <div className="flex-shrink-0">
+              <CartButton />
+            </div>
           )}
         </div>
       </div>
@@ -975,34 +1102,148 @@ Best regards`
           transform: translateY(-4px);
         }
 
-        .styled-category-button:hover::after {
+        /* Category buttons - Simple text color change */
+        .cat-btn-wrapper {
+          display: inline-block;
+        }
+
+        .cat-btn {
+          padding: 0.6em 1.2em;
+          border: none;
+          border-radius: 8px;
+          background: transparent;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          position: relative;
+        }
+
+        .cat-btn:active {
+          transform: scale(0.98);
+        }
+
+        .cat-btn > div {
+          font-weight: 600;
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          color: #6b7280;
+          white-space: nowrap;
+          transition: color 0.3s ease;
+        }
+
+        .cat-btn:hover > div {
+          color: #37aa87;
+        }
+
+        .cat-btn.active > div {
+          color: #37aa87;
+          font-weight: 700;
+        }
+
+        /* Smaller variant for action buttons */
+        .cat-btn-sm {
+          padding: 0.4em 0.8em;
+          font-size: 11px;
+          letter-spacing: 0.5px;
+        }
+
+        .cat-btn-sm svg {
+          width: 16px;
+          height: 16px;
+        }
+
+        .cat-btn-sm span {
+          font-size: 10px;
+        }
+
+        /* Action buttons (UIverse style by catraco) */
+        .action-btn {
+          --color: #37aa87;
+          position: relative;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          transition: all 0.5s;
+          border: none;
+          background-color: transparent;
+          cursor: pointer;
+          gap: 0.5rem;
+        }
+
+        .action-btn > div {
+          letter-spacing: 1px;
+          font-weight: bold;
+          background: var(--color);
+          border-radius: 9px;
+          color: white;
+          padding: 0.75rem 1.25rem;
+          font-size: 13px;
+          text-transform: uppercase;
+        }
+
+        .action-btn::before {
+          content: '';
+          z-index: -1;
+          background-color: var(--color);
+          border: 2px solid var(--color);
+          border-radius: 9px;
+          width: 110%;
+          height: 100%;
+          position: absolute;
+          transform: rotate(10deg);
+          transition: 0.5s;
           opacity: 0.2;
         }
 
-        .styled-category-button:hover:before {
+        .action-btn:hover {
+          filter: brightness(1.2);
+          transform: scale(1.08);
+        }
+
+        .action-btn:hover::before {
+          transform: rotate(0deg);
           opacity: 1;
-          top: -75%;
-          left: -75%;
         }
 
-        .styled-category-button:active {
-          transform: translateY(-2px);
+        .action-btn svg {
+          transform: translateX(-200%);
+          transition: 0.5s;
+          width: 0;
+          opacity: 0;
+          stroke: white;
         }
 
-        .styled-category-button.active {
-          background-color: #2ee59d;
-          box-shadow: 0 8px 12px rgba(46, 229, 157, 0.4);
-          transform: translateY(-4px);
-        }
-
-        .styled-category-button.active::after {
-          opacity: 0.2;
-        }
-
-        .styled-category-button.active::before {
+        .action-btn:hover svg {
+          width: 20px;
+          transform: translateX(0%);
           opacity: 1;
-          top: -75%;
-          left: -75%;
+        }
+
+        .action-btn:active {
+          filter: brightness(1.3);
+        }
+
+        /* Mini action buttons for sticky header */
+        .action-btn-mini {
+          padding: 0.4rem 0.8rem;
+          background: #37aa87;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          white-space: nowrap;
+        }
+
+        .action-btn-mini:hover {
+          background: #2d8a6f;
+          transform: scale(1.05);
+        }
+
+        .action-btn-mini:active {
+          transform: scale(0.98);
         }
       `}</style>
 
@@ -1015,37 +1256,47 @@ Best regards`
           </div>
           
           {/* Category Filter Buttons */}
-          <div className="flex gap-2 mb-4 overflow-x-auto pb-2 pt-2 scrollbar-hide">
-            <button
-              onClick={() => setSelectedCategory('all')}
-              className={`styled-category-button ${selectedCategory === 'all' ? 'active' : ''}`}
-            >
-              All Products
-            </button>
-            <button
-              onClick={() => setSelectedCategory('products')}
-              className={`styled-category-button ${selectedCategory === 'products' ? 'active' : ''}`}
-            >
-              Products
-            </button>
-            <button
-              onClick={() => setSelectedCategory('services')}
-              className={`styled-category-button ${selectedCategory === 'services' ? 'active' : ''}`}
-            >
-              Services
-            </button>
-            <button
-              onClick={() => setSelectedCategory('food')}
-              className={`styled-category-button ${selectedCategory === 'food' ? 'active' : ''}`}
-            >
-              Food & Drinks
-            </button>
-            <button
-              onClick={() => setSelectedCategory('retail')}
-              className={`styled-category-button ${selectedCategory === 'retail' ? 'active' : ''}`}
-            >
-              Retail Items
-            </button>
+          <div className="flex gap-3 mb-4 overflow-x-auto pb-2 pt-2 scrollbar-hide">
+            <div className="cat-btn-wrapper">
+              <button
+                onClick={() => setSelectedCategory('all')}
+                className={`cat-btn ${selectedCategory === 'all' ? 'active' : ''}`}
+              >
+                <div>All Products</div>
+              </button>
+            </div>
+            <div className="cat-btn-wrapper">
+              <button
+                onClick={() => setSelectedCategory('products')}
+                className={`cat-btn ${selectedCategory === 'products' ? 'active' : ''}`}
+              >
+                <div>Products</div>
+              </button>
+            </div>
+            <div className="cat-btn-wrapper">
+              <button
+                onClick={() => setSelectedCategory('services')}
+                className={`cat-btn ${selectedCategory === 'services' ? 'active' : ''}`}
+              >
+                <div>Services</div>
+              </button>
+            </div>
+            <div className="cat-btn-wrapper">
+              <button
+                onClick={() => setSelectedCategory('food')}
+                className={`cat-btn ${selectedCategory === 'food' ? 'active' : ''}`}
+              >
+                <div>Food & Drinks</div>
+              </button>
+            </div>
+            <div className="cat-btn-wrapper">
+              <button
+                onClick={() => setSelectedCategory('retail')}
+                className={`cat-btn ${selectedCategory === 'retail' ? 'active' : ''}`}
+              >
+                <div>Retail Items</div>
+              </button>
+            </div>
           </div>
           
           {(selectedCategory === 'all' ? products : products.filter(p => p.category === selectedCategory)).length > 0 ? (
@@ -1277,12 +1528,16 @@ Best regards`
                 <div>
                   <div className="mb-4">
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">{selectedProduct.name}</h1>
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="flex items-center">
-                        {renderStars(4.5)}
+                    {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && reviewStats.totalReviews > 0 && (
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="flex items-center">
+                          {renderStars(reviewStats.averageRating)}
+                        </div>
+                        <span className="text-sm text-gray-600">
+                          {reviewStats.averageRating} ({reviewStats.totalReviews} review{reviewStats.totalReviews !== 1 ? 's' : ''})
+                        </span>
                       </div>
-                      <span className="text-sm text-gray-600">4.5 (24 reviews)</span>
-                    </div>
+                    )}
                   </div>
 
                   <div className="mb-6">
@@ -1420,58 +1675,51 @@ Best regards`
                           </svg>
                         </button>
                       </div>
-                      <button
-                        onClick={() => setIsWishlisted(!isWishlisted)}
-                        className={`p-2 rounded-full transition-colors ${
-                          isWishlisted 
-                            ? 'text-red-500 bg-red-50' 
-                            : 'text-gray-400 hover:text-red-500'
-                        }`}
-                      >
-                        <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
-                      </button>
                     </div>
 
                     <div className="space-y-3">
                       {/* E-commerce enabled for Premium/Business tiers */}
                       {isEcommerceEnabled() && selectedProduct.price_cents ? (
                         <div className="space-y-3">
-                          <button 
-                            onClick={() => handleAddToCart(selectedProduct)}
-                            className="w-full bg-emerald-600 text-white py-3 px-6 rounded-[9px] hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 font-semibold"
-                          >
-                            <ShoppingBag className="w-5 h-5" />
-                            Add to Cart
-                          </button>
-                          
-                          {/* Secondary Contact Button for Premium/Business */}
-                          <div className="relative">
+                          {/* Row: Add to Cart + Contact Seller */}
+                          <div className="flex gap-3">
                             <button 
-                              onClick={handleContactSeller}
-                              className="w-full bg-gray-600 text-white py-2 px-6 rounded-[9px] hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 text-sm"
+                              onClick={() => handleAddToCart(selectedProduct)}
+                              className="w-1/2 bg-emerald-600 text-white py-3 px-6 rounded-[9px] hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 font-semibold"
                             >
-                              <MessageCircle className="w-4 h-4" />
-                              Contact Seller
+                              <ShoppingBag className="w-5 h-5" />
+                              Add to Cart
                             </button>
-                            
-                            {showContactOptions && (
-                              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-[9px] shadow-lg z-10 overflow-hidden">
-                                <button
-                                  onClick={() => handleWhatsAppContact(selectedProduct!)}
-                                  className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 border-b border-gray-100"
-                                >
-                                  <MessageCircle className="w-5 h-5 text-green-600" />
-                                  <span className="text-gray-700">WhatsApp</span>
-                                </button>
-                                <button
-                                  onClick={() => handleEmailContact(selectedProduct!)}
-                                  className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
-                                >
-                                  <Mail className="w-5 h-5 text-blue-600" />
-                                  <span className="text-gray-700">Email</span>
-                                </button>
-                              </div>
-                            )}
+
+                            {/* Secondary Contact Button for Premium/Business */}
+                            <div className="relative w-1/2">
+                              <button 
+                                onClick={handleContactSeller}
+                                className="w-full bg-gray-600 text-white py-3 px-6 rounded-[9px] hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 font-semibold"
+                              >
+                                <MessageCircle className="w-5 h-5" />
+                                Contact Seller
+                              </button>
+                              
+                              {showContactOptions && (
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-[9px] shadow-lg z-10 overflow-hidden">
+                                  <button
+                                    onClick={() => handleWhatsAppContact(selectedProduct!)}
+                                    className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 border-b border-gray-100"
+                                  >
+                                    <MessageCircle className="w-5 h-5 text-green-600" />
+                                    <span className="text-gray-700">WhatsApp</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleEmailContact(selectedProduct!)}
+                                    className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
+                                  >
+                                    <Mail className="w-5 h-5 text-blue-600" />
+                                    <span className="text-gray-700">Email</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       ) : (
@@ -1567,6 +1815,100 @@ Best regards`
                     ))}
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Review Modal */}
+      {showReviewModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-md w-full">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <h2 className="text-xl font-semibold text-gray-900">Leave a Review</h2>
+              <button
+                onClick={() => {
+                  setShowReviewModal(false)
+                  setReviewRating(0)
+                  setReviewText('')
+                }}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="space-y-6">
+                {/* Rating Section */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Rate your experience *
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => setReviewRating(star)}
+                        className="p-1 hover:scale-110 transition-transform"
+                      >
+                        <Star 
+                          className={`w-8 h-8 ${
+                            star <= reviewRating 
+                              ? 'text-yellow-400 fill-current' 
+                              : 'text-gray-300 hover:text-yellow-200'
+                          }`} 
+                        />
+                      </button>
+                    ))}
+                    {reviewRating > 0 && (
+                      <span className="ml-2 text-sm text-gray-600">
+                        {reviewRating}/5 stars
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Review Text Section */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Write a review (optional)
+                  </label>
+                  <textarea
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    placeholder="Share your experience with this business..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none"
+                    rows={4}
+                    maxLength={500}
+                  />
+                  <div className="text-right text-xs text-gray-500 mt-1">
+                    {reviewText.length}/500 characters
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => {
+                      setShowReviewModal(false)
+                      setReviewRating(0)
+                      setReviewText('')
+                    }}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSubmitReview}
+                    disabled={reviewRating === 0 || submittingReview}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    {submittingReview ? 'Submitting...' : 'Submit Review'}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

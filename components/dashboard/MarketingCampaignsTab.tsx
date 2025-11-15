@@ -430,29 +430,6 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
               </div>
             </div>
 
-            {/* Analytics Data for this listing */}
-            <div className="bg-gray-50 rounded-lg p-3 mt-4 border border-gray-200">
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1 text-blue-600">
-                    <Eye className="w-3 h-3" />
-                    <span className="font-medium">Views: {Math.floor(Math.random() * 50) + 10}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-purple-600">
-                    <BarChart3 className="w-3 h-3" />
-                    <span className="font-medium">Clicks: {Math.floor(Math.random() * 15) + 2}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-green-600">
-                    <MessageSquare className="w-3 h-3" />
-                    <span className="font-medium">CTR: {((Math.floor(Math.random() * 15) + 2) / (Math.floor(Math.random() * 50) + 10) * 100).toFixed(1)}%</span>
-                  </div>
-                </div>
-                <div className="text-xs text-gray-500">
-                  Last 30 days
-                </div>
-              </div>
-            </div>
-
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <div className="flex items-center gap-4">

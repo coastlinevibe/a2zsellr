@@ -291,10 +291,10 @@ export default function DashboardPage() {
         .eq('profile_id', profile.id)
         .eq('is_active', true)
       
-      // Fetch active business listings
-      const { data: activeListingsData } = await supabase
-        .from('business_listings')
-        .select('id')
+      // Fetch listings (match marketing tab logic)
+      const { data: listingsData } = await supabase
+        .from('profile_listings')
+        .select('id, status')
         .eq('profile_id', profile.id)
       
       // Fetch store rating
@@ -311,7 +311,7 @@ export default function DashboardPage() {
       setDashboardMetrics({
         profileViews: totalViews,
         activeProducts: activeProductsData?.length || 0,
-        activeListings: activeListingsData?.length || 0,
+        activeListings: (listingsData || []).filter((listing: any) => (listing?.status || '').toLowerCase() === 'active').length,
         storeRating: Number(avgRating.toFixed(1))
       })
       

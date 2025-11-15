@@ -182,11 +182,18 @@ export function UserProfileDropdown({
 
                 {/* Support */}
                 <button
-                  onClick={() => handleAction('help')}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                  type="button"
+                  disabled
+                  aria-disabled="true"
+                  className="w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left cursor-not-allowed disabled:opacity-80"
                 >
                   <HelpCircle className="w-5 h-5 text-gray-500" />
-                  <span className="font-medium">Support</span>
+                  <div className="relative">
+                    <span className="font-medium text-gray-400 blur-[3px] opacity-70 select-none">Support</span>
+                    <span className="absolute inset-0 flex items-center whitespace-nowrap text-[11px] font-black uppercase tracking-[0.2em] text-emerald-600 pointer-events-none drop-shadow-sm">
+                      COMING SOON
+                    </span>
+                  </div>
                 </button>
               </div>
 

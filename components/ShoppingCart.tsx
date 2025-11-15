@@ -11,6 +11,237 @@ interface ShoppingCartProps {
   onClose: () => void
 }
 
+// Add styles for the checkout button
+const checkoutStyles = `
+  .checkout-container {
+    background-color: #ffffff;
+    display: flex;
+    width: 100%;
+    height: 120px;
+    position: relative;
+    border-radius: 6px;
+    transition: 0.3s ease-in-out;
+    border: 1px solid #e5e7eb;
+  }
+
+  .checkout-container:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .checkout-container:hover .checkout-left-side {
+    width: 100%;
+  }
+
+  .checkout-left-side {
+    background-color: #5de2a3;
+    width: 130px;
+    height: 120px;
+    border-radius: 4px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.3s;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .checkout-right-side {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    cursor: pointer;
+    justify-content: space-between;
+    white-space: nowrap;
+    transition: 0.3s;
+    flex: 1;
+  }
+
+  .checkout-right-side:hover {
+    background-color: #f9f7f9;
+  }
+
+  .checkout-new {
+    font-size: 20px;
+    font-family: "Lexend Deca", sans-serif;
+    margin-left: 20px;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .checkout-card {
+    width: 70px;
+    height: 46px;
+    background-color: #c7ffbc;
+    border-radius: 6px;
+    position: absolute;
+    display: flex;
+    z-index: 10;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 9px 9px 9px -2px rgba(77, 200, 143, 0.72);
+  }
+
+  .checkout-card-line {
+    width: 65px;
+    height: 13px;
+    background-color: #80ea69;
+    border-radius: 2px;
+    margin-top: 7px;
+  }
+
+  .checkout-buttons {
+    width: 8px;
+    height: 8px;
+    background-color: #379e1f;
+    box-shadow: 0 -10px 0 0 #26850e, 0 10px 0 0 #56be3e;
+    border-radius: 50%;
+    margin-top: 5px;
+    transform: rotate(90deg);
+    margin: 10px 0 0 -30px;
+  }
+
+  .checkout-container:hover .checkout-card {
+    animation: checkout-slide-top 1.2s cubic-bezier(0.645, 0.045, 0.355, 1) both;
+  }
+
+  .checkout-container:hover .checkout-post {
+    animation: checkout-slide-post 1s cubic-bezier(0.165, 0.84, 0.44, 1) both;
+  }
+
+  @keyframes checkout-slide-top {
+    0% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-70px) rotate(90deg);
+    }
+    60% {
+      transform: translateY(-70px) rotate(90deg);
+    }
+    100% {
+      transform: translateY(-8px) rotate(90deg);
+    }
+  }
+
+  .checkout-post {
+    width: 63px;
+    height: 75px;
+    background-color: #dddde0;
+    position: absolute;
+    z-index: 11;
+    bottom: 10px;
+    top: 120px;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .checkout-post-line {
+    width: 47px;
+    height: 9px;
+    background-color: #545354;
+    position: absolute;
+    border-radius: 0px 0px 3px 3px;
+    right: 8px;
+    top: 8px;
+  }
+
+  .checkout-post-line:before {
+    content: "";
+    position: absolute;
+    width: 47px;
+    height: 9px;
+    background-color: #757375;
+    top: -8px;
+  }
+
+  .checkout-screen {
+    width: 47px;
+    height: 23px;
+    background-color: #ffffff;
+    position: absolute;
+    top: 22px;
+    right: 8px;
+    border-radius: 3px;
+  }
+
+  .checkout-numbers {
+    width: 12px;
+    height: 12px;
+    background-color: #838183;
+    box-shadow: 0 -18px 0 0 #838183, 0 18px 0 0 #838183;
+    border-radius: 2px;
+    position: absolute;
+    transform: rotate(90deg);
+    left: 25px;
+    top: 52px;
+  }
+
+  .checkout-numbers-line2 {
+    width: 12px;
+    height: 12px;
+    background-color: #aaa9ab;
+    box-shadow: 0 -18px 0 0 #aaa9ab, 0 18px 0 0 #aaa9ab;
+    border-radius: 2px;
+    position: absolute;
+    transform: rotate(90deg);
+    left: 25px;
+    top: 68px;
+  }
+
+  @keyframes checkout-slide-post {
+    50% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(-70px);
+    }
+  }
+
+  .checkout-dollar {
+    position: absolute;
+    font-size: 16px;
+    font-family: "Lexend Deca", sans-serif;
+    width: 100%;
+    left: 0;
+    top: 0;
+    color: #4b953b;
+    text-align: center;
+  }
+
+  .checkout-container:hover .checkout-dollar {
+    animation: checkout-fade-in-fwd 0.3s 1s backwards;
+  }
+
+  @keyframes checkout-fade-in-fwd {
+    0% {
+      opacity: 0;
+      transform: translateY(-5px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media only screen and (max-width: 480px) {
+    .checkout-container {
+      transform: scale(0.85);
+      height: auto;
+    }
+
+    .checkout-container:hover {
+      transform: scale(0.87);
+    }
+
+    .checkout-new {
+      font-size: 16px;
+    }
+  }
+`
+
 export default function ShoppingCart({ isOpen, onClose }: ShoppingCartProps) {
   const { items, removeItem, updateQuantity, getItemCount, getSubtotal, getItemsByBusiness } = useCart()
   const [isCheckingOut, setIsCheckingOut] = useState(false)
@@ -23,6 +254,9 @@ export default function ShoppingCart({ isOpen, onClose }: ShoppingCartProps) {
 
   return (
     <>
+      {/* Inject checkout button styles */}
+      <style>{checkoutStyles}</style>
+
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black/50 z-40 transition-opacity"
@@ -150,23 +384,30 @@ export default function ShoppingCart({ isOpen, onClose }: ShoppingCartProps) {
               <span className="text-emerald-600">{formatPrice(subtotal)}</span>
             </div>
 
-            {/* Checkout Button */}
-            <Link href="/checkout" onClick={onClose}>
-              <Button 
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-6 text-lg font-semibold"
-                disabled={isCheckingOut}
-              >
-                {isCheckingOut ? 'Processing...' : 'Proceed to Checkout'}
-              </Button>
+            {/* Checkout Button - Animated Card Style */}
+            <Link href="/checkout" onClick={onClose} className="block">
+              <div className="checkout-container">
+                <div className="checkout-left-side">
+                  <div className="checkout-card">
+                    <div className="checkout-card-line"></div>
+                    <div className="checkout-buttons"></div>
+                  </div>
+                  <div className="checkout-post">
+                    <div className="checkout-post-line"></div>
+                    <div className="checkout-screen">
+                      <div className="checkout-dollar">$</div>
+                    </div>
+                    <div className="checkout-numbers"></div>
+                    <div className="checkout-numbers-line2"></div>
+                  </div>
+                </div>
+                <div className="checkout-right-side">
+                  <div className="checkout-new">
+                    {isCheckingOut ? 'Processing...' : 'Checkout'}
+                  </div>
+                </div>
+              </div>
             </Link>
-
-            {/* Continue Shopping */}
-            <button
-              onClick={onClose}
-              className="w-full text-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Continue Shopping
-            </button>
           </div>
         )}
       </div>

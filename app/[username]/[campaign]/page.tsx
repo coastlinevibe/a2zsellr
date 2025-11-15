@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Head from 'next/head'
-import { supabase } from '@/lib/supabaseClient'
 import {
   GalleryMosaicLayout,
   HoverCardsLayout,
@@ -88,180 +87,28 @@ export default function CampaignPage({ params }: CampaignPageProps) {
     fetchListingData()
   }, [params.username, params.campaign])
 
-  const loadReviewSummary = async (profileId: string) => {
-    try {
-      const { data: reviewsData, error: reviewsError } = await supabase
-        .from('profile_reviews')
-        .select('rating')
-        .eq('profile_id', profileId)
-
-      if (reviewsError) {
-        console.error('Error loading reviews:', reviewsError)
-        setReviewSummary(null)
-        return
-      }
-
-      if (reviewsData && reviewsData.length > 0) {
-        const total = reviewsData.reduce((sum, review) => sum + (review?.rating ?? 0), 0)
-        const average = total / reviewsData.length
-        setReviewSummary({ average, count: reviewsData.length })
-      } else {
-        setReviewSummary({ average: 0, count: 0 })
-      }
-    } catch (reviewErr) {
-      console.error('Unexpected error loading reviews:', reviewErr)
-      setReviewSummary(null)
-    }
-  }
-
   const fetchListingData = async () => {
     try {
       setLoading(true)
-      
-      // Get profile by display name (username) - try multiple variations
-      const usernameVariations = [
-        params.username.replace(/-/g, ' '),  // "alf-burger" -> "alf burger"
-        params.username.replace(/-/g, ''),   // "alf-burger" -> "alfburger"
-        params.username,                      // "alf-burger" as is
-      ]
-      
-      let profileData = null
-      for (const variation of usernameVariations) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, display_name, avatar_url, bio, phone_number')
-          .ilike('display_name', `%${variation}%`)
-          .limit(1)
-        
-        console.log(`Trying profile variation: "${variation}"`, { data, error })
-        
-        if (data && data.length > 0) {
-          profileData = Array.isArray(data) ? data[0] : data
-          console.log('Found profile:', profileData)
-          break
-        }
+      setError(null)
+
+      const response = await fetch(`/api/public-listings/${params.username}/${params.campaign}`)
+      const payload = await response.json().catch(() => null)
+
+      if (!response.ok || !payload) {
+        throw new Error(payload?.error || 'Failed to load listing')
       }
 
-      if (!profileData) {
-        console.error('Profile not found. Tried variations:', usernameVariations)
-        throw new Error('Business not found')
-      }
-      setProfile(profileData)
-      await loadReviewSummary(profileData.id)
-
-      // Get listing by profile and title/slug - try multiple matches
-      const listingVariations = [
-        params.campaign.replace(/-/g, ' '),  // "bh6" -> "bh6"
-        params.campaign.replace(/-/g, ''),   // Just in case
-        params.campaign,                      // As is
-      ]
-      
-      let listingData = null
-      for (const variation of listingVariations) {
-        const { data, error } = await supabase
-          .from('profile_listings')
-          .select('*')
-          .eq('profile_id', profileData.id)
-          .ilike('title', `%${variation}%`)
-          .limit(1)
-        
-        if (data && data.length > 0) {
-          listingData = data[0]
-          break
-        }
+      if (!payload.listing || !payload.profile) {
+        throw new Error(payload.error || 'Listing not found')
       }
 
-      if (!listingData) throw new Error('Listing not found')
-      setListing(listingData)
-
-      // Get products that were specifically selected for this listing
-      const selectedProductIds = listingData.selected_products || []
-      console.log('🔍 Selected product IDs from listing:', selectedProductIds)
-      
-      if (selectedProductIds.length > 0) {
-        // Try profile_products table first
-        let { data: productsData, error: productsError } = await supabase
-          .from('profile_products')
-          .select('id, name, image_url, price_cents')
-          .in('id', selectedProductIds)
-        
-        console.log('🔍 Products from profile_products:', productsData, productsError)
-        
-        // If profile_products doesn't work, try products table
-        if (!productsData || productsData.length === 0) {
-          const result = await supabase
-            .from('products')
-            .select('id, name, image_url, price_cents')
-            .in('id', selectedProductIds)
-          productsData = result.data
-          console.log('🔍 Products from products table:', productsData)
-        }
-        
-        setProducts(productsData || [])
-      } else {
-        // ✅ FIX: Don't auto-fetch products if none were selected
-        // Only show products that were explicitly selected by user
-        console.log('🔍 No products selected for this listing - showing none')
-        setProducts([])
-      }
-
+      setListing(payload.listing)
+      setProfile(payload.profile)
+      setProducts(Array.isArray(payload.products) ? payload.products : [])
+      setReviewSummary(payload.reviewSummary ?? null)
     } catch (err: any) {
       console.error('Error fetching campaign:', err)
-      
-      // Fallback: Try to find campaign by URL pattern and then get profile
-      try {
-        console.log('Trying fallback: search all listings...')
-        const { data: allListings } = await supabase
-          .from('profile_listings')
-          .select('*, profiles!inner(id, display_name, avatar_url, bio)')
-          .limit(100)
-        
-        console.log('All listings:', allListings)
-        
-        // Find matching listing
-        const matchingListing = allListings?.find(c => {
-          const titleSlug = c.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-          const profileSlug = c.profiles.display_name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-          return titleSlug === params.campaign && profileSlug === params.username
-        })
-        
-        if (matchingListing) {
-          console.log('Found matching listing via fallback:', matchingListing)
-          setListing(matchingListing)
-          setProfile(matchingListing.profiles)
-          await loadReviewSummary(matchingListing.profiles.id)
-          
-          // Get products that were specifically selected for this listing
-          const selectedProductIds = matchingListing.selected_products || []
-          
-          if (selectedProductIds.length > 0) {
-            let { data: productsData } = await supabase
-              .from('profile_products')
-              .select('id, name, image_url, price_cents')
-              .in('id', selectedProductIds)
-            
-            if (!productsData || productsData.length === 0) {
-              const result = await supabase
-                .from('products')
-                .select('id, name, image_url, price_cents')
-                .in('id', selectedProductIds)
-              productsData = result.data
-            }
-            setProducts(productsData || [])
-          } else {
-            // ✅ FIX: Don't auto-fetch products if none were selected
-            // Only show products that were explicitly selected by user
-            console.log('🔍 Fallback: No products selected for this listing - showing none')
-            setProducts([])
-          }
-          
-          setError(null) // Clear error
-          return
-        }
-      } catch (fallbackErr) {
-        console.error('Fallback also failed:', fallbackErr)
-      }
-      
       setError(err.message || 'Failed to load listing')
     } finally {
       setLoading(false)
