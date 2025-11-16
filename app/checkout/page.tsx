@@ -127,7 +127,8 @@ export default function CheckoutPage() {
       }
     } catch (error) {
       console.error('Checkout error:', error)
-      alert('Failed to process order. Please try again.')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to process order. Please try again.'
+      alert(errorMessage)
     } finally {
       setIsProcessing(false)
     }

@@ -1,87 +1,217 @@
 # A2Z Business Directory
 
-South Africa's Premium Business Directory - A modern, mobile-first platform for discovering and managing business listings.
+South Africa's Premium Business Directory - A modern, mobile-first platform for discovering and managing business listings with powerful e-commerce and marketing tools.
 
 ## 🚀 Features
 
-### 🏢 Business Profiles
-- **Free Tier**: Complete profile with 3 gallery images, 5 products (display only), 3 shared listings, 7-day reset
-- **Premium Tier**: Unlimited gallery slider, full e-commerce shop, WhatsApp & Facebook marketing tools
+### 🏢 Business Profiles & Tiers
+- **Free Tier**: Complete profile with 3 gallery images, 5 products, 3 shared listings, 7-day reset
+- **Premium Tier**: Unlimited gallery, full e-commerce, WhatsApp & Facebook marketing, Google Maps
 - **Business Tier**: Multi-location management, Instagram automation, advanced analytics, custom branding
 
-### 🔍 Advanced Search & Filtering
-- Real-time search across business names, categories, and locations
-- 15+ business categories (Restaurants, Retail, Healthcare, Technology, etc.)
-- 13+ South African cities (Johannesburg, Cape Town, Durban, etc.)
-- Verified seller priority and rating-based sorting
+### �️ Ev-Commerce & Shopping
+- **Shopping Cart System**: Full cart management with persistent storage
+- **Product Management**: Unlimited products for Premium/Business tiers, 5 for Free tier
+- **Order Management**: Complete order lifecycle tracking (pending → confirmed → processing → shipped → delivered)
+- **Payment Processing**: PayFast integration for secure payments, EFT payment option
+- **Order Items**: Detailed order items with variants (size, color, custom options)
+- **Shipping Integration**: Address validation, city/province selection, postal code tracking
+
+### 🔍 Advanced Search & Discovery
+- **Real-time Search**: Search across business names, categories, locations, and descriptions
+- **Dynamic Filtering**: Filter by 15+ business categories and 13+ South African cities
+- **Verified Seller Priority**: Verified businesses ranked higher in search results
+- **Success Ticker**: Live feed of recent product additions and business activity
+- **Business Card Display**: Rich business cards with ratings, reviews, and quick actions
 
 ### 📱 Mobile-First Design
-- Responsive interface optimized for all devices
-- Touch-friendly controls and navigation
-- Fast loading with optimized queries
+- **Responsive Interface**: Optimized for all devices (mobile, tablet, desktop)
+- **Brutalist UI**: Bold, high-contrast design with strong typography
+- **Touch-Friendly**: Optimized controls and navigation for mobile users
+- **Fast Loading**: Optimized queries and lazy loading
+
+### 📊 Marketing & Analytics
+- **WhatsApp Marketing**: Ad scheduling and automation tools
+- **Facebook Campaigns**: Campaign creation and management tools
+- **Instagram Automation**: Cross-platform campaign automation (Business tier)
+- **Marketing Analytics**: Track campaign performance and ROI
+- **Campaign Dashboard**: Centralized campaign management interface
+
+### 🗺️ Location & Mapping
+- **Google Maps Integration**: Interactive maps for Premium/Business tiers
+- **Location Management**: Support for all South African provinces and cities
+- **Multi-Location Support**: Manage multiple business locations (Business tier)
+- **Location Auto-Creation**: Automatic location creation during bulk uploads
+
+### 👥 User Management & Admin
+- **Admin Dashboard**: Comprehensive admin interface for system management
+- **User Management**: View, filter, and manage all users by subscription tier
+- **Category Management**: Create and manage business categories
+- **Location Management**: Manage cities and provinces
+- **Bulk Upload System**: Upload hundreds of profiles at once with default products
+- **Reset System**: Automated 7-day reset for free tier users
+- **Payment Dashboard**: Track all payment transactions and subscriptions
+
+### 🎯 Bulk Upload System
+- **CSV Import**: Upload up to 300 profiles per batch
+- **Auto-Location Creation**: Automatically creates missing locations
+- **Default Products**: Assigns 10 category-specific products per profile
+- **Duplicate Detection**: Removes duplicate profiles automatically
+- **Error Reporting**: Detailed error logs for failed uploads
+- **Category-Based Products**: Butcher shops, restaurants, bakeries, grocery stores, etc.
 
 ## 🛠 Tech Stack
 
 - **Framework**: Next.js 14 with App Router
-- **Database**: Supabase (PostgreSQL)
-- **Styling**: Tailwind CSS
-- **Authentication**: Supabase Auth
-- **Icons**: Lucide React
-- **Language**: TypeScript
+- **Language**: TypeScript with strict mode
+- **Database**: Supabase (PostgreSQL) with Row Level Security
+- **Styling**: Tailwind CSS with custom utilities
+- **UI Components**: Radix UI primitives, Lucide React icons
+- **Animations**: Framer Motion for smooth transitions
+- **Authentication**: Supabase Auth with email/password
+- **Payment**: PayFast integration for subscriptions
+- **Maps**: Google Maps API integration
+- **State Management**: React Context (Auth, Cart, Notifications)
 
 ## 📁 Project Structure
 
 ```
 a2z/
-├── app/                          # Next.js App Router pages
-│   ├── auth/signup-animated/     # User registration
-│   ├── directory/                # Business directory pages
-│   │   ├── profile/              # Profile redirect handler
-│   │   └── [username]/           # Dynamic user profiles
-│   │       ├── free/             # Free tier profile
-│   │       ├── premium/          # Premium tier profile
-│   │       └── business/         # Business tier profile
-│   ├── profile/                  # Profile management
-│   ├── globals.css               # Global styles
-│   ├── layout.tsx                # Root layout
-│   └── page.tsx                  # Homepage with search
-├── components/                   # Reusable components
-│   ├── ui/                       # UI primitives
-│   ├── BusinessCard.tsx          # Business listing card
-│   ├── LocationCategorySelector.tsx # Location/category picker
-│   └── UserProfileDropdown.tsx   # User menu dropdown
-├── lib/                          # Utilities and configurations
-│   ├── auth.tsx                  # Authentication context
-│   ├── supabaseClient.ts         # Database client
-│   └── utils.ts                  # Helper functions
-└── supabase/migrations/          # Database migrations
+├── app/                              # Next.js App Router
+│   ├── page.tsx                      # Homepage with search & directory
+│   ├── layout.tsx                    # Root layout with providers
+│   ├── globals.css                   # Global styles
+│   ├── auth/
+│   │   └── signup-animated/          # Animated signup flow
+│   ├── dashboard/
+│   │   ├── page.tsx                  # User dashboard
+│   │   └── shop/                     # Shop management
+│   ├── profile/
+│   │   ├── page.tsx                  # Profile redirect
+│   │   └── [username]/               # Dynamic profile pages
+│   │       ├── free/                 # Free tier profile view
+│   │       ├── premium/              # Premium tier profile view
+│   │       └── business/             # Business tier profile view
+│   ├── admin/                        # Admin dashboard
+│   ├── checkout/                     # Checkout flow
+│   ├── orders/                       # Order management
+│   ├── payment/                      # Payment processing
+│   ├── settings/                     # User settings
+│   ├── referrals/                    # Referral system
+│   ├── support/                      # Support pages
+│   ├── api/
+│   │   ├── admin/                    # Admin API endpoints
+│   │   ├── payfast/                  # PayFast webhooks
+│   │   ├── public-listings/          # Public listing endpoints
+│   │   ├── track-view/               # Analytics tracking
+│   │   ├── templates/                # Template management
+│   │   └── n8n/                      # Automation webhooks
+│   └── [username]/                   # Public profile routes
+├── components/                       # Reusable React components
+│   ├── ui/                           # UI primitives
+│   ├── dashboard/                    # Dashboard components
+│   ├── providers/                    # Context providers
+│   ├── BusinessCard.tsx              # Business listing card
+│   ├── ShoppingCart.tsx              # Shopping cart component
+│   ├── PaymentModal.tsx              # Payment processing modal
+│   ├── PlanSelectionModal.tsx        # Subscription plan selector
+│   ├── BulkUploadManager.tsx         # Bulk upload interface
+│   ├── AdminLoginModal.tsx           # Admin authentication
+│   ├── AdminPaymentDashboard.tsx     # Payment tracking
+│   ├── AdminCategoriesLocations.tsx  # Category/location management
+│   ├── CampaignDashboard.tsx         # Marketing campaigns
+│   ├── MarketingAnalytics.tsx        # Analytics dashboard
+│   ├── ProfileCompletenessIndicator.tsx # Profile completion tracker
+│   ├── ResetCountdownBanner.tsx      # Free tier reset timer
+│   ├── GoogleMapDisplay.tsx          # Map display component
+│   ├── GoogleMapPicker.tsx           # Map location picker
+│   └── [40+ more components]         # Additional UI components
+├── lib/                              # Utility functions & services
+│   ├── supabaseClient.ts             # Supabase client initialization
+│   ├── auth.tsx                      # Authentication context & hooks
+│   ├── subscription.ts               # Subscription management
+│   ├── orderService.ts               # Order creation & management
+│   ├── resetSystem.ts                # Free tier reset automation
+│   ├── bulkUploadUtils.ts            # Bulk upload processing
+│   ├── defaultProducts.ts            # Category-specific products
+│   ├── googleMapsUtils.ts            # Google Maps utilities
+│   ├── uploadUtils.ts                # File upload utilities
+│   ├── performanceOptimizations.ts   # Performance utilities
+│   └── [15+ more utilities]          # Additional helpers
+├── hooks/                            # Custom React hooks
+│   └── useCustomPopup.tsx            # Custom popup hook
+├── contexts/                         # React Context providers
+│   ├── CartContext.tsx               # Shopping cart state
+│   └── NotificationContext.tsx       # Notification system
+├── types/                            # TypeScript type definitions
+│   └── google-maps.d.ts              # Google Maps types
+├── supabase/                         # Supabase configuration
+│   ├── migrations/                   # Database migrations
+│   └── functions/                    # Edge functions
+├── scripts/                          # Utility scripts
+├── sql/                              # SQL queries & schemas
+├── tailwind.config.js                # Tailwind CSS configuration
+├── next.config.js                    # Next.js configuration
+├── tsconfig.json                     # TypeScript configuration
+├── package.json                      # Dependencies
+└── .env.example                      # Environment variables template
 ```
 
 ## 🗄️ Database Schema
 
 ### Core Tables
-- **profiles**: User business profiles with subscription tiers
+- **profiles**: User business profiles with subscription tiers, verification status, analytics
+- **profile_products**: Products/services offered by businesses
+- **profile_gallery**: Gallery images for business profiles
+- **profile_listings**: Marketing listings and shared content
 - **locations**: South African cities and provinces
 - **categories**: Business categories with descriptions
+- **orders**: Customer orders with payment tracking
+- **order_items**: Individual items within orders
+- **payment_transactions**: Payment history and subscription tracking
+- **reset_history**: Tracking of free tier resets
 
 ### Key Features
-- Row Level Security (RLS) policies
-- Automatic profile creation on user signup
-- Foreign key relationships for data integrity
+- **Row Level Security (RLS)**: Policies for data access control
+- **Automatic Timestamps**: created_at, updated_at on all tables
+- **Foreign Keys**: Referential integrity across tables
+- **Indexes**: Optimized queries for search and filtering
+- **Soft Deletes**: is_active flags for data retention
 
-## 🚀 Getting Started
+## � Geteting Started
 
-1. **Install dependencies**:
+### Prerequisites
+- Node.js 18+ and npm
+- Supabase account with PostgreSQL database
+- Google Maps API key (for Premium/Business features)
+- PayFast merchant account (for payments)
+
+### Installation
+
+1. **Clone and install**:
    ```bash
    npm install
    ```
 
 2. **Set up environment variables**:
-   Create `.env.local` with your Supabase credentials:
+   Create `.env.local` with:
    ```
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   # Supabase
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
    SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+   # Google Maps
+   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_key
+
+   # PayFast
+   NEXT_PUBLIC_PAYFAST_MERCHANT_ID=your_merchant_id
+   NEXT_PUBLIC_PAYFAST_MERCHANT_KEY=your_merchant_key
+   PAYFAST_PASSPHRASE=your_passphrase
+
+   # Application
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   CRON_SECRET_TOKEN=your_secret_token
    ```
 
 3. **Run database migrations**:
@@ -100,83 +230,210 @@ a2z/
 ## 📊 Business Tiers
 
 ### Free Tier (R0/month)
-- **Complete user profile** with validation
-- **3 gallery images** (strict limit) with multiple layout options
-- **5 products in shop** (1 image per product, display only)
-- **Contact information** and basic location mapping
-- **3 shared listings** with gallery components
-- **Gallery layouts**: horizontal slider, vertical slider, hover effects
-- **Sharing restrictions**: No sharing on Wednesday, Saturday, Sunday
-- **7-day profile reset**: Products and listings cleared weekly
+- **Profile Features**:
+  - Complete business profile with validation
+  - 3 gallery images (strict limit)
+  - 5 products in shop (display only)
+  - Contact information and basic location
+  - 3 shared marketing listings
+  - Gallery layouts: horizontal slider, vertical slider, hover effects
+  
+- **Restrictions**:
+  - No sharing on Wednesday, Saturday, Sunday
+  - 7-day automatic reset (products & listings cleared)
+  - No e-commerce checkout
+  - No Google Maps integration
+  - No marketing tools
+  
+- **Use Case**: Businesses testing the platform, local service providers
 
 ### Premium Tier (R149/month)
 - **All Free Tier features** without restrictions
-- **No 7-day resets** - permanent content
-- **No sharing day restrictions** - share any day
-- **Unlimited gallery images** with enhanced slider
-- **Full e-commerce shop** with cart and checkout
-- **Google Maps integration** (replaces basic location)
-- **PayFast payment processing**
-- **WhatsApp ad scheduling** and automation
-- **Facebook campaign tools** and analytics
-- **Premium directory placement** and search priority
+- **E-Commerce**:
+  - Unlimited products and gallery images
+  - Full shopping cart and checkout
+  - PayFast payment processing
+  - Order management and tracking
+  
+- **Marketing**:
+  - WhatsApp ad scheduling and automation
+  - Facebook campaign tools and analytics
+  - Premium directory placement
+  - Search priority and featured listings
+  
+- **Features**:
+  - Google Maps integration
+  - No 7-day resets
+  - No sharing day restrictions
+  - Enhanced analytics
+  
+- **Use Case**: Active businesses selling online, restaurants, retail shops
 
 ### Business Tier (R299/month)
-- **Everything in Premium** plus advanced features
-- **Multi-location management** with centralized dashboard
-- **Advanced analytics dashboard** with predictive insights
-- **Instagram ad automation** and cross-platform campaigns
-- **Custom branding** and white-label options
-- **Priority support** with dedicated agents
-- **API access** for third-party integrations
-- **Enterprise-level features** and SLA
+- **Everything in Premium** plus:
+- **Advanced Management**:
+  - Multi-location management with centralized dashboard
+  - Bulk product management
+  - Advanced analytics with predictive insights
+  
+- **Marketing Automation**:
+  - Instagram ad automation
+  - Cross-platform campaign management
+  - Custom branding and white-label options
+  - Priority support with dedicated agents
+  
+- **Enterprise Features**:
+  - API access for third-party integrations
+  - Bulk upload system (300+ profiles)
+  - Custom reporting
+  - SLA guarantees
+  
+- **Use Case**: Enterprise businesses, franchises, multi-location operations
 
 ## 🔧 Development
 
 ### Key Commands
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
+```bash
+npm run dev      # Start development server (port 3000)
+npm run build    # Build for production
+npm run start    # Start production server
+npm run lint     # Run ESLint
+```
 
 ### Database Management
-- Use Supabase Dashboard for manual database operations
-- Run migration scripts in `/scripts/` directory
-- Check `/supabase/migrations/` for schema changes
+- **Supabase Dashboard**: Manual operations at https://app.supabase.com
+- **Migrations**: Run scripts in `/scripts/` directory
+- **Schema Changes**: Check `/supabase/migrations/` for version history
+
+### Admin Features
+- **Admin Dashboard**: Access at `/admin` (requires admin credentials)
+- **User Management**: View and manage all users
+- **Category Management**: Create and edit business categories
+- **Location Management**: Manage cities and provinces
+- **Bulk Upload**: Upload CSV files with business profiles
+- **Reset System**: Trigger manual resets for free tier users
+- **Payment Dashboard**: Track all transactions
+
+### API Endpoints
+- `POST /api/admin/bulk-upload` - Upload CSV profiles
+- `POST /api/payfast/webhook` - PayFast payment webhook
+- `GET /api/public-listings` - Get public business listings
+- `POST /api/track-view` - Track profile views
+- `POST /api/templates/*` - Template management
+- `POST /api/orders/create` - Create orders (bypasses RLS)
+- `POST /api/admin/setup-rls` - Configure RLS policies
+
+## 🎯 Core Features Deep Dive
+
+### Shopping Cart System
+- **Persistent Storage**: Cart saved in browser localStorage
+- **Multi-Business**: Add items from multiple businesses
+- **Variants**: Support for size, color, and custom options
+- **Real-time Updates**: Instant price calculations and totals
+- **Checkout Flow**: Streamlined checkout with address validation
+
+### Order Management
+- **Order Lifecycle**: pending → confirmed → processing → shipped → delivered
+- **Order Tracking**: Real-time status updates and tracking numbers
+- **Payment Integration**: Automatic payment status updates
+- **Order History**: Complete order history for customers and businesses
+- **Invoice Generation**: Automatic invoice creation
+
+### Marketing Tools
+- **Campaign Creation**: Create and schedule marketing campaigns
+- **Multi-Channel**: WhatsApp, Facebook, Instagram integration
+- **Analytics**: Track campaign performance and ROI
+- **Automation**: Scheduled posting and automated responses
+- **A/B Testing**: Test different campaign variations
+
+### Bulk Upload System
+- **CSV Format**: Standard CSV with required columns
+- **Auto-Location**: Automatically creates missing locations
+- **Default Products**: 10 category-specific products per profile
+- **Duplicate Detection**: Removes duplicate profiles
+- **Error Handling**: Detailed error reports for failed uploads
+- **Progress Tracking**: Real-time upload progress
+
+### Free Tier Reset System
+- **Automatic Reset**: Every 7 days for free tier users
+- **Reset Scope**: Clears products, listings, and gallery
+- **Notifications**: Users notified before reset
+- **Reset History**: Track all resets for audit purposes
+- **Manual Override**: Admin can trigger manual resets
+
+## 🌟 Recent Updates & Enhancements
+
+### Frontend Improvements
+- **Brutalist Design**: Bold, high-contrast UI with strong typography
+- **Framer Motion Animations**: Smooth transitions and interactive elements
+- **Success Ticker**: Live feed of recent business activity
+- **Exit Intent Modal**: Capture users about to leave
+- **Responsive Grid**: Dynamic business card grid layout
+- **Mobile Optimization**: Touch-friendly controls and navigation
+
+### Backend Enhancements
+- **Order Service**: Complete order creation and management via API endpoint
+- **Payment Integration**: PayFast and EFT payment options with proper RLS handling
+- **Bulk Upload**: CSV import with auto-location creation
+- **Reset Automation**: Scheduled 7-day resets for free tier
+- **Analytics Tracking**: View tracking and engagement metrics
+- **Admin Dashboard**: Comprehensive system management
+
+### Database Improvements
+- **RLS Policies**: Enhanced security with row-level security for orders/order_items
+- **Order Number Generation**: Auto-generated order numbers with database trigger
+- **Optimized Indexes**: Faster search and filtering
+- **Audit Logging**: Track all important actions
+- **Data Validation**: Constraints and triggers for data integrity
+- **Backup System**: Automated backups and recovery
+
+### Checkout & Payment Fixes (Latest)
+- **Order Creation API**: New `/api/orders/create` endpoint using service role to bypass RLS
+- **Order Number Auto-Generation**: Database trigger generates unique order numbers
+- **Proper Field Mapping**: Corrected field names to match actual database schema
+- **Error Handling**: Improved error messages for debugging
+- **Multi-Business Checkout**: Support for orders from multiple businesses in single checkout
 
 ## 🚀 Development Roadmap
 
-### Phase 1: Free Tier Foundation (Weeks 1-6)
-- Enhanced profile system with completeness tracking
-- Advanced gallery components (4 layout options)
-- Product display system with 5-product limit
-- 7-day reset automation with notifications
-- Day-based sharing restrictions (Wed/Sat/Sun blocked)
-- Basic location mapping without Google Maps
+### Phase 1: Foundation (Completed)
+- ✅ User authentication and profiles
+- ✅ Business directory with search
+- ✅ Free tier with restrictions
+- ✅ Basic gallery and products
 
-### Phase 2: Premium E-commerce (Weeks 7-13)
-- Remove all Free Tier restrictions
-- Google Maps integration
-- Full shopping cart and checkout system
-- PayFast payment processing
-- WhatsApp and Facebook marketing tools
-- Unlimited products and gallery images
+### Phase 2: E-Commerce (In Progress)
+- ✅ Shopping cart system
+- ✅ Order management
+- ✅ PayFast integration
+- ✅ Checkout flow
+- 🔄 Inventory management
+- 🔄 Shipping integration
 
-### Phase 3: Business Advanced (Weeks 14-20)
-- Multi-location management system
-- Advanced analytics and business intelligence
-- Instagram automation and cross-platform campaigns
-- Custom branding and white-label options
-- Priority support system
-- API development and third-party integrations
+### Phase 3: Marketing (In Progress)
+- ✅ WhatsApp marketing tools
+- ✅ Facebook campaign tools
+- ✅ Campaign dashboard
+- 🔄 Instagram automation
+- 🔄 Analytics dashboard
+
+### Phase 4: Enterprise (Planned)
+- 📋 Multi-location management
+- 📋 Advanced analytics
+- 📋 API access
+- 📋 Custom branding
+- 📋 Priority support
 
 ## 🌟 Future Features
 
-- Multi-language support (Afrikaans, Zulu, Xhosa)
-- Mobile app (React Native)
-- Advanced AI-powered business insights
-- Marketplace integrations
-- Voice search capabilities
+- **Multi-Language Support**: Afrikaans, Zulu, Xhosa translations
+- **Mobile App**: React Native iOS/Android app
+- **AI Features**: Business insights, recommendations, chatbot
+- **Marketplace**: Integrated marketplace for services
+- **Voice Search**: Voice-based search capability
+- **Video Support**: Product videos and business tours
+- **Live Chat**: Real-time customer support
+- **Loyalty Program**: Customer rewards and referrals
 
 ## 📝 License
 This project is proprietary software for A2Z Business Directory.
@@ -190,6 +447,7 @@ Built with ❤️ for South African businesses
 - **Free Tier**: Complete profiles in <5 minutes, drive customer inquiries
 - **Premium Tier**: Generate direct sales, measurable marketing ROI
 - **Business Tier**: Enterprise-level management, data-driven growth
+- **Platform**: 1,000+ active businesses, 10,000+ monthly visitors
 
 ---
 

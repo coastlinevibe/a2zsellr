@@ -76,72 +76,29 @@ export interface OrderItem {
 /**
  * Create orders from cart items
  * Creates separate orders for each business
+ * Uses API endpoint to bypass RLS policies
  */
 export async function createOrders(data: CreateOrderData, userId?: string): Promise<Order[]> {
-  const createdOrders: Order[] = []
-
   try {
-    // Create an order for each business
-    for (const businessOrder of data.businessOrders) {
-      const { businessId, items } = businessOrder
+    // Use API endpoint to bypass RLS
+    const response = await fetch('/api/orders/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        ...data,
+        userId
+      })
+    })
 
-      // Calculate totals
-      const subtotalCents = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-      const shippingCents = 0 // Free shipping
-      const taxCents = Math.round(subtotalCents * 0.15) // 15% VAT
-      const totalCents = subtotalCents + shippingCents + taxCents
-
-      // Create order
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          customer_id: userId || null,
-          business_id: businessId,
-          customer_name: data.customerName,
-          customer_email: data.customerEmail,
-          customer_phone: data.customerPhone || null,
-          shipping_address: data.shippingAddress,
-          shipping_city: data.shippingCity,
-          shipping_province: data.shippingProvince,
-          shipping_postal_code: data.shippingPostalCode,
-          shipping_notes: data.shippingNotes || null,
-          subtotal_cents: subtotalCents,
-          shipping_cents: shippingCents,
-          tax_cents: taxCents,
-          total_cents: totalCents,
-          payment_method: data.paymentMethod,
-          payment_status: 'pending',
-          status: 'pending'
-        })
-        .select()
-        .single()
-
-      if (orderError) throw orderError
-
-      // Create order items
-      const orderItems = items.map(item => ({
-        order_id: order.id,
-        product_id: item.productId,
-        product_name: item.name,
-        product_image_url: item.image || null,
-        variant_size: item.variant?.size || null,
-        variant_color: item.variant?.color || null,
-        variant_options: item.variant?.options || null,
-        unit_price_cents: item.price,
-        quantity: item.quantity,
-        subtotal_cents: item.price * item.quantity
-      }))
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems)
-
-      if (itemsError) throw itemsError
-
-      createdOrders.push(order)
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'Failed to create orders')
     }
 
-    return createdOrders
+    const result = await response.json()
+    return result.orders
   } catch (error) {
     console.error('Error creating orders:', error)
     throw error
