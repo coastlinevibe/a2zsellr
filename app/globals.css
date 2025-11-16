@@ -86,3 +86,55 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
+
+/* Category buttons - Contact Button Style (From Uiverse.io by d4niz) */
+.cat-btn-wrapper {
+  display: inline-block;
+}
+
+.cat-btn {
+  background: #16a38a;
+  color: white;
+  font-family: inherit;
+  padding: 0.35em;
+  padding-left: 0.8em;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 0.8em;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 1.2em -0.6em #0d7a63;
+  overflow: hidden;
+  position: relative;
+  height: 2.2em;
+  padding-right: 0.8em;
+  min-width: auto;
+  transition: all 0.3s;
+}
+
+.cat-btn:hover {
+  transform: translate(-0.05em, -0.05em);
+  box-shadow: 0.12em 0.12em #0d7a63;
+}
+
+.cat-btn:active,
+.cat-btn.active {
+  transform: translate(0.05em, 0.05em);
+  box-shadow: 0.05em 0.05em #0d7a63;
+}
+
+.cat-btn:focus {
+  transform: translate(0.05em, 0.05em);
+  box-shadow: 0.05em 0.05em #0d7a63;
+}
+
+.cat-btn > div {
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}

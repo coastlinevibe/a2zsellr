@@ -49,23 +49,27 @@ export async function resetSingleUser(profileId: string): Promise<ResetResult> {
     const listingsToDelete = listingsCount.count || 0
     const galleryToDelete = galleryCount.count || 0
 
-    // Delete products, listings, and gallery items
-    const [productsResult, listingsResult, galleryResult] = await Promise.all([
+    // Delete products, listings, gallery items, and analytics
+    const [productsResult, listingsResult, galleryResult, analyticsResult] = await Promise.all([
       supabase.from('profile_products').delete().eq('profile_id', profileId),
       supabase.from('profile_listings').delete().eq('profile_id', profileId),
-      supabase.from('profile_gallery').delete().eq('profile_id', profileId)
+      supabase.from('profile_gallery').delete().eq('profile_id', profileId),
+      supabase.from('profile_analytics').delete().eq('profile_id', profileId)
     ])
 
     const errors: string[] = []
     if (productsResult.error) errors.push(`Products: ${productsResult.error.message}`)
     if (listingsResult.error) errors.push(`Listings: ${listingsResult.error.message}`)
     if (galleryResult.error) errors.push(`Gallery: ${galleryResult.error.message}`)
+    if (analyticsResult.error) errors.push(`Analytics: ${analyticsResult.error.message}`)
 
-    // Update profile reset tracking
+    // Update profile reset tracking and reset view count
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
         current_listings: 0,
+        profile_views: 0,
+        last_view_reset: new Date().toISOString(),
         last_free_reset: new Date().toISOString(),
         last_reset_at: new Date().toISOString()
       })

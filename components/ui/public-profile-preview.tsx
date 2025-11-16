@@ -277,11 +277,7 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
                 <button
                   key={category.value}
                   onClick={() => setSelectedCategory(category.value as typeof selectedCategory)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-[9px] whitespace-nowrap transition-colors ${
-                    selectedCategory === category.value
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                  className="button"
                 >
                   {category.label}
                 </button>

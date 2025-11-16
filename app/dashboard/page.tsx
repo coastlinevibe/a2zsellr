@@ -442,36 +442,52 @@ export default function DashboardPage() {
             <div className="flex gap-1 p-2">
               {marketingViews.map((view) => {
                 const IconComponent = view.icon
+                const isComingSoon = ['scheduler', 'analytics', 'templates'].includes(view.id)
                 const isDisabled = userTier === 'free' && isPremiumFeature(view.id)
-                const isActive = marketingActiveView === view.id && !isDisabled
+                const isActive = marketingActiveView === view.id && !isDisabled && !isComingSoon
                 
                 return (
-                  <button
-                    key={view.id}
-                    onClick={() => {
-                      if (isDisabled) {
-                        alert('🔒 This feature is only available on Premium and Business tiers.\n\nUpgrade your plan to unlock advanced marketing tools!')
-                        return
-                      }
-                      setMarketingActiveView(view.id)
-                    }}
-                    className={`flex-1 py-3 px-4 rounded-[6px] border-2 border-black font-bold transition-all flex items-center justify-center gap-2 relative ${
-                      isActive
-                        ? 'bg-blue-500 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]'
-                        : isDisabled
-                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed shadow-[1px_1px_0px_0px_rgba(0,0,0,0.3)]'
-                        : 'bg-white text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-gray-100'
-                    }`}
-                    disabled={isDisabled}
-                  >
-                    <IconComponent className="w-4 h-4" />
-                    <span className="text-sm">{view.label}</span>
-                    {isDisabled && (
-                      <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
+                  <div key={view.id} className="flex-1 relative">
+                    <button
+                      onClick={() => {
+                        if (isComingSoon) {
+                          alert('🚀 Coming Soon!\n\nThis feature is currently in development and will be available soon.')
+                          return
+                        }
+                        if (isDisabled) {
+                          alert('🔒 This feature is only available on Premium and Business tiers.\n\nUpgrade your plan to unlock advanced marketing tools!')
+                          return
+                        }
+                        setMarketingActiveView(view.id)
+                      }}
+                      className={`w-full py-3 px-4 rounded-[6px] border-2 border-black font-bold transition-all flex items-center justify-center gap-2 ${
+                        isActive
+                          ? 'bg-blue-500 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]'
+                          : isComingSoon
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-[1px_1px_0px_0px_rgba(0,0,0,0.3)] blur-[1px]'
+                          : isDisabled
+                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed shadow-[1px_1px_0px_0px_rgba(0,0,0,0.3)]'
+                          : 'bg-white text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-gray-100'
+                      }`}
+                      disabled={isDisabled || isComingSoon}
+                    >
+                      <IconComponent className="w-4 h-4" />
+                      <span className="text-sm">{view.label}</span>
+                    </button>
+                    {isComingSoon && (
+                      <span 
+                        className="absolute -top-1 -right-1 bg-amber-400 text-black text-xs px-1.5 py-0.5 font-bold border border-black pointer-events-none"
+                        style={{ borderRadius: '9px', zIndex: 9999 }}
+                      >
+                        Coming Soon
+                      </span>
+                    )}
+                    {isDisabled && !isComingSoon && (
+                      <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold pointer-events-none" style={{ zIndex: 9999 }}>
                         Premium
                       </span>
                     )}
-                  </button>
+                  </div>
                 )
               })}
             </div>

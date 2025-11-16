@@ -1212,50 +1212,53 @@ Best regards`
           transform: translateY(-4px);
         }
 
-        /* Category buttons - 3D gradient style */
+        /* Category buttons - Contact Button Style (From Uiverse.io by d4niz) */
         .cat-btn-wrapper {
           display: inline-block;
         }
 
         .cat-btn {
+          background: #7079f0;
+          color: white;
+          font-family: inherit;
+          padding: 0.45em;
+          padding-left: 1em;
+          font-size: 17px;
+          font-weight: 500;
+          border-radius: 0.9em;
+          border: none;
+          cursor: pointer;
+          letter-spacing: 0.05em;
           display: flex;
           align-items: center;
-          justify-content: center;
-          outline: none;
-          cursor: pointer;
-          min-width: 120px;
-          height: 42px;
-          padding: 0 20px;
-          background-image: linear-gradient(to top, #D8D9DB 0%, #fff 80%, #FDFDFD 100%);
-          border-radius: 9px;
-          border: 1px solid #8F9092;
-          transition: all 0.2s ease;
-          font-family: inherit;
-          font-size: 14px;
-          font-weight: 600;
-          color: #606060;
-          text-shadow: 0 1px #fff;
+          box-shadow: inset 0 0 1.6em -0.6em #714da6;
+          overflow: hidden;
           position: relative;
+          height: 2.8em;
+          padding-right: 3em;
+          transition: all 0.3s;
         }
 
         .cat-btn:hover {
-          box-shadow: 0 4px 3px 1px #FCFCFC, 0 6px 8px #D6D7D9, 0 -4px 4px #CECFD1, 0 -6px 4px #FEFEFE, inset 0 0 3px 3px #CECFD1;
+          transform: translate(-0.05em, -0.05em);
+          box-shadow: 0.15em 0.15em #5566c2;
         }
 
         .cat-btn:active,
         .cat-btn.active {
-          box-shadow: 0 4px 3px 1px #FCFCFC, 0 6px 8px #D6D7D9, 0 -4px 4px #CECFD1, 0 -6px 4px #FEFEFE, inset 0 0 5px 3px #999, inset 0 0 30px #aaa;
+          transform: translate(0.05em, 0.05em);
+          box-shadow: 0.05em 0.05em #5566c2;
         }
 
         .cat-btn:focus {
-          box-shadow: 0 4px 3px 1px #FCFCFC, 0 6px 8px #D6D7D9, 0 -4px 4px #CECFD1, 0 -6px 4px #FEFEFE, inset 0 0 5px 3px #999, inset 0 0 30px #aaa;
+          transform: translate(0.05em, 0.05em);
+          box-shadow: 0.05em 0.05em #5566c2;
         }
 
         .cat-btn > div {
-          font-weight: 600;
-          font-size: 12px;
-          text-transform: uppercase;
-          letter-spacing: 1px;
+          font-weight: 500;
+          font-size: 17px;
+          letter-spacing: 0.05em;
           white-space: nowrap;
         }
 

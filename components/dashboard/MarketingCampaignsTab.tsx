@@ -117,7 +117,37 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
 
       if (error) throw error
       
-      setListings(prev => prev.filter(c => c.id !== listingId))
+      // Update local state
+      const updatedListings = listings.filter(c => c.id !== listingId)
+      setListings(updatedListings)
+      
+      // If no listings remain, reset all analytics data
+      if (updatedListings.length === 0) {
+        await Promise.all([
+          // Reset profile views
+          supabase
+            .from('profiles')
+            .update({ 
+              profile_views: 0,
+              last_view_reset: new Date().toISOString()
+            })
+            .eq('id', user?.id),
+          
+          // Clear all analytics data
+          supabase
+            .from('profile_analytics')
+            .delete()
+            .eq('profile_id', user?.id)
+        ])
+        
+        // Update local analytics state
+        setAnalyticsData({
+          totalViews: 0,
+          totalClicks: 0
+        })
+        
+        console.log('✅ All analytics data cleared - no listings remaining')
+      }
     } catch (err: any) {
       console.error('Error deleting listing:', err)
       alert('Error deleting listing: ' + err.message)

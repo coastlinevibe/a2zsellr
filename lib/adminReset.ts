@@ -79,14 +79,17 @@ export async function adminResetAllFreeUsers(): Promise<AdminResetResult> {
       await Promise.all([
         supabase.from('profile_products').delete().eq('profile_id', user.id),
         supabase.from('profile_listings').delete().eq('profile_id', user.id),
-        supabase.from('profile_gallery').delete().eq('profile_id', user.id)
+        supabase.from('profile_gallery').delete().eq('profile_id', user.id),
+        supabase.from('profile_analytics').delete().eq('profile_id', user.id)
       ])
 
-      // Update profile tracking
+      // Update profile tracking and reset view count
       await supabase
         .from('profiles')
         .update({
           current_listings: 0,
+          profile_views: 0,
+          last_view_reset: resetTime,
           last_free_reset: resetTime,
           last_reset_at: resetTime
         })
