@@ -230,7 +230,9 @@ export function BusinessCard({ business, categoryName, locationName, index = 0 }
             href={`/profile/${username}`}
             className="w-full text-center text-sm font-black transition-all block"
             style={{
-              background: '#5cbdfd',
+              background: business.subscription_tier === 'business' ? '#3b82f6' :
+                         business.subscription_tier === 'premium' ? '#f97316' :
+                         '#6b7280',
               fontFamily: 'inherit',
               padding: '0.6em 1.3em',
               fontWeight: 900,
@@ -240,7 +242,8 @@ export function BusinessCard({ business, categoryName, locationName, index = 0 }
               boxShadow: '0.1em 0.1em',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
-              display: 'block'
+              display: 'block',
+              color: '#FFFFFF'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';

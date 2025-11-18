@@ -57,38 +57,72 @@ export function Header() {
             </div>
           </div>
           <div className="flex shrink-0 gap-2 max-md:flex-wrap">
-            <motion.button 
+2            <button 
               onClick={handleSignUp}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-black transition-colors border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)]"
-              whileHover={{ 
-                scale: 1.05,
-                boxShadow: "6px 6px 0px 0px rgba(0,0,0,0.9)",
-                x: 2,
-                y: -2
+              style={{
+                background: '#5cbdfd',
+                fontFamily: 'inherit',
+                padding: '0.4em 0.9em',
+                fontWeight: 900,
+                fontSize: '12px',
+                border: '3px solid black',
+                borderRadius: '0.4em',
+                boxShadow: '0.1em 0.1em',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
               }}
-              whileTap={{ 
-                scale: 0.95,
-                transition: { duration: 0.1 }
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                e.currentTarget.style.boxShadow = '0.15em 0.15em';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translate(0, 0)';
+                e.currentTarget.style.boxShadow = '0.1em 0.1em';
+              }}
+              onMouseDown={(e) => {
+                e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+                e.currentTarget.style.boxShadow = '0.05em 0.05em';
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                e.currentTarget.style.boxShadow = '0.15em 0.15em';
               }}
             >
               SIGN UP FOR FREE TRIAL
-            </motion.button>
-            <motion.button 
+            </button>
+            <button 
               onClick={handleLogin}
-              className="bg-white hover:bg-gray-100 text-black px-4 py-2 rounded-lg text-xs font-black transition-colors border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)]"
-              whileHover={{ 
-                scale: 1.05,
-                boxShadow: "6px 6px 0px 0px rgba(0,0,0,0.9)",
-                x: 2,
-                y: -2
+              style={{
+                background: '#5cbdfd',
+                fontFamily: 'inherit',
+                padding: '0.4em 0.9em',
+                fontWeight: 900,
+                fontSize: '12px',
+                border: '3px solid black',
+                borderRadius: '0.4em',
+                boxShadow: '0.1em 0.1em',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
               }}
-              whileTap={{ 
-                scale: 0.95,
-                transition: { duration: 0.1 }
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                e.currentTarget.style.boxShadow = '0.15em 0.15em';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translate(0, 0)';
+                e.currentTarget.style.boxShadow = '0.1em 0.1em';
+              }}
+              onMouseDown={(e) => {
+                e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+                e.currentTarget.style.boxShadow = '0.05em 0.05em';
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                e.currentTarget.style.boxShadow = '0.15em 0.15em';
               }}
             >
               LOG IN
-            </motion.button>
+            </button>
           </div>
         </div>
       </div>

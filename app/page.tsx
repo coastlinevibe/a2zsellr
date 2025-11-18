@@ -462,6 +462,8 @@ export default function HomePage() {
       } else {
         setBusinesses(data || [])
       }
+      // Reset carousel to first slide when search results change
+      setCurrentSlide(0)
     } catch (error) {
       console.error('Search error:', error)
       setBusinesses([])
@@ -616,9 +618,9 @@ export default function HomePage() {
               </motion.div>
             </motion.div>
 
-            {/* Right Content - Brutalist Illustration */}
+            {/* Right Content - Brutalist Illustration - Hidden on Mobile */}
             <motion.div 
-              className="relative"
+              className="relative hidden lg:block"
               initial={{ x: 100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
@@ -1934,9 +1936,9 @@ export default function HomePage() {
         onClose={() => setShowAdminModal(false)} 
       />
 
-      {/* Live Chat Widget with Success Guarantee */}
+      {/* Live Chat Widget with Success Guarantee - Hidden on Mobile */}
       <motion.div 
-        className="fixed bottom-6 right-6 z-50"
+        className="fixed bottom-6 right-6 z-50 hidden lg:block"
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 2, duration: 0.5 }}
