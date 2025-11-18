@@ -960,10 +960,10 @@ export default function HomePage() {
           {!isSearching && businesses.length > 0 && (
             <div className="relative">
               {/* Carousel Header */}
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
                 {/* Featured Businesses - Left */}
                 <motion.h3 
-                  className="text-2xl font-black text-black bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] inline-block"
+                  className="text-xl md:text-2xl font-black text-black bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] inline-block"
                   initial={{ x: -50, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ duration: 0.6 }}
@@ -971,13 +971,13 @@ export default function HomePage() {
                   FEATURED BUSINESSES
                 </motion.h3>
                 
-                {/* Premium Directory - Center (Large) */}
-                <h2 className="text-4xl font-black text-black bg-white p-6 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]">
+                {/* Premium Directory - Center (Large) - Hidden on mobile */}
+                <h2 className="hidden md:block text-4xl font-black text-black bg-white p-6 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]">
                   PREMIUM DIRECTORY
                 </h2>
                 
                 {/* Found Profiles - Right */}
-                <p className="text-black text-lg bg-green-300 p-3 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold">
+                <p className="text-black text-sm md:text-lg bg-green-300 p-3 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold">
                   FOUND {businesses.length} PROFILE{businesses.length !== 1 ? 'S' : ''} 
                   {searchQuery && ` MATCHING "${searchQuery.toUpperCase()}"`}
                   {selectedCategory !== 'all' && ` IN ${categories.find(c => c.slug === selectedCategory)?.name?.toUpperCase()}`}
