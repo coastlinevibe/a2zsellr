@@ -544,46 +544,75 @@ export default function HomePage() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 1.4 }}
               >
-                <motion.div
-                  whileHover={{ 
-                    scale: 1.05,
-                    rotate: 2,
-                    boxShadow: "10px 10px 0px 0px rgba(0,0,0,0.9)",
-                    x: 3,
-                    y: -3
+                <Link
+                  href="/auth/signup-animated?plan=free"
+                  className="inline-flex items-center justify-center"
+                  style={{
+                    background: '#5cbdfd',
+                    fontFamily: 'inherit',
+                    padding: '0.6em 1.3em',
+                    fontWeight: 900,
+                    fontSize: '18px',
+                    border: '3px solid black',
+                    borderRadius: '0.4em',
+                    boxShadow: '0.1em 0.1em',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
                   }}
-                  whileTap={{ 
-                    scale: 0.95,
-                    rotate: -2,
-                    transition: { duration: 0.1 }
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                    e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translate(0, 0)';
+                    e.currentTarget.style.boxShadow = '0.1em 0.1em';
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+                    e.currentTarget.style.boxShadow = '0.05em 0.05em';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                    e.currentTarget.style.boxShadow = '0.15em 0.15em';
                   }}
                 >
-                  <Link
-                    href="/auth/signup-animated?plan=free"
-                    className="inline-flex items-center justify-center px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-black rounded-lg transition-colors border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]"
-                  >
-                    START FREE TRIAL
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </motion.div>
-                <motion.button 
-                  className="inline-flex items-center justify-center px-8 py-4 bg-white hover:bg-gray-100 text-black font-black rounded-lg transition-colors border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]"
-                  whileHover={{ 
-                    scale: 1.05,
-                    rotate: -2,
-                    boxShadow: "10px 10px 0px 0px rgba(0,0,0,0.9)",
-                    x: 3,
-                    y: -3
+                  START FREE TRIAL
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+                <button 
+                  className="inline-flex items-center justify-center"
+                  style={{
+                    background: '#5cbdfd',
+                    fontFamily: 'inherit',
+                    padding: '0.6em 1.3em',
+                    fontWeight: 900,
+                    fontSize: '18px',
+                    border: '3px solid black',
+                    borderRadius: '0.4em',
+                    boxShadow: '0.1em 0.1em',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
                   }}
-                  whileTap={{ 
-                    scale: 0.95,
-                    rotate: 2,
-                    transition: { duration: 0.1 }
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                    e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translate(0, 0)';
+                    e.currentTarget.style.boxShadow = '0.1em 0.1em';
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+                    e.currentTarget.style.boxShadow = '0.05em 0.05em';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                    e.currentTarget.style.boxShadow = '0.15em 0.15em';
                   }}
                 >
                   <Eye className="mr-2 h-5 w-5" />
                   WATCH DEMO
-                </motion.button>
+                </button>
               </motion.div>
             </motion.div>
 
@@ -1584,14 +1613,72 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   href="/auth/signup-animated?plan=free"
-                  className="inline-flex items-center justify-center px-8 py-3 bg-green-500 hover:bg-green-600 text-white font-black rounded-lg transition-colors border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-1 hover:translate-y-1"
+                  className="inline-flex items-center justify-center"
+                  style={{
+                    background: '#5cbdfd',
+                    fontFamily: 'inherit',
+                    padding: '0.6em 1.3em',
+                    fontWeight: 900,
+                    fontSize: '18px',
+                    border: '3px solid black',
+                    borderRadius: '0.4em',
+                    boxShadow: '0.1em 0.1em',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                    e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translate(0, 0)';
+                    e.currentTarget.style.boxShadow = '0.1em 0.1em';
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+                    e.currentTarget.style.boxShadow = '0.05em 0.05em';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                    e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                  }}
                 >
                   START FREE TRIAL
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
                 <a
                   href="#pricing"
-                  className="inline-flex items-center justify-center px-8 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-black rounded-lg transition-colors border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-1 hover:translate-y-1"
+                  className="inline-flex items-center justify-center"
+                  style={{
+                    background: '#5cbdfd',
+                    fontFamily: 'inherit',
+                    padding: '0.6em 1.3em',
+                    fontWeight: 900,
+                    fontSize: '18px',
+                    border: '3px solid black',
+                    borderRadius: '0.4em',
+                    boxShadow: '0.1em 0.1em',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    textDecoration: 'none',
+                    color: 'inherit'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                    e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translate(0, 0)';
+                    e.currentTarget.style.boxShadow = '0.1em 0.1em';
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+                    e.currentTarget.style.boxShadow = '0.05em 0.05em';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                    e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                  }}
                 >
                   VIEW PRICING
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -1992,7 +2079,37 @@ export default function HomePage() {
               
               <Link
                 href="/auth/signup-animated?plan=premium&promo=FIRSTFREE"
-                className="block w-full bg-green-500 hover:bg-green-600 text-white font-black py-3 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-1 hover:translate-y-1 transition-all mb-3"
+                className="block w-full text-center font-black mb-3"
+                style={{
+                  background: '#5cbdfd',
+                  fontFamily: 'inherit',
+                  padding: '0.6em 1.3em',
+                  fontWeight: 900,
+                  fontSize: '15px',
+                  border: '3px solid black',
+                  borderRadius: '0.4em',
+                  boxShadow: '0.1em 0.1em',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  textDecoration: 'none',
+                  color: 'inherit'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                  e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translate(0, 0)';
+                  e.currentTarget.style.boxShadow = '0.1em 0.1em';
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+                  e.currentTarget.style.boxShadow = '0.05em 0.05em';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                  e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                }}
               >
                 🎉 CLAIM YOUR FREE MONTH NOW!
               </Link>

@@ -297,26 +297,40 @@ const PricingCard = ({
                       plan.name === 'Premium' ? '/auth/signup-animated?plan=premium' : 
                       '/auth/signup-animated?plan=business'}
                 className="block w-full"
+                style={{
+                    background: '#5cbdfd',
+                    fontFamily: 'inherit',
+                    padding: '0.6em 1.3em',
+                    fontWeight: 900,
+                    fontSize: '18px',
+                    border: '3px solid black',
+                    borderRadius: '0.4em',
+                    boxShadow: '0.1em 0.1em',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'block',
+                    textAlign: 'center',
+                    textDecoration: 'none',
+                    color: 'inherit'
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                    e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translate(0, 0)';
+                    e.currentTarget.style.boxShadow = '0.1em 0.1em';
+                }}
+                onMouseDown={(e) => {
+                    e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+                    e.currentTarget.style.boxShadow = '0.05em 0.05em';
+                }}
+                onMouseUp={(e) => {
+                    e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                    e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                }}
             >
-                <motion.div
-                    className={cn(
-                        `w-full py-2 rounded-lg text-white font-black text-sm text-center cursor-pointer
-                        border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]
-                        hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]
-                        active:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]
-                        transition-all duration-200`
-                        , plan.accent)}
-                    whileHover={{
-                        scale: 1.02,
-                        transition: { duration: 0.2 }
-                    }}
-                    whileTap={{
-                        scale: 0.95,
-                        rotate: [-1, 1, 0],
-                    }}
-                >
-                    GET STARTED →
-                </motion.div>
+                GET STARTED →
             </Link>
         </motion.div>
     );

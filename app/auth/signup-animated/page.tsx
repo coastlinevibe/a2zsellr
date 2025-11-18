@@ -434,7 +434,43 @@ export default function AnimatedSignupPage() {
         </div>
         
         {/* Home Link */}
-        <Link href="/" className="absolute top-6 left-6 z-20 bg-white border-2 border-black rounded-lg px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-1 hover:translate-y-1 transition-all flex items-center gap-2 text-black font-black">
+        <Link 
+          href="/" 
+          className="absolute top-6 left-6 z-20 flex items-center gap-2 text-black font-black"
+          style={{
+            background: '#5cbdfd',
+            fontFamily: 'inherit',
+            padding: '0.6em 1.3em',
+            fontWeight: 900,
+            fontSize: '18px',
+            border: '3px solid black',
+            borderRadius: '0.4em',
+            boxShadow: '0.1em 0.1em',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            textDecoration: 'none',
+            color: 'inherit',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5em'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+            e.currentTarget.style.boxShadow = '0.15em 0.15em';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translate(0, 0)';
+            e.currentTarget.style.boxShadow = '0.1em 0.1em';
+          }}
+          onMouseDown={(e) => {
+            e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+            e.currentTarget.style.boxShadow = '0.05em 0.05em';
+          }}
+          onMouseUp={(e) => {
+            e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+            e.currentTarget.style.boxShadow = '0.15em 0.15em';
+          }}
+        >
           <Home className="h-5 w-5" />
           <span>HOME</span>
         </Link>
@@ -665,7 +701,37 @@ export default function AnimatedSignupPage() {
             <div className="text-center">
               <Link 
                 href="/#pricing"
-                className="bg-white text-black px-4 py-2 rounded-lg border-2 border-black font-black text-xs hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] transition-all inline-block"
+                style={{
+                  background: '#5cbdfd',
+                  fontFamily: 'inherit',
+                  padding: '0.6em 1.3em',
+                  fontWeight: 900,
+                  fontSize: '15px',
+                  border: '3px solid black',
+                  borderRadius: '0.4em',
+                  boxShadow: '0.1em 0.1em',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  display: 'inline-block'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                  e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translate(0, 0)';
+                  e.currentTarget.style.boxShadow = '0.1em 0.1em';
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+                  e.currentTarget.style.boxShadow = '0.05em 0.05em';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                  e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                }}
               >
                 CHANGE PLAN?
               </Link>
@@ -796,7 +862,38 @@ export default function AnimatedSignupPage() {
               ALREADY HAVE AN ACCOUNT?{' '}
               <Link 
                 href={`/auth/login-animated${selectedPlan ? `?plan=${selectedPlan}` : ''}`} 
-                className="bg-blue-500 text-white px-3 py-1 rounded border-2 border-black font-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] transition-all inline-block ml-2"
+                style={{
+                  background: '#5cbdfd',
+                  fontFamily: 'inherit',
+                  padding: '0.6em 1.3em',
+                  fontWeight: 900,
+                  fontSize: '15px',
+                  border: '3px solid black',
+                  borderRadius: '0.4em',
+                  boxShadow: '0.1em 0.1em',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  display: 'inline-block',
+                  marginLeft: '0.5em'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                  e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translate(0, 0)';
+                  e.currentTarget.style.boxShadow = '0.1em 0.1em';
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+                  e.currentTarget.style.boxShadow = '0.05em 0.05em';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                  e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                }}
               >
                 SIGN IN
               </Link>

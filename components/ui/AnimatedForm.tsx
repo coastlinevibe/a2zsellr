@@ -127,30 +127,48 @@ export function AnimatedButton({
   disabled,
   ...props 
 }: AnimatedButtonProps) {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2'
-  
-  const variants = {
-    primary: 'bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500 active:scale-95',
-    secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 active:scale-95',
-    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-emerald-500 active:scale-95'
-  }
-  
-  const sizes = {
-    sm: 'px-3 py-2 text-sm',
-    md: 'px-4 py-3 text-base',
-    lg: 'px-6 py-4 text-lg'
-  }
-
   return (
     <button
-      className={cn(
-        baseStyles,
-        variants[variant],
-        sizes[size],
-        (disabled || loading) && 'opacity-50 cursor-not-allowed',
-        className
-      )}
+      style={{
+        background: '#5cbdfd',
+        fontFamily: 'inherit',
+        padding: '0.6em 1.3em',
+        fontWeight: 900,
+        fontSize: '18px',
+        border: '3px solid black',
+        borderRadius: '0.4em',
+        boxShadow: '0.1em 0.1em',
+        cursor: disabled || loading ? 'not-allowed' : 'pointer',
+        transition: 'all 0.2s ease',
+        opacity: disabled || loading ? 0.5 : 1,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.5em'
+      }}
       disabled={disabled || loading}
+      onMouseEnter={(e) => {
+        if (!disabled && !loading) {
+          e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+          e.currentTarget.style.boxShadow = '0.15em 0.15em';
+        }
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translate(0, 0)';
+        e.currentTarget.style.boxShadow = '0.1em 0.1em';
+      }}
+      onMouseDown={(e) => {
+        if (!disabled && !loading) {
+          e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+          e.currentTarget.style.boxShadow = '0.05em 0.05em';
+        }
+      }}
+      onMouseUp={(e) => {
+        if (!disabled && !loading) {
+          e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+          e.currentTarget.style.boxShadow = '0.15em 0.15em';
+        }
+      }}
       {...props}
     >
       {loading ? (

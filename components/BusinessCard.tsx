@@ -228,11 +228,36 @@ export function BusinessCard({ business, categoryName, locationName, index = 0 }
         >
           <Link
             href={`/profile/${username}`}
-            className={`w-full py-3 px-4 rounded-lg text-center text-sm font-black transition-all block border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] ${
-              business.subscription_tier === 'business' ? 'bg-blue-500 hover:bg-blue-600 text-white' :
-              business.subscription_tier === 'premium' ? 'bg-orange-500 hover:bg-orange-600 text-white' :
-              'bg-gray-500 hover:bg-gray-600 text-white'
-            }`}
+            className="w-full text-center text-sm font-black transition-all block"
+            style={{
+              background: '#5cbdfd',
+              fontFamily: 'inherit',
+              padding: '0.6em 1.3em',
+              fontWeight: 900,
+              fontSize: '16px',
+              border: '3px solid black',
+              borderRadius: '0.4em',
+              boxShadow: '0.1em 0.1em',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              display: 'block'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+              e.currentTarget.style.boxShadow = '0.15em 0.15em';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translate(0, 0)';
+              e.currentTarget.style.boxShadow = '0.1em 0.1em';
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+              e.currentTarget.style.boxShadow = '0.05em 0.05em';
+            }}
+            onMouseUp={(e) => {
+              e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+              e.currentTarget.style.boxShadow = '0.15em 0.15em';
+            }}
           >
             VIEW PROFILE
           </Link>
