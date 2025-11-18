@@ -497,7 +497,7 @@ export default function HomePage() {
     >
       {/* Hero Section - Brutalist Style */}
       <motion.section 
-        className="pt-10 pb-16 lg:pt-20 lg:pb-20 relative"
+        className="pt-4 pb-16 sm:pt-10 lg:pt-20 lg:pb-20 relative"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
