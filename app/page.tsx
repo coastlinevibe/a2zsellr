@@ -962,10 +962,25 @@ export default function HomePage() {
             <div className="relative">
               {/* Carousel Header */}
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-                {/* Businesses + Found Count - Left */}
-                <div className="flex flex-col md:flex-row md:items-center gap-3">
+                {/* Mobile: Found Count (Left) + Businesses (Right) */}
+                <div className="flex md:hidden items-center justify-between gap-3">
+                  <p className="text-black text-sm bg-green-300 px-4 py-2 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold">
+                    FOUND {businesses.length}
+                  </p>
                   <motion.h3 
-                    className="text-xl md:text-2xl font-black text-black bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] inline-block"
+                    className="text-xl font-black text-black bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
+                    initial={{ x: 50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    BUSINESSES
+                  </motion.h3>
+                </div>
+
+                {/* Desktop: Businesses + Found Count */}
+                <div className="hidden md:flex md:items-center gap-3">
+                  <motion.h3 
+                    className="text-2xl font-black text-black bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] inline-block"
                     initial={{ x: -50, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ duration: 0.6 }}
@@ -974,7 +989,7 @@ export default function HomePage() {
                   </motion.h3>
                   
                   {/* Found Count */}
-                  <p className="text-black text-sm md:text-lg bg-green-300 px-4 py-2 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold inline-block">
+                  <p className="text-black text-lg bg-green-300 px-4 py-2 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold inline-block">
                     FOUND {businesses.length}
                   </p>
                 </div>
