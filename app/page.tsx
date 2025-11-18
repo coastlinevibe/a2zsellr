@@ -36,6 +36,8 @@ export default function HomePage() {
   const [showExitIntent, setShowExitIntent] = useState(false)
   const [chatWidgetCollapsed, setChatWidgetCollapsed] = useState(false)
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([])
+  const [touchStart, setTouchStart] = useState(0)
+  const [touchEnd, setTouchEnd] = useState(0)
   const locationDropdownRef = useRef<HTMLDivElement>(null)
   const categoryDropdownRef = useRef<HTMLDivElement>(null)
 
@@ -989,7 +991,7 @@ export default function HomePage() {
                 <motion.button
                   onClick={() => setCurrentSlide(Math.max(0, currentSlide - 1))}
                   disabled={currentSlide === 0}
-                  className={`p-4 rounded-lg border-2 border-black font-black transition-all ${
+                  className={`hidden md:block p-4 rounded-lg border-2 border-black font-black transition-all ${
                     currentSlide === 0 
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                       : 'bg-blue-500 text-white hover:bg-blue-600 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]'
@@ -1072,7 +1074,7 @@ export default function HomePage() {
                 <motion.button
                   onClick={() => setCurrentSlide(Math.min(Math.max(0, businesses.length - 3), currentSlide + 1))}
                   disabled={currentSlide >= Math.max(0, businesses.length - 3)}
-                  className={`p-4 rounded-lg border-2 border-black font-black transition-all ${
+                  className={`hidden md:block p-4 rounded-lg border-2 border-black font-black transition-all ${
                     currentSlide >= Math.max(0, businesses.length - 3)
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                       : 'bg-blue-500 text-white hover:bg-blue-600 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]'
