@@ -9,6 +9,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { AdminLoginModal } from '@/components/AdminLoginModal'
 import { PricingContainer, type PricingPlan } from '@/components/ui/pricing-container'
+import { ProductShowcase } from '@/components/ProductShowcase'
 import { motion } from 'framer-motion'
 
 type RecentActivity = {
@@ -680,96 +681,7 @@ export default function HomePage() {
                   </span>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl p-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]">
-                <div className="bg-green-300 rounded-xl p-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] mb-4">
-                  <div className="flex items-center gap-3 mb-4">
-                    <motion.div 
-                      className="w-12 h-12 bg-green-500 rounded-lg border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
-                      whileHover={{ scale: 1.1, transition: { duration: 0.2 } }}
-                    >
-                      <motion.div whileHover={{ rotate: 360, transition: { duration: 0.6 } }}>
-                        <ShoppingBag className="h-6 w-6 text-white" />
-                      </motion.div>
-                    </motion.div>
-                    <div>
-                      <h3 className="font-black text-black">OCEAN BASKET</h3>
-                      <p className="text-sm text-black font-bold">V&A WATERFRONT</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 mb-3">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 text-black fill-current" />
-                    ))}
-                    <span className="text-sm text-black ml-2 font-bold">(4.8) • 1.2K REVIEWS</span>
-                  </div>
-                  <p className="text-black text-sm mb-4 font-bold">FRESH SEAFOOD WITH HARBOR VIEWS</p>
-                  <div className="flex gap-2">
-                    <motion.button 
-                      className="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg text-sm font-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
-                      whileHover={{ 
-                        scale: 1.05,
-                        rotate: 2,
-                        boxShadow: "10px 10px 0px 0px rgba(0,0,0,0.9)",
-                        x: 3,
-                        y: -3
-                      }}
-                      whileTap={{ 
-                        scale: 0.95,
-                        rotate: -2,
-                        transition: { duration: 0.1 }
-                      }}
-                    >
-                      VIEW MENU
-                    </motion.button>
-                    <motion.button 
-                      className="bg-blue-400 text-black py-2 px-4 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
-                      whileHover={{ 
-                        scale: 1.05,
-                        rotate: -2,
-                        boxShadow: "10px 10px 0px 0px rgba(0,0,0,0.9)",
-                        x: 3,
-                        y: -3
-                      }}
-                      whileTap={{ 
-                        scale: 0.95,
-                        rotate: 2,
-                        transition: { duration: 0.1 }
-                      }}
-                    >
-                      <motion.div whileHover={{ rotate: 360, transition: { duration: 0.5 } }}>
-                        <Share2 className="h-4 w-4" />
-                      </motion.div>
-                    </motion.button>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <motion.div 
-                    className="bg-blue-400 rounded-lg p-4 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
-                    whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <motion.div whileHover={{ rotate: 360, transition: { duration: 0.6 } }}>
-                        <BarChart3 className="h-4 w-4 text-black" />
-                      </motion.div>
-                      <span className="text-sm font-black text-black">ANALYTICS</span>
-                    </div>
-                    <p className="text-xs text-black font-bold">TRACK PERFORMANCE</p>
-                  </motion.div>
-                  <motion.div 
-                    className="bg-green-400 rounded-lg p-4 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
-                    whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <motion.div whileHover={{ rotate: 360, transition: { duration: 0.7 } }}>
-                        <Target className="h-4 w-4 text-black" />
-                      </motion.div>
-                      <span className="text-sm font-black text-black">MARKETING</span>
-                    </div>
-                    <p className="text-xs text-black font-bold">BOOST VISIBILITY</p>
-                  </motion.div>
-                </div>
-              </div>
+              <ProductShowcase />
             </motion.div>
           </div>
         </div>
