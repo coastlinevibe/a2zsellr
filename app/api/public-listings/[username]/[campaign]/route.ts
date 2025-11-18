@@ -32,6 +32,8 @@ export async function GET(
     const campaignSlug = slugify(params.campaign)
 
     console.log(`🔍 Searching for listing: username="${params.username}" (${usernameSlug}), campaign="${params.campaign}" (${campaignSlug})`)
+    console.log(`🔍 Request URL: ${_request.url}`)
+    console.log(`🔍 Params:`, params)
 
     let foundListing: any = null
 
