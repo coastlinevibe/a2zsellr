@@ -38,6 +38,7 @@ export default function HomePage() {
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([])
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
+  const [dotPage, setDotPage] = useState(0)
   const locationDropdownRef = useRef<HTMLDivElement>(null)
   const categoryDropdownRef = useRef<HTMLDivElement>(null)
 
@@ -961,28 +962,27 @@ export default function HomePage() {
             <div className="relative">
               {/* Carousel Header */}
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-                {/* Featured Businesses - Left */}
-                <motion.h3 
-                  className="text-xl md:text-2xl font-black text-black bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] inline-block"
-                  initial={{ x: -50, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ duration: 0.6 }}
-                >
-                  FEATURED BUSINESSES
-                </motion.h3>
+                {/* Businesses + Found Count - Left */}
+                <div className="flex flex-col md:flex-row md:items-center gap-3">
+                  <motion.h3 
+                    className="text-xl md:text-2xl font-black text-black bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] inline-block"
+                    initial={{ x: -50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    BUSINESSES
+                  </motion.h3>
+                  
+                  {/* Found Count */}
+                  <p className="text-black text-sm md:text-lg bg-green-300 px-4 py-2 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold inline-block">
+                    FOUND {businesses.length}
+                  </p>
+                </div>
                 
                 {/* Premium Directory - Center (Large) - Hidden on mobile */}
                 <h2 className="hidden md:block text-4xl font-black text-black bg-white p-6 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]">
                   PREMIUM DIRECTORY
                 </h2>
-                
-                {/* Found Profiles - Right */}
-                <p className="text-black text-sm md:text-lg bg-green-300 p-3 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold">
-                  FOUND {businesses.length} PROFILE{businesses.length !== 1 ? 'S' : ''} 
-                  {searchQuery && ` MATCHING "${searchQuery.toUpperCase()}"`}
-                  {selectedCategory !== 'all' && ` IN ${categories.find(c => c.slug === selectedCategory)?.name?.toUpperCase()}`}
-                  {selectedLocation !== 'all' && ` IN ${locations.find(l => l.slug === selectedLocation)?.city?.toUpperCase()}`}
-                </p>
               </div>
               
               {/* Carousel Container with Side Navigation */}
@@ -1007,9 +1007,21 @@ export default function HomePage() {
                 </motion.button>
 
                 {/* Carousel Container */}
-                <div className="flex-1 overflow-hidden rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] bg-white p-6">
+                <div 
+                  className="flex-1 overflow-hidden rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] bg-white p-6"
+                  onTouchStart={(e) => setTouchStart(e.targetTouches[0].clientX)}
+                  onTouchEnd={(e) => {
+                    setTouchEnd(e.changedTouches[0].clientX)
+                    const distance = touchStart - e.changedTouches[0].clientX
+                    if (distance > 50) {
+                      setCurrentSlide(Math.min(Math.max(0, businesses.length - 1), currentSlide + 1))
+                    } else if (distance < -50) {
+                      setCurrentSlide(Math.max(0, currentSlide - 1))
+                    }
+                  }}
+                >
                 <motion.div 
-                  className="flex gap-6"
+                  className="flex gap-6 justify-center md:justify-start"
                   animate={{ x: -currentSlide * (320 + 24) }} // 320px card width + 24px gap
                   transition={{ 
                     type: "spring", 
@@ -1053,20 +1065,71 @@ export default function HomePage() {
                 </motion.div>
                 
                 {/* Slide Indicators */}
-                <div className="flex justify-center gap-2 mt-6">
-                  {Array.from({ length: Math.max(1, businesses.length - 2) }).map((_, index) => (
+                <div className="mt-6">
+                  {/* Desktop: Show all dots */}
+                  <div className="hidden md:flex justify-center gap-2">
+                    {Array.from({ length: Math.max(1, businesses.length - 2) }).map((_, index) => (
+                      <motion.button
+                        key={index}
+                        onClick={() => setCurrentSlide(index)}
+                        className={`w-4 h-4 rounded-full border-2 border-black transition-all ${
+                          currentSlide === index 
+                            ? 'bg-yellow-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]' 
+                            : 'bg-white hover:bg-gray-200'
+                        }`}
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.9 }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Mobile: Show 6 dots with pagination */}
+                  <div className="md:hidden flex items-center justify-center gap-2">
                     <motion.button
-                      key={index}
-                      onClick={() => setCurrentSlide(index)}
-                      className={`w-4 h-4 rounded-full border-2 border-black transition-all ${
-                        currentSlide === index 
-                          ? 'bg-yellow-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]' 
-                          : 'bg-white hover:bg-gray-200'
+                      onClick={() => setDotPage(Math.max(0, dotPage - 1))}
+                      disabled={dotPage === 0}
+                      className={`p-2 rounded-lg border-2 border-black font-black text-sm ${
+                        dotPage === 0 
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                          : 'bg-blue-400 text-white hover:bg-blue-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]'
                       }`}
-                      whileHover={{ scale: 1.2 }}
-                      whileTap={{ scale: 0.9 }}
-                    />
-                  ))}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      ←
+                    </motion.button>
+
+                    <div className="flex gap-2">
+                      {Array.from({ length: Math.min(6, Math.max(1, businesses.length - 2) - dotPage * 6) }).map((_, i) => {
+                        const index = dotPage * 6 + i
+                        return (
+                          <motion.button
+                            key={index}
+                            onClick={() => setCurrentSlide(index)}
+                            className={`w-3 h-3 rounded-full border-2 border-black transition-all ${
+                              currentSlide === index 
+                                ? 'bg-yellow-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]' 
+                                : 'bg-white hover:bg-gray-200'
+                            }`}
+                            whileHover={{ scale: 1.2 }}
+                            whileTap={{ scale: 0.9 }}
+                          />
+                        )
+                      })}
+                    </div>
+
+                    <motion.button
+                      onClick={() => setDotPage(dotPage + 1)}
+                      disabled={dotPage * 6 + 6 >= Math.max(1, businesses.length - 2)}
+                      className={`p-2 rounded-lg border-2 border-black font-black text-sm ${
+                        dotPage * 6 + 6 >= Math.max(1, businesses.length - 2)
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                          : 'bg-blue-400 text-white hover:bg-blue-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]'
+                      }`}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      →
+                    </motion.button>
+                  </div>
                 </div>
                 </div>
 
