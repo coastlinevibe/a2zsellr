@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Use your existing Supabase client
+// Use anon key for client-side operations
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dcfgdlwhixdruyewywly.supabase.co'
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjZmdkbHdoaXhkcnV5ZXd5d2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1MjU1NjYsImV4cCI6MjA3NjEwMTU2Nn0.wMGq2FpoVFMnLemUP13763iodoXNu-gx8I0rRpTubG4'
 
@@ -27,130 +27,38 @@ export interface AdminResetResult {
 
 /**
  * ADMIN RESET FUNCTION
- * Instantly deletes all products, listings, and gallery items for ALL free tier users
+ * Calls the API endpoint to reset all free tier users
  * Use with caution - this action cannot be undone!
  */
 export async function adminResetAllFreeUsers(): Promise<AdminResetResult> {
-  const resetTime = new Date().toISOString()
-  
   try {
-    console.log('🚨 ADMIN RESET INITIATED - Resetting all free tier users...')
-    console.log(`⏰ Reset time: ${resetTime}`)
+    console.log('🚨 ADMIN RESET INITIATED - Calling API endpoint...')
 
-    // Step 1: Get all free tier users
-    const { data: freeUsers, error: usersError } = await supabase
-      .from('profiles')
-      .select('id, display_name')
-      .eq('subscription_tier', 'free')
-
-    if (usersError || !freeUsers) {
-      throw new Error(`Failed to fetch free users: ${usersError?.message}`)
-    }
-
-    console.log(`👥 Found ${freeUsers.length} free tier users`)
-
-    let totalProductsDeleted = 0
-    let totalListingsDeleted = 0
-    let totalGalleryDeleted = 0
-    const userDetails: Array<{
-      id: string
-      name: string
-      productsDeleted: number
-      listingsDeleted: number
-      galleryDeleted: number
-    }> = []
-
-    // Step 2: Process each user
-    for (const user of freeUsers) {
-      console.log(`🔄 Processing: ${user.display_name}`)
-
-      // Count items before deletion
-      const [productsCount, listingsCount, galleryCount] = await Promise.all([
-        supabase.from('profile_products').select('id', { count: 'exact' }).eq('profile_id', user.id),
-        supabase.from('profile_listings').select('id', { count: 'exact' }).eq('profile_id', user.id),
-        supabase.from('profile_gallery').select('id', { count: 'exact' }).eq('profile_id', user.id)
-      ])
-
-      const productsToDelete = productsCount.count || 0
-      const listingsToDelete = listingsCount.count || 0
-      const galleryToDelete = galleryCount.count || 0
-
-      // Delete all items for this user
-      await Promise.all([
-        supabase.from('profile_products').delete().eq('profile_id', user.id),
-        supabase.from('profile_listings').delete().eq('profile_id', user.id),
-        supabase.from('profile_gallery').delete().eq('profile_id', user.id),
-        supabase.from('profile_analytics').delete().eq('profile_id', user.id)
-      ])
-
-      // Update profile tracking and reset view count
-      await supabase
-        .from('profiles')
-        .update({
-          current_listings: 0,
-          profile_views: 0,
-          last_view_reset: resetTime,
-          last_free_reset: resetTime,
-          last_reset_at: resetTime
-        })
-        .eq('id', user.id)
-
-      // Log to reset history
-      await supabase
-        .from('reset_history')
-        .insert({
-          profile_id: user.id,
-          reset_date: resetTime,
-          products_deleted: productsToDelete,
-          listings_deleted: listingsToDelete,
-          gallery_items_deleted: galleryToDelete,
-          subscription_tier: 'free'
-        })
-
-      // Track totals
-      totalProductsDeleted += productsToDelete
-      totalListingsDeleted += listingsToDelete
-      totalGalleryDeleted += galleryToDelete
-
-      userDetails.push({
-        id: user.id,
-        name: user.display_name,
-        productsDeleted: productsToDelete,
-        listingsDeleted: listingsToDelete,
-        galleryDeleted: galleryToDelete
-      })
-
-      console.log(`   ✅ ${user.display_name}: ${productsToDelete} products, ${listingsToDelete} listings, ${galleryToDelete} gallery items deleted`)
-    }
-
-    const successMessage = `🎯 ADMIN RESET COMPLETED! ${freeUsers.length} users reset successfully`
-    console.log(successMessage)
-    console.log(`📊 Total deleted: ${totalProductsDeleted} products, ${totalListingsDeleted} listings, ${totalGalleryDeleted} gallery items`)
-
-    return {
-      success: true,
-      message: successMessage,
-      data: {
-        usersReset: freeUsers.length,
-        totalProductsDeleted,
-        totalListingsDeleted,
-        totalGalleryDeleted,
-        resetTime,
-        userDetails
+    const response = await fetch('/api/admin/reset-free-users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
       }
+    })
+
+    const result = await response.json()
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Reset failed')
     }
 
+    return result
   } catch (error) {
     console.error('❌ ADMIN RESET FAILED:', error)
     return {
       success: false,
-      message: `Admin reset failed: ${error}`,
+      message: `Admin reset failed: ${error instanceof Error ? error.message : String(error)}`,
       data: {
         usersReset: 0,
         totalProductsDeleted: 0,
         totalListingsDeleted: 0,
         totalGalleryDeleted: 0,
-        resetTime,
+        resetTime: new Date().toISOString(),
         userDetails: []
       }
     }

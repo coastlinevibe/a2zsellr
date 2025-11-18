@@ -442,18 +442,13 @@ export default function DashboardPage() {
             <div className="flex gap-1 p-2">
               {marketingViews.map((view) => {
                 const IconComponent = view.icon
-                const isComingSoon = ['scheduler', 'analytics', 'templates'].includes(view.id)
                 const isDisabled = userTier === 'free' && isPremiumFeature(view.id)
-                const isActive = marketingActiveView === view.id && !isDisabled && !isComingSoon
+                const isActive = marketingActiveView === view.id && !isDisabled
                 
                 return (
                   <div key={view.id} className="flex-1 relative">
                     <button
                       onClick={() => {
-                        if (isComingSoon) {
-                          alert('🚀 Coming Soon!\n\nThis feature is currently in development and will be available soon.')
-                          return
-                        }
                         if (isDisabled) {
                           alert('🔒 This feature is only available on Premium and Business tiers.\n\nUpgrade your plan to unlock advanced marketing tools!')
                           return
@@ -463,29 +458,23 @@ export default function DashboardPage() {
                       className={`w-full py-3 px-4 rounded-[6px] border-2 border-black font-bold transition-all flex items-center justify-center gap-2 ${
                         isActive
                           ? 'bg-blue-500 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]'
-                          : isComingSoon
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-[1px_1px_0px_0px_rgba(0,0,0,0.3)] blur-[1px]'
                           : isDisabled
                           ? 'bg-gray-200 text-gray-500 cursor-not-allowed shadow-[1px_1px_0px_0px_rgba(0,0,0,0.3)]'
                           : 'bg-white text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-gray-100'
                       }`}
-                      disabled={isDisabled || isComingSoon}
+                      disabled={isDisabled}
                     >
                       <IconComponent className="w-4 h-4" />
                       <span className="text-sm">{view.label}</span>
                     </button>
-                    {isComingSoon && (
-                      <span 
-                        className="absolute -top-1 -right-1 bg-amber-400 text-black text-xs px-1.5 py-0.5 font-bold border border-black pointer-events-none"
-                        style={{ borderRadius: '9px', zIndex: 9999 }}
-                      >
-                        Coming Soon
-                      </span>
-                    )}
-                    {isDisabled && !isComingSoon && (
-                      <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold pointer-events-none" style={{ zIndex: 9999 }}>
-                        Premium
-                      </span>
+                    {isDisabled && (
+                      <button
+                        onClick={() => setShowPlanModal(true)}
+                        className="absolute -top-1 -right-1 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black text-xs px-2 py-1 rounded-lg border border-black font-black flex items-center gap-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all duration-200" style={{ zIndex: 10 }}>
+                        <Crown className="w-3 h-3" />
+                        UPGRADE NOW
+                        <Star className="w-2 h-2" />
+                      </button>
                     )}
                   </div>
                 )
@@ -523,15 +512,17 @@ export default function DashboardPage() {
                   <div className="mx-auto w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center mb-6">
                     <Clipboard className="w-12 h-12 text-purple-600" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Templates - Premium Feature</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">My Templates</h3>
                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
                     Access professional templates to create stunning marketing pages. Only available on Premium and Business tiers.
                   </p>
                   <button
                     onClick={() => setShowPlanModal(true)}
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-pink-600 transition-all"
+                    className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-2 px-3 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 mx-auto text-sm"
                   >
-                    Upgrade to Premium
+                    <Crown className="w-4 h-4" />
+                    <span>UPGRADE NOW</span>
+                    <Star className="w-3 h-3" />
                   </button>
                 </div>
               ) : (
@@ -641,15 +632,17 @@ export default function DashboardPage() {
                   <div className="mx-auto w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mb-6">
                     <Calendar className="w-12 h-12 text-amber-600" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Scheduler - Premium Feature</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Schedule</h3>
                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
                     Schedule your marketing campaigns for optimal engagement times. Only available on Premium and Business tiers.
                   </p>
                   <button
-                    onClick={() => router.push('/#pricing')}
-                    className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-amber-600 hover:to-orange-600 transition-all"
+                    onClick={() => setShowPlanModal(true)}
+                    className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-2 px-3 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 mx-auto text-sm"
                   >
-                    Upgrade to Premium
+                    <Crown className="w-4 h-4" />
+                    <span>UPGRADE NOW</span>
+                    <Star className="w-3 h-3" />
                   </button>
                 </div>
               ) : (
@@ -666,15 +659,17 @@ export default function DashboardPage() {
                   <div className="mx-auto w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mb-6">
                     <TrendingUp className="w-12 h-12 text-blue-600" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Analytics - Premium Feature</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Analytics</h3>
                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
                     Track your campaign performance with detailed analytics and insights. Only available on Premium and Business tiers.
                   </p>
                   <button
-                    onClick={() => router.push('/#pricing')}
-                    className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all"
+                    onClick={() => setShowPlanModal(true)}
+                    className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-2 px-3 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 mx-auto text-sm"
                   >
-                    Upgrade to Premium
+                    <Crown className="w-4 h-4" />
+                    <span>UPGRADE NOW</span>
+                    <Star className="w-3 h-3" />
                   </button>
                 </div>
               ) : (
