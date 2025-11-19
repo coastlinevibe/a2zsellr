@@ -521,16 +521,9 @@ export default function HomePage() {
                 animate={{ y: 0, opacity: 1, rotate: 0 }}
                 transition={{ duration: 0.8, delay: 0.6, type: "spring", stiffness: 100 }}
               >
-                <span className="block text-blue-600">Sell Smarter.</span>
-                <span className="block text-green-600">Sell Anywhere.</span>
-                <span className="flex items-center justify-start gap-3 text-black">
-                  Sell 
-                  <img 
-                    src="/logo.png" 
-                    alt="A2Z Sellr Logo" 
-                    className="w-20 h-20 object-contain inline-block"
-                  />
-                </span>
+                <span className="block">BE SEEN.</span>
+                <span className="block">SHOW & SELL.</span>
+                <span className="text-green-600 block">ALL IN ONE</span>
               </motion.h1>
               
               <motion.p 
