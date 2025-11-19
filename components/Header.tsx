@@ -43,13 +43,13 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 py-2">
         <div className="flex flex-col justify-between gap-2 md:flex-row md:items-center">
           <div className="flex items-center gap-3">
-            <motion.div 
-              className="text-lg"
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              🎉
-            </motion.div>
+            <div className="w-12 h-12 flex items-center justify-center">
+              <img 
+                src="/logo.png" 
+                alt="A2Z Sellr Logo" 
+                className="w-10 h-10 object-contain"
+              />
+            </div>
             <div className="bg-white p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]">
               <p className="text-xs font-black text-black uppercase">
                 WELCOME TO S.A's PREMIUM SELLER DIRECTORY! JOIN THOUSANDS OF MEMBERS SHOWING & SHARING THEIR PRODUCTS AND SERVICES.
@@ -57,7 +57,7 @@ export function Header() {
             </div>
           </div>
           <div className="flex shrink-0 gap-2 max-md:flex-wrap">
-2            <button 
+            <button 
               onClick={handleSignUp}
               style={{
                 background: '#5cbdfd',

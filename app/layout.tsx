@@ -10,8 +10,8 @@ import { Header } from '@/components/Header'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'A2Z Business Directory - South Africa\'s Premium Directory',
-  description: 'Discover quality businesses nationwide with A2Z Business Directory. Mobile-first, award-winning design for South African businesses.',
+  title: 'A2Z Sellr - South Africa\'s Leading Seller Platform',
+  description: 'Discover quality businesses nationwide with A2Z Sellr. Mobile-first, award-winning design for South African sellers.',
   metadataBase: new URL('https://a2zsellr.life'),
   icons: {
     icon: [
@@ -22,10 +22,10 @@ export const metadata: Metadata = {
     apple: '/favicon.png',
   },
   openGraph: {
-    title: 'A2Z Business Directory - South Africa\'s Premium Directory',
-    description: 'Discover quality businesses nationwide with A2Z Business Directory. Mobile-first, award-winning design for South African businesses.',
+    title: 'A2Z Sellr - South Africa\'s Leading Seller Platform',
+    description: 'Discover quality businesses nationwide with A2Z Sellr. Mobile-first, award-winning design for South African sellers.',
     url: 'https://a2zsellr.life',
-    siteName: 'A2Z Business Directory',
+    siteName: 'A2Z Sellr',
     images: [
       {
         url: '/thumbnail.png',
@@ -39,8 +39,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'A2Z Business Directory - South Africa\'s Premium Directory',
-    description: 'Discover quality businesses nationwide with A2Z Business Directory. Mobile-first, award-winning design for South African businesses.',
+    title: 'A2Z Sellr - South Africa\'s Leading Seller Platform',
+    description: 'Discover quality businesses nationwide with A2Z Sellr. Mobile-first, award-winning design for South African sellers.',
     images: ['/thumbnail.png'],
   },
 }

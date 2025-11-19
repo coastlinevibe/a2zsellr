@@ -521,17 +521,25 @@ export default function HomePage() {
                 animate={{ y: 0, opacity: 1, rotate: 0 }}
                 transition={{ duration: 0.8, delay: 0.6, type: "spring", stiffness: 100 }}
               >
-                <span className="block">BE SEEN.</span>
-                <span className="block">SHOW & SELL.</span>
-                <span className="text-green-600 block">ALL IN ONE</span>
+                <span className="block text-blue-600">Sell Smarter.</span>
+                <span className="block text-green-600">Sell Anywhere.</span>
+                <span className="flex items-center justify-start gap-3 text-black">
+                  Sell 
+                  <img 
+                    src="/logo.png" 
+                    alt="A2Z Sellr Logo" 
+                    className="w-20 h-20 object-contain inline-block"
+                  />
+                </span>
               </motion.h1>
+              
               <motion.p 
                 className="text-lg text-black mb-0 leading-relaxed max-w-lg bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold"
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
+                transition={{ duration: 0.6, delay: 0.9 }}
               >
-                Setup your profile to, display your products/services, and sell with powerful marketing tools. Everything you need to boost your sales.
+                The All-In-One Home for South African Sellers. Your products, your services, your brand — amplified with tools built for real South African businesses.
               </motion.p>
               
               {/* Feature Pills */}
@@ -1711,14 +1719,18 @@ export default function HomePage() {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               <motion.div 
-                className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-xl border-4 border-white flex items-center justify-center shadow-[6px_6px_0px_0px_rgba(255,255,255,0.9)] transform rotate-3"
+                className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-xl border-4 border-white flex items-center justify-center shadow-[6px_6px_0px_0px_rgba(255,255,255,0.9)] transform rotate-3 overflow-hidden"
                 whileHover={{ 
                   rotate: [3, -3, 3],
                   scale: 1.1,
                   transition: { duration: 0.5 }
                 }}
               >
-                <span className="text-black font-black text-2xl">A</span>
+                <img 
+                  src="/logo.png" 
+                  alt="A2Z Sellr Logo" 
+                  className="w-12 h-12 object-contain"
+                />
               </motion.div>
               <div className="text-left">
                 <motion.h2 
@@ -1738,7 +1750,7 @@ export default function HomePage() {
                   }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  PREMIUM DIRECTORY
+                  SELLER PLATFORM
                 </motion.p>
               </div>
             </motion.div>
