@@ -62,6 +62,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Wait a moment for user to be fully created
         await new Promise(resolve => setTimeout(resolve, 1000))
         
+        const selectedPlan = metadata?.selected_plan || 'free'
+        const trialEndDate = selectedPlan === 'free' 
+          ? new Date(Date.now() + 5 * 60 * 1000).toISOString() // 5 minutes from now
+          : null
+
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert(
@@ -69,11 +74,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               id: data.user.id,
               display_name: metadata?.display_name || email.split('@')[0],
               email: email,
-              subscription_tier: metadata?.selected_plan || 'free',
+              subscription_tier: selectedPlan,
               subscription_status: 'active',
               verified_seller: false,
               is_active: true,
               current_listings: 0,
+              trial_end_date: trialEndDate,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             },

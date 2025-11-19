@@ -41,41 +41,35 @@ export default function ResetTimer({
   // Don't show for premium/business users
   if (subscriptionTier !== 'free' || !resetInfo) return null
 
-  // Don't show if more than 7 days remaining
-  if (resetInfo.daysRemaining > 7) return null
+  // Always show for free users since reset is every 5 minutes
 
   const getTimeDisplay = () => {
     if (resetInfo.shouldReset) {
       return { text: 'RESET DONE', color: 'text-green-600', bgColor: 'bg-green-100' }
     }
 
-    const days = resetInfo.daysRemaining
-    const hours = resetInfo.hoursRemaining % 24
-    const minutes = Math.floor((resetInfo.hoursRemaining * 60) % 60)
-    const seconds = Math.floor(((resetInfo.resetDate.getTime() - currentTime.getTime()) / 1000) % 60)
+    const msRemaining = resetInfo.resetDate.getTime() - currentTime.getTime()
+    const minutes = Math.floor(msRemaining / (60 * 1000))
+    const seconds = Math.floor((msRemaining % (60 * 1000)) / 1000)
 
     let text = ''
     let color = 'text-gray-700'
     let bgColor = 'bg-gray-100'
 
-    if (days > 3) {
-      text = `${days}d ${hours}h`
+    if (minutes > 3) {
+      text = `${minutes}m ${seconds}s`
       color = 'text-blue-700'
       bgColor = 'bg-blue-100'
-    } else if (days > 1) {
-      text = `${days}d ${hours}h ${minutes}m`
+    } else if (minutes > 1) {
+      text = `${minutes}m ${seconds}s`
       color = 'text-amber-700'
       bgColor = 'bg-amber-100'
-    } else if (days === 1) {
-      text = `${days}d ${hours}h ${minutes}m`
+    } else if (minutes === 1) {
+      text = `${minutes}m ${seconds}s`
       color = 'text-orange-700'
       bgColor = 'bg-orange-100'
-    } else if (hours > 1) {
-      text = `${hours}h ${minutes}m ${seconds}s`
-      color = 'text-red-700'
-      bgColor = 'bg-red-100'
     } else {
-      text = `${minutes}m ${seconds}s`
+      text = `${seconds}s`
       color = 'text-red-700'
       bgColor = 'bg-red-100'
     }
@@ -85,8 +79,11 @@ export default function ResetTimer({
 
   const getIcon = () => {
     if (resetInfo.shouldReset) return AlertTriangle
-    if (resetInfo.daysRemaining <= 1) return Zap
-    if (resetInfo.daysRemaining <= 3) return AlertTriangle
+    const msRemaining = resetInfo.resetDate.getTime() - currentTime.getTime()
+    const minutes = Math.floor(msRemaining / (60 * 1000))
+    
+    if (minutes <= 1) return Zap
+    if (minutes <= 2) return AlertTriangle
     return Clock
   }
 

@@ -86,8 +86,7 @@ export default function ResetCountdownBanner({
               </>
             ) : (
               <>
-                Free tier accounts reset every Sunday. All products and listings will be cleared on{' '}
-                <strong>{resetInfo.resetDate.toLocaleDateString()}</strong> at{' '}
+                Free tier accounts reset every 5 minutes for testing. All products and listings will be cleared at{' '}
                 <strong>{resetInfo.resetDate.toLocaleTimeString()}</strong>.
               </>
             )}

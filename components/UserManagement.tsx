@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, Shield, Crown, Star, Eye, Edit, Trash2, RefreshCw, Search, Filter } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Users, Shield, Crown, Star, Eye, Edit, Trash2, RefreshCw, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
 import { motion } from 'framer-motion'
 
@@ -81,6 +80,259 @@ export function UserManagement() {
     } catch (error) {
       console.error('Error updating user:', error)
       alert(`❌ Failed to update user ${field}`)
+    } finally {
+      setUpdating(null)
+    }
+  }
+
+  const deleteUser = async (userId: string, userName: string) => {
+    console.log(`🚨 DELETE USER CALLED: ${userId} (${userName})`)
+    
+    // Triple confirmation for user deletion
+    if (!confirm(`🚨 WARNING: You are about to PERMANENTLY DELETE user "${userName}" and ALL their data. This action CANNOT be undone. Are you absolutely sure?`)) {
+      console.log('❌ User cancelled at first confirmation')
+      return
+    }
+
+    if (!confirm(`🚨 FINAL WARNING: This will delete:\n- User profile and authentication\n- All products and listings\n- All gallery images\n- All analytics data\n- All payment records\n- ALL user data permanently\n\nType "DELETE" in the next dialog to confirm.`)) {
+      console.log('❌ User cancelled at second confirmation')
+      return
+    }
+
+    const confirmation = prompt(`Type "DELETE" to permanently remove user "${userName}":`)
+    if (confirmation !== 'DELETE') {
+      console.log(`❌ User typed "${confirmation}" instead of "DELETE"`)
+      alert('User deletion cancelled - confirmation text did not match.')
+      return
+    }
+
+    console.log('✅ All confirmations passed, starting deletion...')
+    setUpdating(userId)
+    try {
+      console.log(`🗑️ Starting complete deletion of user: ${userId} (${userName})`)
+
+      // First, let's verify the user exists and we can access it
+      const { data: userProfile, error: userReadError } = await supabase
+        .from('profiles')
+        .select('id, display_name, email')
+        .eq('id', userId)
+        .single()
+      
+      console.log(`🔍 User profile check:`, { 
+        userProfile, 
+        userReadError,
+        canReadUser: !!userProfile 
+      })
+
+      if (userReadError) {
+        console.error('❌ Cannot read user profile:', userReadError)
+        alert(`❌ Cannot access user profile: ${userReadError.message}`)
+        return
+      }
+
+      // First, let's get all user data that contains storage files
+      const { data: existingProducts, error: productsReadError } = await supabase
+        .from('profile_products')
+        .select('id, name, profile_id, image_url, images')
+        .eq('profile_id', userId)
+      
+      const { data: existingGallery, error: galleryReadError } = await supabase
+        .from('profile_gallery')
+        .select('id, image_url, storage_path')
+        .eq('profile_id', userId)
+      
+      console.log(`🔍 Found ${existingProducts?.length || 0} products for user ${userId}:`, existingProducts)
+      console.log(`🔍 Found ${existingGallery?.length || 0} gallery items for user ${userId}:`, existingGallery)
+      
+      if (productsReadError) {
+        console.error('❌ Error reading products:', productsReadError)
+      }
+      if (galleryReadError) {
+        console.error('❌ Error reading gallery:', galleryReadError)
+      }
+
+      // Extract all storage paths that need to be deleted
+      const storagePaths: string[] = []
+      
+      // Get product image paths
+      existingProducts?.forEach(product => {
+        if (product.image_url) {
+          // Extract path from URL
+          const urlParts = product.image_url.split('/product-images/')
+          if (urlParts.length > 1) {
+            storagePaths.push(urlParts[1])
+          }
+        }
+        
+        // Handle multiple images in JSON format
+        if (product.images) {
+          try {
+            const images = typeof product.images === 'string' ? JSON.parse(product.images) : product.images
+            if (Array.isArray(images)) {
+              images.forEach((img: any) => {
+                if (img.url) {
+                  const urlParts = img.url.split('/product-images/')
+                  if (urlParts.length > 1) {
+                    storagePaths.push(urlParts[1])
+                  }
+                }
+              })
+            }
+          } catch (e) {
+            console.warn('Could not parse product images JSON:', e)
+          }
+        }
+      })
+      
+      // Get gallery image paths
+      existingGallery?.forEach(item => {
+        if (item.storage_path) {
+          storagePaths.push(item.storage_path)
+        } else if (item.image_url) {
+          // Try to extract path from URL
+          const urlParts = item.image_url.split('/sharelinks/')
+          if (urlParts.length > 1) {
+            storagePaths.push(urlParts[1])
+          }
+        }
+      })
+      
+      console.log(`🗑️ Found ${storagePaths.length} storage files to delete:`, storagePaths)
+
+      // Count items before deletion for logging
+      const [productsCount, listingsCount, galleryCount, analyticsCount] = await Promise.all([
+        supabase.from('profile_products').select('id', { count: 'exact' }).eq('profile_id', userId),
+        supabase.from('profile_listings').select('id', { count: 'exact' }).eq('profile_id', userId),
+        supabase.from('profile_gallery').select('id', { count: 'exact' }).eq('profile_id', userId),
+        supabase.from('profile_analytics').select('id', { count: 'exact' }).eq('profile_id', userId)
+      ])
+
+      const productsToDelete = productsCount.count || 0
+      const listingsToDelete = listingsCount.count || 0
+      const galleryToDelete = galleryCount.count || 0
+      const analyticsToDelete = analyticsCount.count || 0
+
+      console.log(`📊 Items to delete: ${productsToDelete} products, ${listingsToDelete} listings, ${galleryToDelete} gallery, ${analyticsToDelete} analytics`)
+
+      // Delete all user-related data in sequence
+      console.log('🗑️ Deleting user products...')
+      const { error: productsError, data: deletedProducts } = await supabase
+        .from('profile_products')
+        .delete()
+        .eq('profile_id', userId)
+        .select()
+      
+      console.log(`🗑️ Products deletion result:`, { error: productsError, deletedCount: deletedProducts?.length || 0 })
+
+      console.log('🗑️ Deleting user listings...')
+      const { error: listingsError } = await supabase
+        .from('profile_listings')
+        .delete()
+        .eq('profile_id', userId)
+
+      console.log('🗑️ Deleting user gallery...')
+      const { error: galleryError } = await supabase
+        .from('profile_gallery')
+        .delete()
+        .eq('profile_id', userId)
+
+      console.log('🗑️ Deleting user analytics...')
+      const { error: analyticsError } = await supabase
+        .from('profile_analytics')
+        .delete()
+        .eq('profile_id', userId)
+
+      // Try to delete from other possible tables
+      console.log('🗑️ Deleting payment transactions...')
+      const { error: paymentsError } = await supabase
+        .from('payment_transactions')
+        .delete()
+        .eq('profile_id', userId)
+
+      console.log('🗑️ Deleting reset history...')
+      const { error: resetHistoryError } = await supabase
+        .from('reset_history')
+        .delete()
+        .eq('profile_id', userId)
+
+
+
+      // Finally, delete the user profile
+      console.log('🗑️ Deleting user profile...')
+      console.log(`🔍 Attempting to delete profile with ID: ${userId}`)
+      
+      const { error: profileError, data: deletedProfile } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId)
+        .select()
+      
+      console.log(`🗑️ Profile deletion result:`, { 
+        error: profileError, 
+        deletedProfile: deletedProfile,
+        deletedCount: deletedProfile?.length || 0 
+      })
+
+      // Clean up storage files
+      if (storagePaths.length > 0) {
+        console.log('🗑️ Cleaning up storage files...')
+        
+        // Delete product images from product-images bucket
+        const productImagePaths = storagePaths.filter(path => !path.includes('/'))
+        if (productImagePaths.length > 0) {
+          const { error: productStorageError } = await supabase.storage
+            .from('product-images')
+            .remove(productImagePaths)
+          
+          if (productStorageError) {
+            console.error('❌ Error deleting product images:', productStorageError)
+          } else {
+            console.log(`✅ Deleted ${productImagePaths.length} product images from storage`)
+          }
+        }
+        
+        // Delete other files from sharelinks bucket
+        const otherPaths = storagePaths.filter(path => path.includes('/'))
+        if (otherPaths.length > 0) {
+          const { error: otherStorageError } = await supabase.storage
+            .from('sharelinks')
+            .remove(otherPaths)
+          
+          if (otherStorageError) {
+            console.error('❌ Error deleting other files:', otherStorageError)
+          } else {
+            console.log(`✅ Deleted ${otherPaths.length} other files from storage`)
+          }
+        }
+      }
+
+      // Check for errors
+      const errors = []
+      if (productsError) errors.push(`Products: ${productsError.message}`)
+      if (listingsError) errors.push(`Listings: ${listingsError.message}`)
+      if (galleryError) errors.push(`Gallery: ${galleryError.message}`)
+      if (analyticsError) errors.push(`Analytics: ${analyticsError.message}`)
+      if (paymentsError) errors.push(`Payments: ${paymentsError.message}`)
+      if (resetHistoryError) errors.push(`Reset History: ${resetHistoryError.message}`)
+      if (profileError) errors.push(`Profile: ${profileError.message}`)
+      
+      // Note: Storage errors are logged but don't fail the deletion since database cleanup is more important
+
+      if (errors.length > 0) {
+        console.error('❌ Deletion errors:', errors)
+        alert(`⚠️ User deleted but with some errors:\n${errors.join('\n')}`)
+      } else {
+        console.log(`✅ User ${userName} completely deleted from database`)
+        alert(`✅ User "${userName}" has been completely deleted!\n\nDeleted:\n- ${productsToDelete} products\n- ${listingsToDelete} listings\n- ${galleryToDelete} gallery items\n- ${analyticsToDelete} analytics records\n- ${storagePaths.length} storage files\n- User profile and authentication`)
+      }
+
+      // Remove from local state
+      setUsers(users.filter(user => user.id !== userId))
+      setSelectedUser(null)
+
+    } catch (error) {
+      console.error('❌ Error deleting user:', error)
+      alert(`❌ Failed to delete user: ${error}`)
     } finally {
       setUpdating(null)
     }
@@ -342,7 +594,7 @@ export function UserManagement() {
                         disabled={updating === user.id}
                         className={`p-2 rounded-lg border-2 border-black font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] ${
                           user.is_active 
-                            ? 'bg-red-500 hover:bg-red-600 text-white' 
+                            ? 'bg-orange-500 hover:bg-orange-600 text-white' 
                             : 'bg-green-500 hover:bg-green-600 text-white'
                         }`}
                         whileHover={{ scale: 1.1 }}
@@ -353,6 +605,21 @@ export function UserManagement() {
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                         ) : (
                           <Edit className="w-4 h-4" />
+                        )}
+                      </motion.button>
+
+                      <motion.button
+                        onClick={() => deleteUser(user.id, user.display_name)}
+                        disabled={updating === user.id}
+                        className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg border-2 border-black font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        title="🚨 DELETE USER PERMANENTLY"
+                      >
+                        {updating === user.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
                         )}
                       </motion.button>
                     </div>
@@ -480,6 +747,106 @@ export function UserManagement() {
                     {selectedUser.verified_seller ? 'UNVERIFY' : 'VERIFY SELLER'}
                   </motion.button>
                 </div>
+              </div>
+
+              {/* Subscription Management */}
+              <div className="bg-blue-100 p-4 rounded-xl border-2 border-black">
+                <h4 className="font-black text-black mb-3 uppercase">SUBSCRIPTION MANAGEMENT</h4>
+                <div className="space-y-4">
+                  {/* PayFast Payment Status */}
+                  <PayFastPaymentStatus userId={selectedUser.id} userName={selectedUser.display_name} />
+                  
+                  {/* EFT Manual Activation */}
+                  <EFTManualActivation 
+                    user={selectedUser} 
+                    onUserUpdate={(updatedUser) => {
+                      setUsers(users.map(user => 
+                        user.id === updatedUser.id ? updatedUser : user
+                      ))
+                      setSelectedUser(updatedUser)
+                    }}
+                  />
+                  
+                  {/* General Tier Change */}
+                  <motion.button
+                    onClick={async () => {
+                      const newTier = selectedUser.subscription_tier === 'free' ? 'premium' : 
+                                    selectedUser.subscription_tier === 'premium' ? 'business' : 'free'
+                      
+                      if (confirm(`Change ${selectedUser.display_name}'s subscription from ${selectedUser.subscription_tier} to ${newTier}?`)) {
+                        await updateUserStatus(selectedUser.id, 'subscription_tier', newTier)
+                        if (newTier !== 'free') {
+                          await updateUserStatus(selectedUser.id, 'trial_end_date', null)
+                        }
+                      }
+                    }}
+                    className="px-4 py-2 rounded-lg border-2 border-black font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] bg-blue-500 hover:bg-blue-600 text-white"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    MANUAL TIER CHANGE
+                  </motion.button>
+                  
+                  <motion.button
+                    onClick={async () => {
+                      if (confirm(`Activate business subscription for ${selectedUser.display_name}? This will set them to business tier and remove trial restrictions.`)) {
+                        try {
+                          const { error } = await supabase
+                            .from('profiles')
+                            .update({
+                              subscription_tier: 'business',
+                              subscription_status: 'active',
+                              trial_end_date: null,
+                              updated_at: new Date().toISOString()
+                            })
+                            .eq('id', selectedUser.id)
+                          
+                          if (error) throw error
+                          
+                          // Note: admin_payment_overview is a view, so we can't update it directly
+                          // The payment status will be reflected through the underlying tables
+                          console.log('ℹ️ Payment status will be reflected in admin_payment_overview view')
+                          
+                          alert('✅ Business subscription activated!')
+                          setUsers(users.map(user => 
+                            user.id === selectedUser.id 
+                              ? { ...user, subscription_tier: 'business', subscription_status: 'active', trial_end_date: null }
+                              : user
+                          ))
+                          setSelectedUser(prev => prev ? { ...prev, subscription_tier: 'business', subscription_status: 'active' } : null)
+                        } catch (error) {
+                          console.error('Error activating subscription:', error)
+                          alert('❌ Failed to activate subscription')
+                        }
+                      }
+                    }}
+                    className="px-4 py-2 rounded-lg border-2 border-black font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] bg-blue-500 hover:bg-blue-600 text-white"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    ACTIVATE BUSINESS
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Danger Zone */}
+              <div className="bg-red-200 p-4 rounded-xl border-4 border-red-600">
+                <h4 className="font-black text-red-800 mb-3 uppercase flex items-center gap-2">
+                  <Trash2 className="w-5 h-5" />
+                  DANGER ZONE
+                </h4>
+                <p className="text-red-700 font-bold mb-4">
+                  ⚠️ This action will PERMANENTLY DELETE the user and ALL their data. This cannot be undone!
+                </p>
+                <motion.button
+                  onClick={() => deleteUser(selectedUser.id, selectedUser.display_name)}
+                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg border-2 border-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] flex items-center gap-2"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Trash2 className="w-5 h-5" />
+                  🚨 DELETE USER PERMANENTLY
+                </motion.button>
               </div>
             </div>
           </motion.div>

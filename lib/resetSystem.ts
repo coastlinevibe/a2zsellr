@@ -186,17 +186,16 @@ export async function resetAllFreeUsers(): Promise<ResetResult> {
   }
 }
 
-// Get users eligible for reset (based on last reset date)
-export async function getUsersEligibleForReset(daysSinceLastReset: number = 7) {
+// Get users eligible for reset (based on trial_end_date)
+export async function getUsersEligibleForReset() {
   try {
-    const cutoffDate = new Date()
-    cutoffDate.setDate(cutoffDate.getDate() - daysSinceLastReset)
+    const now = new Date().toISOString()
 
     const { data: users, error } = await supabase
       .from('profiles')
-      .select('id, display_name, last_free_reset, created_at')
+      .select('id, display_name, trial_end_date, created_at')
       .eq('subscription_tier', 'free')
-      .or(`last_free_reset.is.null,last_free_reset.lt.${cutoffDate.toISOString()}`)
+      .lt('trial_end_date', now)
 
     if (error) {
       console.error('Error fetching eligible users:', error)
@@ -210,10 +209,10 @@ export async function getUsersEligibleForReset(daysSinceLastReset: number = 7) {
   }
 }
 
-// Reset users who haven't been reset in X days
-export async function resetEligibleUsers(daysSinceLastReset: number = 7): Promise<ResetResult> {
+// Reset users whose trial has expired
+export async function resetEligibleUsers(): Promise<ResetResult> {
   try {
-    const eligibleResult = await getUsersEligibleForReset(daysSinceLastReset)
+    const eligibleResult = await getUsersEligibleForReset()
     
     if (!eligibleResult.success) {
       return {

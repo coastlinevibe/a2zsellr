@@ -46,8 +46,9 @@ import { GalleryTab } from '@/components/dashboard/GalleryTab'
 import { MarketingCampaignsTab } from '@/components/dashboard/MarketingCampaignsTab'
 import PublicProfilePreview from '@/components/ui/public-profile-preview'
 import ResetCountdownBanner from '@/components/ResetCountdownBanner'
-import ResetTimer from '@/components/ResetTimer'
+import TrialTimer from '@/components/TrialTimer'
 import ResetNotificationModal from '@/components/ResetNotificationModal'
+import { resetUserData } from '@/lib/trialManager'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 
 type SubscriptionTier = 'free' | 'premium' | 'business'
@@ -107,9 +108,9 @@ export default function DashboardPage() {
   const [metricsLoading, setMetricsLoading] = useState(true)
   
 
-  // Redirect free tier users away from premium tabs
+  // Redirect free and premium tier users away from business-only tabs
   useEffect(() => {
-    if (profile?.subscription_tier === 'free' && ['scheduler', 'analytics'].includes(marketingActiveView)) {
+    if (profile?.subscription_tier !== 'business' && ['scheduler', 'analytics', 'templates'].includes(marketingActiveView)) {
       setMarketingActiveView('builder')
     }
   }, [profile?.subscription_tier, marketingActiveView])
@@ -420,14 +421,14 @@ export default function DashboardPage() {
 
   const renderMarketingTab = () => {
     const userTier = profile?.subscription_tier || 'free'
-    const isPremiumFeature = (viewId: string) => ['scheduler', 'analytics', 'templates'].includes(viewId)
+    const isBusinessFeature = (viewId: string) => ['scheduler', 'analytics', 'templates'].includes(viewId)
     
     const marketingViews = [
       { id: 'builder', label: 'Listing Builder', icon: Plus },
       { id: 'campaigns', label: 'My Listings', icon: MessageSquare },
-      { id: 'templates', label: 'My Templates', icon: Clipboard },
-      { id: 'scheduler', label: 'Scheduler', icon: Calendar, premium: true },
-      { id: 'analytics', label: 'Analytics', icon: TrendingUp, premium: true }
+      { id: 'templates', label: 'My Templates', icon: Clipboard, business: true },
+      { id: 'scheduler', label: 'Scheduler', icon: Calendar, business: true },
+      { id: 'analytics', label: 'Analytics', icon: TrendingUp, business: true }
     ]
 
     return (
@@ -442,7 +443,7 @@ export default function DashboardPage() {
             <div className="flex gap-1 p-2">
               {marketingViews.map((view) => {
                 const IconComponent = view.icon
-                const isDisabled = userTier === 'free' && isPremiumFeature(view.id)
+                const isDisabled = userTier !== 'business' && isBusinessFeature(view.id)
                 const isActive = marketingActiveView === view.id && !isDisabled
                 
                 return (
@@ -450,7 +451,10 @@ export default function DashboardPage() {
                     <button
                       onClick={() => {
                         if (isDisabled) {
-                          alert('🔒 This feature is only available on Premium and Business tiers.\n\nUpgrade your plan to unlock advanced marketing tools!')
+                          const upgradeMessage = userTier === 'free' 
+                            ? '🔒 This feature is only available on Business tier.\n\nUpgrade to Business to unlock advanced marketing tools!'
+                            : '🔒 This feature is only available on Business tier.\n\nUpgrade from Premium to Business to unlock advanced marketing tools!'
+                          alert(upgradeMessage)
                           return
                         }
                         setMarketingActiveView(view.id)
@@ -470,9 +474,9 @@ export default function DashboardPage() {
                     {isDisabled && (
                       <button
                         onClick={() => setShowPlanModal(true)}
-                        className="absolute -top-1 -right-1 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black text-xs px-2 py-1 rounded-lg border border-black font-black flex items-center gap-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all duration-200" style={{ zIndex: 10 }}>
+                        className="absolute -top-1 -right-1 bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white text-xs px-2 py-1 rounded-lg border border-black font-black flex items-center gap-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all duration-200" style={{ zIndex: 10 }}>
                         <Crown className="w-3 h-3" />
-                        UPGRADE NOW
+                        {userTier === 'free' ? 'UPGRADE' : 'BUSINESS'}
                         <Star className="w-2 h-2" />
                       </button>
                     )}
@@ -507,21 +511,24 @@ export default function DashboardPage() {
             )}
 
             {marketingActiveView === 'templates' && (
-              userTier === 'free' ? (
+              userTier !== 'business' ? (
                 <div className="text-center py-12">
                   <div className="mx-auto w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center mb-6">
                     <Clipboard className="w-12 h-12 text-purple-600" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">My Templates</h3>
                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    Access professional templates to create stunning marketing pages. Only available on Premium and Business tiers.
+                    {userTier === 'free' 
+                      ? 'Access professional templates to create stunning marketing pages. Only available on Business tier.'
+                      : 'Advanced template management is only available on Business tier. Upgrade to unlock professional templates and customization options.'
+                    }
                   </p>
                   <button
                     onClick={() => setShowPlanModal(true)}
-                    className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-2 px-3 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 mx-auto text-sm"
+                    className="bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white font-black py-2 px-3 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 mx-auto text-sm"
                   >
                     <Crown className="w-4 h-4" />
-                    <span>UPGRADE NOW</span>
+                    <span>{userTier === 'free' ? 'UPGRADE TO BUSINESS' : 'UPGRADE TO BUSINESS'}</span>
                     <Star className="w-3 h-3" />
                   </button>
                 </div>
@@ -627,21 +634,24 @@ export default function DashboardPage() {
             )}
 
             {marketingActiveView === 'scheduler' && (
-              userTier === 'free' ? (
+              userTier !== 'business' ? (
                 <div className="text-center py-12">
                   <div className="mx-auto w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mb-6">
                     <Calendar className="w-12 h-12 text-amber-600" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Schedule</h3>
                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    Schedule your marketing campaigns for optimal engagement times. Only available on Premium and Business tiers.
+                    {userTier === 'free' 
+                      ? 'Schedule your marketing campaigns for optimal engagement times. Only available on Business tier.'
+                      : 'Advanced campaign scheduling is only available on Business tier. Upgrade to unlock automated scheduling and optimal timing features.'
+                    }
                   </p>
                   <button
                     onClick={() => setShowPlanModal(true)}
-                    className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-2 px-3 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 mx-auto text-sm"
+                    className="bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white font-black py-2 px-3 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 mx-auto text-sm"
                   >
                     <Crown className="w-4 h-4" />
-                    <span>UPGRADE NOW</span>
+                    <span>{userTier === 'free' ? 'UPGRADE TO BUSINESS' : 'UPGRADE TO BUSINESS'}</span>
                     <Star className="w-3 h-3" />
                   </button>
                 </div>
@@ -654,21 +664,24 @@ export default function DashboardPage() {
             )}
 
             {marketingActiveView === 'analytics' && (
-              userTier === 'free' ? (
+              userTier !== 'business' ? (
                 <div className="text-center py-12">
                   <div className="mx-auto w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mb-6">
                     <TrendingUp className="w-12 h-12 text-blue-600" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Analytics</h3>
                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    Track your campaign performance with detailed analytics and insights. Only available on Premium and Business tiers.
+                    {userTier === 'free' 
+                      ? 'Track your campaign performance with detailed analytics and insights. Only available on Business tier.'
+                      : 'Advanced analytics and detailed insights are only available on Business tier. Upgrade to unlock comprehensive performance tracking and ROI analysis.'
+                    }
                   </p>
                   <button
                     onClick={() => setShowPlanModal(true)}
-                    className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-2 px-3 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 mx-auto text-sm"
+                    className="bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white font-black py-2 px-3 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 mx-auto text-sm"
                   >
                     <Crown className="w-4 h-4" />
-                    <span>UPGRADE NOW</span>
+                    <span>{userTier === 'free' ? 'UPGRADE TO BUSINESS' : 'UPGRADE TO BUSINESS'}</span>
                     <Star className="w-3 h-3" />
                   </button>
                 </div>
@@ -780,12 +793,10 @@ export default function DashboardPage() {
                     Free
                   </Badge>
                 )}
-                {/* Reset Timer in Header */}
-                {profile && profile.subscription_tier === 'free' && (
-                  <ResetTimer
-                    profileCreatedAt={profile.created_at || new Date().toISOString()}
-                    lastResetAt={null}
-                    subscriptionTier={profile.subscription_tier}
+                {/* Trial Timer in Header */}
+                {profile && profile.subscription_tier === 'free' && user && (
+                  <TrialTimer
+                    userId={user.id}
                     compact={true}
                   />
                 )}

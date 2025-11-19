@@ -516,7 +516,7 @@ export default function HomePage() {
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <motion.h1 
-                className="text-4xl sm:text-5xl lg:text-6xl font-black text-black leading-tight mb-6 bg-white p-6 rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]"
+                className="text-4xl sm:text-5xl lg:text-6xl font-black text-black leading-tight mb-6 bg-white pt-10 px-6 pb-6 rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]"
                 initial={{ y: 50, opacity: 0, rotate: -5 }}
                 animate={{ y: 0, opacity: 1, rotate: 0 }}
                 transition={{ duration: 0.8, delay: 0.6, type: "spring", stiffness: 100 }}

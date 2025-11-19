@@ -43,34 +43,37 @@ export default function PaymentSuccessPage() {
             transaction.status === 'pending' && 
             paymentMethod === 'payfast') {
           
+          console.log('🔄 PayFast webhook failed, manually activating subscription...')
+          
           try {
-            // Call the activate_subscription function directly
-            const { error: activationError } = await supabase
-              .rpc('activate_subscription', {
-                p_profile_id: user?.id,
-                p_tier: transaction.tier_requested,
-                p_billing_cycle: 'monthly'
+            // Direct profile update (bypassing the broken activate_subscription function)
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .update({
+                subscription_tier: transaction.tier_requested,
+                subscription_status: 'active',
+                trial_end_date: null,
+                updated_at: new Date().toISOString()
               })
+              .eq('id', user?.id)
 
-            if (!activationError) {
+            if (profileError) {
+              console.error('Profile update error:', profileError)
+            } else {
+              console.log('✅ Profile updated to', transaction.tier_requested)
+              
               // Update transaction status
               await supabase
                 .from('payment_transactions')
                 .update({
                   status: 'paid',
                   payment_date: new Date().toISOString(),
+                  payfast_payment_id: 'SUCCESS_PAGE_' + Date.now(),
                   updated_at: new Date().toISOString()
                 })
                 .eq('id', transaction.id)
-
-              // Update profile payment status
-              await supabase
-                .from('profiles')
-                .update({
-                  payment_status: 'paid',
-                  last_payment_date: new Date().toISOString()
-                })
-                .eq('id', user?.id)
+              
+              console.log('✅ Payment marked as paid')
               
               // Refresh transaction data
               const { data: updatedTransaction } = await supabase
@@ -84,7 +87,7 @@ export default function PaymentSuccessPage() {
               }
             }
           } catch (manualError) {
-            console.error('PayFast activation error:', manualError)
+            console.error('PayFast manual activation error:', manualError)
           }
         }
       }

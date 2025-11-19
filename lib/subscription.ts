@@ -73,7 +73,7 @@ export async function getUserSubscription(userId?: string) {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('subscription_tier, subscription_status, early_adopter')
+      .select('subscription_tier, subscription_status, early_adopter, trial_end_date')
       .eq('id', targetUserId)
       .single()
 
