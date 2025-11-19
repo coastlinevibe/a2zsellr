@@ -12,6 +12,34 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'A2Z Business Directory - South Africa\'s Premium Directory',
   description: 'Discover quality businesses nationwide with A2Z Business Directory. Mobile-first, award-winning design for South African businesses.',
+  metadataBase: new URL('https://a2zsellr.life'),
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
+  openGraph: {
+    title: 'A2Z Business Directory - South Africa\'s Premium Directory',
+    description: 'Discover quality businesses nationwide with A2Z Business Directory. Mobile-first, award-winning design for South African businesses.',
+    url: 'https://a2zsellr.life',
+    siteName: 'A2Z Business Directory',
+    images: [
+      {
+        url: '/thumbnail.png',
+        width: 1200,
+        height: 630,
+        alt: 'A2Z Business Directory',
+      },
+    ],
+    locale: 'en_ZA',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'A2Z Business Directory - South Africa\'s Premium Directory',
+    description: 'Discover quality businesses nationwide with A2Z Business Directory. Mobile-first, award-winning design for South African businesses.',
+    images: ['/thumbnail.png'],
+  },
 }
 
 export default function RootLayout({
