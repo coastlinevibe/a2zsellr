@@ -201,11 +201,32 @@ export default function AdminDashboard() {
           transition={{ duration: 0.4 }}
         >
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-black text-white uppercase">A2Z ADMIN DASHBOARD</h1>
-              <p className="text-white font-bold bg-black px-3 py-1 rounded border-2 border-white inline-block mt-2">
-                FULL SYSTEM CONTROL & MANAGEMENT
-              </p>
+            <div className="flex items-center gap-4">
+              <motion.button
+                onClick={() => router.push('/dashboard')}
+                className="bg-white hover:bg-gray-100 text-black px-4 py-2 rounded-lg border-2 border-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center gap-2"
+                whileHover={{ 
+                  scale: 1.05,
+                  y: -2,
+                  transition: { duration: 0.2 }
+                }}
+                whileTap={{ 
+                  scale: 0.95,
+                  transition: { duration: 0.1 }
+                }}
+                title="Back to Dashboard"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                BACK
+              </motion.button>
+              <div>
+                <h1 className="text-4xl font-black text-white uppercase">A2Z ADMIN DASHBOARD</h1>
+                <p className="text-white font-bold bg-black px-3 py-1 rounded border-2 border-white inline-block mt-2">
+                  FULL SYSTEM CONTROL & MANAGEMENT
+                </p>
+              </div>
             </div>
             <motion.div
               className="bg-white p-3 rounded-lg border-2 border-black"
