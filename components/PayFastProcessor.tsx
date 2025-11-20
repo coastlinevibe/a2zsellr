@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { RefreshCw, CreditCard, CheckCircle, XCircle } from 'lucide-react'
 
@@ -61,7 +61,7 @@ export function PayFastProcessor() {
   }
 
   // Check pending payments on component mount
-  React.useEffect(() => {
+  useEffect(() => {
     checkPendingPayments()
   }, [])
 
