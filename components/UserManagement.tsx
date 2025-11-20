@@ -780,19 +780,6 @@ export function UserManagement() {
               <div className="bg-blue-100 p-4 rounded-xl border-2 border-black">
                 <h4 className="font-black text-black mb-3 uppercase">SUBSCRIPTION MANAGEMENT</h4>
                 <div className="space-y-4">
-                  {/* PayFast Payment Status */}
-                  <PayFastPaymentStatus userId={selectedUser.id} userName={selectedUser.display_name} />
-                  
-                  {/* EFT Manual Activation */}
-                  <EFTManualActivation 
-                    user={selectedUser} 
-                    onUserUpdate={(updatedUser) => {
-                      setUsers(users.map(user => 
-                        user.id === updatedUser.id ? updatedUser : user
-                      ))
-                      setSelectedUser(updatedUser)
-                    }}
-                  />
                   
                   {/* General Tier Change */}
                   <motion.button
