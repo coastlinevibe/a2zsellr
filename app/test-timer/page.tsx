@@ -1,14 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { supabase } from '@/lib/supabaseClient'
 import TrialTimer from '@/components/TrialTimer'
 import { checkTrialStatus, resetUserData } from '@/lib/trialManager'
 
 export default function TestTimerPage() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClientComponentClient()
 
   useEffect(() => {
     const getUser = async () => {
@@ -17,7 +16,7 @@ export default function TestTimerPage() {
       setLoading(false)
     }
     getUser()
-  }, [supabase])
+  }, [])
 
   const handleManualReset = async () => {
     if (!user) return
