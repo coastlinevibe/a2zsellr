@@ -445,31 +445,96 @@ export default function HomePage() {
       if (searchQuery.trim()) {
         const searchTerm = searchQuery.trim()
         
-        // Search for products with matching tags or product details
-        const { data: matchingProducts } = await supabase
-          .from('products_with_tags')
-          .select('profile_id, tags')
-          .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,product_details.ilike.%${searchTerm}%`)
+        // Split search term by commas and clean up keywords
+        const keywords = searchTerm.split(',').map(keyword => keyword.trim()).filter(keyword => keyword.length > 0)
         
-        // Also search for products where tags contain the search term
-        const { data: tagMatchingProducts } = await supabase
-          .from('products_with_tags')
-          .select('profile_id, tags')
-          .not('tags', 'is', null)
+        // If no commas, treat as single search term
+        const searchTerms = keywords.length > 1 ? keywords : [searchTerm]
         
-        // Filter products that have tags matching the search term
-        const tagFilteredProducts = tagMatchingProducts?.filter(product => {
-          if (!product.tags || !Array.isArray(product.tags)) return false
-          return product.tags.some((tag: any) => 
-            tag.name?.toLowerCase().includes(searchTerm.toLowerCase())
-          )
-        }) || []
+        const allMatchingProducts: any[] = []
         
-        // Combine profile IDs from both searches
-        const allMatchingProducts = [...(matchingProducts || []), ...tagFilteredProducts]
-        const profileIdMap: { [key: string]: boolean } = {}
-        allMatchingProducts.forEach(p => { profileIdMap[p.profile_id] = true })
-        profileIds = Object.keys(profileIdMap)
+        // Search for each keyword separately
+        for (const term of searchTerms) {
+          // Search for products with matching names, descriptions, or product details
+          const { data: matchingProducts } = await supabase
+            .from('products_with_tags')
+            .select('profile_id, tags, name, description, product_details')
+            .or(`name.ilike.%${term}%,description.ilike.%${term}%,product_details.ilike.%${term}%`)
+          
+          if (matchingProducts) {
+            allMatchingProducts.push(...matchingProducts)
+          }
+          
+          // Also search for products where tags contain the search term
+          const { data: tagMatchingProducts } = await supabase
+            .from('products_with_tags')
+            .select('profile_id, tags, name, description, product_details')
+            .not('tags', 'is', null)
+          
+          // Filter products that have tags matching the search term
+          const tagFilteredProducts = tagMatchingProducts?.filter(product => {
+            if (!product.tags || !Array.isArray(product.tags)) return false
+            return product.tags.some((tag: any) => 
+              tag.name?.toLowerCase().includes(term.toLowerCase())
+            )
+          }) || []
+          
+          allMatchingProducts.push(...tagFilteredProducts)
+        }
+        
+        // For comma-separated searches, require ALL keywords to match
+        if (keywords.length > 1) {
+          const productMatches: { [key: string]: { profileId: string, matchedKeywords: Set<string>, product: any } } = {}
+          
+          allMatchingProducts.forEach(product => {
+            const productKey = `${product.profile_id}-${product.name || 'unnamed'}`
+            if (!productMatches[productKey]) {
+              productMatches[productKey] = { 
+                profileId: product.profile_id, 
+                matchedKeywords: new Set(), 
+                product: product 
+              }
+            }
+            
+            // Check which keywords this product matches
+            keywords.forEach(keyword => {
+              const lowerKeyword = keyword.toLowerCase()
+              let keywordMatches = false
+              
+              // Check product name, description, details
+              if (product.name?.toLowerCase().includes(lowerKeyword) ||
+                  product.description?.toLowerCase().includes(lowerKeyword) ||
+                  product.product_details?.toLowerCase().includes(lowerKeyword)) {
+                keywordMatches = true
+              }
+              
+              // Check tags
+              if (product.tags && Array.isArray(product.tags)) {
+                product.tags.forEach((tag: any) => {
+                  if (tag.name?.toLowerCase().includes(lowerKeyword)) {
+                    keywordMatches = true
+                  }
+                })
+              }
+              
+              if (keywordMatches) {
+                productMatches[productKey].matchedKeywords.add(keyword)
+              }
+            })
+          })
+          
+          // Only include products that match ALL keywords
+          const validProducts = Object.values(productMatches)
+            .filter(p => p.matchedKeywords.size === keywords.length)
+          
+          const uniqueProfileIds = new Set(validProducts.map(p => p.profileId))
+          profileIds = Array.from(uniqueProfileIds)
+        } else {
+          // Single search term - use all matches
+          const profileIdMap: { [key: string]: boolean } = {}
+          allMatchingProducts.forEach(p => { profileIdMap[p.profile_id] = true })
+          profileIds = Object.keys(profileIdMap)
+        }
       }
 
       let query = supabase
@@ -490,11 +555,20 @@ export default function HomePage() {
       if (searchQuery.trim()) {
         const searchTerm = searchQuery.trim()
         
+        // Check if this is a comma-separated product search
+        const keywords = searchTerm.split(',').map(keyword => keyword.trim()).filter(keyword => keyword.length > 0)
+        const isProductSearch = keywords.length > 1
+        
         if (profileIds.length > 0) {
-          // Include profiles that have matching products/tags OR match the basic profile search
-          query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%,id.in.(${profileIds.join(',')})`)
+          if (isProductSearch) {
+            // For comma-separated searches, ONLY show profiles with matching products
+            query = query.in('id', profileIds)
+          } else {
+            // For single term searches, include both product matches and profile matches
+            query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%,id.in.(${profileIds.join(',')})`)
+          }
         } else {
-          // Fallback to basic profile search
+          // No product matches found, fallback to basic profile search
           query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
         }
       }
