@@ -399,7 +399,10 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
                 <div className="text-2xl">{getLayoutIcon(listing.layout_type)}</div>
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-1">{listing.title}</h4>
-                  <p className="text-sm text-gray-600 mb-2 line-clamp-2">{listing.message_template}</p>
+                  <div 
+                    className="text-sm text-gray-600 mb-2 line-clamp-2"
+                    dangerouslySetInnerHTML={{ __html: listing.message_template }}
+                  />
                   <div className="flex items-center gap-2">
                     <Badge className={getStatusColor(listing.status)}>
                       {listing.status}

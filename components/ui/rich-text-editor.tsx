@@ -265,15 +265,44 @@ export default function RichTextEditor({
 
         {/* Font Size */}
         <select
-          onChange={(e) => executeCommand('fontSize', e.target.value)}
-          className="text-xs border border-gray-300 rounded px-2 py-1"
-          defaultValue="3"
+          onChange={(e) => {
+            const size = e.target.value
+            if (size) {
+              // Use a more reliable method for font size
+              const selection = window.getSelection()
+              if (selection && selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0)
+                if (!range.collapsed) {
+                  // Wrap selected text in span with font-size
+                  const span = document.createElement('span')
+                  span.style.fontSize = size
+                  try {
+                    range.surroundContents(span)
+                  } catch (e) {
+                    // If surroundContents fails, extract and wrap content
+                    const contents = range.extractContents()
+                    span.appendChild(contents)
+                    range.insertNode(span)
+                  }
+                  if (editorRef.current) {
+                    onChange(editorRef.current.innerHTML)
+                  }
+                }
+              }
+            }
+          }}
+          className="text-xs border border-gray-300 rounded px-2 py-1 bg-white text-gray-700"
+          defaultValue=""
         >
-          <option value="1">12px</option>
-          <option value="2">14px</option>
-          <option value="3">16px</option>
-          <option value="4">18px</option>
-          <option value="5">19px</option>
+          <option value="" className="text-gray-700">Font Size</option>
+          <option value="12px" className="text-gray-700">12px</option>
+          <option value="14px" className="text-gray-700">14px</option>
+          <option value="16px" className="text-gray-700">16px</option>
+          <option value="18px" className="text-gray-700">18px</option>
+          <option value="19px" className="text-gray-700">19px</option>
+          <option value="20px" className="text-gray-700">20px</option>
+          <option value="22px" className="text-gray-700">22px</option>
+          <option value="24px" className="text-gray-700">24px</option>
         </select>
 
         {/* Text Color */}
@@ -434,6 +463,15 @@ export default function RichTextEditor({
         }
         [contenteditable] strike {
           text-decoration: line-through;
+        }
+        /* Fix dropdown styling */
+        select option {
+          background-color: white !important;
+          color: #374151 !important;
+        }
+        select {
+          background-color: white !important;
+          color: #374151 !important;
         }
       `}</style>
     </div>

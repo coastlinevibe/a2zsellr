@@ -63,7 +63,10 @@ export const VideoSpotlightLayout: React.FC<VideoSpotlightLayoutProps> = ({
             className="mb-2"
           />
           <h3 className="font-bold text-gray-900 mb-2 text-lg md:text-xl lg:text-2xl">{title}</h3>
-          <p className="text-gray-700 text-sm md:text-base lg:text-lg leading-relaxed">{message}</p>
+          <div 
+            className="text-gray-700 text-sm md:text-base lg:text-lg leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: message }}
+          />
         </div>
 
         {/* Video Spotlight */}
