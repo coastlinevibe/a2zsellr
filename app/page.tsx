@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Smartphone, Share2, MessageCircle, Zap, Shield, Globe, Star, Crown, Users, Check, Search, MapPin, Filter, Grid, Calendar, TrendingUp, Award, Eye, ShoppingBag, CheckCircle, BarChart3, Target, Rocket, ChevronLeft, ChevronRight, Tag } from 'lucide-react'
+import { ArrowRight, Smartphone, Share2, MessageCircle, Zap, Shield, Globe, Star, Crown, Users, Check, Search, MapPin, Filter, Grid, Calendar, TrendingUp, Award, Eye, ShoppingBag, CheckCircle, BarChart3, Target, Rocket, ChevronLeft, ChevronRight, Tag, X } from 'lucide-react'
 import { BusinessCard } from '@/components/BusinessCard'
 import { useAuth } from '@/lib/auth'
 import { MovingBorderButton } from '@/components/ui/moving-border'
@@ -840,7 +840,7 @@ export default function HomePage() {
               />
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
                 {/* Search Input */}
-                <div className="lg:col-span-5">
+                <div className="lg:col-span-4">
                   <label className="block text-sm font-black text-black mb-2">FIND BUSINESSES</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black" />
@@ -954,6 +954,36 @@ export default function HomePage() {
                         <Search className="h-5 w-5" />
                       </motion.div>
                     )}
+                  </motion.button>
+                </div>
+
+                {/* Clear Filters Button */}
+                <div className="lg:col-span-1">
+                  <motion.button 
+                    onClick={() => {
+                      setSearchQuery('')
+                      setSelectedCategory('all')
+                      setSelectedLocation('all')
+                      setSelectedTags([])
+                    }}
+                    disabled={isSearching}
+                    className="w-full bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white font-black py-3 px-6 rounded-lg transition-colors flex items-center justify-center border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
+                    whileHover={{ 
+                      scale: 1.05,
+                      rotate: -3,
+                      boxShadow: "8px 8px 0px 0px rgba(0,0,0,0.9)",
+                      x: -2,
+                      y: -2
+                    }}
+                    whileTap={{ 
+                      scale: 0.95,
+                      rotate: 3,
+                      transition: { duration: 0.1 }
+                    }}
+                  >
+                    <motion.div whileHover={{ rotate: -360, transition: { duration: 0.5 } }}>
+                      <X className="h-5 w-5" />
+                    </motion.div>
                   </motion.button>
                 </div>
               </div>
