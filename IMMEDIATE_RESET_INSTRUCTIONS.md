@@ -14,7 +14,7 @@ Your trial shows "Trial Expired" but you still have 1 product showing.
 - Confirms before resetting
 
 ### 2. **Test Page** (MOST COMPREHENSIVE)
-- Go to: `localhost:3000/test-timer`
+- Go to: `https://www.a2zsellr.life/test-timer`
 - Use the **"🚨 FORCE RESET NOW"** button
 - Shows detailed timer and status info
 

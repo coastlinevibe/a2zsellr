@@ -72,9 +72,10 @@ interface WYSIWYGCampaignBuilderProps {
   selectedPlatforms: string[]
   businessProfile: any
   editListing?: any // Optional listing data for editing
+  onRefresh?: () => void
 }
 
-const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, editListing }: WYSIWYGCampaignBuilderProps) => {
+const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, editListing, onRefresh }: WYSIWYGCampaignBuilderProps) => {
   const [campaignTitle, setCampaignTitle] = useState(editListing?.title || 'Mid-Month Growth Blast')
   const [selectedLayout, setSelectedLayout] = useState(editListing?.layout_type || 'gallery-mosaic')
   const [messageTemplate, setMessageTemplate] = useState(editListing?.message_template || 'Hey there! We just launched new services tailored for you. Tap to explore what\'s hot this week.')
@@ -522,6 +523,11 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
           `Listing "${campaignTitle}" updated successfully!`,
           `• ${uploadedMedia.length} files • ${selectedProducts.length} products • ${selectedLayout} layout • View in Marketing > My Listings tab!`
         )
+        
+        // Notify parent component to refresh metrics
+        if (onRefresh) {
+          onRefresh()
+        }
       } else {
         // Create new listing
         const { data: listing, error: listingError } = await supabase
@@ -542,6 +548,11 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
           `Listing "${campaignTitle}" saved successfully!`,
           `• ${uploadedMedia.length} files • ${selectedProducts.length} products • ${selectedLayout} layout • View in Marketing > My Listings tab!`
         )
+        
+        // Notify parent component to refresh metrics
+        if (onRefresh) {
+          onRefresh()
+        }
       }
       
     } catch (error: any) {

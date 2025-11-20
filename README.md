@@ -210,7 +210,7 @@ a2z/
    PAYFAST_PASSPHRASE=your_passphrase
 
    # Application
-   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   NEXT_PUBLIC_APP_URL=https://www.a2zsellr.life
    CRON_SECRET_TOKEN=your_secret_token
    ```
 
@@ -225,7 +225,7 @@ a2z/
    ```
 
 5. **Open in browser**:
-   Navigate to `http://localhost:3000`
+   Navigate to `https://www.a2zsellr.life`
 
 ## 📊 Business Tiers
 

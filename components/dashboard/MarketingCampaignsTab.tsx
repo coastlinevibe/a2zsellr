@@ -49,9 +49,10 @@ interface MarketingCampaignsTabProps {
     display_name: string | null
     id: string
   }
+  onRefresh?: () => void
 }
 
-export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = 'free', businessProfile }: MarketingCampaignsTabProps) {
+export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = 'free', businessProfile, onRefresh }: MarketingCampaignsTabProps) {
   const { user } = useAuth()
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
@@ -147,6 +148,11 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
         })
         
         console.log('✅ All analytics data cleared - no listings remaining')
+      }
+      
+      // Notify parent component to refresh metrics
+      if (onRefresh) {
+        onRefresh()
       }
     } catch (err: any) {
       console.error('Error deleting listing:', err)

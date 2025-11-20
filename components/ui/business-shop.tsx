@@ -65,6 +65,7 @@ interface BusinessShopProps {
   businessId: string
   isOwner?: boolean
   userTier?: 'free' | 'premium' | 'business'
+  onRefresh?: () => void
 }
 
 // Tier limits constant
@@ -77,7 +78,8 @@ const TIER_LIMITS = {
 export default function BusinessShop({ 
   businessId, 
   isOwner = false,
-  userTier = 'free'
+  userTier = 'free',
+  onRefresh
 }: BusinessShopProps) {
   const { addItem } = useCart()
   const { showError, showWarning, showSuccess } = usePopup()
@@ -248,6 +250,11 @@ export default function BusinessShop({
 
       if (error) throw error
       fetchProducts()
+      
+      // Notify parent component to refresh metrics
+      if (onRefresh) {
+        onRefresh()
+      }
     } catch (error) {
       console.error('Error deleting product:', error)
       showError('Failed to delete product. Please try again.', 'Delete Failed')
@@ -266,7 +273,8 @@ export default function BusinessShop({
       const businessName = profile?.display_name || 'Business'
       // Create URL with product parameter to open the product modal
       const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-      const shareUrl = `https://www.a2zsellr.life/profile/${businessName}?product=${encodeURIComponent(productSlug)}`
+      const businessSlug = businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+      const shareUrl = `https://www.a2zsellr.life/profile/${businessSlug}?product=${encodeURIComponent(productSlug)}`
       const shareText = `Check out "${product.name}" from ${businessName} on A2Z Business Directory!`
       
       if (navigator.share) {
@@ -511,6 +519,11 @@ export default function BusinessShop({
       setImageFiles([])
       setProductImages([])
       setSelectedTags([])
+      
+      // Notify parent component to refresh metrics
+      if (onRefresh) {
+        onRefresh()
+      }
     } catch (error) {
       console.error('Error saving product:', error)
       showError('Failed to save product. Please try again.', 'Save Failed')

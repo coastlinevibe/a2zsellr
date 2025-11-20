@@ -74,8 +74,9 @@ interface Product {
 
 // Helper function to create consistent profile URLs
 const createProfileUrl = (displayName: string, productSlug?: string) => {
-  // Use the display_name as-is for URLs to maintain compatibility
-  const baseUrl = `https://www.a2zsellr.life/profile/${encodeURIComponent(displayName)}`
+  // Convert display name to URL-friendly slug
+  const profileSlug = displayName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+  const baseUrl = `https://www.a2zsellr.life/profile/${profileSlug}`
   return productSlug ? `${baseUrl}?product=${encodeURIComponent(productSlug)}` : baseUrl
 }
 

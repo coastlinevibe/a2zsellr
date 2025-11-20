@@ -399,7 +399,9 @@ export default function DashboardPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const profileUrl = `https://www.a2zsellr.life/profile/${profile.display_name}`
+                  // Convert display name to URL-friendly slug
+                  const profileSlug = profile.display_name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'profile'
+                  const profileUrl = `https://www.a2zsellr.life/profile/${profileSlug}`
                   navigator.clipboard.writeText(profileUrl)
                   alert('Profile link copied to clipboard!')
                 }}
@@ -489,7 +491,12 @@ export default function DashboardPage() {
           {/* Content */}
           <div className="p-6">
             {marketingActiveView === 'builder' && (
-              <ShareLinkBuilder products={marketingProducts} businessProfile={profile} editListing={editListing} />
+              <ShareLinkBuilder 
+                products={marketingProducts} 
+                businessProfile={profile} 
+                editListing={editListing}
+                onRefresh={fetchDashboardMetrics}
+              />
             )}
 
             {marketingActiveView === 'campaigns' && (
@@ -507,6 +514,7 @@ export default function DashboardPage() {
                 }}
                 userTier={profile?.subscription_tier || 'free'} 
                 businessProfile={profile || undefined}
+                onRefresh={fetchDashboardMetrics}
               />
             )}
 
@@ -722,7 +730,12 @@ export default function DashboardPage() {
           onUpgrade={() => setShowPlanModal(true)}
         />
       case 'shop':
-        return <BusinessShop businessId={profile?.id || ''} isOwner={true} userTier={profile?.subscription_tier || 'free'} />
+        return <BusinessShop 
+          businessId={profile?.id || ''} 
+          isOwner={true} 
+          userTier={profile?.subscription_tier || 'free'}
+          onRefresh={fetchDashboardMetrics}
+        />
       case 'marketing':
         return renderMarketingTab()
       default:

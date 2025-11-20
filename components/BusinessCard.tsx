@@ -38,7 +38,7 @@ export function BusinessCard({ business, categoryName, locationName, index = 0 }
   }
 
   const tierBadge = getTierBadge()
-  const username = business.display_name?.toLowerCase().replace(/\s+/g, '') || 'business'
+  const username = business.display_name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'business'
 
   return (
     <motion.div 
@@ -247,7 +247,7 @@ export function BusinessCard({ business, categoryName, locationName, index = 0 }
           }}
         >
           <Link
-            href={`/profile/${username}`}
+            href={`https://www.a2zsellr.life/profile/${username}`}
             className="w-full text-center text-sm font-black transition-all block"
             style={{
               background: business.subscription_tier === 'business' ? '#3b82f6' :

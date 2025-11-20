@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       
       // Replace template variables
       welcomeEmailHtml = welcomeEmailHtml
-        .replace(/\{\{\.SiteURL\}\}/g, process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000')
+        .replace(/\{\{\.SiteURL\}\}/g, process.env.NEXT_PUBLIC_SITE_URL || 'https://www.a2zsellr.life')
         .replace(/\{\{displayName\}\}/g, displayName)
         .replace(/\{\{selectedPlan\}\}/g, selectedPlan)
         .replace(/\{\{email\}\}/g, email)
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
             </div>
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard" 
+              <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.a2zsellr.life'}/dashboard" 
                  style="background: #5cbdfd; color: black; padding: 15px 30px; font-size: 18px; font-weight: bold; text-decoration: none; border-radius: 10px; display: inline-block;">
                 Start Building Your Store
               </a>
