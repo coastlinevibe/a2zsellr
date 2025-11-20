@@ -27,7 +27,7 @@ export default function TestTimerPage() {
     console.log('🔄 Manual reset triggered...')
     const success = await resetUserData(user.id)
     if (success) {
-      alert('✅ Data reset successfully! Your trial has been extended by 5 minutes.')
+      alert('✅ Data reset successfully! Your trial has been extended by 24 hours.')
       setTimeout(() => {
         window.location.reload()
       }, 1000)
@@ -79,7 +79,7 @@ export default function TestTimerPage() {
       <h1 className="text-3xl font-bold mb-6">Timer Test Page</h1>
       
       <div className="bg-white border rounded-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Trial Timer (5 Minutes)</h2>
+        <h2 className="text-xl font-semibold mb-4">Trial Timer (24 Hours)</h2>
         <div className="mb-4">
           <TrialTimer userId={user.id} compact={false} />
         </div>
@@ -116,10 +116,10 @@ export default function TestTimerPage() {
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4 text-yellow-800">How It Works</h2>
         <ul className="list-disc list-inside space-y-2 text-yellow-700">
-          <li>Free tier users get a 5-minute trial period</li>
+          <li>Free tier users get a 24-hour trial period</li>
           <li>When the timer reaches 0, all products, listings, and gallery items are automatically deleted</li>
           <li>The user profile information is preserved</li>
-          <li>The trial is automatically extended by another 5 minutes after reset</li>
+          <li>The trial is automatically extended by another 24 hours after reset</li>
           <li>The timer updates every second for real-time countdown</li>
           <li>You can manually trigger a reset using the button above</li>
         </ul>

@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const selectedPlan = metadata?.selected_plan || 'free'
         const displayName = metadata?.display_name || email.split('@')[0]
         const trialEndDate = selectedPlan === 'free' 
-          ? new Date(Date.now() + 5 * 60 * 1000).toISOString() // 5 minutes from now
+          ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
           : null
 
         const { error: profileError } = await supabase

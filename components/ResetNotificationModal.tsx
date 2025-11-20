@@ -121,7 +121,7 @@ export default function ResetNotificationModal({
         bgColor: 'bg-orange-50',
         borderColor: 'border-orange-200',
         title: '⏰ Reset Tomorrow!',
-        message: `Your free tier will reset in ${resetInfo.hoursRemaining} hours. All your products, listings, and gallery images will be cleared.`,
+        message: `Your free tier will reset in ${resetInfo.hoursRemaining > 20 ? '1 day' : `${resetInfo.hoursRemaining} hours`}. All your products, listings, and gallery images will be cleared.`,
         action: 'Upgrade to Premium today to keep your content forever.',
         urgency: 'high'
       }
@@ -161,7 +161,7 @@ export default function ResetNotificationModal({
                   </h3>
                   {!resetInfo.shouldReset && (
                     <div className="text-sm font-mono font-semibold text-gray-700 mt-1">
-                      {resetInfo.daysRemaining}d {resetInfo.hoursRemaining % 24}h remaining
+                      {resetInfo.hoursRemaining > 20 ? '1 day' : `${resetInfo.hoursRemaining}h`} remaining
                     </div>
                   )}
                 </div>

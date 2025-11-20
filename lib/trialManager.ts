@@ -238,16 +238,23 @@ export function formatTimeRemaining(milliseconds: number): string {
   const days = Math.floor(milliseconds / (1000 * 60 * 60 * 24))
   const hours = Math.floor((milliseconds % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
   const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60))
+  const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000)
   
-  if (days > 0) {
-    if (hours > 0) {
-      return `${days} day${days > 1 ? 's' : ''} and ${hours} hour${hours > 1 ? 's' : ''}`
-    } else {
-      return `${days} day${days > 1 ? 's' : ''}`
-    }
-  } else if (hours > 0) {
-    return `${hours}h ${minutes}m`
-  } else {
-    return `${minutes}m`
+  // If more than 20 hours remaining, always show as "1 day"
+  if (milliseconds > 20 * 60 * 60 * 1000) {
+    return '1 day'
   }
+  
+  // If less than 20 hours but more than 1 hour, show hours and minutes
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  }
+  
+  // If less than 1 hour but more than 1 minute, show minutes and seconds
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`
+  }
+  
+  // If less than 1 minute, show just seconds
+  return `${seconds}s`
 }
