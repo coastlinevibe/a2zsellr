@@ -315,9 +315,11 @@ export const CustomTemplateLayout: React.FC<CustomTemplateLayoutProps> = ({
       {template.interactions.map((interaction) => (
           <div
             key={interaction.id}
-            className={`absolute border-2 border-blue-500 bg-blue-600 text-white flex items-center justify-center font-medium text-sm select-none ${
-              hoveredInteraction === interaction.id ? 'shadow-lg border-blue-400' : ''
-            } ${isDragging === interaction.id ? 'cursor-grabbing' : 'cursor-grab'}`}
+            className={`absolute flex items-center justify-center font-medium text-sm select-none ${
+              isEditMode 
+                ? `border-2 border-blue-500 bg-blue-600 text-white ${hoveredInteraction === interaction.id ? 'shadow-lg border-blue-400' : ''} ${isDragging === interaction.id ? 'cursor-grabbing' : 'cursor-grab'}`
+                : 'border-0 bg-transparent text-transparent cursor-pointer'
+            }`}
             style={{
               left: `${interaction.x}%`,
               top: `${interaction.y}%`,
@@ -334,21 +336,31 @@ export const CustomTemplateLayout: React.FC<CustomTemplateLayoutProps> = ({
               // Smooth transitions only when not actively dragging/resizing
               transition: isDragging === interaction.id || isResizing === interaction.id ? 'none' : 'box-shadow 0.2s ease, border-color 0.2s ease'
             }}
-            onMouseEnter={() => setHoveredInteraction(interaction.id)}
-            onMouseLeave={() => setHoveredInteraction(null)}
+            onMouseEnter={() => isEditMode && setHoveredInteraction(interaction.id)}
+            onMouseLeave={() => isEditMode && setHoveredInteraction(null)}
             onMouseDown={(e) => {
               e.stopPropagation()
-              setIsDragging(interaction.id)
-              setDragStart({ x: e.clientX, y: e.clientY })
+              if (isEditMode) {
+                setIsDragging(interaction.id)
+                setDragStart({ x: e.clientX, y: e.clientY })
+              }
             }}
             onClick={(e) => {
               e.stopPropagation()
+              
+              // If not in edit mode, handle the button action
+              if (!isEditMode && interaction.type === 'cta' && interaction.action === 'contact') {
+                // Convert business name to URL slug and redirect to profile
+                const businessSlug = businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+                const profileUrl = `https://www.a2zsellr.life/profile/${businessSlug}`
+                window.open(profileUrl, '_blank')
+              }
             }}
           >
-            <span style={{ pointerEvents: 'none' }}>{interaction.data?.label || 'Contact Us'}</span>
+            <span style={{ pointerEvents: 'none', opacity: isEditMode ? 1 : 0 }}>{interaction.data?.label || 'Contact Us'}</span>
             
-            {/* Delete button */}
-            {hoveredInteraction === interaction.id && (
+            {/* Delete button - only in edit mode */}
+            {isEditMode && hoveredInteraction === interaction.id && (
               <button
                 onClick={(e) => {
                   e.stopPropagation()
@@ -363,8 +375,8 @@ export const CustomTemplateLayout: React.FC<CustomTemplateLayoutProps> = ({
               </button>
             )}
             
-            {/* Professional Resize Handles - All 8 Directions */}
-            {hoveredInteraction === interaction.id && (
+            {/* Professional Resize Handles - All 8 Directions - only in edit mode */}
+            {isEditMode && hoveredInteraction === interaction.id && (
               <>
                 {/* Corner Handles */}
                 <div className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 border border-white cursor-nw-resize" 
