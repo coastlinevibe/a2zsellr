@@ -15,6 +15,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetMessage, setResetMessage] = useState('')
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,6 +56,33 @@ export default function LoginPage() {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handlePasswordReset = async () => {
+    if (!email) {
+      setError('Please enter your email address first')
+      return
+    }
+
+    setResetLoading(true)
+    setError('')
+    setResetMessage('')
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      })
+
+      if (error) {
+        setError(error.message)
+      } else {
+        setResetMessage('Password reset email sent! Check your inbox.')
+      }
+    } catch (err) {
+      setError('Failed to send reset email')
+    } finally {
+      setResetLoading(false)
     }
   }
 
@@ -147,6 +176,18 @@ export default function LoginPage() {
               transition={{ duration: 0.3 }}
             >
               <p className="text-black font-bold text-sm">⚠️ {error}</p>
+            </motion.div>
+          )}
+
+          {/* Reset Message */}
+          {resetMessage && (
+            <motion.div 
+              className="mb-6 p-4 bg-green-400 border-4 border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <p className="text-black font-bold text-sm">✅ {resetMessage}</p>
             </motion.div>
           )}
 
@@ -257,6 +298,60 @@ export default function LoginPage() {
                     SIGN IN
                     <ArrowRight className="h-5 w-5" />
                   </>
+                )}
+              </button>
+            </div>
+
+            {/* Forgot Password Button */}
+            <div className="flex justify-center mt-4">
+              <button
+                type="button"
+                onClick={handlePasswordReset}
+                disabled={resetLoading}
+                style={{
+                  background: '#ff6b6b',
+                  fontFamily: 'inherit',
+                  padding: '0.5em 1em',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  border: '2px solid black',
+                  borderRadius: '0.4em',
+                  boxShadow: '0.1em 0.1em',
+                  cursor: resetLoading ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  opacity: resetLoading ? 0.5 : 1,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.3em'
+                }}
+                onMouseEnter={(e) => {
+                  if (!resetLoading) {
+                    e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                    e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translate(0, 0)';
+                  e.currentTarget.style.boxShadow = '0.1em 0.1em';
+                }}
+                onMouseDown={(e) => {
+                  if (!resetLoading) {
+                    e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+                    e.currentTarget.style.boxShadow = '0.05em 0.05em';
+                  }
+                }}
+                onMouseUp={(e) => {
+                  if (!resetLoading) {
+                    e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                    e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                  }
+                }}
+              >
+                {resetLoading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                ) : (
+                  'FORGOT PASSWORD?'
                 )}
               </button>
             </div>

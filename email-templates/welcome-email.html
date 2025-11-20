@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to A2Z Sellr!</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .email-card {
+            background: white;
+            border-radius: 20px;
+            border: 4px solid #000;
+            box-shadow: 12px 12px 0px 0px rgba(0,0,0,0.9);
+            overflow: hidden;
+            transform: rotate(1deg);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #5cbdfd 0%, #667eea 100%);
+            padding: 30px;
+            text-align: center;
+            border-bottom: 4px solid #000;
+            transform: rotate(-1deg);
+            margin: -4px -4px 20px -4px;
+        }
+        
+        .header h1 {
+            color: white;
+            font-size: 32px;
+            font-weight: 900;
+            margin: 0;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+        }
+        
+        .header p {
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 0 0 0;
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.3);
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .welcome-message {
+            background: #fff3cd;
+            border: 3px solid #000;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 4px 4px 0px 0px rgba(0,0,0,0.9);
+            transform: rotate(-0.5deg);
+        }
+        
+        .welcome-message h2 {
+            color: #856404;
+            font-size: 24px;
+            font-weight: 900;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+        }
+        
+        .welcome-message p {
+            color: #856404;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        .features {
+            margin: 25px 0;
+        }
+        
+        .feature-item {
+            background: #d1ecf1;
+            border: 2px solid #000;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+        }
+        
+        .feature-icon {
+            background: #17a2b8;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .feature-text {
+            color: #0c5460;
+            font-weight: bold;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: #5cbdfd;
+            color: #000;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: 900;
+            text-decoration: none;
+            border: 3px solid #000;
+            border-radius: 10px;
+            box-shadow: 4px 4px 0px 0px rgba(0,0,0,0.9);
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px 0px rgba(0,0,0,0.9);
+        }
+        
+        .trial-info {
+            background: #f8d7da;
+            border: 3px solid #000;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 25px 0;
+            box-shadow: 4px 4px 0px 0px rgba(0,0,0,0.9);
+            text-align: center;
+            transform: rotate(0.5deg);
+        }
+        
+        .trial-info h3 {
+            color: #721c24;
+            font-size: 20px;
+            font-weight: 900;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+        }
+        
+        .trial-info p {
+            color: #721c24;
+            font-weight: bold;
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            border-top: 3px solid #000;
+            padding: 20px;
+            text-align: center;
+            margin: 20px -30px -30px -30px;
+        }
+        
+        .footer p {
+            color: #6c757d;
+            font-size: 14px;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        
+        .social-links {
+            margin: 15px 0;
+        }
+        
+        .social-link {
+            display: inline-block;
+            background: #6c757d;
+            color: white;
+            padding: 8px 12px;
+            margin: 0 5px;
+            text-decoration: none;
+            border: 2px solid #000;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .feature-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .feature-icon {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="email-card">
+            <div class="header">
+                <h1>🚀 Welcome to A2Z Sellr! 🚀</h1>
+                <p>Your Journey to Online Success Starts Now!</p>
+            </div>
+            
+            <div class="content">
+                <div class="welcome-message">
+                    <h2>🎉 You're In!</h2>
+                    <p>Welcome to the A2Z Sellr family! We're thrilled to have you on board and can't wait to help you grow your online business.</p>
+                </div>
+                
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon">🛍️</div>
+                        <div class="feature-text">
+                            <strong>Create Your Shop:</strong> Build a stunning online store in minutes with our easy-to-use tools.
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">📱</div>
+                        <div class="feature-text">
+                            <strong>Mobile Optimized:</strong> Your store looks perfect on all devices - desktop, tablet, and mobile.
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-text">
+                            <strong>Analytics Dashboard:</strong> Track your sales, visitors, and performance with detailed insights.
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">💳</div>
+                        <div class="feature-text">
+                            <strong>Secure Payments:</strong> Accept payments safely with our integrated payment processing.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="cta-section">
+                    <a href="{{.SiteURL}}/dashboard" class="cta-button">
+                        Start Building Your Store
+                    </a>
+                </div>
+                
+                <div class="trial-info">
+                    <h3>🎁 Your Free Trial</h3>
+                    <p>You have <strong>24 hours</strong> to explore all features for free!</p>
+                    <p>After your trial, upgrade to <strong>Premium (R149/month)</strong> to keep your store forever.</p>
+                    <p><strong>No credit card required</strong> to get started!</p>
+                </div>
+                
+                <div style="text-align: center; margin: 25px 0;">
+                    <p style="font-size: 16px; font-weight: bold; color: #333; margin-bottom: 15px;">
+                        Need help getting started?
+                    </p>
+                    <p style="font-size: 14px; color: #666; line-height: 1.5;">
+                        Check out our <a href="{{.SiteURL}}/help" style="color: #5cbdfd; font-weight: bold;">Getting Started Guide</a> or 
+                        <a href="mailto:support@a2zsellr.com" style="color: #5cbdfd; font-weight: bold;">contact our support team</a>.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p><strong>A2Z Sellr</strong> - Your Complete E-commerce Solution</p>
+                <p>Making online selling simple, powerful, and profitable.</p>
+                
+                <div class="social-links">
+                    <a href="#" class="social-link">Facebook</a>
+                    <a href="#" class="social-link">Twitter</a>
+                    <a href="#" class="social-link">Instagram</a>
+                </div>
+                
+                <p style="font-size: 12px; margin-top: 15px;">
+                    If you didn't create an account with A2Z Sellr, please ignore this email.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

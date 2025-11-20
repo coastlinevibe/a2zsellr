@@ -56,13 +56,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     })
     
-    // If signup successful, create profile manually and sign out to prevent auto-login
+    // If signup successful, create profile manually and send welcome email
     if (!error && data.user) {
       try {
         // Wait a moment for user to be fully created
         await new Promise(resolve => setTimeout(resolve, 1000))
         
         const selectedPlan = metadata?.selected_plan || 'free'
+        const displayName = metadata?.display_name || email.split('@')[0]
         const trialEndDate = selectedPlan === 'free' 
           ? new Date(Date.now() + 5 * 60 * 1000).toISOString() // 5 minutes from now
           : null
@@ -72,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .upsert(
             {
               id: data.user.id,
-              display_name: metadata?.display_name || email.split('@')[0],
+              display_name: displayName,
               email: email,
               subscription_tier: selectedPlan,
               subscription_status: 'active',
@@ -89,6 +90,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (profileError) {
           console.warn('Profile creation failed:', profileError.message)
           // Don't fail the signup, just log the warning
+        }
+
+        // Send welcome email
+        try {
+          const welcomeEmailResponse = await fetch('/api/send-welcome-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: email,
+              displayName: displayName,
+              selectedPlan: selectedPlan
+            })
+          })
+
+          if (!welcomeEmailResponse.ok) {
+            console.warn('Failed to send welcome email:', await welcomeEmailResponse.text())
+          } else {
+            console.log('Welcome email sent successfully to:', email)
+          }
+        } catch (emailError) {
+          console.warn('Error sending welcome email:', emailError)
+          // Don't fail the signup for email errors
         }
 
       } catch (profileErr) {

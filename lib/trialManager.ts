@@ -235,10 +235,17 @@ export async function resetUserData(userId: string): Promise<boolean> {
 export function formatTimeRemaining(milliseconds: number): string {
   if (milliseconds <= 0) return 'Expired'
   
-  const hours = Math.floor(milliseconds / (1000 * 60 * 60))
+  const days = Math.floor(milliseconds / (1000 * 60 * 60 * 24))
+  const hours = Math.floor((milliseconds % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
   const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60))
   
-  if (hours > 0) {
+  if (days > 0) {
+    if (hours > 0) {
+      return `${days} day${days > 1 ? 's' : ''} and ${hours} hour${hours > 1 ? 's' : ''}`
+    } else {
+      return `${days} day${days > 1 ? 's' : ''}`
+    }
+  } else if (hours > 0) {
     return `${hours}h ${minutes}m`
   } else {
     return `${minutes}m`
