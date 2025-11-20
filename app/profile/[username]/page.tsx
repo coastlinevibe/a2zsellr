@@ -51,6 +51,14 @@ interface ProductImage {
   order: number
 }
 
+interface ProductTag {
+  id: string
+  name: string
+  icon?: string
+  color: string
+  is_system_tag: boolean
+}
+
 interface Product {
   id: string
   name: string
@@ -59,6 +67,7 @@ interface Product {
   category: string | null
   image_url: string | null
   images?: ProductImage[]
+  tags?: ProductTag[]
   price_cents: number | null
   is_active: boolean
 }
@@ -514,9 +523,9 @@ Best regards`
         setGalleryItems(formattedGallery)
       }
 
-      // Fetch products
+      // Fetch products with tags
       const { data: productsData, error: productsError } = await supabase
-        .from('profile_products')
+        .from('products_with_tags')
         .select('*')
         .eq('profile_id', profileData.id)
         .eq('is_active', true)
@@ -1877,13 +1886,26 @@ Best regards`
                         ) : (
                           <p className="text-gray-500 italic">No description available.</p>
                         )}
-                        {selectedProduct?.category && (
-                          <div className="mt-4">
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {selectedProduct?.category && (
                             <span className="inline-block bg-emerald-100 text-emerald-700 text-sm px-3 py-1 rounded-full">
                               {selectedProduct?.category}
                             </span>
-                          </div>
-                        )}
+                          )}
+                          {/* Display product tags */}
+                          {selectedProduct?.tags && selectedProduct.tags.length > 0 && (
+                            selectedProduct.tags.map((tag: any) => (
+                              <span
+                                key={tag.id}
+                                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium text-white"
+                                style={{ backgroundColor: tag.color }}
+                              >
+                                {tag.icon && <span>{tag.icon}</span>}
+                                {tag.name}
+                              </span>
+                            ))
+                          )}
+                        </div>
                       </div>
                     )}
 

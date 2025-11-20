@@ -246,8 +246,8 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Login Button */}
-            <div className="flex justify-center">
+            {/* Login and Forgot Password Buttons */}
+            <div className="flex justify-center items-center gap-4">
               <button
                 type="submit"
                 disabled={loading}
@@ -300,10 +300,7 @@ export default function LoginPage() {
                   </>
                 )}
               </button>
-            </div>
 
-            {/* Forgot Password Button */}
-            <div className="flex justify-center mt-4">
               <button
                 type="button"
                 onClick={handlePasswordReset}
@@ -311,7 +308,7 @@ export default function LoginPage() {
                 style={{
                   background: '#ff6b6b',
                   fontFamily: 'inherit',
-                  padding: '0.5em 1em',
+                  padding: '0.6em 1em',
                   fontWeight: 700,
                   fontSize: '14px',
                   border: '2px solid black',

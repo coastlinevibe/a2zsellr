@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { usePopup } from '@/components/providers/PopupProvider'
 import EmojiPicker from '@/components/ui/emoji-picker'
 import RichTextEditor from '@/components/ui/rich-text-editor'
+import ProductTagSelector from '@/components/ui/ProductTagSelector'
 import { 
   ShoppingCart, 
   Plus, 
@@ -36,6 +37,14 @@ interface ProductImage {
   order: number
 }
 
+interface ProductTag {
+  id: string
+  name: string
+  icon?: string
+  color: string
+  is_system_tag: boolean
+}
+
 interface Product {
   id: string
   profile_id: string
@@ -46,6 +55,7 @@ interface Product {
   category: string | null
   image_url: string | null
   images?: ProductImage[]
+  tags?: ProductTag[]
   is_active: boolean
   created_at: string
 }
@@ -87,6 +97,8 @@ export default function BusinessShop({
     category: '',
     image_url: ''
   })
+  const [selectedTags, setSelectedTags] = useState<ProductTag[]>([])
+  const [availableTags, setAvailableTags] = useState<ProductTag[]>([])
   const [productImages, setProductImages] = useState<ProductImage[]>([])
   const [uploadingImages, setUploadingImages] = useState(false)
   const [imageFiles, setImageFiles] = useState<File[]>([])
@@ -97,14 +109,13 @@ export default function BusinessShop({
   const categories = [
     { value: 'all', label: 'All Products' },
     { value: 'products', label: 'Products' },
-    { value: 'services', label: 'Services' },
-    { value: 'food', label: 'Food & Drinks' },
-    { value: 'retail', label: 'Retail Items' }
+    { value: 'services', label: 'Services' }
   ]
 
   useEffect(() => {
     fetchProducts()
     fetchBusinessName()
+    fetchTags()
   }, [businessId])
 
   const fetchBusinessName = async () => {
@@ -127,7 +138,7 @@ export default function BusinessShop({
     try {
       setLoading(true)
       const { data, error } = await supabase
-        .from('profile_products')
+        .from('products_with_tags')
         .select('*')
         .eq('profile_id', businessId)
         .eq('is_active', true)
@@ -139,6 +150,21 @@ export default function BusinessShop({
       console.error('Error fetching products:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchTags = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('product_tags')
+        .select('*')
+        .order('is_system_tag', { ascending: false })
+        .order('name')
+
+      if (error) throw error
+      setAvailableTags(data || [])
+    } catch (error) {
+      console.error('Error fetching tags:', error)
     }
   }
 
@@ -183,6 +209,7 @@ export default function BusinessShop({
     })
     setProductImages([])
     setImageFiles([])
+    setSelectedTags([])
     setEditingProduct(null)
     setShowAddProduct(true)
   }
@@ -201,8 +228,9 @@ export default function BusinessShop({
       category: product.category || 'products',
       image_url: product.image_url || ''
     })
-    // Load existing images
+    // Load existing images and tags
     setProductImages(product.images || [])
+    setSelectedTags(product.tags || [])
     setImageFiles([])
     setEditingProduct(product)
     setShowAddProduct(true)
@@ -345,6 +373,50 @@ export default function BusinessShop({
     }
   }
 
+  const createTag = async (tagData: { name: string; icon?: string; color: string }) => {
+    try {
+      const { data, error } = await supabase
+        .from('product_tags')
+        .insert([{ ...tagData, created_by: businessId }])
+        .select()
+        .single()
+
+      if (error) throw error
+      setAvailableTags(prev => [...prev, data])
+      return data
+    } catch (error) {
+      console.error('Error creating tag:', error)
+      throw error
+    }
+  }
+
+  const assignProductTags = async (productId: string, tagIds: string[]) => {
+    try {
+      // First, remove existing assignments
+      await supabase
+        .from('product_tag_assignments')
+        .delete()
+        .eq('product_id', productId)
+
+      // Then add new assignments
+      if (tagIds.length > 0) {
+        const assignments = tagIds.map(tagId => ({
+          product_id: productId,
+          tag_id: tagId
+        }))
+
+        const { error } = await supabase
+          .from('product_tag_assignments')
+          .insert(assignments)
+
+        if (error) throw error
+      }
+    } catch (error) {
+      console.error('Error assigning tags:', error)
+      throw error
+    }
+  }
+
   const handleSaveProduct = async () => {
     if (!productForm.name.trim()) return
 
@@ -384,23 +456,36 @@ export default function BusinessShop({
         is_active: true
       }
 
+      let productId: string
+
       if (editingProduct) {
         const { error } = await supabase
           .from('profile_products')
           .update(productData)
           .eq('id', editingProduct.id)
         if (error) throw error
+        productId = editingProduct.id
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('profile_products')
           .insert([productData])
+          .select('id')
+          .single()
         if (error) throw error
+        productId = data.id
+      }
+
+      // Assign tags to the product
+      if (selectedTags.length > 0) {
+        const tagIds = selectedTags.map(tag => tag.id)
+        await assignProductTags(productId, tagIds)
       }
 
       fetchProducts()
       setShowAddProduct(false)
       setImageFiles([])
       setProductImages([])
+      setSelectedTags([])
     } catch (error) {
       console.error('Error saving product:', error)
       showError('Failed to save product. Please try again.', 'Save Failed')
@@ -643,13 +728,31 @@ export default function BusinessShop({
                   </Button>
                 )}
                 
-                {product.category && (
-                  <div className="mt-2">
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {product.category && (
                     <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-[9px]">
                       {categories.find(c => c.value === product.category)?.label || product.category}
                     </span>
-                  </div>
-                )}
+                  )}
+                  {/* Display product tags */}
+                  {product.tags && product.tags.length > 0 && (
+                    product.tags.slice(0, 3).map(tag => (
+                      <span
+                        key={tag.id}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-white"
+                        style={{ backgroundColor: tag.color }}
+                      >
+                        {tag.icon && <span>{tag.icon}</span>}
+                        {tag.name}
+                      </span>
+                    ))
+                  )}
+                  {product.tags && product.tags.length > 3 && (
+                    <span className="inline-block bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">
+                      +{product.tags.length - 3} more
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -767,6 +870,14 @@ export default function BusinessShop({
                   </select>
                 </div>
               </div>
+
+              {/* Product Tags */}
+              <ProductTagSelector 
+                selectedTags={selectedTags}
+                onTagsChange={setSelectedTags}
+                availableTags={availableTags}
+                onCreateTag={createTag}
+              />
               
               {/* Product Images Upload */}
               <div className="bg-white rounded-lg p-4 border border-gray-200">

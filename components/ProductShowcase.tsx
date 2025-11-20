@@ -7,6 +7,14 @@ import { supabase } from '@/lib/supabaseClient'
 import Image from 'next/image'
 import Link from 'next/link'
 
+interface ProductTag {
+  id: string
+  name: string
+  icon?: string
+  color: string
+  is_system_tag: boolean
+}
+
 interface Product {
   id: string
   name: string
@@ -15,6 +23,7 @@ interface Product {
   image_url: string | null
   profile_id: string
   created_at: string
+  tags?: ProductTag[]
   profiles?: {
     display_name: string
     avatar_url: string | null
@@ -84,7 +93,7 @@ export function ProductShowcase() {
       setLoading(true)
       
       const { data, error } = await supabase
-        .from('profile_products')
+        .from('products_with_tags')
         .select(`
           id,
           name,
@@ -93,6 +102,7 @@ export function ProductShowcase() {
           image_url,
           profile_id,
           created_at,
+          tags,
           profiles!inner(
             display_name,
             avatar_url,
@@ -349,6 +359,27 @@ export function ProductShowcase() {
                   return cleanText.length > 80 ? cleanText.substring(0, 80) + '...' : cleanText
                 })()}
               </p>
+            )}
+
+            {/* Product Tags */}
+            {currentProduct.tags && currentProduct.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-2">
+                {currentProduct.tags.slice(0, 3).map((tag: ProductTag) => (
+                  <span
+                    key={tag.id}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold text-white border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]"
+                    style={{ backgroundColor: tag.color }}
+                  >
+                    {tag.icon && <span className="text-xs">{tag.icon}</span>}
+                    {tag.name}
+                  </span>
+                ))}
+                {currentProduct.tags.length > 3 && (
+                  <span className="inline-block bg-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded-full border border-black font-bold">
+                    +{currentProduct.tags.length - 3}
+                  </span>
+                )}
+              </div>
             )}
 
             {/* Seller Info */}
