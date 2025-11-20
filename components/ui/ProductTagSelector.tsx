@@ -7,6 +7,7 @@ interface ProductTag {
   icon?: string;
   color: string;
   is_system_tag: boolean;
+  category?: string;
 }
 
 interface ProductTagSelectorProps {
@@ -14,13 +15,15 @@ interface ProductTagSelectorProps {
   onTagsChange: (tags: ProductTag[]) => void;
   availableTags: ProductTag[];
   onCreateTag: (tagData: { name: string; icon?: string; color: string }) => Promise<ProductTag>;
+  selectedCategory?: string; // Add category prop to filter tags
 }
 
 const ProductTagSelector: React.FC<ProductTagSelectorProps> = ({
   selectedTags,
   onTagsChange,
   availableTags,
-  onCreateTag
+  onCreateTag,
+  selectedCategory = 'products'
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -31,7 +34,14 @@ const ProductTagSelector: React.FC<ProductTagSelectorProps> = ({
   });
   const [isCreating, setIsCreating] = useState(false);
 
-  const filteredTags = availableTags.filter(tag =>
+  // Filter tags based on selected category and search term
+  const categoryFilteredTags = availableTags.filter(tag => {
+    // Show general tags and tags matching the selected category
+    const categoryMatch = !tag.category || tag.category === 'general' || tag.category === selectedCategory;
+    return categoryMatch;
+  });
+
+  const filteredTags = categoryFilteredTags.filter(tag =>
     tag.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
     !selectedTags.some(selected => selected.id === tag.id)
   );
@@ -231,13 +241,15 @@ const ProductTagSelector: React.FC<ProductTagSelectorProps> = ({
         </div>
       )}
 
-      {/* Quick Add System Tags */}
+      {/* Quick Add Category-Specific Tags */}
       <div>
-        <p className="text-sm text-gray-600 mb-2">Popular tags:</p>
+        <p className="text-sm text-gray-600 mb-2">
+          Popular {selectedCategory} tags:
+        </p>
         <div className="flex flex-wrap gap-2">
-          {availableTags
+          {categoryFilteredTags
             .filter(tag => tag.is_system_tag && !selectedTags.some(selected => selected.id === tag.id))
-            .slice(0, 8)
+            .slice(0, 12)
             .map(tag => (
               <button
                 key={tag.id}

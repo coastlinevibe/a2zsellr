@@ -9,6 +9,7 @@ interface ProductTag {
   icon?: string;
   color: string;
   is_system_tag: boolean;
+  category?: string;
   product_count?: number;
 }
 

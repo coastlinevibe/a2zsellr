@@ -43,6 +43,7 @@ interface ProductTag {
   icon?: string
   color: string
   is_system_tag: boolean
+  category?: string
 }
 
 interface Product {
@@ -377,7 +378,11 @@ export default function BusinessShop({
     try {
       const { data, error } = await supabase
         .from('product_tags')
-        .insert([{ ...tagData, created_by: businessId }])
+        .insert([{ 
+          ...tagData, 
+          created_by: businessId,
+          category: productForm.category // Set category based on selected product category
+        }])
         .select()
         .single()
 
@@ -877,6 +882,7 @@ export default function BusinessShop({
                 onTagsChange={setSelectedTags}
                 availableTags={availableTags}
                 onCreateTag={createTag}
+                selectedCategory={productForm.category}
               />
               
               {/* Product Images Upload */}
