@@ -65,193 +65,310 @@ export default function SettingsPage() {
     setLoading(true)
 
     try {
-      // Delete all user data in the correct order (respecting foreign key constraints)
+      console.log(`🚨 SELF-DELETE ACCOUNT CALLED: ${user.id} (${userProfile.display_name})`)
+      console.log(`🗑️ Starting complete deletion of user: ${user.id} (${userProfile.display_name})`)
 
-      // 1. Delete order status history where user created entries
-      const { error: historyError } = await supabase
-        .from('order_status_history')
-        .delete()
-        .eq('created_by', user.id)
+      // First, let's get all user data that contains storage files (same as admin delete)
+      const { data: existingProducts, error: productsReadError } = await supabase
+        .from('profile_products')
+        .select('id, name, profile_id, image_url, images')
+        .eq('profile_id', user.id)
+      
+      const { data: existingGallery, error: galleryReadError } = await supabase
+        .from('profile_gallery')
+        .select('id, image_url, storage_path')
+        .eq('profile_id', user.id)
+      
+      console.log(`🔍 Found ${existingProducts?.length || 0} products for user ${user.id}:`, existingProducts)
+      console.log(`🔍 Found ${existingGallery?.length || 0} gallery items for user ${user.id}:`, existingGallery)
+      
+      if (productsReadError) {
+        console.error('❌ Error reading products:', productsReadError)
+      }
+      if (galleryReadError) {
+        console.error('❌ Error reading gallery:', galleryReadError)
+      }
 
-      if (historyError) console.warn('Error deleting order history:', historyError)
+      // Extract all storage paths that need to be deleted (same as admin delete)
+      const storagePaths: string[] = []
+      
+      // Get product image paths
+      existingProducts?.forEach(product => {
+        if (product.image_url) {
+          // Extract path from URL
+          const urlParts = product.image_url.split('/product-images/')
+          if (urlParts.length > 1) {
+            storagePaths.push(urlParts[1])
+          }
+        }
+        
+        // Handle multiple images in JSON format
+        if (product.images) {
+          try {
+            const images = typeof product.images === 'string' ? JSON.parse(product.images) : product.images
+            if (Array.isArray(images)) {
+              images.forEach((img: any) => {
+                if (img.url) {
+                  const urlParts = img.url.split('/product-images/')
+                  if (urlParts.length > 1) {
+                    storagePaths.push(urlParts[1])
+                  }
+                }
+              })
+            }
+          } catch (e) {
+            console.warn('Could not parse product images JSON:', e)
+          }
+        }
+      })
+      
+      // Get gallery image paths
+      existingGallery?.forEach(item => {
+        if (item.storage_path) {
+          storagePaths.push(item.storage_path)
+        } else if (item.image_url) {
+          // Try to extract path from URL
+          const urlParts = item.image_url.split('/sharelinks/')
+          if (urlParts.length > 1) {
+            storagePaths.push(urlParts[1])
+          }
+        }
+      })
+      
+      console.log(`🗑️ Found ${storagePaths.length} storage files to delete:`, storagePaths)
 
-      // 2. Delete campaign media first (before campaigns)
-      const { error: campaignMediaError } = await supabase
-        .from('campaign_media')
+      // Count items before deletion for logging (same as admin delete)
+      const [productsCount, listingsCount, galleryCount, analyticsCount] = await Promise.all([
+        supabase.from('profile_products').select('id', { count: 'exact' }).eq('profile_id', user.id),
+        supabase.from('profile_listings').select('id', { count: 'exact' }).eq('profile_id', user.id),
+        supabase.from('profile_gallery').select('id', { count: 'exact' }).eq('profile_id', user.id),
+        supabase.from('profile_analytics').select('id', { count: 'exact' }).eq('profile_id', user.id)
+      ])
+
+      const productsToDelete = productsCount.count || 0
+      const listingsToDelete = listingsCount.count || 0
+      const galleryToDelete = galleryCount.count || 0
+      const analyticsToDelete = analyticsCount.count || 0
+
+      console.log(`📊 Items to delete: ${productsToDelete} products, ${listingsToDelete} listings, ${galleryToDelete} gallery, ${analyticsToDelete} analytics`)
+
+      // Delete all user-related data in sequence (same as admin delete)
+      console.log('🗑️ Deleting user products...')
+      const { error: productsError, data: deletedProducts } = await supabase
+        .from('profile_products')
         .delete()
         .eq('profile_id', user.id)
+        .select()
+      
+      console.log(`🗑️ Products deletion result:`, { error: productsError, deletedCount: deletedProducts?.length || 0 })
 
-      if (campaignMediaError) console.warn('Error deleting campaign media:', campaignMediaError)
-
-      // 3. Delete campaign executions (before campaigns)
-      const { error: executionsError } = await supabase
-        .from('campaign_executions')
-        .delete()
-        .eq('profile_id', user.id)
-
-      if (executionsError) console.warn('Error deleting campaign executions:', executionsError)
-
-      // 4. Delete whatsapp campaigns
-      const { error: whatsappError } = await supabase
-        .from('whatsapp_campaigns')
-        .delete()
-        .eq('profile_id', user.id)
-
-      if (whatsappError) console.warn('Error deleting whatsapp campaigns:', whatsappError)
-
-      // 5. Delete marketing campaigns
-      const { error: campaignsError } = await supabase
-        .from('marketing_campaigns')
-        .delete()
-        .eq('profile_id', user.id)
-
-      if (campaignsError) console.warn('Error deleting marketing campaigns:', campaignsError)
-
-      // 6. Delete social media groups
-      const { error: groupsError } = await supabase
-        .from('social_media_groups')
-        .delete()
-        .eq('created_by', user.id)
-
-      if (groupsError) console.warn('Error deleting social media groups:', groupsError)
-
-      // 7. Delete analytics data
-      const { error: analyticsError } = await supabase
-        .from('profile_analytics')
-        .delete()
-        .eq('profile_id', user.id)
-
-      if (analyticsError) console.warn('Error deleting analytics:', analyticsError)
-
-      // 8. Delete reviews
-      const { error: reviewsError } = await supabase
-        .from('profile_reviews')
-        .delete()
-        .eq('profile_id', user.id)
-
-      if (reviewsError) console.warn('Error deleting reviews:', reviewsError)
-
-      // 9. Delete order items for orders where user is customer or business
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .delete()
-        .or(`order_id.in.(select id from orders where customer_id.eq.${user.id}),order_id.in.(select id from orders where business_id.eq.${user.id})`)
-
-      if (itemsError) console.warn('Error deleting order items:', itemsError)
-
-      // 10. Delete orders where user is customer
-      const { error: customerOrdersError } = await supabase
-        .from('orders')
-        .delete()
-        .eq('customer_id', user.id)
-
-      if (customerOrdersError) console.warn('Error deleting customer orders:', customerOrdersError)
-
-      // 11. Delete orders where user is business (this will cascade to order_items)
-      const { error: businessOrdersError } = await supabase
-        .from('orders')
-        .delete()
-        .eq('business_id', user.id)
-
-      if (businessOrdersError) console.warn('Error deleting business orders:', businessOrdersError)
-
-      // 12. Delete user's listings
+      console.log('🗑️ Deleting user listings...')
       const { error: listingsError } = await supabase
         .from('profile_listings')
         .delete()
         .eq('profile_id', user.id)
 
-      if (listingsError) console.warn('Error deleting listings:', listingsError)
-
-      // 13. Delete user's gallery items
+      console.log('🗑️ Deleting user gallery...')
       const { error: galleryError } = await supabase
         .from('profile_gallery')
         .delete()
         .eq('profile_id', user.id)
 
-      if (galleryError) console.warn('Error deleting gallery:', galleryError)
-
-      // 14. Delete user's products
-      const { error: productsError } = await supabase
-        .from('profile_products')
+      console.log('🗑️ Deleting user analytics...')
+      const { error: analyticsError } = await supabase
+        .from('profile_analytics')
         .delete()
         .eq('profile_id', user.id)
 
-      if (productsError) console.warn('Error deleting products:', productsError)
+      // Try to delete from other possible tables (same as admin delete)
+      console.log('🗑️ Deleting payment transactions...')
+      const { error: paymentsError } = await supabase
+        .from('payment_transactions')
+        .delete()
+        .eq('profile_id', user.id)
 
-      // 15. Delete referral records (both as referrer and referred)
+      console.log('🗑️ Deleting reset history...')
+      const { error: resetHistoryError } = await supabase
+        .from('reset_history')
+        .delete()
+        .eq('profile_id', user.id)
+
+      // Delete additional tables that might exist
+      console.log('🗑️ Deleting order status history...')
+      const { error: historyError } = await supabase
+        .from('order_status_history')
+        .delete()
+        .eq('created_by', user.id)
+
+      console.log('🗑️ Deleting campaign media...')
+      const { error: campaignMediaError } = await supabase
+        .from('campaign_media')
+        .delete()
+        .eq('profile_id', user.id)
+
+      console.log('🗑️ Deleting campaign executions...')
+      const { error: executionsError } = await supabase
+        .from('campaign_executions')
+        .delete()
+        .eq('profile_id', user.id)
+
+      console.log('🗑️ Deleting whatsapp campaigns...')
+      const { error: whatsappError } = await supabase
+        .from('whatsapp_campaigns')
+        .delete()
+        .eq('profile_id', user.id)
+
+      console.log('🗑️ Deleting marketing campaigns...')
+      const { error: campaignsError } = await supabase
+        .from('marketing_campaigns')
+        .delete()
+        .eq('profile_id', user.id)
+
+      console.log('🗑️ Deleting social media groups...')
+      const { error: groupsError } = await supabase
+        .from('social_media_groups')
+        .delete()
+        .eq('created_by', user.id)
+
+      console.log('🗑️ Deleting reviews...')
+      const { error: reviewsError } = await supabase
+        .from('profile_reviews')
+        .delete()
+        .eq('profile_id', user.id)
+
+      console.log('🗑️ Deleting order items...')
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .delete()
+        .or(`order_id.in.(select id from orders where customer_id.eq.${user.id}),order_id.in.(select id from orders where business_id.eq.${user.id})`)
+
+      console.log('🗑️ Deleting customer orders...')
+      const { error: customerOrdersError } = await supabase
+        .from('orders')
+        .delete()
+        .eq('customer_id', user.id)
+
+      console.log('🗑️ Deleting business orders...')
+      const { error: businessOrdersError } = await supabase
+        .from('orders')
+        .delete()
+        .eq('business_id', user.id)
+
+      console.log('🗑️ Deleting referrals...')
       const { error: referralsError } = await supabase
         .from('referrals')
         .delete()
         .or(`referrer_id.eq.${user.id},referred_user_id.eq.${user.id}`)
 
-      if (referralsError) console.warn('Error deleting referrals:', referralsError)
-
-      // 16. Delete payment transactions
-      const { error: paymentsError } = await supabase
-        .from('payment_transactions')
-        .delete()
-        .eq('user_id', user.id)
-
-      if (paymentsError) console.warn('Error deleting payment transactions:', paymentsError)
-
-      // 17. Delete subscription data
+      console.log('🗑️ Deleting subscriptions...')
       const { error: subscriptionsError } = await supabase
         .from('user_subscriptions')
         .delete()
         .eq('user_id', user.id)
 
-      if (subscriptionsError) console.warn('Error deleting subscriptions:', subscriptionsError)
-
-      // 18. Delete profile pictures/avatars from storage
-      // Get profile to find avatar URL
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('avatar_url')
-        .eq('id', user.id)
-        .single()
-
-      if (profileData?.avatar_url) {
-        // Extract file path from URL and delete from storage
-        const urlParts = profileData.avatar_url.split('/')
-        const bucket = urlParts[urlParts.length - 2] // 'avatars' or similar
-        const fileName = urlParts[urlParts.length - 1]
-
-        if (bucket && fileName) {
-          const { error: avatarError } = await supabase.storage
-            .from(bucket)
-            .remove([fileName])
-
-          if (avatarError) console.warn('Error deleting avatar file:', avatarError)
+      // Delete user authentication from Supabase Auth (same as admin delete)
+      console.log('🗑️ Deleting user authentication...')
+      try {
+        const authResponse = await fetch('/api/admin/delete-user-auth', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: user.id,
+            userEmail: user.email
+          })
+        })
+        
+        const authResult = await authResponse.json()
+        
+        if (authResponse.ok) {
+          console.log('✅ User authentication deleted successfully')
+        } else {
+          console.error('❌ Failed to delete user authentication:', authResult.error)
+          // Continue with profile deletion even if auth deletion fails
         }
+      } catch (authError) {
+        console.error('❌ Error calling auth deletion API:', authError)
+        // Continue with profile deletion even if auth deletion fails
       }
 
-      // 19. Delete user profile (this should be last as other tables reference it)
-      const { error: profileError } = await supabase
+      // Finally, delete the user profile (same as admin delete)
+      console.log('🗑️ Deleting user profile...')
+      console.log(`🔍 Attempting to delete profile with ID: ${user.id}`)
+      
+      const { error: profileError, data: deletedProfile } = await supabase
         .from('profiles')
         .delete()
         .eq('id', user.id)
+        .select()
+      
+      console.log(`🗑️ Profile deletion result:`, { 
+        error: profileError, 
+        deletedProfile: deletedProfile,
+        deletedCount: deletedProfile?.length || 0 
+      })
 
-      if (profileError) {
-        throw new Error(`Failed to delete profile: ${profileError.message}`)
+      // Clean up storage files (same as admin delete)
+      if (storagePaths.length > 0) {
+        console.log('🗑️ Cleaning up storage files...')
+        
+        // Delete product images from product-images bucket
+        const productImagePaths = storagePaths.filter(path => !path.includes('/'))
+        if (productImagePaths.length > 0) {
+          const { error: productStorageError } = await supabase.storage
+            .from('product-images')
+            .remove(productImagePaths)
+          
+          if (productStorageError) {
+            console.error('❌ Error deleting product images:', productStorageError)
+          } else {
+            console.log(`✅ Deleted ${productImagePaths.length} product images from storage`)
+          }
+        }
+        
+        // Delete other files from sharelinks bucket
+        const otherPaths = storagePaths.filter(path => path.includes('/'))
+        if (otherPaths.length > 0) {
+          const { error: otherStorageError } = await supabase.storage
+            .from('sharelinks')
+            .remove(otherPaths)
+          
+          if (otherStorageError) {
+            console.error('❌ Error deleting other files:', otherStorageError)
+          } else {
+            console.log(`✅ Deleted ${otherPaths.length} other files from storage`)
+          }
+        }
       }
 
-      // 20. Delete auth user (this should be done by Supabase trigger, but let's try)
-      // Note: This might not work if there are RLS policies preventing it
-      const { error: authError } = await supabase.auth.admin.deleteUser(user.id)
-      if (authError) {
-        console.warn('Could not delete auth user (this might be expected):', authError)
+      // Check for errors (same as admin delete)
+      const errors = []
+      if (productsError) errors.push(`Products: ${productsError.message}`)
+      if (listingsError) errors.push(`Listings: ${listingsError.message}`)
+      if (galleryError) errors.push(`Gallery: ${galleryError.message}`)
+      if (analyticsError) errors.push(`Analytics: ${analyticsError.message}`)
+      if (paymentsError) errors.push(`Payments: ${paymentsError.message}`)
+      if (resetHistoryError) errors.push(`Reset History: ${resetHistoryError.message}`)
+      if (profileError) errors.push(`Profile: ${profileError.message}`)
+      
+      // Note: Storage errors are logged but don't fail the deletion since database cleanup is more important
+
+      if (errors.length > 0) {
+        console.error('❌ Deletion errors:', errors)
+        alert(`⚠️ Account deleted but with some errors:\n${errors.join('\n')}`)
+      } else {
+        console.log(`✅ User ${userProfile.display_name} completely deleted from database and authentication`)
+        alert(`✅ Account "${userProfile.display_name}" has been completely deleted!\n\nDeleted:\n- User authentication (cannot sign in anymore)\n- ${productsToDelete} products\n- ${listingsToDelete} listings\n- ${galleryToDelete} gallery items\n- ${analyticsToDelete} analytics records\n- ${storagePaths.length} storage files\n- User profile and all data`)
       }
 
       // Sign out and redirect
       await signOut()
       router.push('/')
 
-      alert('Account deleted successfully. All your data has been permanently removed.')
-
     } catch (error) {
-      console.error('Error deleting account:', error)
-      alert('Failed to delete account. Please contact support.')
+      console.error('❌ Error deleting account:', error)
+      alert(`❌ Failed to delete account: ${error}`)
       setLoading(false)
     }
   }

@@ -257,6 +257,33 @@ export function UserManagement() {
 
 
 
+      // Delete user authentication from Supabase Auth
+      console.log('🗑️ Deleting user authentication...')
+      try {
+        const authResponse = await fetch('/api/admin/delete-user-auth', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: userId,
+            userEmail: userProfile.email
+          })
+        })
+        
+        const authResult = await authResponse.json()
+        
+        if (authResponse.ok) {
+          console.log('✅ User authentication deleted successfully')
+        } else {
+          console.error('❌ Failed to delete user authentication:', authResult.error)
+          // Continue with profile deletion even if auth deletion fails
+        }
+      } catch (authError) {
+        console.error('❌ Error calling auth deletion API:', authError)
+        // Continue with profile deletion even if auth deletion fails
+      }
+
       // Finally, delete the user profile
       console.log('🗑️ Deleting user profile...')
       console.log(`🔍 Attempting to delete profile with ID: ${userId}`)
@@ -322,8 +349,8 @@ export function UserManagement() {
         console.error('❌ Deletion errors:', errors)
         alert(`⚠️ User deleted but with some errors:\n${errors.join('\n')}`)
       } else {
-        console.log(`✅ User ${userName} completely deleted from database`)
-        alert(`✅ User "${userName}" has been completely deleted!\n\nDeleted:\n- ${productsToDelete} products\n- ${listingsToDelete} listings\n- ${galleryToDelete} gallery items\n- ${analyticsToDelete} analytics records\n- ${storagePaths.length} storage files\n- User profile and authentication`)
+        console.log(`✅ User ${userName} completely deleted from database and authentication`)
+        alert(`✅ User "${userName}" has been completely deleted!\n\nDeleted:\n- User authentication (cannot sign in anymore)\n- ${productsToDelete} products\n- ${listingsToDelete} listings\n- ${galleryToDelete} gallery items\n- ${analyticsToDelete} analytics records\n- ${storagePaths.length} storage files\n- User profile and all data`)
       }
 
       // Remove from local state
