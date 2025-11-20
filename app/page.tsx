@@ -77,9 +77,9 @@ export default function HomePage() {
         "Basic business profile",
         "3 gallery images",
         "5 products in shop",
-        "Contact information",
-        "Customer reviews",
-        "3 marketing listings/shares"
+        "1 image per product",
+        "2 tags per product",
+        "3 marketing listings"
       ],
       isPopular: false,
       accent: "bg-gray-500"
@@ -90,11 +90,13 @@ export default function HomePage() {
       yearlyPrice: 1192, // 20% discount
       features: [
         "Everything in Free",
-        "Premium directory placement",
-        "Unlimited products & images",
-        "WhatsApp ad scheduling",
-        "Facebook campaign tools",
-        "Advanced analytics"
+        "Unlimited gallery images",
+        "20 products in shop",
+        "8 images per product",
+        "5 tags per product",
+        "WhatsApp & Facebook campaigns",
+        "Advanced analytics",
+        "E-commerce features"
       ],
       isPopular: true,
       accent: "bg-green-500"
@@ -105,11 +107,13 @@ export default function HomePage() {
       yearlyPrice: 2392, // 20% discount
       features: [
         "Everything in Premium",
-        "Multi-location management",
+        "Unlimited products in shop",
+        "50 images per product",
+        "15 tags per product",
         "Instagram ad automation",
-        "Custom branding",
+        "Bulk campaign management",
         "Priority support",
-        "Bulk campaign management"
+        "Business marketing listing"
       ],
       isPopular: false,
       accent: "bg-blue-500"
