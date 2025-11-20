@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Smartphone, Share2, MessageCircle, Zap, Shield, Globe, Star, Crown, Users, Check, Search, MapPin, Filter, Grid, Calendar, TrendingUp, Award, Eye, ShoppingBag, CheckCircle, BarChart3, Target, Rocket, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowRight, Smartphone, Share2, MessageCircle, Zap, Shield, Globe, Star, Crown, Users, Check, Search, MapPin, Filter, Grid, Calendar, TrendingUp, Award, Eye, ShoppingBag, CheckCircle, BarChart3, Target, Rocket, ChevronLeft, ChevronRight, Tag } from 'lucide-react'
 import { BusinessCard } from '@/components/BusinessCard'
 import { useAuth } from '@/lib/auth'
 import { MovingBorderButton } from '@/components/ui/moving-border'
@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { AdminLoginModal } from '@/components/AdminLoginModal'
 import { PricingContainer, type PricingPlan } from '@/components/ui/pricing-container'
 import { ProductShowcase } from '@/components/ProductShowcase'
+import TagSearchFilters from '@/components/TagSearchFilters'
 import { motion } from 'framer-motion'
 
 type RecentActivity = {
@@ -40,6 +41,8 @@ export default function HomePage() {
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
   const [dotPage, setDotPage] = useState(0)
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [searchResults, setSearchResults] = useState<{ total: number; tagMatches: number }>({ total: 0, tagMatches: 0 })
   const locationDropdownRef = useRef<HTMLDivElement>(null)
   const categoryDropdownRef = useRef<HTMLDivElement>(null)
 
@@ -240,10 +243,43 @@ export default function HomePage() {
         .in('subscription_tier', ['free', 'premium', 'business']) // All subscription tiers
         .not('display_name', 'is', null) // Only profiles with display names
 
-      // Apply search filters
+      // Apply search filters - enhanced with tag searching
       if (searchQuery && searchQuery.trim() !== '') {
         const searchTerm = searchQuery.trim()
-        query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
+        
+        // Search for profiles that have products with matching tags
+        const { data: matchingProducts } = await supabase
+          .from('products_with_tags')
+          .select('profile_id, tags')
+          .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,product_details.ilike.%${searchTerm}%`)
+        
+        // Also search for products where tags contain the search term
+        const { data: tagMatchingProducts } = await supabase
+          .from('products_with_tags')
+          .select('profile_id, tags')
+          .not('tags', 'is', null)
+        
+        // Filter products that have tags matching the search term
+        const tagFilteredProducts = tagMatchingProducts?.filter(product => {
+          if (!product.tags || !Array.isArray(product.tags)) return false
+          return product.tags.some((tag: any) => 
+            tag.name?.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        }) || []
+        
+        // Combine profile IDs from both searches
+        const allMatchingProducts = [...(matchingProducts || []), ...tagFilteredProducts]
+        const profileIdMap: { [key: string]: boolean } = {}
+        allMatchingProducts.forEach(p => { profileIdMap[p.profile_id] = true })
+        const profileIds = Object.keys(profileIdMap)
+        
+        if (profileIds.length > 0) {
+          // Include profiles that have matching products/tags OR match the basic profile search
+          query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%,id.in.(${profileIds.join(',')})`)
+        } else {
+          // Fallback to basic profile search
+          query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
+        }
       }
 
       if (selectedCategory && selectedCategory !== 'all') {
@@ -403,6 +439,39 @@ export default function HomePage() {
   const handleSearch = async () => {
     setIsSearching(true)
     try {
+      let profileIds: string[] = []
+      
+      // If there's a search query, first search for profiles that have products with matching tags
+      if (searchQuery.trim()) {
+        const searchTerm = searchQuery.trim()
+        
+        // Search for products with matching tags or product details
+        const { data: matchingProducts } = await supabase
+          .from('products_with_tags')
+          .select('profile_id, tags')
+          .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,product_details.ilike.%${searchTerm}%`)
+        
+        // Also search for products where tags contain the search term
+        const { data: tagMatchingProducts } = await supabase
+          .from('products_with_tags')
+          .select('profile_id, tags')
+          .not('tags', 'is', null)
+        
+        // Filter products that have tags matching the search term
+        const tagFilteredProducts = tagMatchingProducts?.filter(product => {
+          if (!product.tags || !Array.isArray(product.tags)) return false
+          return product.tags.some((tag: any) => 
+            tag.name?.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        }) || []
+        
+        // Combine profile IDs from both searches
+        const allMatchingProducts = [...(matchingProducts || []), ...tagFilteredProducts]
+        const profileIdMap: { [key: string]: boolean } = {}
+        allMatchingProducts.forEach(p => { profileIdMap[p.profile_id] = true })
+        profileIds = Object.keys(profileIdMap)
+      }
+
       let query = supabase
         .from('profiles')
         .select(`
@@ -417,10 +486,17 @@ export default function HomePage() {
         .in('subscription_tier', ['free', 'premium', 'business']) // All active profiles
         .not('display_name', 'is', null) // Only profiles with display names
 
-      // Apply search query filter
+      // Apply search query filter - enhanced to include tag matches
       if (searchQuery.trim()) {
         const searchTerm = searchQuery.trim()
-        query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
+        
+        if (profileIds.length > 0) {
+          // Include profiles that have matching products/tags OR match the basic profile search
+          query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%,id.in.(${profileIds.join(',')})`)
+        } else {
+          // Fallback to basic profile search
+          query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
+        }
       }
 
       // Apply category filter
@@ -465,15 +541,38 @@ export default function HomePage() {
         setBusinesses(fallbackData || [])
       } else {
         setBusinesses(data || [])
+        
+        // Update search results stats
+        const tagMatches = profileIds.length
+        setSearchResults({ total: data?.length || 0, tagMatches })
       }
       // Reset carousel to first slide when search results change
       setCurrentSlide(0)
     } catch (error) {
       console.error('Search error:', error)
       setBusinesses([])
+      setSearchResults({ total: 0, tagMatches: 0 })
     } finally {
       setIsSearching(false)
     }
+  }
+
+  const handleTagSelect = (tagName: string) => {
+    if (!selectedTags.includes(tagName)) {
+      const newTags = [...selectedTags, tagName]
+      setSelectedTags(newTags)
+      // Add tag to search query
+      const tagQuery = newTags.join(' ')
+      setSearchQuery(tagQuery)
+    }
+  }
+
+  const handleTagRemove = (tagName: string) => {
+    const newTags = selectedTags.filter(tag => tag !== tagName)
+    setSelectedTags(newTags)
+    // Update search query
+    const tagQuery = newTags.join(' ')
+    setSearchQuery(tagQuery)
   }
   
   // Show loading state on first mount
@@ -733,6 +832,12 @@ export default function HomePage() {
             viewport={{ once: true }}
           >
             <div className="bg-white rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] p-6">
+              {/* Tag Search Filters */}
+              <TagSearchFilters
+                onTagSelect={handleTagSelect}
+                selectedTags={selectedTags}
+                onTagRemove={handleTagRemove}
+              />
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
                 {/* Search Input */}
                 <div className="lg:col-span-5">
@@ -741,7 +846,7 @@ export default function HomePage() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black" />
                     <input
                       type="text"
-                      placeholder="Search businesses, products..."
+                      placeholder="Search businesses, products, tags..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 border-2 border-black rounded-lg focus:ring-0 focus:border-green-500 bg-white font-bold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
@@ -877,9 +982,17 @@ export default function HomePage() {
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
                 {/* Mobile: Found Count (Left) + Businesses (Right) */}
                 <div className="flex md:hidden items-center justify-between gap-3">
-                  <p className="text-black text-sm bg-green-300 px-4 py-2 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold">
-                    FOUND {businesses.length}
-                  </p>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-black text-sm bg-green-300 px-4 py-2 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold">
+                      FOUND {businesses.length}
+                    </p>
+                    {searchResults.tagMatches > 0 && (
+                      <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full border border-blue-500 font-bold text-xs">
+                        <Tag className="h-3 w-3" />
+                        {searchResults.tagMatches} by tags
+                      </span>
+                    )}
+                  </div>
                   <motion.h3 
                     className="text-xl font-black text-black bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
                     initial={{ x: 50, opacity: 0 }}
@@ -902,9 +1015,17 @@ export default function HomePage() {
                   </motion.h3>
                   
                   {/* Found Count */}
-                  <p className="text-black text-lg bg-green-300 px-4 py-2 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold inline-block">
-                    FOUND {businesses.length}
-                  </p>
+                  <div className="flex flex-col items-start gap-2">
+                    <p className="text-black text-lg bg-green-300 px-4 py-2 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold inline-block">
+                      FOUND {businesses.length}
+                    </p>
+                    {searchResults.tagMatches > 0 && (
+                      <span className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full border-2 border-blue-500 font-bold text-sm">
+                        <Tag className="h-4 w-4" />
+                        {searchResults.tagMatches} found by tags
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
                 {/* Premium Directory - Center (Large) - Hidden on mobile */}
