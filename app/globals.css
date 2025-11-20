@@ -138,3 +138,169 @@ body {
   letter-spacing: 0.03em;
   white-space: nowrap;
 }
+/* Holographic Social Media Icons for Profile Page */
+.holographic-icon-profile {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-style: preserve-3d;
+}
+
+.holographic-icon-profile svg {
+  width: 12px;
+  height: 12px;
+  position: relative;
+  z-index: 3;
+  transition: all 0.2s ease;
+  filter: drop-shadow(0 0 1px currentColor);
+}
+
+.holographic-ring-profile {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1px solid;
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  animation: rotate-profile 2s linear infinite;
+  opacity: 0.6;
+}
+
+.holographic-particles-profile {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    transparent 20%,
+    currentColor 20%,
+    currentColor 30%,
+    transparent 30%,
+    transparent 40%,
+    currentColor 40%,
+    currentColor 50%,
+    transparent 50%
+  );
+  background-size: 8px 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.holographic-pulse-profile {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.holographic-icon-profile.facebook {
+  color: #1877f2;
+}
+
+.holographic-icon-profile.facebook:hover {
+  color: #0d5bd9;
+  transform: translateY(-2px) rotateX(15deg);
+}
+
+.holographic-icon-profile.instagram {
+  color: #e4405f;
+}
+
+.holographic-icon-profile.instagram:hover {
+  color: #c13584;
+  transform: translateY(-2px) rotateX(15deg);
+}
+
+.holographic-icon-profile.twitter {
+  color: #1da1f2;
+}
+
+.holographic-icon-profile.twitter:hover {
+  color: #0d8bd9;
+  transform: translateY(-2px) rotateX(15deg);
+}
+
+.holographic-icon-profile.youtube {
+  color: #ff0000;
+}
+
+.holographic-icon-profile.youtube:hover {
+  color: #cc0000;
+  transform: translateY(-2px) rotateX(15deg);
+}
+
+.holographic-icon-profile:hover svg {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.holographic-icon-profile:hover .holographic-particles-profile {
+  opacity: 0.2;
+  animation: particles-profile 2s linear infinite;
+}
+
+.holographic-icon-profile:hover .holographic-pulse-profile {
+  opacity: 0.3;
+  animation: pulse-profile 1.5s ease-out infinite;
+}
+
+@keyframes rotate-profile {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes particles-profile {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 16px 16px;
+  }
+}
+
+@keyframes pulse-profile {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.1;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+.holographic-icon-profile::before {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 10%;
+  width: 80%;
+  height: 15%;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  filter: blur(2px);
+  transform: rotateX(80deg) translateZ(-8px);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.holographic-icon-profile:hover::before {
+  opacity: 0.3;
+}
