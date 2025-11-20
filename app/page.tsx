@@ -846,7 +846,7 @@ export default function HomePage() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black" />
                     <input
                       type="text"
-                      placeholder="Search businesses, products, tags..."
+                      placeholder="Use example tags or type in search bar to search for products in businesses..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 border-2 border-black rounded-lg focus:ring-0 focus:border-green-500 bg-white font-bold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"

@@ -103,11 +103,12 @@ const TagSearchFilters: React.FC<TagSearchFiltersProps> = ({
       <div>
         <div className="flex items-center gap-2 mb-3">
           <Tag className="h-4 w-4 text-gray-600" />
-          <span className="text-sm font-bold text-gray-700">Popular Tags:</span>
+          <span className="text-sm font-bold text-gray-700">Use example tags or type in search bar to search for products in businesses:</span>
         </div>
         <div className="flex flex-wrap gap-2">
           {popularTags
             .filter(tag => !selectedTags.includes(tag.name))
+            .slice(0, 4)
             .map(tag => (
               <motion.button
                 key={tag.id}
