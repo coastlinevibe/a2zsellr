@@ -395,6 +395,26 @@ export default function BusinessShop({
     }
   }
 
+  const updateTag = async (tagId: string, tagData: { name: string; icon?: string; color: string }) => {
+    try {
+      const { data, error } = await supabase
+        .from('product_tags')
+        .update(tagData)
+        .eq('id', tagId)
+        .select()
+        .single()
+
+      if (error) throw error
+      
+      // Update the tag in availableTags
+      setAvailableTags(prev => prev.map(tag => tag.id === tagId ? data : tag))
+      return data
+    } catch (error) {
+      console.error('Error updating tag:', error)
+      throw error
+    }
+  }
+
   const assignProductTags = async (productId: string, tagIds: string[]) => {
     try {
       // First, remove existing assignments
@@ -882,7 +902,9 @@ export default function BusinessShop({
                 onTagsChange={setSelectedTags}
                 availableTags={availableTags}
                 onCreateTag={createTag}
+                onUpdateTag={updateTag}
                 selectedCategory={productForm.category}
+                userTier={userTier}
               />
               
               {/* Product Images Upload */}
