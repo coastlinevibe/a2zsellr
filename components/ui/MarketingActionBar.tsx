@@ -15,9 +15,11 @@ interface MarketingActionBarProps {
   onChatWithSeller: () => void
   onViewMenuPopup: () => void
   onNewProductsPopup: () => void
+  onUpgrade: () => void
   businessName?: string
   listingTitle?: string
   className?: string
+  userTier?: 'free' | 'premium' | 'business'
 }
 
 interface ActionButton {
@@ -27,6 +29,8 @@ interface ActionButton {
   icon: React.ReactNode
   onClick: () => void
   gradientClasses: string
+  isEnabled: boolean
+  requiresUpgrade: boolean
 }
 
 export function MarketingActionBar({
@@ -35,9 +39,11 @@ export function MarketingActionBar({
   onChatWithSeller,
   onViewMenuPopup,
   onNewProductsPopup,
+  onUpgrade,
   businessName,
   listingTitle,
-  className
+  className,
+  userTier = 'free'
 }: MarketingActionBarProps) {
   // Button handlers
   const handleVideoPopup = () => {
@@ -52,6 +58,32 @@ export function MarketingActionBar({
     onNewProductsPopup()
   }
 
+  // Determine which actions are enabled based on user tier
+  const getActionPermissions = (actionId: string) => {
+    switch (userTier) {
+      case 'free':
+        return {
+          isEnabled: actionId === 'chat',
+          requiresUpgrade: actionId !== 'chat'
+        }
+      case 'premium':
+        return {
+          isEnabled: !['menu', 'products'].includes(actionId),
+          requiresUpgrade: ['menu', 'products'].includes(actionId)
+        }
+      case 'business':
+        return {
+          isEnabled: true,
+          requiresUpgrade: false
+        }
+      default:
+        return {
+          isEnabled: false,
+          requiresUpgrade: true
+        }
+    }
+  }
+
   const actions: ActionButton[] = [
     {
       id: 'video',
@@ -59,7 +91,8 @@ export function MarketingActionBar({
       sublabel: 'See it in action',
       icon: <Play className="h-5 w-5" />,
       onClick: handleVideoPopup,
-      gradientClasses: 'bg-gradient-to-br from-red-400 via-red-500 to-red-600'
+      gradientClasses: 'bg-gradient-to-br from-red-400 via-red-500 to-red-600',
+      ...getActionPermissions('video')
     },
     {
       id: 'profile',
@@ -67,7 +100,8 @@ export function MarketingActionBar({
       sublabel: 'Complete details',
       icon: <User className="h-5 w-5" />,
       onClick: onViewProfile,
-      gradientClasses: 'bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600'
+      gradientClasses: 'bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600',
+      ...getActionPermissions('profile')
     },
     {
       id: 'chat',
@@ -75,7 +109,8 @@ export function MarketingActionBar({
       sublabel: 'Get instant help',
       icon: <MessageCircle className="h-5 w-5" />,
       onClick: onChatWithSeller,
-      gradientClasses: 'bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600'
+      gradientClasses: 'bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600',
+      ...getActionPermissions('chat')
     },
     {
       id: 'menu',
@@ -83,7 +118,8 @@ export function MarketingActionBar({
       sublabel: 'All offerings',
       icon: <Menu className="h-5 w-5" />,
       onClick: handleViewMenuPopup,
-      gradientClasses: 'bg-gradient-to-br from-purple-400 via-purple-500 to-purple-600'
+      gradientClasses: 'bg-gradient-to-br from-purple-400 via-purple-500 to-purple-600',
+      ...getActionPermissions('menu')
     },
     {
       id: 'products',
@@ -91,7 +127,8 @@ export function MarketingActionBar({
       sublabel: '3 new arrivals',
       icon: <Package className="h-5 w-5" />,
       onClick: handleNewProductsPopup,
-      gradientClasses: 'bg-gradient-to-br from-amber-400 via-orange-400 to-orange-500'
+      gradientClasses: 'bg-gradient-to-br from-amber-400 via-orange-400 to-orange-500',
+      ...getActionPermissions('products')
     }
   ]
 
@@ -102,32 +139,27 @@ export function MarketingActionBar({
         className
       )}
     >
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-slate-400">Marketing actions</p>
-          <h3 className="text-sm font-semibold text-white">
-            {listingTitle || 'Campaign'} · {businessName || 'Your brand'}
-          </h3>
-        </div>
-        <div className="hidden sm:flex flex-col items-end text-right text-[10px] uppercase tracking-[0.2em] text-slate-500">
-          <span>Premium grade</span>
-          <span>Footer toolkit</span>
-        </div>
-      </div>
+
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
         {actions.map(action => (
           <button
             key={action.id}
-            onClick={action.onClick}
+            onClick={action.isEnabled ? action.onClick : onUpgrade}
             className={cn(
               'group relative isolate overflow-hidden rounded-xl px-4 py-3 text-left transition-transform duration-200 text-white',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900',
               'shadow-lg shadow-black/30 hover:shadow-black/40 hover:-translate-y-1',
               'sm:flex sm:flex-col sm:items-start sm:justify-between',
-              action.gradientClasses
+              action.isEnabled ? action.gradientClasses : 'bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600',
+              !action.isEnabled && 'opacity-75'
             )}
           >
             <div className={cn('absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-200 bg-white')} />
+            {action.requiresUpgrade && (
+              <div className="absolute top-1 right-1 bg-yellow-400 text-black text-xs px-1.5 py-0.5 rounded-full font-bold">
+                UPGRADE
+              </div>
+            )}
             <div className={cn('relative flex items-center gap-3 text-white sm:flex-col sm:items-start sm:gap-2')}>
               <div
                 className={cn(
@@ -139,7 +171,9 @@ export function MarketingActionBar({
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-sm leading-tight drop-shadow-sm">{action.label}</p>
-                <p className="text-xs text-white/80">{action.sublabel}</p>
+                <p className="text-xs text-white/80">
+                  {action.requiresUpgrade ? 'Upgrade tier' : action.sublabel}
+                </p>
               </div>
             </div>
           </button>
