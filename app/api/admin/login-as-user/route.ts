@@ -87,13 +87,16 @@ export async function POST(request: NextRequest) {
           .eq('id', userId)
 
         // Generate login link for the new user
+        // Always use production URL for magic links
+        const redirectUrl = 'https://www.a2zsellr.life/dashboard'
+        
+        console.log('🌐 Using redirect URL:', redirectUrl)
+        
         const { data: tokenData, error: tokenError } = await supabaseAdmin.auth.admin.generateLink({
           type: 'magiclink',
           email: tempEmail,
           options: {
-            redirectTo: process.env.NODE_ENV === 'production' 
-              ? 'https://www.a2zsellr.life/dashboard'
-              : 'http://localhost:3000/dashboard'
+            redirectTo: redirectUrl
           }
         })
 
@@ -126,13 +129,16 @@ export async function POST(request: NextRequest) {
     // For users with existing auth records, generate magic link
     console.log('✅ User has auth record, generating magic link')
 
+    // Always use production URL for magic links
+    const redirectUrl = 'https://www.a2zsellr.life/dashboard'
+    
+    console.log('🌐 Using redirect URL for existing user:', redirectUrl)
+    
     const { data: tokenData, error: tokenError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
       email: authUser.user.email!,
       options: {
-        redirectTo: process.env.NODE_ENV === 'production' 
-          ? 'https://www.a2zsellr.life/dashboard'
-          : 'http://localhost:3000/dashboard'
+        redirectTo: redirectUrl
       }
     })
 
