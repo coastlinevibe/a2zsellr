@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Check, X } from 'lucide-react'
 
 
 interface MessageConsentPopupProps {
@@ -101,17 +102,15 @@ export function MessageConsentPopup({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4">
+          <div className="flex gap-4 justify-center">
             <button
               onClick={handleAccept}
               disabled={isProcessing}
-              className="flex-1 inline-flex items-center justify-center"
+              className="inline-flex items-center justify-center w-16 h-16"
               style={{
-                background: '#5cbdfd',
+                background: '#22c55e',
                 fontFamily: 'inherit',
-                padding: '0.6em 1.3em',
                 fontWeight: 900,
-                fontSize: '16px',
                 border: '3px solid black',
                 borderRadius: '11px',
                 boxShadow: '0.1em 0.1em',
@@ -138,20 +137,18 @@ export function MessageConsentPopup({
               {isProcessing ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-black border-t-transparent" />
               ) : (
-                'Yes'
+                <Check className="w-8 h-8 text-white" />
               )}
             </button>
             
             <button
               onClick={handleDecline}
               disabled={isProcessing}
-              className="flex-1 inline-flex items-center justify-center"
+              className="inline-flex items-center justify-center w-16 h-16"
               style={{
-                background: '#5cbdfd',
+                background: '#ef4444',
                 fontFamily: 'inherit',
-                padding: '0.6em 1.3em',
                 fontWeight: 900,
-                fontSize: '16px',
                 border: '3px solid black',
                 borderRadius: '11px',
                 boxShadow: '0.1em 0.1em',
@@ -175,7 +172,7 @@ export function MessageConsentPopup({
                 e.currentTarget.style.boxShadow = '0.15em 0.15em';
               }}
             >
-              No
+              <X className="w-8 h-8 text-white" />
             </button>
           </div>
         </div>
