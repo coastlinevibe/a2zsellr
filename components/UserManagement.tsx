@@ -123,9 +123,21 @@ export function UserManagement() {
       const result = await response.json()
 
       if (response.ok) {
-        // All users now use the impersonation method
-        alert(`✅ Impersonating "${userName}"! Redirecting to their dashboard...`)
-        window.location.href = '/dashboard'
+        if (result.method === 'magic_link' && result.loginUrl) {
+          // Log out admin and redirect to magic link
+          alert(`✅ Logging out admin and logging in as "${userName}"...`)
+          
+          // Clear admin session
+          await supabase.auth.signOut()
+          
+          // Wait a moment for logout to complete, then redirect to magic link
+          setTimeout(() => {
+            window.location.href = result.loginUrl
+          }, 1000)
+        } else {
+          alert(`✅ Logged in as "${userName}"! Redirecting...`)
+          window.location.href = '/dashboard'
+        }
       } else {
         alert(`❌ Failed: ${result.error}`)
       }

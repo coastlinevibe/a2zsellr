@@ -52,69 +52,107 @@ export async function POST(request: NextRequest) {
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId)
 
     if (authError || !authUser.user) {
-      console.log('⚠️ User has no auth record, creating temporary session...')
+      console.log('⚠️ User has no auth record, need to create one first...')
       
-      // For users without email/auth (like bulk uploaded users), 
-      // we'll create a temporary admin session that acts as the user
-      const response = NextResponse.json({
-        success: true,
-        message: 'Temporary admin session created',
-        userProfile: userProfile,
-        method: 'admin_impersonation'
-      })
-
-      // Set a special cookie to indicate admin impersonation
-      console.log('🍪 Setting impersonation cookies for user without auth:', { userId, userName })
+      // For users without auth, create a temporary auth account
+      const tempEmail = userProfile.email || `${userProfile.display_name.toLowerCase().replace(/[^a-z0-9]/g, '')}@temp.a2zsellr.life`
+      const tempPassword = '123456' // Default password
       
-      response.cookies.set('admin_impersonating', userId, {
-        httpOnly: false, // Change to false so we can read it client-side
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 * 2 // 2 hours
-      })
+      try {
+        console.log(`🔐 Creating temporary auth for user: ${tempEmail}`)
+        
+        const { data: newAuthUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+          email: tempEmail,
+          password: tempPassword,
+          email_confirm: true,
+          user_metadata: {
+            display_name: userProfile.display_name,
+            temp_account: true,
+            original_user_id: userId
+          }
+        })
 
-      response.cookies.set('impersonated_user_name', encodeURIComponent(userName), {
-        httpOnly: false, // Allow client-side access for UI
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 60 * 2 // 2 hours
-      })
+        if (createError) {
+          console.error('❌ Failed to create temp auth:', createError)
+          return NextResponse.json(
+            { error: 'Failed to create temporary authentication' },
+            { status: 500 }
+          )
+        }
 
-      return response
+        // Update the profile to use the new auth user ID
+        await supabaseAdmin
+          .from('profiles')
+          .update({ id: newAuthUser.user!.id })
+          .eq('id', userId)
+
+        // Generate login link for the new user
+        const { data: tokenData, error: tokenError } = await supabaseAdmin.auth.admin.generateLink({
+          type: 'magiclink',
+          email: tempEmail,
+          options: {
+            redirectTo: process.env.NODE_ENV === 'production' 
+              ? 'https://www.a2zsellr.life/dashboard'
+              : 'http://localhost:3000/dashboard'
+          }
+        })
+
+        if (tokenError) {
+          console.error('❌ Failed to generate login link:', tokenError)
+          return NextResponse.json(
+            { error: 'Failed to generate login session' },
+            { status: 500 }
+          )
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: 'Temporary authentication created and login link generated',
+          loginUrl: tokenData.properties?.action_link,
+          userProfile: userProfile,
+          method: 'magic_link',
+          tempCredentials: { email: tempEmail, password: tempPassword }
+        })
+
+      } catch (error) {
+        console.error('❌ Error creating temp auth:', error)
+        return NextResponse.json(
+          { error: 'Failed to create temporary authentication' },
+          { status: 500 }
+        )
+      }
     }
 
-    // For users with auth records, use impersonation approach instead of magic links
-    console.log('✅ Setting up impersonation for authenticated user')
+    // For users with existing auth records, generate magic link
+    console.log('✅ User has auth record, generating magic link')
 
-    const response = NextResponse.json({
+    const { data: tokenData, error: tokenError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: authUser.user.email!,
+      options: {
+        redirectTo: process.env.NODE_ENV === 'production' 
+          ? 'https://www.a2zsellr.life/dashboard'
+          : 'http://localhost:3000/dashboard'
+      }
+    })
+
+    if (tokenError) {
+      console.error('❌ Failed to generate login link:', tokenError)
+      return NextResponse.json(
+        { error: 'Failed to generate login session' },
+        { status: 500 }
+      )
+    }
+
+    console.log('✅ Login link generated successfully')
+
+    return NextResponse.json({
       success: true,
-      message: 'User impersonation session created',
+      message: 'Login session created successfully',
+      loginUrl: tokenData.properties?.action_link,
       userProfile: userProfile,
-      method: 'admin_impersonation'
+      method: 'magic_link'
     })
-
-    // Set impersonation cookies for authenticated users too
-    console.log('🍪 Setting impersonation cookies:', { userId, userName })
-    
-    response.cookies.set('admin_impersonating', userId, {
-      httpOnly: false, // Change to false so we can read it client-side
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 2 // 2 hours
-    })
-
-    response.cookies.set('impersonated_user_name', encodeURIComponent(userName), {
-      httpOnly: false, // Allow client-side access for UI
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 2 // 2 hours
-    })
-
-    return response
 
   } catch (error) {
     console.error('❌ Admin login-as-user error:', error)
