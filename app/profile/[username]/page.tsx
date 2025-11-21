@@ -1527,26 +1527,63 @@ Best regards`
                       }}
                       whileHover={{ y: -8, boxShadow: '0 12px 24px rgba(0, 0, 0, 0.15)' }}
                     >
-                    {((product.images && product.images.length > 0) || product.image_url) ? (
-                      <div className="relative">
-                        <img
-                          src={product.images && product.images.length > 0 ? product.images[0].url : product.image_url!}
-                          alt={product.name}
-                          className="w-full h-[146px] object-fill"
-                        />
-                        {/* Image count indicator */}
-                        {product.images && product.images.length > 1 && (
-                          <div className="absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                            <Package className="h-3 w-3" />
-                            {product.images.length}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="w-full h-32 bg-gray-100 flex items-center justify-center">
-                        <ShoppingBag className="w-8 h-8 text-gray-400" />
-                      </div>
-                    )}
+                    {(() => {
+                      // Handle both JSON string and array formats for images
+                      let imagesArray = []
+                      if (product.images) {
+                        if (typeof product.images === 'string') {
+                          try {
+                            imagesArray = JSON.parse(product.images)
+                          } catch (e) {
+                            imagesArray = []
+                          }
+                        } else if (Array.isArray(product.images)) {
+                          imagesArray = product.images
+                        }
+                      }
+                      
+                      const hasImages = imagesArray && imagesArray.length > 0
+                      const imageUrl = hasImages 
+                        ? imagesArray[0]?.url || product.image_url
+                        : product.image_url
+                      
+                      return (hasImages || product.image_url) ? (
+                        <div className="relative">
+                          <img
+                            src={imageUrl}
+                            alt={product.name}
+                            className="w-full h-[146px] object-fill"
+                          />
+                          {/* Image count indicator */}
+                          {(() => {
+                            // Handle both JSON string and array formats for count
+                            let imagesArray = []
+                            if (product.images) {
+                              if (typeof product.images === 'string') {
+                                try {
+                                  imagesArray = JSON.parse(product.images)
+                                } catch (e) {
+                                  imagesArray = []
+                                }
+                              } else if (Array.isArray(product.images)) {
+                                imagesArray = product.images
+                              }
+                            }
+                            
+                            return imagesArray && imagesArray.length > 1 && (
+                              <div className="absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                <Package className="h-3 w-3" />
+                                {imagesArray.length}
+                              </div>
+                            )
+                          })()}
+                        </div>
+                      ) : (
+                        <div className="w-full h-32 bg-gray-100 flex items-center justify-center">
+                          <ShoppingBag className="w-8 h-8 text-gray-400" />
+                        </div>
+                      )
+                    })()}
                     <div className="p-3">
                       <h3 className="font-medium text-gray-900 mb-1 text-sm truncate">{product.name}</h3>
                       {product.price_cents ? (
@@ -1766,58 +1803,122 @@ Best regards`
                 <div className="space-y-4">
                   {/* Main Image */}
                   <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                    {((selectedProduct?.images && selectedProduct?.images.length > 0) || selectedProduct?.image_url) ? (
-                      <>
-                        <img
-                          src={
-                            selectedProduct?.images && selectedProduct?.images.length > 0
-                              ? selectedProduct?.images[currentProductImageIndex]?.url || selectedProduct?.image_url!
-                              : selectedProduct?.image_url!
+                    {(() => {
+                      // Handle both JSON string and array formats for main image
+                      let imagesArray = []
+                      if (selectedProduct?.images) {
+                        if (typeof selectedProduct.images === 'string') {
+                          try {
+                            imagesArray = JSON.parse(selectedProduct.images)
+                          } catch (e) {
+                            imagesArray = []
                           }
-                          alt={selectedProduct?.name}
-                          className="w-full h-full object-cover"
-                        />
+                        } else if (Array.isArray(selectedProduct.images)) {
+                          imagesArray = selectedProduct.images
+                        }
+                      }
+                      
+                      const hasImages = imagesArray && imagesArray.length > 0
+                      const imageUrl = hasImages 
+                        ? imagesArray[currentProductImageIndex]?.url || selectedProduct?.image_url
+                        : selectedProduct?.image_url
+                      
+                      return (hasImages || selectedProduct?.image_url) ? (
+                        <>
+                          <img
+                            src={imageUrl}
+                            alt={selectedProduct?.name}
+                            className="w-full h-full object-cover"
+                          />
                         
                         {/* Navigation Arrows */}
-                        {selectedProduct?.images && selectedProduct.images.length > 1 && (
-                          <>
-                            <button
-                              onClick={() => setCurrentProductImageIndex(prev => 
-                                prev === 0 ? (selectedProduct?.images?.length || 1) - 1 : prev - 1
-                              )}
-                              className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 hover:bg-opacity-80 text-white p-2 rounded-full transition-all"
-                            >
-                              <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <button
-                              onClick={() => setCurrentProductImageIndex(prev => 
-                                prev === (selectedProduct?.images?.length || 1) - 1 ? 0 : prev + 1
-                              )}
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 hover:bg-opacity-80 text-white p-2 rounded-full transition-all"
-                            >
-                              <ChevronRight className="w-5 h-5" />
-                            </button>
-                          </>
-                        )}
+                        {(() => {
+                          // Handle both JSON string and array formats for navigation
+                          let imagesArray = []
+                          if (selectedProduct?.images) {
+                            if (typeof selectedProduct.images === 'string') {
+                              try {
+                                imagesArray = JSON.parse(selectedProduct.images)
+                              } catch (e) {
+                                imagesArray = []
+                              }
+                            } else if (Array.isArray(selectedProduct.images)) {
+                              imagesArray = selectedProduct.images
+                            }
+                          }
+                          
+                          return imagesArray && imagesArray.length > 1 && (
+                            <>
+                              <button
+                                onClick={() => setCurrentProductImageIndex(prev => 
+                                  prev === 0 ? imagesArray.length - 1 : prev - 1
+                                )}
+                                className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 hover:bg-opacity-80 text-white p-2 rounded-full transition-all"
+                              >
+                                <ChevronLeft className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={() => setCurrentProductImageIndex(prev => 
+                                  prev === imagesArray.length - 1 ? 0 : prev + 1
+                                )}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 hover:bg-opacity-80 text-white p-2 rounded-full transition-all"
+                              >
+                                <ChevronRight className="w-5 h-5" />
+                              </button>
+                            </>
+                          )
+                        })()}
                         
                         {/* Image Counter */}
-                        {selectedProduct?.images && selectedProduct.images.length > 1 && (
-                          <div className="absolute bottom-3 right-3 bg-black bg-opacity-60 text-white text-sm px-3 py-1 rounded-full">
-                            {currentProductImageIndex + 1} / {selectedProduct.images.length}
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        <Package className="w-16 h-16" />
-                      </div>
-                    )}
+                        {(() => {
+                          // Handle both JSON string and array formats for counter
+                          let imagesArray = []
+                          if (selectedProduct?.images) {
+                            if (typeof selectedProduct.images === 'string') {
+                              try {
+                                imagesArray = JSON.parse(selectedProduct.images)
+                              } catch (e) {
+                                imagesArray = []
+                              }
+                            } else if (Array.isArray(selectedProduct.images)) {
+                              imagesArray = selectedProduct.images
+                            }
+                          }
+                          
+                          return imagesArray && imagesArray.length > 1 && (
+                            <div className="absolute bottom-3 right-3 bg-black bg-opacity-60 text-white text-sm px-3 py-1 rounded-full">
+                              {currentProductImageIndex + 1} / {imagesArray.length}
+                            </div>
+                          )
+                        })()}
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          <Package className="w-16 h-16" />
+                        </div>
+                      )
+                    })()}
                   </div>
 
                   {/* Thumbnail Strip */}
-                  {selectedProduct?.images && selectedProduct.images.length > 1 && (
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                      {selectedProduct.images.map((img, index) => (
+                  {(() => {
+                    // Handle both JSON string and array formats
+                    let imagesArray = []
+                    if (selectedProduct?.images) {
+                      if (typeof selectedProduct.images === 'string') {
+                        try {
+                          imagesArray = JSON.parse(selectedProduct.images)
+                        } catch (e) {
+                          imagesArray = []
+                        }
+                      } else if (Array.isArray(selectedProduct.images)) {
+                        imagesArray = selectedProduct.images
+                      }
+                    }
+                    
+                    return imagesArray && imagesArray.length > 1 && (
+                      <div className="flex gap-2 overflow-x-auto pb-2">
+                        {imagesArray.map((img: any, index: number) => (
                         <button
                           key={index}
                           onClick={() => setCurrentProductImageIndex(index)}
@@ -1833,9 +1934,10 @@ Best regards`
                             className="w-full h-full object-cover"
                           />
                         </button>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    )
+                  })()}
                 </div>
 
                 {/* Product Info */}

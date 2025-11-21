@@ -231,8 +231,22 @@ export default function BusinessShop({
       category: product.category || 'products',
       image_url: product.image_url || ''
     })
-    // Load existing images and tags
-    setProductImages(product.images || [])
+    // Load existing images and tags - handle different data types
+    let parsedImages: ProductImage[] = []
+    if (product.images) {
+      if (Array.isArray(product.images)) {
+        parsedImages = product.images
+      } else if (typeof product.images === 'string') {
+        try {
+          const parsed = JSON.parse(product.images)
+          parsedImages = Array.isArray(parsed) ? parsed : []
+        } catch (e) {
+          console.warn('Could not parse product images JSON:', e)
+          parsedImages = []
+        }
+      }
+    }
+    setProductImages(parsedImages)
     setSelectedTags(product.tags || [])
     setImageFiles([])
     setEditingProduct(product)
@@ -683,20 +697,41 @@ export default function BusinessShop({
                 : 'border-gray-200 hover:shadow-md'
             }`}>
               {/* Show first image from images array or fallback to image_url */}
-              {((product.images && product.images.length > 0) || product.image_url) && (
-                <img
-                  src={product.images && product.images.length > 0 ? product.images[0].url : product.image_url!}
-                  alt={product.name}
-                  className="w-full h-48 object-cover"
-                />
-              )}
-              {/* Image count indicator */}
-              {product.images && product.images.length > 1 && (
-                <div className="absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                  <ImageIcon className="h-3 w-3" />
-                  {product.images.length}
-                </div>
-              )}
+              {(() => {
+                // Handle both JSON string and array formats for images
+                let imagesArray = []
+                if (product.images) {
+                  if (Array.isArray(product.images)) {
+                    imagesArray = product.images
+                  } else if (typeof product.images === 'string') {
+                    try {
+                      imagesArray = JSON.parse(product.images)
+                    } catch (e) {
+                      imagesArray = []
+                    }
+                  }
+                }
+                
+                const hasImages = imagesArray && imagesArray.length > 0
+                const imageUrl = hasImages ? imagesArray[0]?.url : product.image_url
+                
+                return (imageUrl || product.image_url) ? (
+                  <>
+                    <img
+                      src={imageUrl || product.image_url!}
+                      alt={product.name}
+                      className="w-full h-48 object-cover"
+                    />
+                    {/* Image count indicator */}
+                    {hasImages && imagesArray.length > 1 && (
+                      <div className="absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                        <ImageIcon className="h-3 w-3" />
+                        {imagesArray.length}
+                      </div>
+                    )}
+                  </>
+                ) : null
+              })()}
               <div className="p-4">
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="font-semibold text-gray-900 flex-1">{product.name}</h3>
@@ -925,7 +960,7 @@ export default function BusinessShop({
                 <div className="flex items-center justify-between mb-3">
                   <label className="block text-sm font-semibold text-gray-800 flex items-center gap-2">
                     <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                    Product Images ({productImages.length + imageFiles.length}/{userTier === 'free' ? 1 : userTier === 'premium' ? 8 : 50})
+                    Product Images ({(Array.isArray(productImages) ? productImages.length : 0) + imageFiles.length}/{userTier === 'free' ? 1 : userTier === 'premium' ? 8 : 50})
                   </label>
                   <div className="flex items-center gap-2">
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
@@ -938,10 +973,10 @@ export default function BusinessShop({
                 </div>
                 
                 {/* Combined Images Grid - Compact */}
-                {(productImages.length > 0 || imageFiles.length > 0) && (
+                {(Array.isArray(productImages) && productImages.length > 0 || imageFiles.length > 0) && (
                   <div className="grid grid-cols-5 gap-1.5 mb-2">
                     {/* Existing Images */}
-                    {productImages.map((img, index) => (
+                    {Array.isArray(productImages) && productImages.map((img, index) => (
                       <div key={`existing-${index}`} className="relative group aspect-square">
                         <img
                           src={img.url}

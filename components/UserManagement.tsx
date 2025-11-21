@@ -186,6 +186,34 @@ export function UserManagement() {
       const selectedUserIds = Array.from(selectedUsers)
       
       // Delete all data for selected users in sequence (order matters due to foreign keys)
+      // Delete child tables first (orders, order_items, etc.)
+      console.log('🗑️ Deleting selected users order items...')
+      const { error: orderItemsError } = await supabase
+        .from('order_items')
+        .delete()
+        .in('seller_id', selectedUserIds)
+
+      console.log('🗑️ Deleting selected users orders (as seller)...')
+      const { error: ordersSellerError } = await supabase
+        .from('orders')
+        .delete()
+        .in('seller_id', selectedUserIds)
+
+      console.log('🗑️ Deleting selected users orders (as buyer)...')
+      const { error: ordersBuyerError } = await supabase
+        .from('orders')
+        .delete()
+        .in('buyer_id', selectedUserIds)
+
+      console.log('🗑️ Deleting selected users product tag assignments...')
+      const productIds = (await supabase.from('profile_products').select('id').in('profile_id', selectedUserIds)).data?.map(p => p.id) || []
+      if (productIds.length > 0) {
+        const { error: tagAssignmentsError } = await supabase
+          .from('product_tag_assignments')
+          .delete()
+          .in('product_id', productIds)
+      }
+
       console.log('🗑️ Deleting selected users profile products...')
       const { error: productsError } = await supabase
         .from('profile_products')
@@ -210,15 +238,69 @@ export function UserManagement() {
         .delete()
         .in('profile_id', selectedUserIds)
 
+      console.log('🗑️ Deleting selected users profile reviews...')
+      const { error: reviewsError } = await supabase
+        .from('profile_reviews')
+        .delete()
+        .in('profile_id', selectedUserIds)
+
+      console.log('🗑️ Deleting selected users marketing campaigns...')
+      const { error: campaignsError } = await supabase
+        .from('marketing_campaigns')
+        .delete()
+        .in('profile_id', selectedUserIds)
+
+      console.log('🗑️ Deleting selected users campaign executions...')
+      const { error: executionsError } = await supabase
+        .from('campaign_executions')
+        .delete()
+        .in('profile_id', selectedUserIds)
+
+      console.log('🗑️ Deleting selected users social media groups...')
+      const { error: groupsError } = await supabase
+        .from('social_media_groups')
+        .delete()
+        .in('profile_id', selectedUserIds)
+
       console.log('🗑️ Deleting selected users payment transactions...')
       const { error: paymentsError } = await supabase
         .from('payment_transactions')
         .delete()
         .in('profile_id', selectedUserIds)
 
+      console.log('🗑️ Deleting selected users EFT banking details...')
+      const { error: eftError } = await supabase
+        .from('eft_banking_details')
+        .delete()
+        .in('profile_id', selectedUserIds)
+
       console.log('🗑️ Deleting selected users reset history...')
       const { error: resetHistoryError } = await supabase
         .from('reset_history')
+        .delete()
+        .in('profile_id', selectedUserIds)
+
+      console.log('🗑️ Deleting selected users referrals (as referrer)...')
+      const { error: referralsError } = await supabase
+        .from('referrals')
+        .delete()
+        .in('referrer_id', selectedUserIds)
+
+      console.log('🗑️ Deleting selected users referrals (as referred)...')
+      const { error: referredError } = await supabase
+        .from('referrals')
+        .delete()
+        .in('referred_id', selectedUserIds)
+
+      console.log('🗑️ Deleting selected users user templates...')
+      const { error: userTemplatesError } = await supabase
+        .from('user_templates')
+        .delete()
+        .in('user_id', selectedUserIds)
+
+      console.log('🗑️ Deleting selected users analytics events...')
+      const { error: analyticsEventsError } = await supabase
+        .from('analytics_events')
         .delete()
         .in('profile_id', selectedUserIds)
 
@@ -256,12 +338,24 @@ export function UserManagement() {
 
       // Check for errors
       const errors = []
+      if (orderItemsError) errors.push(`Order Items: ${orderItemsError.message}`)
+      if (ordersSellerError) errors.push(`Orders (Seller): ${ordersSellerError.message}`)
+      if (ordersBuyerError) errors.push(`Orders (Buyer): ${ordersBuyerError.message}`)
       if (productsError) errors.push(`Products: ${productsError.message}`)
       if (listingsError) errors.push(`Listings: ${listingsError.message}`)
       if (galleryError) errors.push(`Gallery: ${galleryError.message}`)
       if (analyticsError) errors.push(`Analytics: ${analyticsError.message}`)
+      if (reviewsError) errors.push(`Reviews: ${reviewsError.message}`)
+      if (campaignsError) errors.push(`Campaigns: ${campaignsError.message}`)
+      if (executionsError) errors.push(`Campaign Executions: ${executionsError.message}`)
+      if (groupsError) errors.push(`Social Media Groups: ${groupsError.message}`)
       if (paymentsError) errors.push(`Payments: ${paymentsError.message}`)
+      if (eftError) errors.push(`EFT Banking: ${eftError.message}`)
       if (resetHistoryError) errors.push(`Reset History: ${resetHistoryError.message}`)
+      if (referralsError) errors.push(`Referrals (Referrer): ${referralsError.message}`)
+      if (referredError) errors.push(`Referrals (Referred): ${referredError.message}`)
+      if (userTemplatesError) errors.push(`User Templates: ${userTemplatesError.message}`)
+      if (analyticsEventsError) errors.push(`Analytics Events: ${analyticsEventsError.message}`)
       if (profilesError) errors.push(`Profiles: ${profilesError.message}`)
 
       if (errors.length > 0) {
@@ -415,7 +509,34 @@ export function UserManagement() {
 
       console.log(`📊 Items to delete: ${productsToDelete} products, ${listingsToDelete} listings, ${galleryToDelete} gallery, ${analyticsToDelete} analytics`)
 
-      // Delete all user-related data in sequence
+      // Delete all user-related data in sequence (order matters due to foreign keys)
+      console.log('🗑️ Deleting user order items...')
+      const { error: orderItemsError } = await supabase
+        .from('order_items')
+        .delete()
+        .eq('seller_id', userId)
+
+      console.log('🗑️ Deleting user orders (as seller)...')
+      const { error: ordersSellerError } = await supabase
+        .from('orders')
+        .delete()
+        .eq('seller_id', userId)
+
+      console.log('🗑️ Deleting user orders (as buyer)...')
+      const { error: ordersBuyerError } = await supabase
+        .from('orders')
+        .delete()
+        .eq('buyer_id', userId)
+
+      console.log('🗑️ Deleting user product tag assignments...')
+      const userProductIds = (await supabase.from('profile_products').select('id').eq('profile_id', userId)).data?.map(p => p.id) || []
+      if (userProductIds.length > 0) {
+        const { error: tagAssignmentsError } = await supabase
+          .from('product_tag_assignments')
+          .delete()
+          .in('product_id', userProductIds)
+      }
+
       console.log('🗑️ Deleting user products...')
       const { error: productsError, data: deletedProducts } = await supabase
         .from('profile_products')
@@ -443,16 +564,69 @@ export function UserManagement() {
         .delete()
         .eq('profile_id', userId)
 
-      // Try to delete from other possible tables
+      console.log('🗑️ Deleting user reviews...')
+      const { error: reviewsError } = await supabase
+        .from('profile_reviews')
+        .delete()
+        .eq('profile_id', userId)
+
+      console.log('🗑️ Deleting user marketing campaigns...')
+      const { error: campaignsError } = await supabase
+        .from('marketing_campaigns')
+        .delete()
+        .eq('profile_id', userId)
+
+      console.log('🗑️ Deleting user campaign executions...')
+      const { error: executionsError } = await supabase
+        .from('campaign_executions')
+        .delete()
+        .eq('profile_id', userId)
+
+      console.log('🗑️ Deleting user social media groups...')
+      const { error: groupsError } = await supabase
+        .from('social_media_groups')
+        .delete()
+        .eq('profile_id', userId)
+
       console.log('🗑️ Deleting payment transactions...')
       const { error: paymentsError } = await supabase
         .from('payment_transactions')
         .delete()
         .eq('profile_id', userId)
 
+      console.log('🗑️ Deleting EFT banking details...')
+      const { error: eftError } = await supabase
+        .from('eft_banking_details')
+        .delete()
+        .eq('profile_id', userId)
+
       console.log('🗑️ Deleting reset history...')
       const { error: resetHistoryError } = await supabase
         .from('reset_history')
+        .delete()
+        .eq('profile_id', userId)
+
+      console.log('🗑️ Deleting referrals (as referrer)...')
+      const { error: referralsError } = await supabase
+        .from('referrals')
+        .delete()
+        .eq('referrer_id', userId)
+
+      console.log('🗑️ Deleting referrals (as referred)...')
+      const { error: referredError } = await supabase
+        .from('referrals')
+        .delete()
+        .eq('referred_id', userId)
+
+      console.log('🗑️ Deleting user templates...')
+      const { error: userTemplatesError } = await supabase
+        .from('user_templates')
+        .delete()
+        .eq('user_id', userId)
+
+      console.log('🗑️ Deleting analytics events...')
+      const { error: analyticsEventsError } = await supabase
+        .from('analytics_events')
         .delete()
         .eq('profile_id', userId)
 
@@ -536,12 +710,24 @@ export function UserManagement() {
 
       // Check for errors
       const errors = []
+      if (orderItemsError) errors.push(`Order Items: ${orderItemsError.message}`)
+      if (ordersSellerError) errors.push(`Orders (Seller): ${ordersSellerError.message}`)
+      if (ordersBuyerError) errors.push(`Orders (Buyer): ${ordersBuyerError.message}`)
       if (productsError) errors.push(`Products: ${productsError.message}`)
       if (listingsError) errors.push(`Listings: ${listingsError.message}`)
       if (galleryError) errors.push(`Gallery: ${galleryError.message}`)
       if (analyticsError) errors.push(`Analytics: ${analyticsError.message}`)
+      if (reviewsError) errors.push(`Reviews: ${reviewsError.message}`)
+      if (campaignsError) errors.push(`Campaigns: ${campaignsError.message}`)
+      if (executionsError) errors.push(`Campaign Executions: ${executionsError.message}`)
+      if (groupsError) errors.push(`Social Media Groups: ${groupsError.message}`)
       if (paymentsError) errors.push(`Payments: ${paymentsError.message}`)
+      if (eftError) errors.push(`EFT Banking: ${eftError.message}`)
       if (resetHistoryError) errors.push(`Reset History: ${resetHistoryError.message}`)
+      if (referralsError) errors.push(`Referrals (Referrer): ${referralsError.message}`)
+      if (referredError) errors.push(`Referrals (Referred): ${referredError.message}`)
+      if (userTemplatesError) errors.push(`User Templates: ${userTemplatesError.message}`)
+      if (analyticsEventsError) errors.push(`Analytics Events: ${analyticsEventsError.message}`)
       if (profileError) errors.push(`Profile: ${profileError.message}`)
       
       // Note: Storage errors are logged but don't fail the deletion since database cleanup is more important
