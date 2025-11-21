@@ -576,6 +576,7 @@ export default function CampaignPage({ params }: CampaignPageProps) {
         onAccept={messageConsent.handleAccept}
         onDecline={messageConsent.handleDecline}
         businessName={profile?.display_name || 'Business'}
+        businessAvatar={profile?.avatar_url || undefined}
       />
     </div>
     </>

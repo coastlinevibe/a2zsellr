@@ -33,14 +33,10 @@ export function useMessageConsent(businessName: string, listingId: string) {
         }
       }
       
-      // Show popup after a short delay if not shown before
-      const timer = setTimeout(() => {
-        if (!consentState.hasShown) {
-          setIsOpen(true)
-        }
-      }, 2000) // 2 second delay to let user see the content first
-
-      return () => clearTimeout(timer)
+      // Show popup immediately if not shown before
+      if (!consentState.hasShown) {
+        setIsOpen(true)
+      }
     } catch (error) {
       console.error('Error loading message consent state:', error)
     }
