@@ -534,8 +534,10 @@ export default function CampaignPage({ params }: CampaignPageProps) {
               onChatWithSeller={handleContactShop}
               onViewMenuPopup={() => setMenuPopupOpen(true)}
               onNewProductsPopup={() => setProductsPopupOpen(true)}
+              onUpgrade={() => console.log('Upgrade clicked')}
               businessName={profile.display_name}
               listingTitle={listing.title}
+              userTier="premium"
             />
           )}
 

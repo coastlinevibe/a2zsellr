@@ -84,7 +84,7 @@ export function MarketingActionBar({
     }
   }
 
-  const actions: ActionButton[] = [
+  const allActions: ActionButton[] = [
     {
       id: 'video',
       label: 'Watch Video',
@@ -132,6 +132,9 @@ export function MarketingActionBar({
     }
   ]
 
+  // Filter to only show enabled actions
+  const actions = allActions.filter(action => action.isEnabled)
+
   return (
     <div
       className={cn(
@@ -140,26 +143,27 @@ export function MarketingActionBar({
       )}
     >
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
+      <div className={cn(
+        'grid gap-2 sm:gap-3 justify-center',
+        actions.length === 1 && 'grid-cols-1 max-w-xs mx-auto',
+        actions.length === 2 && 'grid-cols-2 max-w-sm mx-auto',
+        actions.length === 3 && 'grid-cols-2 sm:grid-cols-3 max-w-md mx-auto',
+        actions.length === 4 && 'grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto',
+        actions.length === 5 && 'grid-cols-2 sm:grid-cols-5'
+      )}>
         {actions.map(action => (
           <button
             key={action.id}
-            onClick={action.isEnabled ? action.onClick : onUpgrade}
+            onClick={action.onClick}
             className={cn(
               'group relative isolate overflow-hidden rounded-xl px-4 py-3 text-left transition-transform duration-200 text-white',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900',
               'shadow-lg shadow-black/30 hover:shadow-black/40 hover:-translate-y-1',
               'sm:flex sm:flex-col sm:items-start sm:justify-between',
-              action.isEnabled ? action.gradientClasses : 'bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600',
-              !action.isEnabled && 'opacity-75'
+              action.gradientClasses
             )}
           >
             <div className={cn('absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-200 bg-white')} />
-            {action.requiresUpgrade && (
-              <div className="absolute top-1 right-1 bg-yellow-400 text-black text-xs px-1.5 py-0.5 rounded-full font-bold">
-                UPGRADE
-              </div>
-            )}
             <div className={cn('relative flex items-center gap-3 text-white sm:flex-col sm:items-start sm:gap-2')}>
               <div
                 className={cn(
@@ -171,9 +175,7 @@ export function MarketingActionBar({
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-sm leading-tight drop-shadow-sm">{action.label}</p>
-                <p className="text-xs text-white/80">
-                  {action.requiresUpgrade ? 'Upgrade tier' : action.sublabel}
-                </p>
+                <p className="text-xs text-white/80">{action.sublabel}</p>
               </div>
             </div>
           </button>
