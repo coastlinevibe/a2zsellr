@@ -86,36 +86,37 @@ export async function POST(request: NextRequest) {
           .update({ id: newAuthUser.user!.id })
           .eq('id', userId)
 
-        // Generate login link for the new user
-        // Always use production URL for magic links
-        const redirectUrl = 'https://www.a2zsellr.life/dashboard'
-        
-        console.log('🌐 Using redirect URL:', redirectUrl)
-        
-        const { data: tokenData, error: tokenError } = await supabaseAdmin.auth.admin.generateLink({
-          type: 'magiclink',
-          email: tempEmail,
-          options: {
-            redirectTo: redirectUrl
-          }
-        })
+        // Use impersonation instead of magic links to avoid Supabase URL config issues
+        console.log('✅ Using impersonation for temporary auth user')
 
-        if (tokenError) {
-          console.error('❌ Failed to generate login link:', tokenError)
-          return NextResponse.json(
-            { error: 'Failed to generate login session' },
-            { status: 500 }
-          )
-        }
-
-        return NextResponse.json({
+        const response = NextResponse.json({
           success: true,
-          message: 'Temporary authentication created and login link generated',
-          loginUrl: tokenData.properties?.action_link,
+          message: 'Temporary authentication created with impersonation',
           userProfile: userProfile,
-          method: 'magic_link',
+          method: 'admin_impersonation',
           tempCredentials: { email: tempEmail, password: tempPassword }
         })
+
+        // Set impersonation cookies
+        console.log('🍪 Setting impersonation cookies for temp auth user:', { userId: newAuthUser.user!.id, userName })
+        
+        response.cookies.set('admin_impersonating', newAuthUser.user!.id, {
+          httpOnly: false,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 2 // 2 hours
+        })
+
+        response.cookies.set('impersonated_user_name', encodeURIComponent(userName), {
+          httpOnly: false,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 2 // 2 hours
+        })
+
+        return response
 
       } catch (error) {
         console.error('❌ Error creating temp auth:', error)
@@ -129,36 +130,36 @@ export async function POST(request: NextRequest) {
     // For users with existing auth records, generate magic link
     console.log('✅ User has auth record, generating magic link')
 
-    // Always use production URL for magic links
-    const redirectUrl = 'https://www.a2zsellr.life/dashboard'
-    
-    console.log('🌐 Using redirect URL for existing user:', redirectUrl)
-    
-    const { data: tokenData, error: tokenError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'magiclink',
-      email: authUser.user.email!,
-      options: {
-        redirectTo: redirectUrl
-      }
-    })
+    // Skip magic links and use impersonation for all users to avoid Supabase URL config issues
+    console.log('✅ Using impersonation method to avoid Supabase URL configuration issues')
 
-    if (tokenError) {
-      console.error('❌ Failed to generate login link:', tokenError)
-      return NextResponse.json(
-        { error: 'Failed to generate login session' },
-        { status: 500 }
-      )
-    }
-
-    console.log('✅ Login link generated successfully')
-
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
-      message: 'Login session created successfully',
-      loginUrl: tokenData.properties?.action_link,
+      message: 'User impersonation session created',
       userProfile: userProfile,
-      method: 'magic_link'
+      method: 'admin_impersonation'
     })
+
+    // Set impersonation cookies
+    console.log('🍪 Setting impersonation cookies for authenticated user:', { userId, userName })
+    
+    response.cookies.set('admin_impersonating', userId, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 2 // 2 hours
+    })
+
+    response.cookies.set('impersonated_user_name', encodeURIComponent(userName), {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 2 // 2 hours
+    })
+
+    return response
 
   } catch (error) {
     console.error('❌ Admin login-as-user error:', error)
