@@ -20,6 +20,7 @@ interface UserProfile {
   bio: string | null
   business_category: string | null
   business_location: string | null
+  address: string | null
   phone_number: string | null
   website_url: string | null
   business_hours: string | null
@@ -996,12 +997,12 @@ Best regards`
                 </motion.button>
               )}
               
-              {profile.business_location && (
+              {profile.address && (
                 <motion.button 
                   className={`p-2 rounded-lg transition-colors ${isHeaderSticky ? 'hover:bg-gray-100' : 'hover:bg-emerald-50'}`}
                   onClick={() => {
-                    const locationQuery = profile.business_location || ''
-                    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`
+                    const addressQuery = profile.address || ''
+                    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`
                     window.open(mapsUrl, '_blank')
                   }}
                   title="Directions"

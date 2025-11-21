@@ -65,6 +65,7 @@ const ShareLinkBuilder = ({ products = [], businessProfile, editListing, onRefre
                 businessProfile={businessProfile}
                 editListing={editListing}
                 onRefresh={onRefresh}
+                userTier={businessProfile?.subscription_tier || 'free'}
               />
             </div>
           </div>

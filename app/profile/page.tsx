@@ -26,6 +26,7 @@ interface UserProfile {
   website_url: string | null
   business_category: string | null
   business_location: string | null
+  address: string | null
   business_hours: any
   verified_seller: boolean
   early_adopter: boolean
@@ -83,6 +84,7 @@ export default function ProfilePage() {
   const [websiteUrl, setWebsiteUrl] = useState('')
   const [businessCategory, setBusinessCategory] = useState('')
   const [businessLocation, setBusinessLocation] = useState('')
+  const [businessAddress, setBusinessAddress] = useState('')
   const [businessHours, setBusinessHours] = useState('')
   const [todayHours, setTodayHours] = useState('')
   
@@ -164,6 +166,7 @@ export default function ProfilePage() {
       setWebsiteUrl(profileData.website_url || '')
       setBusinessCategory(profileData.business_category || '')
       setBusinessLocation(profileData.business_location || '')
+      setBusinessAddress(profileData.address || '')
       setBusinessHours(profileData.business_hours || '')
       
       // Load social media data
@@ -389,6 +392,7 @@ export default function ProfilePage() {
         website_url: websiteUrl.trim() || undefined,
         business_category: businessCategory.trim() || undefined,
         business_location: businessLocation.trim() || undefined,
+        address: businessAddress.trim() || undefined,
         business_hours: businessHours.trim() || undefined,
         facebook: facebook.trim() || null,
         instagram: instagram.trim() || null,
@@ -801,6 +805,30 @@ export default function ProfilePage() {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                {/* Business Address */}
+                <div id="business_address">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <Building2 className="w-4 h-4" />
+                    Business Address
+                    <span className="text-gray-400 text-xs">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={businessAddress}
+                    onChange={(e) => {
+                      setBusinessAddress(e.target.value)
+                      handleFieldFocus('business_address')
+                    }}
+                    placeholder="Enter your full business address"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 outline-none text-sm ${
+                      businessAddress ? 'border-emerald-500 focus:border-emerald-500 focus:ring-emerald-500' : 'border-gray-300 focus:border-emerald-500 focus:ring-emerald-500'
+                    }`}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    This will be used for Google Maps directions
+                  </p>
                 </div>
               </div>
 

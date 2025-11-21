@@ -73,9 +73,10 @@ interface WYSIWYGCampaignBuilderProps {
   businessProfile: any
   editListing?: any // Optional listing data for editing
   onRefresh?: () => void
+  userTier?: 'free' | 'premium' | 'business'
 }
 
-const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, editListing, onRefresh }: WYSIWYGCampaignBuilderProps) => {
+const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, editListing, onRefresh, userTier = 'free' }: WYSIWYGCampaignBuilderProps) => {
   const [campaignTitle, setCampaignTitle] = useState(editListing?.title || 'Mid-Month Growth Blast')
   const [selectedLayout, setSelectedLayout] = useState(editListing?.layout_type || 'gallery-mosaic')
   const [messageTemplate, setMessageTemplate] = useState(editListing?.message_template || 'Hey there! We just launched new services tailored for you. Tap to explore what\'s hot this week.')
@@ -794,8 +795,6 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
       alert('⚠️ Please save your listing first using "Save Listing Draft", then try preview again.')
     }
   }
-
-  const userTier = businessProfile?.subscription_tier || 'free'
   
   const layouts = [
     { id: 'gallery-mosaic', name: 'Gallery Mosaic', description: 'Grid layout with multiple images' },
@@ -1092,7 +1091,8 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
             </div>
           )}
 
-          {/* Video Section */}
+          {/* Video Section - Premium and Business tiers only */}
+          {(userTier === 'premium' || userTier === 'business') && (
           <div>
             <div className="flex items-center justify-between mb-3">
               <label className="block text-sm font-medium text-blue-100">Campaign Video</label>
@@ -1254,8 +1254,10 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
               )}
             </div>
           </div>
+          )}
 
-          {/* Menu Section */}
+          {/* Menu Section - Business tier only */}
+          {userTier === 'business' && (
           <div>
             <div className="flex items-center justify-between mb-3">
               <label className="block text-sm font-medium text-blue-100">Menu Image</label>
@@ -1334,6 +1336,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
               )}
             </div>
           </div>
+          )}
 
           {/* Media Selection */}
           <div>
