@@ -47,6 +47,14 @@ interface Listing {
   }>
   selected_products?: string[]
   delivery_available?: boolean | null
+  video_url?: string
+  video_type?: 'youtube' | 'upload'
+  menu_images?: Array<{
+    id: string
+    url: string
+    name?: string
+    order?: number
+  }>
   template_data?: {
     backgroundImage?: string
     interactions?: Array<{
@@ -68,6 +76,14 @@ interface Profile {
   avatar_url: string | null
   bio: string | null
   phone_number: string | null
+  global_video_url?: string
+  global_video_type?: 'youtube' | 'upload'
+  global_menu_images?: Array<{
+    id: string
+    url: string
+    name?: string
+    order?: number
+  }>
 }
 
 interface Product {
