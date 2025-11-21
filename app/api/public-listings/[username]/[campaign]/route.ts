@@ -42,7 +42,7 @@ export async function GET(
     const { data: allListings, error: listingsError } = await adminClient
       .from('profile_listings')
       .select(`
-        *, video_url, video_type, menu_images
+        *, video_url, video_type, menu_images, uploaded_media, selected_products
       `)
       .limit(1000)
 

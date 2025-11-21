@@ -19,6 +19,8 @@ import { MarketingActionBar } from '@/components/ui/MarketingActionBar'
 import { VideoPopup } from '@/components/ui/VideoPopup'
 import { MenuPopup } from '@/components/ui/MenuPopup'
 import { NewProductsPopup } from '@/components/ui/NewProductsPopup'
+import { MessageConsentPopup } from '@/components/ui/MessageConsentPopup'
+import { useMessageConsent } from '@/hooks/useMessageConsent'
 
 interface CampaignPageProps {
   params: {
@@ -106,6 +108,12 @@ export default function CampaignPage({ params }: CampaignPageProps) {
   const [videoPopupOpen, setVideoPopupOpen] = useState(false)
   const [menuPopupOpen, setMenuPopupOpen] = useState(false)
   const [productsPopupOpen, setProductsPopupOpen] = useState(false)
+
+  // Message consent popup
+  const messageConsent = useMessageConsent(
+    profile?.display_name || 'Business',
+    listing?.id || 'unknown'
+  )
 
   useEffect(() => {
     fetchListingData()
@@ -315,65 +323,203 @@ export default function CampaignPage({ params }: CampaignPageProps) {
 
   // Get the first media item for OG image - ensure it's a full URL
   const getFullImageUrl = () => {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.a2zsellr.life'
     
-    // Try uploaded media first
-    if (listing.uploaded_media?.[0]?.url) {
-      const url = listing.uploaded_media[0].url
-      // If it's already a full URL, use it; otherwise make it absolute
-      return url.startsWith('http') ? url : `${baseUrl}${url}`
+    // COMPREHENSIVE DEBUG - Let's see exactly what data we have
+    console.log('🚨 DEBUGGING OG IMAGE SELECTION:')
+    console.log('📋 Raw listing object:', listing)
+    console.log('📋 listing.uploaded_media type:', typeof listing.uploaded_media)
+    console.log('📋 listing.uploaded_media value:', listing.uploaded_media)
+    console.log('📋 listing.uploaded_media length:', listing.uploaded_media?.length)
+    console.log('🛍️ Raw products array:', products)
+    console.log('🛍️ Products length:', products?.length)
+    console.log('👤 Profile avatar:', profile?.avatar_url)
+    
+    // Helper function to validate and format image URL
+    const formatImageUrl = (url: string) => {
+      if (!url || url.trim() === '') return null
+      
+      const cleanUrl = url.trim()
+      
+      // If it's already a full URL (Supabase storage, etc.), use it
+      if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+        console.log('📎 Using full URL:', cleanUrl)
+        return cleanUrl
+      }
+      
+      // If it starts with /, make it absolute
+      if (cleanUrl.startsWith('/')) {
+        const fullUrl = `${baseUrl}${cleanUrl}`
+        console.log('📎 Converting absolute path:', cleanUrl, '→', fullUrl)
+        return fullUrl
+      }
+      
+      // Otherwise, assume it needs baseUrl prefix
+      const fullUrl = `${baseUrl}/${cleanUrl}`
+      console.log('📎 Converting relative path:', cleanUrl, '→', fullUrl)
+      return fullUrl
     }
     
-    // Try products
-    if (products.length > 0 && products[0].image_url) {
-      const url = products[0].image_url
-      return url.startsWith('http') ? url : `${baseUrl}${url}`
+    // Priority 1: Try uploaded media first (campaign images)
+    let uploadedMedia = listing.uploaded_media
+    
+    // Handle case where uploaded_media might be a JSON string
+    if (typeof uploadedMedia === 'string') {
+      try {
+        uploadedMedia = JSON.parse(uploadedMedia)
+        console.log('📋 Parsed uploaded_media from string:', uploadedMedia)
+      } catch (e) {
+        console.log('❌ Failed to parse uploaded_media string:', e)
+        uploadedMedia = []
+      }
     }
     
-    // Try profile avatar
+    if (uploadedMedia && Array.isArray(uploadedMedia) && uploadedMedia.length > 0) {
+      console.log('🔍 Checking uploaded media:', uploadedMedia)
+      for (const media of uploadedMedia) {
+        console.log('📎 Media item:', media)
+        if (media && media.url) {
+          // Check if it's an image by URL extension or type field
+          const isImage = media.type?.startsWith('image/') || 
+                         media.url.match(/\.(jpg|jpeg|png|gif|webp|bmp)(\?|$)/i) ||
+                         media.name?.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i)
+          
+          console.log('🖼️ Is image check:', { url: media.url, type: media.type, isImage })
+          
+          if (isImage) {
+            const formattedUrl = formatImageUrl(media.url)
+            console.log('✅ Selected uploaded media image:', formattedUrl)
+            if (formattedUrl) return formattedUrl
+          }
+        }
+      }
+    } else {
+      console.log('❌ No uploaded media found or invalid format')
+      console.log('🔍 Raw uploaded_media value:', listing.uploaded_media)
+      console.log('🔍 Type check:', typeof listing.uploaded_media)
+      
+      // Try alternative approaches if standard method fails
+      if (listing.uploaded_media) {
+        // Maybe it's stored as a different structure
+        console.log('🔄 Trying alternative parsing...')
+        
+        // Check if it has a different property structure
+        if (listing.uploaded_media[0] && listing.uploaded_media[0].url) {
+          const firstMedia = listing.uploaded_media[0]
+          console.log('🎯 Found media via alternative method:', firstMedia)
+          const formattedUrl = formatImageUrl(firstMedia.url)
+          if (formattedUrl) return formattedUrl
+        }
+      }
+    }
+    
+    // Priority 2: Try selected products (product images)
+    if (products && Array.isArray(products) && products.length > 0) {
+      console.log('🔍 Checking product images:', products)
+      for (const product of products) {
+        console.log('🛍️ Product item:', { id: product.id, name: product.name, image_url: product.image_url })
+        if (product && product.image_url && product.image_url.trim() !== '') {
+          const formattedUrl = formatImageUrl(product.image_url)
+          console.log('✅ Selected product image:', formattedUrl)
+          if (formattedUrl) return formattedUrl
+        }
+      }
+    } else {
+      console.log('❌ No products found or invalid format')
+    }
+    
+    // Priority 3: Try profile avatar
     if (profile?.avatar_url) {
-      const url = profile.avatar_url
-      return url.startsWith('http') ? url : `${baseUrl}${url}`
+      const formattedUrl = formatImageUrl(profile.avatar_url)
+      console.log('✅ Selected profile avatar:', formattedUrl)
+      if (formattedUrl) return formattedUrl
     }
     
-    // Fallback
-    return `${baseUrl}/og-default.jpg`
+    // Priority 4: A2Z Sellr branded fallback - use a proper image
+    console.log('⚠️ No images found, using fallback')
+    return `${baseUrl}/thumbnail.png`
   }
   
   const ogImage = getFullImageUrl()
-  const pageUrl = typeof window !== 'undefined' ? window.location.href : ''
+  const pageUrl = typeof window !== 'undefined' ? window.location.href : `https://www.a2zsellr.life/${params.username}/${params.campaign}`
+  
+  // Debug: Log the selected OG image and available data
+  console.log('🖼️ FINAL OG Image selected:', ogImage)
+  console.log('📋 Listing data:', {
+    title: listing.title,
+    uploaded_media: listing.uploaded_media,
+    selected_products: listing.selected_products
+  })
+  console.log('🛍️ Products data:', products.map(p => ({ 
+    id: p.id, 
+    name: p.name, 
+    image_url: p.image_url 
+  })))
+  console.log('👤 Profile data:', {
+    display_name: profile?.display_name,
+    avatar_url: profile?.avatar_url
+  })
+
+  // Visual debug info for troubleshooting
+  const debugInfo = {
+    selectedOgImage: ogImage,
+    uploadedMediaType: typeof listing.uploaded_media,
+    uploadedMediaLength: listing.uploaded_media?.length || 0,
+    productsLength: products?.length || 0,
+    hasProfileAvatar: !!profile?.avatar_url
+  }
   
   // Create a better description for the listing
-  const ogDescription = `${listing.message_template} - ${profile?.display_name || 'Business'}`
+  const ogDescription = listing.message_template.length > 160 
+    ? `${listing.message_template.substring(0, 157)}...` 
+    : listing.message_template
+  
+  // Better title for sharing
+  const ogTitle = `${listing.title} | ${profile?.display_name || 'Business'} - A2Z Sellr`
 
   return (
     <>
       <Head>
-        <title>{listing.title} - {profile?.display_name}</title>
+        <title>{ogTitle}</title>
         <meta name="description" content={ogDescription} />
+        <link rel="canonical" href={pageUrl} />
         
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content={pageUrl} />
-        <meta property="og:title" content={`${listing.title} - ${profile?.display_name}`} />
+        <meta property="og:title" content={ogTitle} />
         <meta property="og:description" content={ogDescription} />
-        <meta property="og:image" content={ogImage} />
+        <meta property="og:image" content={`${ogImage}?v=${Date.now()}`} />
+        <meta property="og:image:secure_url" content={`${ogImage}?v=${Date.now()}`} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content={listing.title} />
+        <meta property="og:image:alt" content={`${listing.title} - ${profile?.display_name}`} />
+        <meta property="og:site_name" content="A2Z Sellr" />
+        <meta property="og:locale" content="en_ZA" />
         
         {/* Twitter */}
-        <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:url" content={pageUrl} />
-        <meta property="twitter:title" content={`${listing.title} - ${profile?.display_name}`} />
-        <meta property="twitter:description" content={ogDescription} />
-        <meta property="twitter:image" content={ogImage} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@A2ZSellr" />
+        <meta name="twitter:creator" content={`@${profile?.display_name?.replace(/\s+/g, '')}`} />
+        <meta name="twitter:url" content={pageUrl} />
+        <meta name="twitter:title" content={ogTitle} />
+        <meta name="twitter:description" content={ogDescription} />
+        <meta name="twitter:image" content={`${ogImage}?v=${Date.now()}`} />
+        <meta name="twitter:image:alt" content={`${listing.title} - ${profile?.display_name}`} />
         
-        {/* WhatsApp - Use business name instead of A2Z */}
-        <meta property="og:site_name" content={profile?.display_name || 'Business Listing'} />
+        {/* WhatsApp specific */}
+        <meta property="og:image:type" content="image/jpeg" />
+        <meta name="theme-color" content="#10B981" />
+        
+        {/* Additional meta for better sharing */}
+        <meta name="author" content={profile?.display_name || 'Business Owner'} />
+        <meta name="robots" content="index, follow" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
       
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
+
+
 
       {/* Campaign Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -422,6 +568,14 @@ export default function CampaignPage({ params }: CampaignPageProps) {
         onClose={() => setProductsPopupOpen(false)}
         profileId={profile?.id}
         businessName={profile?.display_name}
+      />
+
+      <MessageConsentPopup
+        isOpen={messageConsent.isOpen}
+        onClose={messageConsent.handleClose}
+        onAccept={messageConsent.handleAccept}
+        onDecline={messageConsent.handleDecline}
+        businessName={profile?.display_name || 'Business'}
       />
     </div>
     </>
