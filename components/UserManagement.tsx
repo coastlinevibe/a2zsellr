@@ -28,6 +28,8 @@ export function UserManagement() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [updating, setUpdating] = useState<string | null>(null)
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
+  const [selectAll, setSelectAll] = useState(false)
 
   useEffect(() => {
     fetchUsers()
@@ -82,6 +84,202 @@ export function UserManagement() {
       alert(`❌ Failed to update user ${field}`)
     } finally {
       setUpdating(null)
+    }
+  }
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedUsers(new Set())
+    } else {
+      setSelectedUsers(new Set(filteredUsers.map(user => user.id)))
+    }
+    setSelectAll(!selectAll)
+  }
+
+  const handleSelectUser = (userId: string) => {
+    const newSelected = new Set(selectedUsers)
+    if (newSelected.has(userId)) {
+      newSelected.delete(userId)
+    } else {
+      newSelected.add(userId)
+    }
+    setSelectedUsers(newSelected)
+    setSelectAll(newSelected.size === filteredUsers.length)
+  }
+
+  const loginAsUser = async (userId: string, userName: string) => {
+    if (!confirm(`🔑 Login as "${userName}"?\n\nThis will log you into their account and redirect to their dashboard.`)) {
+      return
+    }
+
+    setUpdating(userId)
+    try {
+      const response = await fetch('/api/admin/login-as-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, userName })
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        if (result.method === 'magic_link' && result.loginUrl) {
+          // For users with authentication, use the magic link
+          alert(`✅ Logged in as "${userName}"! Redirecting to their dashboard...`)
+          window.location.href = result.loginUrl
+        } else if (result.method === 'admin_impersonation') {
+          // For users without authentication (bulk uploaded), redirect to dashboard with impersonation
+          alert(`✅ Impersonating "${userName}"! Redirecting to their dashboard...`)
+          window.location.href = '/dashboard'
+        } else {
+          alert(`✅ Logged in as "${userName}"! Redirecting...`)
+          window.location.href = '/dashboard'
+        }
+      } else {
+        alert(`❌ Failed: ${result.error}`)
+      }
+    } catch (error) {
+      alert(`❌ Network error: ${error}`)
+    } finally {
+      setUpdating(null)
+    }
+  }
+
+  const bulkDeleteSelectedUsers = async () => {
+    if (selectedUsers.size === 0) {
+      alert('⚠️ Please select users to delete first.')
+      return
+    }
+
+    const selectedUsersList = users.filter(user => selectedUsers.has(user.id))
+    const userNames = selectedUsersList.map(u => u.display_name).join(', ')
+    
+    console.log(`🚨 BULK DELETE SELECTED USERS CALLED: ${selectedUsers.size} users`)
+    
+    // Strict confirmation for bulk deletion
+    if (!confirm(`🚨 WARNING: You are about to DELETE ${selectedUsers.size} selected users and ALL their data:\n\n${userNames}\n\nThis will:\n- Delete their accounts and authentication\n- Delete ALL their products, listings, and gallery items\n- Delete ALL their payment records and analytics\n- Delete ALL their data permanently\n\nThis action CANNOT be undone.\n\nAre you absolutely sure?`)) {
+      console.log('❌ User cancelled at first confirmation')
+      return
+    }
+
+    if (!confirm(`🚨 FINAL WARNING: This will permanently delete ${selectedUsers.size} users and all their data.\n\nType "DELETE SELECTED" in the next dialog to confirm.`)) {
+      console.log('❌ User cancelled at second confirmation')
+      return
+    }
+
+    const confirmation = prompt(`Type "DELETE SELECTED" to permanently delete ${selectedUsers.size} selected users:`)
+    if (confirmation !== 'DELETE SELECTED') {
+      console.log(`❌ User typed "${confirmation}" instead of "DELETE SELECTED"`)
+      alert('Bulk deletion cancelled - confirmation text did not match.')
+      return
+    }
+
+    console.log('✅ All confirmations passed, starting bulk deletion...')
+    setLoading(true)
+    
+    try {
+      console.log(`🗑️ Starting bulk deletion of ${selectedUsers.size} selected users...`)
+
+      const selectedUserIds = Array.from(selectedUsers)
+      
+      // Delete all data for selected users in sequence (order matters due to foreign keys)
+      console.log('🗑️ Deleting selected users profile products...')
+      const { error: productsError } = await supabase
+        .from('profile_products')
+        .delete()
+        .in('profile_id', selectedUserIds)
+
+      console.log('🗑️ Deleting selected users profile listings...')
+      const { error: listingsError } = await supabase
+        .from('profile_listings')
+        .delete()
+        .in('profile_id', selectedUserIds)
+
+      console.log('🗑️ Deleting selected users profile gallery...')
+      const { error: galleryError } = await supabase
+        .from('profile_gallery')
+        .delete()
+        .in('profile_id', selectedUserIds)
+
+      console.log('🗑️ Deleting selected users profile analytics...')
+      const { error: analyticsError } = await supabase
+        .from('profile_analytics')
+        .delete()
+        .in('profile_id', selectedUserIds)
+
+      console.log('🗑️ Deleting selected users payment transactions...')
+      const { error: paymentsError } = await supabase
+        .from('payment_transactions')
+        .delete()
+        .in('profile_id', selectedUserIds)
+
+      console.log('🗑️ Deleting selected users reset history...')
+      const { error: resetHistoryError } = await supabase
+        .from('reset_history')
+        .delete()
+        .in('profile_id', selectedUserIds)
+
+      // Delete selected user authentication via API
+      console.log('🗑️ Deleting selected user authentication...')
+      try {
+        const authResponse = await fetch('/api/admin/bulk-delete-auth', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userIds: selectedUserIds,
+            userEmails: selectedUsersList.map(u => u.email)
+          })
+        })
+        
+        const authResult = await authResponse.json()
+        
+        if (authResponse.ok) {
+          console.log('✅ Selected user authentication deleted successfully')
+        } else {
+          console.error('❌ Failed to delete selected user authentication:', authResult.error)
+        }
+      } catch (authError) {
+        console.error('❌ Error calling bulk auth deletion API:', authError)
+      }
+
+      // Finally, delete selected user profiles
+      console.log('🗑️ Deleting selected user profiles...')
+      const { error: profilesError } = await supabase
+        .from('profiles')
+        .delete()
+        .in('id', selectedUserIds)
+
+      // Check for errors
+      const errors = []
+      if (productsError) errors.push(`Products: ${productsError.message}`)
+      if (listingsError) errors.push(`Listings: ${listingsError.message}`)
+      if (galleryError) errors.push(`Gallery: ${galleryError.message}`)
+      if (analyticsError) errors.push(`Analytics: ${analyticsError.message}`)
+      if (paymentsError) errors.push(`Payments: ${paymentsError.message}`)
+      if (resetHistoryError) errors.push(`Reset History: ${resetHistoryError.message}`)
+      if (profilesError) errors.push(`Profiles: ${profilesError.message}`)
+
+      if (errors.length > 0) {
+        console.error('❌ Bulk deletion errors:', errors)
+        alert(`⚠️ Bulk deletion completed but with some errors:\n${errors.join('\n')}`)
+      } else {
+        console.log(`✅ ${selectedUsers.size} selected users and their data completely deleted`)
+        alert(`✅ BULK DELETION COMPLETE!\n\nDeleted ${selectedUsers.size} users:\n${userNames}\n\nAll their products, listings, gallery items, payment records, and authentication have been permanently removed.`)
+      }
+
+      // Remove deleted users from local state
+      setUsers(users.filter(user => !selectedUsers.has(user.id)))
+      setSelectedUsers(new Set())
+      setSelectAll(false)
+      setSelectedUser(null)
+
+    } catch (error) {
+      console.error('❌ Error during bulk deletion:', error)
+      alert(`❌ Failed to complete bulk deletion: ${error}`)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -522,15 +720,33 @@ export function UserManagement() {
           ))}
         </div>
         
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search users..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 border-2 border-black rounded-lg font-bold bg-white"
-          />
+        <div className="flex gap-4 items-center">
+          {/* Bulk Delete Button */}
+          <motion.button
+            onClick={bulkDeleteSelectedUsers}
+            disabled={selectedUsers.size === 0}
+            className={`px-6 py-2 rounded-xl border-4 border-black font-black text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] flex items-center gap-2 ${
+              selectedUsers.size === 0 
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                : 'bg-red-600 hover:bg-red-700 text-white'
+            }`}
+            whileHover={{ scale: selectedUsers.size === 0 ? 1 : 1.05 }}
+            whileTap={{ scale: selectedUsers.size === 0 ? 1 : 0.95 }}
+          >
+            <Trash2 className="w-4 h-4" />
+            DELETE ({selectedUsers.size})
+          </motion.button>
+          
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 border-2 border-black rounded-lg font-bold bg-white"
+            />
+          </div>
         </div>
       </div>
 
@@ -545,6 +761,14 @@ export function UserManagement() {
           <table className="w-full">
             <thead className="bg-gradient-to-r from-yellow-400 to-orange-400 border-b-4 border-black">
               <tr>
+                <th className="text-left p-4 font-black text-black uppercase">
+                  <input
+                    type="checkbox"
+                    checked={selectAll}
+                    onChange={handleSelectAll}
+                    className="w-5 h-5 border-2 border-black rounded"
+                  />
+                </th>
                 <th className="text-left p-4 font-black text-black uppercase">USER</th>
                 <th className="text-left p-4 font-black text-black uppercase">TIER</th>
                 <th className="text-left p-4 font-black text-black uppercase">STATUS</th>
@@ -557,11 +781,21 @@ export function UserManagement() {
               {filteredUsers.map((user, index) => (
                 <motion.tr 
                   key={user.id} 
-                  className="hover:bg-yellow-100 transition-colors"
+                  className={`hover:bg-yellow-100 transition-colors ${
+                    selectedUsers.has(user.id) ? 'bg-blue-100' : ''
+                  }`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
                 >
+                  <td className="p-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.has(user.id)}
+                      onChange={() => handleSelectUser(user.id)}
+                      className="w-5 h-5 border-2 border-black rounded"
+                    />
+                  </td>
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex-1">
@@ -614,6 +848,34 @@ export function UserManagement() {
                         title="View Details"
                       >
                         <Eye className="w-4 h-4" />
+                      </motion.button>
+
+                      <motion.button
+                        onClick={() => {
+                          const profileSlug = user.display_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+                          window.open(`/profile/${profileSlug}`, '_blank')
+                        }}
+                        className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg border-2 border-black font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        title="View Profile Page"
+                      >
+                        👤
+                      </motion.button>
+
+                      <motion.button
+                        onClick={() => loginAsUser(user.id, user.display_name)}
+                        disabled={updating === user.id}
+                        className="bg-purple-500 hover:bg-purple-600 text-white p-2 rounded-lg border-2 border-black font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        title="Login As User"
+                      >
+                        {updating === user.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        ) : (
+                          '🔑'
+                        )}
                       </motion.button>
                       
                       <motion.button

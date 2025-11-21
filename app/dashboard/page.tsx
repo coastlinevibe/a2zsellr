@@ -107,6 +107,42 @@ export default function DashboardPage() {
   })
   const [metricsLoading, setMetricsLoading] = useState(true)
   
+  // Admin impersonation state
+  const [impersonationData, setImpersonationData] = useState<{
+    isImpersonating: boolean
+    impersonatedUserId: string | null
+    impersonatedUserName: string | null
+  }>({
+    isImpersonating: false,
+    impersonatedUserId: null,
+    impersonatedUserName: null
+  })
+  
+
+  // Check for admin impersonation cookies
+  useEffect(() => {
+    const checkImpersonation = () => {
+      if (typeof document === 'undefined') return
+      
+      const impersonatedUserId = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('admin_impersonating='))
+        ?.split('=')[1]
+      
+      const impersonatedUserName = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('impersonated_user_name='))
+        ?.split('=')[1]
+      
+      setImpersonationData({
+        isImpersonating: !!impersonatedUserId,
+        impersonatedUserId: impersonatedUserId || null,
+        impersonatedUserName: impersonatedUserName ? decodeURIComponent(impersonatedUserName) : null
+      })
+    }
+    
+    checkImpersonation()
+  }, [])
 
   // Redirect free and premium tier users away from business-only tabs
   useEffect(() => {
@@ -124,7 +160,7 @@ export default function DashboardPage() {
     if (user) {
       fetchProfile()
     }
-  }, [user, loading, router])
+  }, [user, loading, router, impersonationData])
 
   // Gallery data fetch
   useEffect(() => {
@@ -249,10 +285,19 @@ export default function DashboardPage() {
         return
       }
 
+      const targetUserId = impersonationData.impersonatedUserId || user.id
+
+      console.log('🔍 Fetching profile for:', { 
+        currentUserId: user.id, 
+        impersonatedUserId: impersonationData.impersonatedUserId, 
+        targetUserId,
+        isImpersonating: impersonationData.isImpersonating 
+      })
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', targetUserId)
         .single()
 
       if (error) {
@@ -260,8 +305,10 @@ export default function DashboardPage() {
       } else {
         setProfile(data as UserProfile)
         
-        // Complete any pending referrals for this user
-        completePendingReferrals(data.id)
+        // Complete any pending referrals for this user (only if not impersonating)
+        if (!impersonationData.isImpersonating) {
+          completePendingReferrals(data.id)
+        }
       }
     } catch (error) {
       console.error('Error:', error)
@@ -275,11 +322,14 @@ export default function DashboardPage() {
     
     setMetricsLoading(true)
     try {
+      // Use the profile ID (which could be impersonated user's ID)
+      const targetProfileId = profile.id
+      
       // Fetch profile views from profile_analytics
       const { data: analyticsData } = await supabase
         .from('profile_analytics')
         .select('views, clicks')
-        .eq('profile_id', profile.id)
+        .eq('profile_id', targetProfileId)
       
       // Sum up all views and clicks
       const totalViews = analyticsData?.reduce((sum: number, record: any) => sum + record.views, 0) || 0
@@ -289,25 +339,25 @@ export default function DashboardPage() {
       const { data: activeProductsData } = await supabase
         .from('profile_products')
         .select('id')
-        .eq('profile_id', profile.id)
+        .eq('profile_id', targetProfileId)
         .eq('is_active', true)
       
       // Fetch listings (match marketing tab logic)
       const { data: listingsData } = await supabase
         .from('profile_listings')
         .select('id, status')
-        .eq('profile_id', profile.id)
+        .eq('profile_id', targetProfileId)
       
       // Fetch store rating
       const { data: reviewsData } = await supabase
         .from('profile_reviews')
         .select('rating')
-        .eq('profile_id', profile.id)
+        .eq('profile_id', targetProfileId)
       
-      // Calculate average rating
+      // Calculate average rating (default to 4.5 if no reviews)
       const avgRating = reviewsData && reviewsData.length > 0 
         ? reviewsData.reduce((sum: number, review: any) => sum + review.rating, 0) / reviewsData.length
-        : 0
+        : 4.5 // Default rating for new businesses
       
       setDashboardMetrics({
         profileViews: totalViews,
@@ -785,6 +835,25 @@ export default function DashboardPage() {
 
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Admin Impersonation Banner */}
+          {impersonationData.isImpersonating && (
+            <div className="bg-red-600 text-white px-4 py-2 text-center text-sm font-bold">
+              🔑 ADMIN IMPERSONATION MODE: Viewing as "{impersonationData.impersonatedUserName || 'Unknown User'}"
+              <button
+                onClick={async () => {
+                  // Clear impersonation cookies
+                  document.cookie = 'admin_impersonating=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+                  document.cookie = 'impersonated_user_name=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+                  // Redirect back to admin dashboard
+                  window.location.href = '/admin'
+                }}
+                className="ml-4 bg-white text-red-600 px-3 py-1 rounded font-bold hover:bg-gray-100"
+              >
+                Exit Impersonation
+              </button>
+            </div>
+          )}
+          
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <Link href="/" className="text-xl font-bold text-emerald-600">
@@ -816,8 +885,8 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {/* Admin Dashboard Button - Only show for admin users */}
-              {profile && (profile.is_admin || profile.email === 'admin@out.com') && (
+              {/* Admin Dashboard Button - Only show for admin users or when impersonating */}
+              {((profile && (profile.is_admin || profile.email === 'admin@out.com')) || impersonationData.isImpersonating) && (
                 <Button 
                   onClick={() => router.push('/admin')}
                   variant="outline"

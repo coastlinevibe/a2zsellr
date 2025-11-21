@@ -181,7 +181,7 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
                       <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
                     ))}
                   </div>
-                  <span className="text-sm text-gray-600">4.8 (124)</span>
+                  <span className="text-sm text-gray-600">4.5 (New Business)</span>
                 </div>
                 {profile.business_category && (
                   <p className="text-sm text-gray-600 mt-1">{profile.business_category}</p>
@@ -204,12 +204,12 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
             {/* Business Hours Status */}
             <div className="flex items-center gap-2 mt-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-green-600 font-medium">Open until 9:00 PM</span>
+              <span className="text-sm text-green-600 font-medium">Open until 5:00 PM</span>
             </div>
             
-            {profile.bio && (
-              <p className="text-sm text-gray-600 mt-2 line-clamp-2">{profile.bio}</p>
-            )}
+            <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+              {profile.bio || `Professional ${profile.business_category?.toLowerCase() || 'business'} services in ${profile.business_location || 'South Africa'}. Contact us for quality products and excellent customer service.`}
+            </p>
           </div>
         </div>
       </div>
@@ -217,24 +217,20 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
       {/* Action Buttons */}
       <div className="bg-white px-4 py-3 border-b border-gray-100">
         <div className="grid grid-cols-4 gap-3">
-          {profile.phone_number && (
-            <Button 
-              className="bg-green-500 hover:bg-green-600 text-white flex-col h-auto py-3 px-2 rounded-[9px]"
-            >
-              <MessageCircle className="h-5 w-5 mb-1" />
-              <span className="text-xs">WhatsApp</span>
-            </Button>
-          )}
+          <Button 
+            className="bg-green-500 hover:bg-green-600 text-white flex-col h-auto py-3 px-2 rounded-[9px]"
+          >
+            <MessageCircle className="h-5 w-5 mb-1" />
+            <span className="text-xs">WhatsApp</span>
+          </Button>
           
-          {profile.business_location && (
-            <Button 
-              variant="outline" 
-              className="flex-col h-auto py-3 px-2 rounded-[9px] border-gray-200"
-            >
-              <MapPin className="h-5 w-5 mb-1 text-blue-600" />
-              <span className="text-xs text-gray-700">Directions</span>
-            </Button>
-          )}
+          <Button 
+            variant="outline" 
+            className="flex-col h-auto py-3 px-2 rounded-[9px] border-gray-200"
+          >
+            <MapPin className="h-5 w-5 mb-1 text-blue-600" />
+            <span className="text-xs text-gray-700">Directions</span>
+          </Button>
           
           <Button 
             variant="outline" 
@@ -244,15 +240,13 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
             <span className="text-xs text-gray-700">Share</span>
           </Button>
           
-          {profile.website_url && (
-            <Button 
-              variant="outline" 
-              className="flex-col h-auto py-3 px-2 rounded-[9px] border-gray-200"
-            >
-              <Globe className="h-5 w-5 mb-1 text-purple-600" />
-              <span className="text-xs text-gray-700">Website</span>
-            </Button>
-          )}
+          <Button 
+            variant="outline" 
+            className="flex-col h-auto py-3 px-2 rounded-[9px] border-gray-200"
+          >
+            <Globe className="h-5 w-5 mb-1 text-purple-600" />
+            <span className="text-xs text-gray-700">Website</span>
+          </Button>
         </div>
       </div>
 
@@ -344,22 +338,18 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
         <div className="bg-white rounded-[9px] border border-gray-200 p-3">
           <h3 className="font-medium text-gray-900 mb-2 text-sm">Contact Information</h3>
           <div className="space-y-2">
-            {profile.business_location && (
-              <div className="flex items-center gap-2">
-                <div className="p-1 bg-emerald-100 rounded-[6px]">
-                  <MapPin className="h-3 w-3 text-emerald-600" />
-                </div>
-                <span className="text-xs text-gray-700">{profile.business_location}</span>
+            <div className="flex items-center gap-2">
+              <div className="p-1 bg-emerald-100 rounded-[6px]">
+                <MapPin className="h-3 w-3 text-emerald-600" />
               </div>
-            )}
-            {profile.phone_number && (
-              <div className="flex items-center gap-2">
-                <div className="p-1 bg-blue-100 rounded-[6px]">
-                  <Phone className="h-3 w-3 text-blue-600" />
-                </div>
-                <span className="text-xs text-gray-700">{profile.phone_number}</span>
+              <span className="text-xs text-gray-700">{profile.business_location || 'South Africa'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="p-1 bg-blue-100 rounded-[6px]">
+                <Phone className="h-3 w-3 text-blue-600" />
               </div>
-            )}
+              <span className="text-xs text-gray-700">{profile.phone_number || '+27 81 234 5678'}</span>
+            </div>
           </div>
         </div>
 
@@ -371,7 +361,8 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
               <Clock className="h-3 w-3 text-orange-600" />
             </div>
             <div>
-              <p className="text-xs text-gray-700">Today: 9:00 AM - 6:00 PM</p>
+              <p className="text-xs text-gray-700">Mon-Fri: 8:00 AM - 5:00 PM</p>
+              <p className="text-xs text-gray-500">Sat: 9:00 AM - 2:00 PM</p>
             </div>
           </div>
         </div>

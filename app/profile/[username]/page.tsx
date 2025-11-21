@@ -488,7 +488,27 @@ Best regards`
           if (decodedMatch && !decodedError) {
             profileData = decodedMatch
           } else {
-            profileError = decodedError || iLikeError || exactError
+            // Strategy 4: Slug-to-name matching - get all profiles and match by generated slug
+            const { data: allProfiles, error: allProfilesError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('is_active', true)
+            
+            if (allProfiles && !allProfilesError) {
+              // Find profile where the generated slug matches the URL slug
+              const matchingProfile = allProfiles.find(profile => {
+                const profileSlug = profile.display_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+                return profileSlug === cleanUsername.toLowerCase()
+              })
+              
+              if (matchingProfile) {
+                profileData = matchingProfile
+              } else {
+                profileError = decodedError || iLikeError || exactError || allProfilesError
+              }
+            } else {
+              profileError = decodedError || iLikeError || exactError || allProfilesError
+            }
           }
         }
       }

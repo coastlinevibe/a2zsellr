@@ -34,10 +34,11 @@ export async function parseBulkUploadCSV(csvText: string): Promise<ProfileData[]
   const lines = csvText.trim().split('\n')
   if (lines.length < 2) return []
 
-  // Get headers from first line
-  const headers = lines[0].split(',').map(h => h.trim())
+  // Get headers from first line (handle both comma and semicolon separators)
+  const separator = lines[0].includes(';') ? ';' : ','
+  const headers = lines[0].split(separator).map(h => h.trim())
   
-  // Expected column order: display_name,address,city,province,website_url,phone_number,email,business_category
+  // Expected column order: display_name;address;city;province;website_url;phone_number;email;business_category
   const expectedHeaders = [
     'display_name',
     'address',
@@ -60,7 +61,7 @@ export async function parseBulkUploadCSV(csvText: string): Promise<ProfileData[]
   const profiles: ProfileData[] = []
   
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(',').map(v => v.trim())
+    const values = lines[i].split(separator).map(v => v.trim())
     if (values.length !== headers.length) continue
 
     const profile: ProfileData = {
@@ -108,9 +109,19 @@ export async function parseBulkUploadCSV(csvText: string): Promise<ProfileData[]
       profile.business_location = generateLocationSlug(profile.city, profile.province)
     }
 
+    // Debug logging
+    console.log('🔍 Processing profile:', {
+      display_name: profile.display_name,
+      business_category: profile.business_category,
+      city: profile.city,
+      business_location: profile.business_location
+    })
+
     // Only add if required fields are present
     if (profile.display_name && profile.business_category && profile.city) {
       profiles.push(profile)
+    } else {
+      console.log('❌ Skipping profile due to missing required fields:', profile)
     }
   }
 
@@ -140,8 +151,8 @@ export async function validateProfileData(profiles: ProfileData[]): Promise<Vali
       profileErrors.push('Business location is required')
     }
 
-    // Email validation (if provided)
-    if (profile.email && !isValidEmail(profile.email)) {
+    // Email validation (only if provided and not empty)
+    if (profile.email && profile.email.trim() !== '' && !isValidEmail(profile.email)) {
       profileErrors.push('Invalid email format')
     }
 

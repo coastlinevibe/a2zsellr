@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabaseClient'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,33 +14,42 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Here you would typically save this to your database
-    // For now, we'll just log it and return success
-    console.log('Message consent tracked:', {
+    // Get user info from headers
+    const userAgent = request.headers.get('user-agent')
+    const ipAddress = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+
+    // Save consent to Supabase
+    const { data, error } = await supabase
+      .from('message_consents')
+      .insert({
+        business_name: businessName,
+        listing_id: listingId,
+        consented,
+        timestamp: new Date(timestamp).toISOString(),
+        user_agent: userAgent,
+        ip_address: ipAddress,
+        created_at: new Date().toISOString()
+      })
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json(
+        { error: 'Failed to save consent data' },
+        { status: 500 }
+      )
+    }
+
+    console.log('Message consent tracked successfully:', {
       businessName,
       listingId,
       consented,
-      timestamp: new Date(timestamp).toISOString(),
-      userAgent: request.headers.get('user-agent'),
-      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip')
+      timestamp: new Date(timestamp).toISOString()
     })
-
-    // TODO: Save to database
-    // Example:
-    // await supabase
-    //   .from('message_consents')
-    //   .insert({
-    //     business_name: businessName,
-    //     listing_id: listingId,
-    //     consented,
-    //     timestamp: new Date(timestamp).toISOString(),
-    //     user_agent: request.headers.get('user-agent'),
-    //     ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip')
-    //   })
 
     return NextResponse.json({ 
       success: true,
-      message: 'Consent tracked successfully'
+      message: 'Consent tracked successfully',
+      data
     })
 
   } catch (error) {
