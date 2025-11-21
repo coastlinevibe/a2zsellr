@@ -64,62 +64,54 @@ export async function POST(request: NextRequest) {
       })
 
       // Set a special cookie to indicate admin impersonation
+      console.log('🍪 Setting impersonation cookies for user without auth:', { userId, userName })
+      
       response.cookies.set('admin_impersonating', userId, {
-        httpOnly: true,
+        httpOnly: false, // Change to false so we can read it client-side
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
+        path: '/',
         maxAge: 60 * 60 * 2 // 2 hours
       })
 
-      response.cookies.set('impersonated_user_name', userName, {
+      response.cookies.set('impersonated_user_name', encodeURIComponent(userName), {
         httpOnly: false, // Allow client-side access for UI
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
+        path: '/',
         maxAge: 60 * 60 * 2 // 2 hours
       })
 
       return response
     }
 
-    // If user has auth record, generate an admin access token for them
-    // Use production domain for redirect
-    const redirectUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://www.a2zsellr.life/dashboard'
-      : 'http://localhost:3000/dashboard'
-    
-    const { data: tokenData, error: tokenError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'magiclink',
-      email: authUser.user.email!,
-      options: {
-        redirectTo: redirectUrl
-      }
-    })
+    // For users with auth records, use impersonation approach instead of magic links
+    console.log('✅ Setting up impersonation for authenticated user')
 
-    if (tokenError) {
-      console.error('❌ Failed to generate login link:', tokenError)
-      return NextResponse.json(
-        { error: 'Failed to generate login session' },
-        { status: 500 }
-      )
-    }
-
-    console.log('✅ Login link generated successfully')
-
-    // For users with auth records, we need to log out the admin first
     const response = NextResponse.json({
       success: true,
-      message: 'Login session created successfully',
-      loginUrl: tokenData.properties?.action_link,
+      message: 'User impersonation session created',
       userProfile: userProfile,
-      method: 'magic_link'
+      method: 'admin_impersonation'
     })
 
-    // Clear any existing admin session cookies to ensure clean login
-    response.cookies.set('supabase-auth-token', '', {
-      httpOnly: true,
+    // Set impersonation cookies for authenticated users too
+    console.log('🍪 Setting impersonation cookies:', { userId, userName })
+    
+    response.cookies.set('admin_impersonating', userId, {
+      httpOnly: false, // Change to false so we can read it client-side
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 0
+      path: '/',
+      maxAge: 60 * 60 * 2 // 2 hours
+    })
+
+    response.cookies.set('impersonated_user_name', encodeURIComponent(userName), {
+      httpOnly: false, // Allow client-side access for UI
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 2 // 2 hours
     })
 
     return response

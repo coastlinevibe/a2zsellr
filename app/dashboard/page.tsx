@@ -124,6 +124,8 @@ export default function DashboardPage() {
     const checkImpersonation = () => {
       if (typeof document === 'undefined') return
       
+      console.log('🍪 All cookies:', document.cookie)
+      
       const impersonatedUserId = document.cookie
         .split('; ')
         .find(row => row.startsWith('admin_impersonating='))
@@ -134,6 +136,11 @@ export default function DashboardPage() {
         .find(row => row.startsWith('impersonated_user_name='))
         ?.split('=')[1]
       
+      console.log('🔍 Impersonation cookies found:', {
+        impersonatedUserId,
+        impersonatedUserName: impersonatedUserName ? decodeURIComponent(impersonatedUserName) : null
+      })
+      
       setImpersonationData({
         isImpersonating: !!impersonatedUserId,
         impersonatedUserId: impersonatedUserId || null,
@@ -142,6 +149,19 @@ export default function DashboardPage() {
     }
     
     checkImpersonation()
+    
+    // Also check cookies when the page becomes visible (in case cookies were set in another tab)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkImpersonation()
+      }
+    }
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [])
 
   // Redirect free and premium tier users away from business-only tabs
@@ -158,6 +178,7 @@ export default function DashboardPage() {
     }
 
     if (user) {
+      console.log('👤 User loaded, fetching profile with impersonation data:', impersonationData)
       fetchProfile()
     }
   }, [user, loading, router, impersonationData])

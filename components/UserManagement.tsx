@@ -123,18 +123,9 @@ export function UserManagement() {
       const result = await response.json()
 
       if (response.ok) {
-        if (result.method === 'magic_link' && result.loginUrl) {
-          // For users with authentication, use the magic link
-          alert(`✅ Logged in as "${userName}"! Redirecting to their dashboard...`)
-          window.location.href = result.loginUrl
-        } else if (result.method === 'admin_impersonation') {
-          // For users without authentication (bulk uploaded), redirect to dashboard with impersonation
-          alert(`✅ Impersonating "${userName}"! Redirecting to their dashboard...`)
-          window.location.href = '/dashboard'
-        } else {
-          alert(`✅ Logged in as "${userName}"! Redirecting...`)
-          window.location.href = '/dashboard'
-        }
+        // All users now use the impersonation method
+        alert(`✅ Impersonating "${userName}"! Redirecting to their dashboard...`)
+        window.location.href = '/dashboard'
       } else {
         alert(`❌ Failed: ${result.error}`)
       }
