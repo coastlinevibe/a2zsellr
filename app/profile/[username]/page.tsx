@@ -1603,22 +1603,6 @@ Best regards`
                     </div>
                   </motion.div>
                 ))}
-                
-                  {/* View All Card */}
-                  <motion.div 
-                    className="bg-gray-50 border border-gray-200 rounded-[9px] flex-shrink-0 w-48 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <div className="text-center p-4">
-                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
-                        <ChevronRight className="w-4 h-4 text-gray-600" />
-                      </div>
-                      <span className="text-sm text-gray-600 font-medium">View All</span>
-                    </div>
-                  </motion.div>
                 </motion.div>
               </motion.div>
             ) : (

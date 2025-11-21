@@ -416,7 +416,7 @@ export function ProductShowcase() {
             <div className="flex gap-1">
               <Link
                 href={profile?.display_name 
-                  ? `https://a2zsellr.life/profile/${profile.display_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`
+                  ? `https://www.a2zsellr.life/profile/${profile.display_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`
                   : '#'
                 }
                 className="flex-1 inline-flex items-center justify-center"
@@ -458,7 +458,7 @@ export function ProductShowcase() {
               
               <Link
                 href={profile?.display_name 
-                  ? `https://a2zsellr.life/profile/${profile.display_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}/product/${currentProduct.id}`
+                  ? `https://www.a2zsellr.life/profile/${profile.display_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}?product=${currentProduct.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`
                   : '#'
                 }
                 className="flex-1 inline-flex items-center justify-center"
