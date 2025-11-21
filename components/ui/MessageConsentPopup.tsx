@@ -91,6 +91,13 @@ export function MessageConsentPopup({
                 Wants to share a message with you
               </p>
             </div>
+            
+            {/* Acceptance Question */}
+            <div className="mb-4">
+              <p className="text-black text-xl font-black">
+                Do you accept ?
+              </p>
+            </div>
           </div>
 
           {/* Action Buttons */}
