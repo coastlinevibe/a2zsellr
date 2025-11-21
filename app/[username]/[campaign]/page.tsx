@@ -16,6 +16,9 @@ import {
 import { MessageCircle, Share2, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MarketingActionBar } from '@/components/ui/MarketingActionBar'
+import { VideoPopup } from '@/components/ui/VideoPopup'
+import { MenuPopup } from '@/components/ui/MenuPopup'
+import { NewProductsPopup } from '@/components/ui/NewProductsPopup'
 
 interface CampaignPageProps {
   params: {
@@ -82,6 +85,11 @@ export default function CampaignPage({ params }: CampaignPageProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [reviewSummary, setReviewSummary] = useState<{ average: number; count: number } | null>(null)
+  
+  // Popup states
+  const [videoPopupOpen, setVideoPopupOpen] = useState(false)
+  const [menuPopupOpen, setMenuPopupOpen] = useState(false)
+  const [productsPopupOpen, setProductsPopupOpen] = useState(false)
 
   useEffect(() => {
     fetchListingData()
@@ -359,32 +367,46 @@ export default function CampaignPage({ params }: CampaignPageProps) {
         <div className="mt-10 space-y-6">
           {profile && listing && (
             <MarketingActionBar
-              onVideoPopup={() => console.log('Video popup clicked - not activated yet')}
+              onVideoPopup={() => setVideoPopupOpen(true)}
               onViewProfile={() => router.push(`/profile/${params.username}`)}
               onChatWithSeller={handleContactShop}
-              onViewMenuPopup={() => console.log('View menu popup clicked - not activated yet')}
-              onNewProductsPopup={() => console.log('New products popup clicked - not activated yet')}
+              onViewMenuPopup={() => setMenuPopupOpen(true)}
+              onNewProductsPopup={() => setProductsPopupOpen(true)}
               businessName={profile.display_name}
               listingTitle={listing.title}
             />
           )}
 
           <div className="text-center">
-            <Button
-              onClick={() => router.push(`/profile/${params.username}`)}
-              variant="outline"
-              className="mb-4"
-            >
-              <ExternalLink className="w-4 h-4 mr-2" />
-              View Full Business Profile
-            </Button>
-
             <p className="text-sm text-gray-500">
               Powered by <span className="font-semibold text-blue-600">A2Z Business Directory</span>
             </p>
           </div>
         </div>
       </main>
+
+      {/* Popup Components */}
+      <VideoPopup
+        isOpen={videoPopupOpen}
+        onClose={() => setVideoPopupOpen(false)}
+        videoUrl={listing?.video_url || profile?.global_video_url}
+        videoType={listing?.video_type || profile?.global_video_type}
+        businessName={profile?.display_name}
+      />
+
+      <MenuPopup
+        isOpen={menuPopupOpen}
+        onClose={() => setMenuPopupOpen(false)}
+        menuImages={listing?.menu_images || profile?.global_menu_images}
+        businessName={profile?.display_name}
+      />
+
+      <NewProductsPopup
+        isOpen={productsPopupOpen}
+        onClose={() => setProductsPopupOpen(false)}
+        profileId={profile?.id}
+        businessName={profile?.display_name}
+      />
     </div>
     </>
   )

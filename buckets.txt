@@ -1,0 +1,44 @@
+[
+  {
+    "name": "gallery",
+    "id": "gallery",
+    "created_at": "2025-11-01 19:47:28.664994+00",
+    "updated_at": "2025-11-01 19:47:28.664994+00",
+    "public": true
+  },
+  {
+    "name": "payment-proofs",
+    "id": "payment-proofs",
+    "created_at": "2025-11-06 08:49:38.898698+00",
+    "updated_at": "2025-11-06 08:49:38.898698+00",
+    "public": true
+  },
+  {
+    "name": "product-images",
+    "id": "product-images",
+    "created_at": "2025-11-05 19:25:43.104188+00",
+    "updated_at": "2025-11-05 19:25:43.104188+00",
+    "public": true
+  },
+  {
+    "name": "profile",
+    "id": "profile",
+    "created_at": "2025-10-21 08:19:44.125974+00",
+    "updated_at": "2025-10-21 08:19:44.125974+00",
+    "public": true
+  },
+  {
+    "name": "sharelinks",
+    "id": "sharelinks",
+    "created_at": "2025-11-04 05:37:38.205969+00",
+    "updated_at": "2025-11-04 05:37:38.205969+00",
+    "public": true
+  },
+  {
+    "name": "templates",
+    "id": "templates",
+    "created_at": "2025-11-08 07:39:35.700717+00",
+    "updated_at": "2025-11-08 07:39:35.700717+00",
+    "public": true
+  }
+]

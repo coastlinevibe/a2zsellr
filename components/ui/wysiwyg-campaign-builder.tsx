@@ -96,6 +96,15 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
   const [deliveryAvailable, setDeliveryAvailable] = useState(editListing?.delivery_available || false)
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null)
   const [isTemplateEditMode, setIsTemplateEditMode] = useState(false)
+  
+  // Video and Menu state
+  const [videoUrl, setVideoUrl] = useState('')
+  const [videoType, setVideoType] = useState<'youtube' | 'upload'>('youtube')
+  const [menuImage, setMenuImage] = useState<{id: string, url: string, name?: string} | null>(null)
+  const [useGlobalVideo, setUseGlobalVideo] = useState(false)
+  const [useGlobalMenu, setUseGlobalMenu] = useState(false)
+  const [uploadingVideo, setUploadingVideo] = useState(false)
+  const [uploadingMenuImage, setUploadingMenuImage] = useState(false)
 
   // Handle template image upload
   const handleTemplateImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -174,8 +183,57 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
         setUploadedMedia(editListing.uploaded_media)
         console.log('Loaded uploaded media:', editListing.uploaded_media)
       }
+
+      // Initialize video data
+      if (editListing.video_url) {
+        setVideoUrl(editListing.video_url)
+        setVideoType(editListing.video_type || 'youtube')
+      }
+
+      // Initialize menu data
+      if (editListing.menu_images && editListing.menu_images.length > 0) {
+        setMenuImage(editListing.menu_images[0])
+      }
     }
   }, [editListing, products])
+
+  // Initialize global preferences and load global content
+  React.useEffect(() => {
+    if (businessProfile) {
+      // Set toggle states from profile preferences
+      setUseGlobalVideo(businessProfile.use_global_video || false)
+      setUseGlobalMenu(businessProfile.use_global_menu || false)
+
+      // For new listings (not editing), load global content if preferences are enabled
+      if (!editListing) {
+        if (businessProfile.use_global_video && businessProfile.global_video_url) {
+          setVideoUrl(businessProfile.global_video_url)
+          setVideoType(businessProfile.global_video_type || 'youtube')
+        }
+
+        if (businessProfile.use_global_menu && businessProfile.global_menu_images) {
+          const globalMenuImages = Array.isArray(businessProfile.global_menu_images) 
+            ? businessProfile.global_menu_images 
+            : JSON.parse(businessProfile.global_menu_images || '[]')
+          if (globalMenuImages.length > 0) {
+            setMenuImage(globalMenuImages[0])
+          }
+        }
+      }
+    }
+  }, [businessProfile, editListing])
+
+  // Load global preferences from business profile
+  React.useEffect(() => {
+    if (businessProfile) {
+      setUseGlobalVideo(businessProfile.use_global_video || false)
+      setUseGlobalMenu(businessProfile.use_global_menu || false)
+      console.log('Loaded global preferences:', {
+        video: businessProfile.use_global_video,
+        menu: businessProfile.use_global_menu
+      })
+    }
+  }, [businessProfile])
   const [showMediaSelector, setShowMediaSelector] = useState(false)
   const [uploadedMedia, setUploadedMedia] = useState<{id: string, name: string, url: string, type: string, storagePath?: string}[]>([])
   const [uploadingFiles, setUploadingFiles] = useState<string[]>([])
@@ -361,6 +419,150 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
     })
   }
 
+  // Video upload handler
+  const handleVideoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('video/')) {
+      alert('Please select a video file')
+      return
+    }
+
+    setUploadingVideo(true)
+    try {
+      const fileName = `video-${Date.now()}-${file.name}`
+      const filePath = `video_uploads/${businessProfile?.id}/${fileName}`
+      
+      const { data, error } = await supabase.storage
+        .from('sharelinks')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        })
+
+      if (error) throw error
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('sharelinks')
+        .getPublicUrl(filePath)
+
+      setVideoUrl(publicUrl)
+      setVideoType('upload')
+      showSuccess('Video uploaded successfully!')
+    } catch (error: any) {
+      console.error('Video upload error:', error)
+      showError('Failed to upload video: ' + error.message)
+    } finally {
+      setUploadingVideo(false)
+      if (event.target) event.target.value = ''
+    }
+  }
+
+  // Menu image upload handler (single image)
+  const handleMenuImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+
+    setUploadingMenuImage(true)
+    try {
+      const fileName = `menu-${Date.now()}-${file.name}`
+      const filePath = `menu_uploads/${businessProfile?.id}/${fileName}`
+      
+      const { data, error } = await supabase.storage
+        .from('gallery')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        })
+
+      if (error) throw error
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('gallery')
+        .getPublicUrl(filePath)
+
+      setMenuImage({
+        id: `menu-${Date.now()}`,
+        url: publicUrl,
+        name: file.name.replace(/\.[^/.]+$/, '') // Remove extension
+      })
+      
+      showSuccess('Menu image uploaded successfully!')
+    } catch (error: any) {
+      console.error('Menu image upload error:', error)
+      showError('Failed to upload menu image: ' + error.message)
+    } finally {
+      setUploadingMenuImage(false)
+      if (event.target) event.target.value = ''
+    }
+  }
+
+  // Remove menu image
+  const removeMenuImage = () => {
+    setMenuImage(null)
+  }
+
+  // Extract YouTube video ID from URL
+  const getYouTubeVideoId = (url: string): string | null => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+    const match = url.match(regExp)
+    return match && match[2].length === 11 ? match[2] : null
+  }
+
+  // Handle global preference toggle
+  const handleGlobalToggle = async (type: 'video' | 'menu', enabled: boolean) => {
+    try {
+      const updateData: any = {}
+      
+      if (type === 'video') {
+        updateData.use_global_video = enabled
+        if (enabled && videoUrl.trim()) {
+          // Save current video as global when enabling
+          updateData.global_video_url = videoUrl.trim()
+          updateData.global_video_type = videoType
+        } else if (enabled && businessProfile?.global_video_url) {
+          // Load existing global video when enabling
+          setVideoUrl(businessProfile.global_video_url)
+          setVideoType(businessProfile.global_video_type || 'youtube')
+        }
+        setUseGlobalVideo(enabled)
+      } else if (type === 'menu') {
+        updateData.use_global_menu = enabled
+        if (enabled && menuImage) {
+          // Save current menu as global when enabling
+          updateData.global_menu_images = [menuImage]
+        } else if (enabled && businessProfile?.global_menu_images) {
+          // Load existing global menu when enabling
+          const globalMenuImages = Array.isArray(businessProfile.global_menu_images) 
+            ? businessProfile.global_menu_images 
+            : JSON.parse(businessProfile.global_menu_images || '[]')
+          if (globalMenuImages.length > 0) {
+            setMenuImage(globalMenuImages[0])
+          }
+        }
+        setUseGlobalMenu(enabled)
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', businessProfile?.id)
+
+      if (error) throw error
+
+      showSuccess(`Global ${type} ${enabled ? 'enabled' : 'disabled'}!`)
+    } catch (error: any) {
+      console.error(`Error updating global ${type} preference:`, error)
+      showError(`Failed to update global ${type} preference: ${error.message}`)
+    }
+  }
+
   // Check for duplicate listing titles
   const checkDuplicateTitle = async (title: string): Promise<boolean> => {
     try {
@@ -485,7 +687,11 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
       template_data: selectedLayout === 'custom-template' && selectedTemplate ? {
         backgroundImage: selectedTemplate.backgroundImage,
         interactions: selectedTemplate.interactions || []
-      } : null
+      } : null,
+      // Video and menu data
+      video_url: videoUrl.trim() || null,
+      video_type: videoUrl.trim() ? videoType : null,
+      menu_images: menuImage ? [menuImage] : null
     }
     
     // Debug: Log what we're saving to catch any unwanted auto-selection
@@ -885,6 +1091,249 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
               />
             </div>
           )}
+
+          {/* Video Section */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-medium text-blue-100">Campaign Video</label>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-blue-200">Optional</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-blue-200">Use Global:</span>
+                  <Switch
+                    checked={useGlobalVideo}
+                    onCheckedChange={(checked) => handleGlobalToggle('video', checked)}
+                    className="data-[state=checked]:bg-yellow-500"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-blue-500 border border-blue-400 rounded-[9px] p-4 space-y-4">
+              {/* Video Type Selection */}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setVideoType('youtube')}
+                  className={`flex-1 p-2 rounded text-sm font-medium transition-colors ${
+                    videoType === 'youtube'
+                      ? 'bg-red-600 text-white'
+                      : 'bg-blue-400 text-blue-100 hover:bg-blue-300'
+                  }`}
+                >
+                  📺 YouTube Link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVideoType('upload')}
+                  className={`flex-1 p-2 rounded text-sm font-medium transition-colors ${
+                    videoType === 'upload'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-blue-400 text-blue-100 hover:bg-blue-300'
+                  }`}
+                >
+                  📁 Upload Video
+                </button>
+              </div>
+
+              {/* YouTube URL Input */}
+              {videoType === 'youtube' && (
+                <div>
+                  <input
+                    type="url"
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    className="w-full p-3 bg-blue-400 border border-blue-300 rounded text-white placeholder-blue-200 focus:ring-2 focus:ring-blue-200 focus:border-blue-200"
+                  />
+                  <p className="text-xs text-blue-200 mt-1">Paste your YouTube video URL</p>
+                </div>
+              )}
+
+              {/* Video Upload */}
+              {videoType === 'upload' && (
+                <div>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                    disabled={uploadingVideo}
+                    className="hidden"
+                    id="video-upload"
+                  />
+                  <label
+                    htmlFor="video-upload"
+                    className={`w-full p-3 rounded border-2 border-dashed border-blue-300 text-center cursor-pointer transition-colors flex items-center justify-center gap-2 ${
+                      uploadingVideo
+                        ? 'bg-blue-400 text-blue-200 cursor-not-allowed'
+                        : 'bg-blue-400 hover:bg-blue-300 text-white'
+                    }`}
+                  >
+                    {uploadingVideo ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Uploading video...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        {videoUrl ? 'Change Video' : 'Upload Video File'}
+                      </>
+                    )}
+                  </label>
+                  {videoUrl && videoType === 'upload' && (
+                    <div className="mt-2 p-2 bg-green-500 rounded text-white text-sm">
+                      ✅ Video uploaded successfully
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Video Preview */}
+              {videoUrl && (
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-blue-100">Preview:</span>
+                    <button
+                      onClick={() => {
+                        setVideoUrl('')
+                        setVideoType('youtube')
+                      }}
+                      className="text-xs bg-red-500 hover:bg-red-400 text-white px-2 py-1 rounded"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  {videoType === 'youtube' ? (
+                    <div className="space-y-2">
+                      {(() => {
+                        const videoId = getYouTubeVideoId(videoUrl)
+                        if (videoId) {
+                          return (
+                            <div className="relative w-full h-0 pb-[56.25%] bg-black rounded overflow-hidden">
+                              <iframe
+                                className="absolute top-0 left-0 w-full h-full"
+                                src={`https://www.youtube.com/embed/${videoId}`}
+                                title="YouTube video preview"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            </div>
+                          )
+                        } else {
+                          return (
+                            <div className="text-sm text-red-200 bg-red-500/50 p-2 rounded">
+                              ⚠️ Invalid YouTube URL. Please check the link.
+                            </div>
+                          )
+                        }
+                      })()}
+                      <div className="text-xs text-blue-200 bg-blue-400 p-2 rounded">
+                        🎬 YouTube: {videoUrl}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <video
+                        className="w-full h-auto max-h-48 bg-black rounded"
+                        controls
+                        preload="metadata"
+                      >
+                        <source src={videoUrl} type="video/mp4" />
+                        <source src={videoUrl} type="video/webm" />
+                        <source src={videoUrl} type="video/ogg" />
+                        Your browser does not support the video tag.
+                      </video>
+                      <div className="text-xs text-blue-200 bg-blue-400 p-2 rounded">
+                        📹 Uploaded video ready
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Menu Section */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-medium text-blue-100">Menu Image</label>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-blue-200">Optional</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-blue-200">Use Global:</span>
+                  <Switch
+                    checked={useGlobalMenu}
+                    onCheckedChange={(checked) => handleGlobalToggle('menu', checked)}
+                    className="data-[state=checked]:bg-yellow-500"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-blue-500 border border-blue-400 rounded-[9px] p-4 space-y-4">
+              {/* Menu Upload */}
+              <div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleMenuImageUpload}
+                  disabled={uploadingMenuImage}
+                  className="hidden"
+                  id="menu-upload"
+                />
+                <label
+                  htmlFor="menu-upload"
+                  className={`w-full p-3 rounded border-2 border-dashed border-blue-300 text-center cursor-pointer transition-colors flex items-center justify-center gap-2 ${
+                    uploadingMenuImage
+                      ? 'bg-blue-400 text-blue-200 cursor-not-allowed'
+                      : 'bg-blue-400 hover:bg-blue-300 text-white'
+                  }`}
+                >
+                  {uploadingMenuImage ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Uploading menu image...
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon className="w-4 h-4" />
+                      {menuImage ? 'Change Menu Image' : 'Upload Menu Image'}
+                    </>
+                  )}
+                </label>
+                <p className="text-xs text-blue-200 mt-1">Upload a single image of your menu</p>
+              </div>
+
+              {/* Menu Image Preview */}
+              {menuImage && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-blue-100">Menu Preview</span>
+                    <button
+                      onClick={removeMenuImage}
+                      className="text-xs bg-red-500 hover:bg-red-400 text-white px-2 py-1 rounded"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  <div className="relative group">
+                    <img
+                      src={menuImage.url}
+                      alt={menuImage.name || 'Menu'}
+                      className="w-full h-32 object-cover rounded"
+                    />
+                    {menuImage.name && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs p-2 rounded-b truncate">
+                        {menuImage.name}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Media Selection */}
           <div>

@@ -41,7 +41,9 @@ export async function GET(
     console.log(`📋 Fetching all listings...`)
     const { data: allListings, error: listingsError } = await adminClient
       .from('profile_listings')
-      .select('*')
+      .select(`
+        *, video_url, video_type, menu_images
+      `)
       .limit(1000)
 
     if (listingsError) {
@@ -62,7 +64,10 @@ export async function GET(
     console.log(`👥 Fetching all profiles...`)
     const { data: allProfiles, error: profilesError } = await adminClient
       .from('profiles')
-      .select('id, display_name, avatar_url, bio, phone_number, subscription_tier')
+      .select(`
+        id, display_name, avatar_url, bio, phone_number, subscription_tier,
+        global_video_url, global_video_type, global_menu_images
+      `)
       .limit(1000)
 
     if (profilesError) {

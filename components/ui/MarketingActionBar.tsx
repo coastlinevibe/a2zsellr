@@ -39,19 +39,16 @@ export function MarketingActionBar({
   listingTitle,
   className
 }: MarketingActionBarProps) {
-  // Placeholder functions for the new buttons (not activated yet)
+  // Button handlers
   const handleVideoPopup = () => {
-    console.log('Video popup - not activated yet')
     onVideoPopup()
   }
 
   const handleViewMenuPopup = () => {
-    console.log('View menu popup - not activated yet')
     onViewMenuPopup()
   }
 
   const handleNewProductsPopup = () => {
-    console.log('New products popup - not activated yet')
     onNewProductsPopup()
   }
 
