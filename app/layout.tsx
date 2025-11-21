@@ -13,14 +13,6 @@ export const metadata: Metadata = {
   title: 'A2Z Sellr - South Africa\'s Leading Seller Platform',
   description: 'Discover quality businesses nationwide with A2Z Sellr. Mobile-first, award-winning design for South African sellers.',
   metadataBase: new URL('https://a2zsellr.life'),
-  icons: {
-    icon: [
-      { url: '/favicon.ico' },
-      { url: '/favicon.png', type: 'image/png' }
-    ],
-    shortcut: '/favicon.ico',
-    apple: '/favicon.png',
-  },
   openGraph: {
     title: 'A2Z Sellr - South Africa\'s Leading Seller Platform',
     description: 'Discover quality businesses nationwide with A2Z Sellr. Mobile-first, award-winning design for South African sellers.',
@@ -53,9 +45,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.png" type="image/png" />
-        <link rel="shortcut icon" href="/favicon.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/favicon.png" />
+        {/* Favicon will be automatically handled by Next.js from app/favicon.ico and app/icon.png */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#10b981" />
       </head>
       <body className={inter.className}>
         <AuthProvider>

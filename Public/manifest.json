@@ -1,0 +1,21 @@
+{
+  "name": "A2Z Sellr - South Africa's Leading Seller Platform",
+  "short_name": "A2Z Sellr",
+  "description": "Discover quality businesses nationwide with A2Z Sellr. Mobile-first, award-winning design for South African sellers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
