@@ -82,11 +82,16 @@ export async function POST(request: NextRequest) {
     }
 
     // If user has auth record, generate an admin access token for them
+    // Use production domain for redirect
+    const redirectUrl = process.env.NODE_ENV === 'production' 
+      ? 'https://www.a2zsellr.life/dashboard'
+      : 'http://localhost:3000/dashboard'
+    
     const { data: tokenData, error: tokenError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'magiclink',
       email: authUser.user.email!,
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard`
+        redirectTo: redirectUrl
       }
     })
 

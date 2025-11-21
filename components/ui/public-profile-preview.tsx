@@ -216,7 +216,7 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
 
       {/* Action Buttons */}
       <div className="bg-white px-4 py-3 border-b border-gray-100">
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 gap-3 mb-3">
           <Button 
             className="bg-green-500 hover:bg-green-600 text-white flex-col h-auto py-3 px-2 rounded-[9px]"
           >
@@ -246,6 +246,49 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
           >
             <Globe className="h-5 w-5 mb-1 text-purple-600" />
             <span className="text-xs text-gray-700">Website</span>
+          </Button>
+        </div>
+        
+        {/* Social Media Buttons */}
+        <div className="grid grid-cols-4 gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex-col h-auto py-2 px-1 rounded-[6px] border-gray-200"
+            onClick={() => window.open(profile.facebook || `https://facebook.com/${displayName.toLowerCase().replace(/[^a-z0-9]/g, '')}`, '_blank')}
+          >
+            <div className="w-4 h-4 mb-1 bg-blue-600 rounded text-white flex items-center justify-center text-xs font-bold">f</div>
+            <span className="text-xs text-gray-700">Facebook</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex-col h-auto py-2 px-1 rounded-[6px] border-gray-200"
+            onClick={() => window.open(profile.instagram || `https://instagram.com/${displayName.toLowerCase().replace(/[^a-z0-9]/g, '')}`, '_blank')}
+          >
+            <div className="w-4 h-4 mb-1 bg-pink-500 rounded text-white flex items-center justify-center text-xs font-bold">📷</div>
+            <span className="text-xs text-gray-700">Instagram</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex-col h-auto py-2 px-1 rounded-[6px] border-gray-200"
+            onClick={() => window.open(profile.twitter || `https://twitter.com/${displayName.toLowerCase().replace(/[^a-z0-9]/g, '')}`, '_blank')}
+          >
+            <div className="w-4 h-4 mb-1 bg-blue-400 rounded text-white flex items-center justify-center text-xs font-bold">𝕏</div>
+            <span className="text-xs text-gray-700">Twitter</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex-col h-auto py-2 px-1 rounded-[6px] border-gray-200"
+            onClick={() => window.open(profile.youtube || `https://youtube.com/@${displayName.toLowerCase().replace(/[^a-z0-9]/g, '')}`, '_blank')}
+          >
+            <div className="w-4 h-4 mb-1 bg-red-600 rounded text-white flex items-center justify-center text-xs font-bold">▶</div>
+            <span className="text-xs text-gray-700">YouTube</span>
           </Button>
         </div>
       </div>

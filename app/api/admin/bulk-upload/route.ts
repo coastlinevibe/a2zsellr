@@ -49,8 +49,18 @@ export async function POST(request: NextRequest) {
     console.log('📊 First profile:', profilesData[0])
 
     if (profilesData.length === 0) {
+      // Get the first line to show headers
+      const lines = csvText.trim().split('\n')
+      const headers = lines.length > 0 ? lines[0] : 'No headers found'
+      
       return NextResponse.json(
-        { error: 'No valid profiles found in CSV', csvPreview: csvText.substring(0, 200) },
+        { 
+          error: 'No valid profiles found in CSV', 
+          details: 'Please check your CSV format and ensure it has the required columns',
+          csvHeaders: headers,
+          expectedFormat: 'Keyword, Company Name, Address, Location, Website, Contact No, Email, Facebook Page URL',
+          csvPreview: csvText.substring(0, 300)
+        },
         { status: 400 }
       )
     }
@@ -119,7 +129,7 @@ export async function POST(request: NextRequest) {
       const defaultWebsite = profile.website_url || `https://www.${profile.display_name.toLowerCase().replace(/[^a-z0-9]/g, '')}.co.za`
       
       // Generate default bio/address if missing
-      const defaultBio = profile.address || `Located in ${profile.business_location || 'South Africa'}. Providing quality ${profile.business_category.toLowerCase()} services to our community.`
+      const defaultBio = profile.address || `Located in ${profile.city || profile.business_location || 'South Africa'}. Providing quality ${profile.business_category.toLowerCase()} services to our community.`
       
       return {
         id: profileId,
@@ -129,7 +139,7 @@ export async function POST(request: NextRequest) {
         phone_number: defaultPhone,
         website_url: defaultWebsite,
         business_category: profile.business_category,
-        business_location: profile.business_location || 'South Africa',
+        business_location: profile.business_location || 'south-africa',
         business_hours: 'Mon-Fri: 8:00 AM - 5:00 PM, Sat: 9:00 AM - 2:00 PM',
         avatar_url: generateDefaultAvatar(profile.display_name),
         subscription_tier: 'premium',
@@ -137,6 +147,11 @@ export async function POST(request: NextRequest) {
         verified_seller: false,
         is_active: true,
         current_listings: 0,
+        // Social media URLs using individual columns
+        facebook: profile.facebook_url || `https://facebook.com/${profile.display_name.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+        instagram: profile.instagram_url || `https://instagram.com/${profile.display_name.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+        twitter: profile.twitter_url || `https://twitter.com/${profile.display_name.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+        youtube: `https://youtube.com/@${profile.display_name.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }

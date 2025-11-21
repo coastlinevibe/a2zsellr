@@ -10,8 +10,10 @@ interface ProfileData {
   website_url?: string
   phone_number?: string
   email?: string
-  facebook_connection?: string
-  google_my_business_connection?: string
+  facebook_url?: string
+  instagram_url?: string
+  twitter_url?: string
+  linkedin_url?: string
   business_category: string
   business_location: string
   bio?: string
@@ -29,40 +31,56 @@ interface LocationResult {
 
 /**
  * Parse CSV text into profile data array
+ * Supports multiple CSV formats:
+ * Format 1: Keyword, Company Name, Address, Location, Website, Contact No, Email, Facebook Page URL
+ * Format 2: display_name;address;city;province;website_url;phone_number;email;business_category
  */
 export async function parseBulkUploadCSV(csvText: string): Promise<ProfileData[]> {
   const lines = csvText.trim().split('\n')
   if (lines.length < 2) return []
 
-  // Get headers from first line (handle both comma and semicolon separators)
-  const separator = lines[0].includes(';') ? ';' : ','
-  const headers = lines[0].split(separator).map(h => h.trim())
+  // Get headers from first line (handle comma, semicolon, and tab separators)
+  let separator = ','
+  if (lines[0].includes('\t')) separator = '\t'
+  else if (lines[0].includes(';')) separator = ';'
   
-  // Expected column order: display_name;address;city;province;website_url;phone_number;email;business_category
-  const expectedHeaders = [
-    'display_name',
-    'address',
-    'city',
-    'province',
-    'website_url',
-    'phone_number',
-    'email',
-    'business_category'
-  ]
-
-  // Validate headers
-  const hasRequiredHeaders = expectedHeaders.every(header => headers.includes(header))
-  if (!hasRequiredHeaders) {
-    console.error('Missing required headers. Expected:', expectedHeaders)
-    return []
+  const headers = lines[0].split(separator).map(h => h.trim().replace(/"/g, ''))
+  
+  console.log('📋 CSV Headers found:', headers)
+  console.log('📋 Using separator:', separator)
+  
+  // Map different CSV header formats to our expected format
+  const headerMapping: { [key: string]: string } = {
+    // New format (your described format)
+    'Keyword': 'business_category',
+    'Company Name': 'display_name', 
+    'Address': 'address',
+    'Location': 'location',
+    'Website': 'website_url',
+    'Contact No': 'phone_number',
+    'Email': 'email',
+    'Facebook Page URL': 'facebook_url',
+    
+    // Old format (existing sample)
+    'display_name': 'display_name',
+    'address': 'address', 
+    'city': 'city',
+    'province': 'province',
+    'website_url': 'website_url',
+    'phone_number': 'phone_number',
+    'email': 'email',
+    'business_category': 'business_category'
   }
 
   // Parse data rows
   const profiles: ProfileData[] = []
   
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(separator).map(v => v.trim())
-    if (values.length !== headers.length) continue
+    const line = lines[i].trim()
+    if (!line) continue // Skip empty lines
+    
+    const values = line.split(separator).map(v => v.trim().replace(/"/g, ''))
+    if (values.length < 2) continue // Need at least 2 columns
 
     const profile: ProfileData = {
       display_name: '',
@@ -70,15 +88,31 @@ export async function parseBulkUploadCSV(csvText: string): Promise<ProfileData[]
       business_location: ''
     }
 
-    // Map values to profile object
+    // Map values to profile object using header mapping
     headers.forEach((header, index) => {
       const value = values[index] || ''
-      switch (header) {
+      const mappedField = headerMapping[header] || header.toLowerCase().replace(/\s+/g, '_')
+      
+      switch (mappedField) {
         case 'display_name':
           profile.display_name = value
           break
+        case 'business_category':
+          profile.business_category = value || 'General Business'
+          break
         case 'address':
           profile.address = value
+          break
+        case 'location':
+          // Split location into city and province if it contains comma
+          if (value.includes(',')) {
+            const parts = value.split(',').map(p => p.trim())
+            profile.city = parts[0]
+            profile.province = parts[1] || 'South Africa'
+          } else {
+            profile.city = value || 'Unknown'
+            profile.province = 'South Africa'
+          }
           break
         case 'city':
           profile.city = value
@@ -95,36 +129,56 @@ export async function parseBulkUploadCSV(csvText: string): Promise<ProfileData[]
         case 'email':
           profile.email = value
           break
-        case 'business_category':
-          profile.business_category = value
+        case 'facebook_url':
+          profile.facebook_url = value
           break
         default:
           // Handle any additional columns
+          console.log(`🔍 Unmapped column: ${header} = ${value}`)
           break
       }
     })
 
-    // Generate business_location slug from city/province if not provided
-    if (!profile.business_location && profile.city) {
+    // Handle old format where city and province are separate
+    if (profile.city && profile.province) {
       profile.business_location = generateLocationSlug(profile.city, profile.province)
+    } else if (profile.city) {
+      profile.business_location = generateLocationSlug(profile.city, 'South Africa')
+    } else {
+      profile.business_location = 'south-africa'
     }
+
+    // Add default social media URLs if missing
+    const businessSlug = profile.display_name.toLowerCase().replace(/[^a-z0-9]/g, '')
+    
+    if (!profile.facebook_url) {
+      profile.facebook_url = `https://facebook.com/${businessSlug}`
+    }
+    
+    // Add default social media URLs
+    profile.instagram_url = `https://instagram.com/${businessSlug}`
+    profile.twitter_url = `https://twitter.com/${businessSlug}`
+    profile.linkedin_url = `https://linkedin.com/company/${profile.display_name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`
 
     // Debug logging
     console.log('🔍 Processing profile:', {
       display_name: profile.display_name,
       business_category: profile.business_category,
       city: profile.city,
-      business_location: profile.business_location
+      province: profile.province,
+      business_location: profile.business_location,
+      facebook_url: profile.facebook_url
     })
 
-    // Only add if required fields are present
-    if (profile.display_name && profile.business_category && profile.city) {
+    // Only add if we have a display name (company name)
+    if (profile.display_name && profile.display_name.trim()) {
       profiles.push(profile)
     } else {
-      console.log('❌ Skipping profile due to missing required fields:', profile)
+      console.log('❌ Skipping profile due to missing company name:', profile)
     }
   }
 
+  console.log(`✅ Parsed ${profiles.length} valid profiles from CSV`)
   return profiles
 }
 
@@ -138,36 +192,49 @@ export async function validateProfileData(profiles: ProfileData[]): Promise<Vali
   for (const profile of profiles) {
     const profileErrors: string[] = []
 
-    // Required field validation
+    // Required field validation - only display_name is truly required
     if (!profile.display_name?.trim()) {
-      profileErrors.push('Display name is required')
+      profileErrors.push('Company name is required')
     }
 
+    // Set defaults for missing required fields
     if (!profile.business_category?.trim()) {
-      profileErrors.push('Business category is required')
+      profile.business_category = 'General Business'
     }
 
     if (!profile.business_location?.trim()) {
-      profileErrors.push('Business location is required')
+      profile.business_location = 'south-africa'
     }
 
     // Email validation (only if provided and not empty)
     if (profile.email && profile.email.trim() !== '' && !isValidEmail(profile.email)) {
-      profileErrors.push('Invalid email format')
+      // Don't fail validation, just clear invalid email
+      profile.email = ''
+      errors.push(`Profile "${profile.display_name}": Invalid email format - will use auto-generated email`)
     }
 
-    // Website URL validation (if provided)
+    // Website URL validation (if provided) - fix invalid URLs
     if (profile.website_url && !isValidUrl(profile.website_url)) {
-      profileErrors.push('Invalid website URL format')
+      // Try to fix the URL
+      if (!profile.website_url.startsWith('http')) {
+        profile.website_url = `https://${profile.website_url}`
+      }
+      // If still invalid, clear it
+      if (!isValidUrl(profile.website_url)) {
+        profile.website_url = ''
+        errors.push(`Profile "${profile.display_name}": Invalid website URL - will use auto-generated URL`)
+      }
     }
 
-    if (profileErrors.length === 0) {
+    // Always add to valid profiles if we have a display name
+    if (profile.display_name?.trim()) {
       valid.push(profile)
     } else {
-      errors.push(`Profile "${profile.display_name}": ${profileErrors.join(', ')}`)
+      errors.push(`Skipped profile: Missing company name`)
     }
   }
 
+  console.log(`✅ Validation complete: ${valid.length} valid profiles, ${errors.length} warnings`)
   return { valid, errors }
 }
 

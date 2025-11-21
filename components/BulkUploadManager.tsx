@@ -144,13 +144,24 @@ export function BulkUploadManager() {
       >
         <h3 className="text-2xl font-black text-black mb-6 uppercase">CSV FILE UPLOAD</h3>
         
+        {/* CSV Format Info */}
+        <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4 mb-4">
+          <h4 className="font-black text-green-800 mb-2">📋 SUPPORTED CSV FORMATS</h4>
+          <div className="text-sm text-green-700">
+            <p><strong>Required columns:</strong> Keyword, Company Name, Address, Location, Website, Contact No, Email, Facebook Page URL</p>
+            <p><strong>Alternative format:</strong> display_name, address, city, province, website_url, phone_number, email, business_category</p>
+            <p><strong>Separators:</strong> Comma (,), Semicolon (;), or Tab supported</p>
+          </div>
+        </div>
+
         {/* Default Credentials Info */}
         <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 mb-6">
-          <h4 className="font-black text-blue-800 mb-2">🔐 DEFAULT LOGIN CREDENTIALS</h4>
+          <h4 className="font-black text-blue-800 mb-2">🔐 DEFAULT DATA & CREDENTIALS</h4>
           <div className="text-sm text-blue-700">
             <p><strong>Password:</strong> 123456 (for all bulk uploaded users)</p>
             <p><strong>Email:</strong> Auto-generated if missing (e.g., businessname@example.com)</p>
             <p><strong>Phone:</strong> +27 81 234 5678 (if missing)</p>
+            <p><strong>Social Media:</strong> Auto-generated Facebook, Instagram, Twitter, LinkedIn URLs</p>
             <p><strong>Rating:</strong> 4.5 stars (default for new businesses)</p>
             <p><strong>Tier:</strong> Premium subscription activated</p>
           </div>
