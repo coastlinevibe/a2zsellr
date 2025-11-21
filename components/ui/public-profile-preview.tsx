@@ -35,6 +35,10 @@ interface UserProfile {
   subscription_tier: 'free' | 'premium' | 'business'
   verified_seller: boolean
   early_adopter?: boolean
+  facebook?: string | null
+  instagram?: string | null
+  twitter?: string | null
+  youtube?: string | null
 }
 
 interface Product {
