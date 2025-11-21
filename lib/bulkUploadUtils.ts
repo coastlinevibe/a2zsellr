@@ -167,7 +167,10 @@ export async function parseBulkUploadCSV(csvText: string): Promise<ProfileData[]
       city: profile.city,
       province: profile.province,
       business_location: profile.business_location,
-      facebook_url: profile.facebook_url
+      facebook_url: profile.facebook_url,
+      email: profile.email,
+      phone_number: profile.phone_number,
+      website_url: profile.website_url
     })
 
     // Only add if we have a display name (company name)

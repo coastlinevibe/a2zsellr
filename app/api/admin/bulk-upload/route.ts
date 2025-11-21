@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
         business_location: profile.business_location || 'south-africa',
         business_hours: 'Mon-Fri: 8:00 AM - 5:00 PM, Sat: 9:00 AM - 2:00 PM',
         avatar_url: generateDefaultAvatar(profile.display_name),
-        subscription_tier: 'premium',
+        subscription_tier: 'business',
         subscription_status: 'active',
         verified_seller: false,
         is_active: true,
@@ -157,11 +157,19 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    console.log(`📝 Inserting ${profilesToInsert.length} profiles...`)
+    console.log('📋 First profile to insert:', {
+      display_name: profilesToInsert[0]?.display_name,
+      subscription_tier: profilesToInsert[0]?.subscription_tier,
+      business_category: profilesToInsert[0]?.business_category,
+      email: profilesToInsert[0]?.email
+    })
+
     // Insert profiles using admin client to bypass RLS
     const { data: insertedProfiles, error: profileError } = await supabaseAdmin
       .from('profiles')
       .insert(profilesToInsert)
-      .select('id, display_name')
+      .select('id, display_name, subscription_tier, business_category')
 
     if (profileError) {
       console.error('Profile insertion error:', profileError)
@@ -171,13 +179,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.log(`✅ Inserted ${insertedProfiles?.length || 0} profiles`)
+    console.log('📋 First inserted profile:', insertedProfiles?.[0])
+
     // Create default products for each profile
     const allProducts = []
 
     for (let i = 0; i < (insertedProfiles || []).length; i++) {
       const profile = insertedProfiles![i]
       const originalProfile = uniqueProfiles[i]
+      
+      console.log(`🛍️ Creating products for profile: ${profile.display_name}`)
+      console.log(`📂 Business category: "${originalProfile.business_category}"`)
+      
       const defaultProducts = getDefaultProductsForCategory(originalProfile.business_category)
+      console.log(`📦 Generated ${defaultProducts.length} products for category: ${originalProfile.business_category}`)
       
       const profileProducts = defaultProducts.map(product => ({
         id: crypto.randomUUID(),
@@ -195,7 +211,11 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString()
       }))
       allProducts.push(...profileProducts)
+      
+      console.log(`✅ Added ${profileProducts.length} products for ${profile.display_name}`)
     }
+
+    console.log(`🛒 Total products to insert: ${allProducts.length}`)
 
     // Insert products using admin client to bypass RLS
     const { data: insertedProducts, error: productError } = await supabaseAdmin
@@ -251,10 +271,16 @@ export async function POST(request: NextRequest) {
           })
           
           // Update the profile with the correct auth user ID
-          await supabaseAdmin
+          const { error: updateError } = await supabaseAdmin
             .from('profiles')
             .update({ id: authData.user!.id })
             .eq('id', profile.id)
+          
+          if (updateError) {
+            console.error(`❌ Failed to update profile ID for ${profile.display_name}:`, updateError)
+          } else {
+            console.log(`✅ Updated profile ID for ${profile.display_name}: ${profile.id} -> ${authData.user!.id}`)
+          }
         }
       } catch (authErr) {
         console.error(`❌ Auth creation error for ${profile.display_name}:`, authErr)

@@ -335,11 +335,50 @@ const fallbackProducts: DefaultProduct[] = [
  * Returns 10 products tailored to the business category
  */
 export function getDefaultProductsForCategory(category: string): DefaultProduct[] {
+  if (!category) {
+    console.log('⚠️ No category provided, using fallback products')
+    return fallbackProducts
+  }
+
   // Normalize category name
   const normalizedCategory = category.toLowerCase().replace(/\s+/g, '-')
   
-  // Return category-specific products or fallback
-  return defaultProductsByCategory[normalizedCategory] || fallbackProducts
+  console.log(`🔍 Looking for products for category: "${category}" (normalized: "${normalizedCategory}")`)
+  
+  // Try exact match first
+  if (defaultProductsByCategory[normalizedCategory]) {
+    console.log(`✅ Found exact match for category: ${normalizedCategory}`)
+    return defaultProductsByCategory[normalizedCategory]
+  }
+  
+  // Try partial matches for common variations
+  const categoryMappings: { [key: string]: string } = {
+    'butcher': 'butcher-shop',
+    'butchery': 'butcher-shop', // Add specific mapping for "butchery"
+    'meat': 'butcher-shop',
+    'restaurant': 'restaurant',
+    'food': 'restaurant',
+    'cafe': 'restaurant',
+    'bakery': 'bakery',
+    'bread': 'bakery',
+    'grocery': 'grocery',
+    'shop': 'grocery',
+    'store': 'grocery',
+    'supermarket': 'grocery'
+  }
+  
+  // Check if any mapping key is contained in the category
+  for (const [key, mappedCategory] of Object.entries(categoryMappings)) {
+    if (normalizedCategory.includes(key)) {
+      console.log(`✅ Found partial match: "${key}" -> "${mappedCategory}" for category "${category}"`)
+      const products = defaultProductsByCategory[mappedCategory]
+      console.log(`📦 Returning ${products.length} products for ${mappedCategory}`)
+      return products
+    }
+  }
+  
+  console.log(`⚠️ No match found for category: "${category}", using fallback products`)
+  return fallbackProducts
 }
 
 /**
