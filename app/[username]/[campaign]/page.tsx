@@ -359,11 +359,11 @@ export default function CampaignPage({ params }: CampaignPageProps) {
         <div className="mt-10 space-y-6">
           {profile && listing && (
             <MarketingActionBar
-              onContactShop={handleContactShop}
-              onWhatsAppShare={handleWhatsAppShare}
-              onShare={handleShare}
+              onVideoPopup={() => console.log('Video popup clicked - not activated yet')}
               onViewProfile={() => router.push(`/profile/${params.username}`)}
-              shareUrl={pageUrl}
+              onChatWithSeller={handleContactShop}
+              onViewMenuPopup={() => console.log('View menu popup clicked - not activated yet')}
+              onNewProductsPopup={() => console.log('New products popup clicked - not activated yet')}
               businessName={profile.display_name}
               listingTitle={listing.title}
             />

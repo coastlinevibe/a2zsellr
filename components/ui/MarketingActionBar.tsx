@@ -1,24 +1,22 @@
 'use client'
 
-import { useState } from 'react'
 import {
+  Play,
+  User,
   MessageCircle,
-  Share2,
-  Megaphone,
-  Copy,
-  ExternalLink
+  Menu,
+  Package
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface MarketingActionBarProps {
-  onContactShop: () => void
-  onWhatsAppShare: () => void
-  onShare: () => void
+  onVideoPopup: () => void
   onViewProfile: () => void
-  shareUrl: string
+  onChatWithSeller: () => void
+  onViewMenuPopup: () => void
+  onNewProductsPopup: () => void
   businessName?: string
   listingTitle?: string
-  onCopyLink?: () => Promise<void> | void
   className?: string
 }
 
@@ -32,75 +30,71 @@ interface ActionButton {
 }
 
 export function MarketingActionBar({
-  onContactShop,
-  onWhatsAppShare,
-  onShare,
+  onVideoPopup,
   onViewProfile,
-  shareUrl,
+  onChatWithSeller,
+  onViewMenuPopup,
+  onNewProductsPopup,
   businessName,
   listingTitle,
-  onCopyLink,
   className
 }: MarketingActionBarProps) {
-  const [copied, setCopied] = useState(false)
+  // Placeholder functions for the new buttons (not activated yet)
+  const handleVideoPopup = () => {
+    console.log('Video popup - not activated yet')
+    onVideoPopup()
+  }
 
-  const handleCopy = async () => {
-    try {
-      if (onCopyLink) {
-        await onCopyLink()
-      } else if (shareUrl) {
-        await navigator.clipboard.writeText(shareUrl)
-      }
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch (error) {
-      console.error('Failed to copy link', error)
-      setCopied(false)
-    }
+  const handleViewMenuPopup = () => {
+    console.log('View menu popup - not activated yet')
+    onViewMenuPopup()
+  }
+
+  const handleNewProductsPopup = () => {
+    console.log('New products popup - not activated yet')
+    onNewProductsPopup()
   }
 
   const actions: ActionButton[] = [
     {
-      id: 'chat',
-      label: 'Direct Chat',
-      sublabel: 'Reply now',
-      icon: <MessageCircle className="h-5 w-5" />,
-      onClick: onContactShop,
-      gradientClasses: 'bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600'
-    },
-    {
-      id: 'broadcast',
-      label: 'Status Share',
-      sublabel: 'WhatsApp blast',
-      icon: <Megaphone className="h-5 w-5" />,
-      onClick: onWhatsAppShare,
-      gradientClasses: 'bg-gradient-to-br from-amber-400 via-orange-400 to-orange-500'
-    },
-    {
-      id: 'share',
-      label: 'Quick Share',
-      sublabel: 'Send anywhere',
-      icon: <Share2 className="h-5 w-5" />,
-      onClick: onShare,
-      gradientClasses: 'bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-500'
-    },
-    {
-      id: 'copy',
-      label: copied ? 'Link Copied' : 'Copy Link',
-      sublabel: copied ? 'Ready to paste' : 'For later',
-      icon: <Copy className="h-5 w-5" />,
-      onClick: handleCopy,
-      gradientClasses: copied
-        ? 'bg-gradient-to-br from-lime-400 via-emerald-500 to-lime-500'
-        : 'bg-gradient-to-br from-purple-400 via-fuchsia-500 to-purple-600'
+      id: 'video',
+      label: 'Watch Video',
+      sublabel: 'See it in action',
+      icon: <Play className="h-5 w-5" />,
+      onClick: handleVideoPopup,
+      gradientClasses: 'bg-gradient-to-br from-red-400 via-red-500 to-red-600'
     },
     {
       id: 'profile',
-      label: 'View Profile',
-      sublabel: 'Full catalog',
-      icon: <ExternalLink className="h-5 w-5" />,
+      label: 'Business Profile',
+      sublabel: 'Complete details',
+      icon: <User className="h-5 w-5" />,
       onClick: onViewProfile,
-      gradientClasses: 'bg-gradient-to-br from-rose-400 via-red-500 to-rose-600'
+      gradientClasses: 'bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600'
+    },
+    {
+      id: 'chat',
+      label: 'Message Seller',
+      sublabel: 'Get instant help',
+      icon: <MessageCircle className="h-5 w-5" />,
+      onClick: onChatWithSeller,
+      gradientClasses: 'bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600'
+    },
+    {
+      id: 'menu',
+      label: 'Browse Menu',
+      sublabel: 'All offerings',
+      icon: <Menu className="h-5 w-5" />,
+      onClick: handleViewMenuPopup,
+      gradientClasses: 'bg-gradient-to-br from-purple-400 via-purple-500 to-purple-600'
+    },
+    {
+      id: 'products',
+      label: 'Latest Items',
+      sublabel: '3 new arrivals',
+      icon: <Package className="h-5 w-5" />,
+      onClick: handleNewProductsPopup,
+      gradientClasses: 'bg-gradient-to-br from-amber-400 via-orange-400 to-orange-500'
     }
   ]
 
