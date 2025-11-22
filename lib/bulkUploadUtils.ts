@@ -4,7 +4,6 @@ interface ProfileData {
   display_name: string
   address?: string
   city?: string
-  province?: string
   postal_code?: string
   country?: string
   website_url?: string
@@ -31,9 +30,7 @@ interface LocationResult {
 
 /**
  * Parse CSV text into profile data array
- * Supports multiple CSV formats:
- * Format 1: Keyword, Company Name, Address, Location, Website, Contact No, Email, Facebook Page URL
- * Format 2: display_name;address;city;province;website_url;phone_number;email;business_category
+ * Standard Format: business_category display_name address business_location website_url phone_number email facebook
  */
 export async function parseBulkUploadCSV(csvText: string): Promise<ProfileData[]> {
   const lines = csvText.trim().split('\n')
@@ -48,17 +45,14 @@ export async function parseBulkUploadCSV(csvText: string): Promise<ProfileData[]
   
   console.log('📋 CSV Headers found:', headers)
   console.log('📋 Using separator:', separator)
-  console.log('📋 Expected format: Keyword, Company Name, Address, Location, Website, Contact No, Email, Facebook Page URL')
+  console.log('📋 Standard format: business_category display_name address business_location website_url phone_number email facebook')
   
-  // For the specific format: Keyword, Company Name, Address, Location, Website, Contact No, Email, Facebook Page URL
-  // We'll use positional mapping instead of header mapping to avoid confusion
-  const expectedHeaders = ['Keyword', 'Company Name', 'Address', 'Location', 'Website', 'Contact No', 'Email', 'Facebook Page URL']
+  // Check if this matches the standard format
+  const isStandardFormat = headers.length >= 7 && 
+    (headers.includes('business_category') || headers.includes('display_name') || 
+     headers.includes('address') || headers.includes('business_location'))
   
-  // Check if this matches the expected format
-  const isExpectedFormat = headers.length >= 4 && 
-    (headers.includes('Company Name') || headers.includes('Keyword') || headers.includes('Address'))
-  
-  console.log('📋 Is expected format:', isExpectedFormat)
+  console.log('📋 Is standard format:', isStandardFormat)
 
   // Parse data rows
   const profiles: ProfileData[] = []
@@ -80,11 +74,12 @@ export async function parseBulkUploadCSV(csvText: string): Promise<ProfileData[]
 
     console.log(`🔍 Row ${i}: Processing ${values.length} values`)
     console.log(`🔍 Raw values:`, values)
+    console.log(`🔍 Raw line:`, line)
 
-    // Use positional mapping for the expected format:
-    // 0: Keyword, 1: Company Name, 2: Address, 3: Location, 4: Website, 5: Contact No, 6: Email, 7: Facebook Page URL
+    // Use positional mapping for the standard format:
+    // 0: business_category, 1: display_name, 2: address, 3: business_location, 4: website_url, 5: phone_number, 6: email, 7: facebook
     
-    if (isExpectedFormat) {
+    if (isStandardFormat) {
       // Clean and assign values by position
       const cleanValue = (val: string) => {
         if (!val) return ''
@@ -92,19 +87,29 @@ export async function parseBulkUploadCSV(csvText: string): Promise<ProfileData[]
         return (val.toLowerCase() === 'demo-data' || val.toLowerCase() === 'demo data') ? '' : val
       }
 
-      profile.business_category = cleanValue(values[0]) || 'butchery'
+      profile.business_category = cleanValue(values[0]) || 'general-business'
       profile.display_name = cleanValue(values[1])
       profile.address = cleanValue(values[2])
       
-      // Location (split into city and province)
-      const location = cleanValue(values[3])
-      if (location && location.includes(',')) {
-        const parts = location.split(',').map(p => p.trim())
-        profile.city = parts[0]
-        profile.province = parts[1] || 'South Africa'
-      } else if (location) {
-        profile.city = location
-        profile.province = 'South Africa'
+      // Business location (use as-is, it should be a location slug like "johannesburg-gauteng")
+      const rawBusinessLocation = values[3]
+      const businessLocation = cleanValue(rawBusinessLocation)
+      profile.business_location = businessLocation || 'south-africa'
+      
+      console.log(`🔍 Business location processing for ${profile.display_name}:`, {
+        totalValues: values.length,
+        rawValue: rawBusinessLocation,
+        cleanedValue: businessLocation,
+        finalBusinessLocation: profile.business_location,
+        allValues: values
+      })
+      
+      // Extract city from business_location if possible (no province needed)
+      if (businessLocation && businessLocation.includes('-')) {
+        const parts = businessLocation.split('-')
+        profile.city = parts[0].replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+      } else if (businessLocation) {
+        profile.city = businessLocation.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
       }
       
       profile.website_url = cleanValue(values[4])
@@ -116,8 +121,8 @@ export async function parseBulkUploadCSV(csvText: string): Promise<ProfileData[]
         business_category: profile.business_category,
         display_name: profile.display_name,
         address: profile.address,
+        business_location: profile.business_location,
         city: profile.city,
-        province: profile.province,
         website_url: profile.website_url,
         phone_number: profile.phone_number,
         email: profile.email,
@@ -137,7 +142,7 @@ export async function parseBulkUploadCSV(csvText: string): Promise<ProfileData[]
           'display_name': 'display_name',
           'address': 'address', 
           'city': 'city',
-          'province': 'province',
+          'business_location': 'business_location',
           'website_url': 'website_url',
           'phone_number': 'phone_number',
           'email': 'email',
@@ -159,8 +164,8 @@ export async function parseBulkUploadCSV(csvText: string): Promise<ProfileData[]
           case 'city':
             profile.city = value
             break
-          case 'province':
-            profile.province = value
+          case 'business_location':
+            profile.business_location = value
             break
           case 'website_url':
             profile.website_url = value
@@ -178,12 +183,10 @@ export async function parseBulkUploadCSV(csvText: string): Promise<ProfileData[]
       })
     }
 
-    // Handle old format where city and province are separate
-    if (profile.city && profile.province) {
-      profile.business_location = generateLocationSlug(profile.city, profile.province)
-    } else if (profile.city) {
-      profile.business_location = generateLocationSlug(profile.city, 'South Africa')
-    } else {
+    // Handle old format where city is separate (no province needed)
+    if (profile.city && !profile.business_location) {
+      profile.business_location = generateLocationSlug(profile.city)
+    } else if (!profile.business_location) {
       profile.business_location = 'south-africa'
     }
 
@@ -205,7 +208,6 @@ export async function parseBulkUploadCSV(csvText: string): Promise<ProfileData[]
       display_name: profile.display_name,
       business_category: profile.business_category,
       city: profile.city,
-      province: profile.province,
       business_location: profile.business_location,
       facebook_url: profile.facebook_url,
       email: profile.email,

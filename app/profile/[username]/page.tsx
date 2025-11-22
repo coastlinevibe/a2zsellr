@@ -1511,6 +1511,16 @@ Best regards`
               </div>
             )}
             
+            {/* Location */}
+            {profile.business_location && (
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-100 rounded-[9px]">
+                  <MapPin className="h-4 w-4 text-orange-600" />
+                </div>
+                <span className="text-sm text-gray-700">{profile.business_location}</span>
+              </div>
+            )}
+            
             {/* Phone Number */}
             {profile.phone_number && (
               <div className="flex items-center gap-3">

@@ -13,7 +13,7 @@ export function BulkUploadManager() {
   const [showPreview, setShowPreview] = useState(false)
   const [selectedTier, setSelectedTier] = useState<'free' | 'premium' | 'business'>('premium')
   const [productImageAssignments, setProductImageAssignments] = useState<{[key: number]: File}>({})
-  const [galleryImage, setGalleryImage] = useState<File | null>(null)
+  const [galleryImages, setGalleryImages] = useState<File[]>([])
   const [defaultProducts, setDefaultProducts] = useState<any[]>([])
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,15 +75,17 @@ export function BulkUploadManager() {
     }
   }
 
-  const handleGalleryImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0]
-    if (selectedFile) {
-      setGalleryImage(selectedFile)
+  const handleGalleryImagesSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(event.target.files || [])
+    if (selectedFiles.length > 0) {
+      // Limit to 6 images
+      const limitedFiles = selectedFiles.slice(0, 6)
+      setGalleryImages(limitedFiles)
     }
   }
 
   const handlePreview = async () => {
-    if (!file || Object.keys(productImageAssignments).length !== 10 || !galleryImage) return
+    if (!file || Object.keys(productImageAssignments).length !== 10 || galleryImages.length === 0) return
     
     setUploading(true)
     setResults(null)
@@ -99,8 +101,11 @@ export function BulkUploadManager() {
         }
       }
       
-      // Add gallery image
-      formData.append('galleryImage', galleryImage)
+      // Add gallery images
+      galleryImages.forEach((image, index) => {
+        formData.append(`galleryImage${index}`, image)
+      })
+      formData.append('galleryImageCount', galleryImages.length.toString())
       
       const response = await fetch('/api/admin/bulk-upload/preview', {
         method: 'POST',
@@ -132,7 +137,7 @@ export function BulkUploadManager() {
   }
 
   const handleConfirmUpload = async () => {
-    if (!file || Object.keys(productImageAssignments).length !== 10 || !galleryImage) return
+    if (!file || Object.keys(productImageAssignments).length !== 10 || galleryImages.length === 0) return
     
     setUploading(true)
     setResults(null)
@@ -150,8 +155,11 @@ export function BulkUploadManager() {
         }
       }
       
-      // Add gallery image
-      formData.append('galleryImage', galleryImage)
+      // Add gallery images
+      galleryImages.forEach((image, index) => {
+        formData.append(`galleryImage${index}`, image)
+      })
+      formData.append('galleryImageCount', galleryImages.length.toString())
       
       const response = await fetch('/api/admin/bulk-upload', {
         method: 'POST',
@@ -231,11 +239,14 @@ export function BulkUploadManager() {
         
         {/* CSV Format Info */}
         <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4 mb-4">
-          <h4 className="font-black text-green-800 mb-2">📋 SUPPORTED CSV FORMATS</h4>
+          <h4 className="font-black text-green-800 mb-2">📋 STANDARD CSV FORMAT (FIXED)</h4>
           <div className="text-sm text-green-700">
-            <p><strong>Required columns:</strong> Keyword, Company Name, Address, Location, Website, Contact No, Email, Facebook Page URL</p>
-            <p><strong>Alternative format:</strong> display_name, address, city, province, website_url, phone_number, email, business_category</p>
-            <p><strong>Separators:</strong> Comma (,), Semicolon (;), or Tab supported</p>
+            <p><strong>Required columns (in exact order):</strong></p>
+            <p className="font-mono bg-white p-2 rounded border mt-1">
+              business_category, display_name, address, business_location, website_url, phone_number, email, facebook
+            </p>
+            <p className="mt-2"><strong>Separators:</strong> Comma (,), Semicolon (;), or Tab supported</p>
+            <p><strong>Note:</strong> This format will never change - use exactly as shown above</p>
           </div>
         </div>
 
@@ -334,35 +345,43 @@ export function BulkUploadManager() {
             </div>
           )}
 
-          {/* Gallery Image Upload */}
+          {/* Gallery Images Upload */}
           <div className="border-4 border-dashed border-blue-500 rounded-xl p-6">
-            <h4 className="text-xl font-black text-black mb-4 uppercase">🖼️ GALLERY IMAGE (1 Required)</h4>
+            <h4 className="text-xl font-black text-black mb-4 uppercase">🖼️ GALLERY IMAGES (1-6 Required)</h4>
             <input
               type="file"
               accept="image/*"
-              onChange={handleGalleryImageSelect}
+              multiple
+              onChange={handleGalleryImagesSelect}
               className="hidden"
-              id="gallery-image-upload"
+              id="gallery-images-upload"
             />
-            <label htmlFor="gallery-image-upload" className="cursor-pointer block">
+            <label htmlFor="gallery-images-upload" className="cursor-pointer block">
               <div className="text-center">
                 <svg className="w-12 h-12 text-blue-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <p className="text-lg font-bold text-black">
-                  {galleryImage ? galleryImage.name : 'Select Gallery Image'}
+                  {galleryImages.length > 0 ? `${galleryImages.length} Gallery Images Selected` : 'Select Gallery Images (1-6)'}
                 </p>
-                <p className="text-gray-600">This image will be added to all profiles' galleries</p>
+                <p className="text-gray-600">Each profile will get a random image from this collection</p>
               </div>
             </label>
             
-            {galleryImage && (
-              <div className="mt-4 flex justify-center">
-                <img 
-                  src={URL.createObjectURL(galleryImage)} 
-                  alt="Gallery preview"
-                  className="w-32 h-24 object-cover rounded border-2 border-black"
-                />
+            {galleryImages.length > 0 && (
+              <div className="mt-4 grid grid-cols-3 gap-4">
+                {galleryImages.map((image, index) => (
+                  <div key={index} className="relative">
+                    <img 
+                      src={URL.createObjectURL(image)} 
+                      alt={`Gallery ${index + 1}`}
+                      className="w-full h-24 object-cover rounded border-2 border-black"
+                    />
+                    <div className="absolute top-1 right-1 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                      {index + 1}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -371,14 +390,14 @@ export function BulkUploadManager() {
           {file && !showPreview && (
             <motion.button
               onClick={handlePreview}
-              disabled={uploading || Object.keys(productImageAssignments).length !== 10 || !galleryImage}
+              disabled={uploading || Object.keys(productImageAssignments).length !== 10 || galleryImages.length === 0}
               className={`w-full px-8 py-4 rounded-xl border-4 border-black font-black text-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] ${
-                Object.keys(productImageAssignments).length === 10 && galleryImage 
+                Object.keys(productImageAssignments).length === 10 && galleryImages.length > 0 
                   ? 'bg-blue-600 hover:bg-blue-700 text-white' 
                   : 'bg-gray-400 text-gray-600 cursor-not-allowed'
               }`}
-              whileHover={{ scale: (uploading || Object.keys(productImageAssignments).length !== 10 || !galleryImage) ? 1 : 1.02 }}
-              whileTap={{ scale: (uploading || Object.keys(productImageAssignments).length !== 10 || !galleryImage) ? 1 : 0.98 }}
+              whileHover={{ scale: (uploading || Object.keys(productImageAssignments).length !== 10 || galleryImages.length === 0) ? 1 : 1.02 }}
+              whileTap={{ scale: (uploading || Object.keys(productImageAssignments).length !== 10 || galleryImages.length === 0) ? 1 : 0.98 }}
             >
               {uploading ? (
                 <>
@@ -390,10 +409,10 @@ export function BulkUploadManager() {
                   <FileText className="w-6 h-6 inline-block mr-3" />
                   ASSIGN {10 - Object.keys(productImageAssignments).length} MORE PRODUCT IMAGES
                 </>
-              ) : !galleryImage ? (
+              ) : galleryImages.length === 0 ? (
                 <>
                   <FileText className="w-6 h-6 inline-block mr-3" />
-                  NEED GALLERY IMAGE
+                  NEED GALLERY IMAGES (1-6)
                 </>
               ) : (
                 <>
@@ -453,8 +472,7 @@ export function BulkUploadManager() {
                   <th className="text-left font-black p-2 whitespace-nowrap">Email</th>
                   <th className="text-left font-black p-2 whitespace-nowrap">Phone</th>
                   <th className="text-left font-black p-2 whitespace-nowrap">Address</th>
-                  <th className="text-left font-black p-2 whitespace-nowrap">City</th>
-                  <th className="text-left font-black p-2 whitespace-nowrap">Province</th>
+                  <th className="text-left font-black p-2 whitespace-nowrap">Business Location</th>
                   <th className="text-left font-black p-2 whitespace-nowrap">Website</th>
                   <th className="text-left font-black p-2 whitespace-nowrap">Category</th>
                   <th className="text-left font-black p-2 whitespace-nowrap">Facebook</th>
@@ -467,8 +485,7 @@ export function BulkUploadManager() {
                     <td className="p-2 text-xs">{profile.email || 'Auto-generated'}</td>
                     <td className="p-2">{profile.phone_number || '+27 81 234 5678'}</td>
                     <td className="p-2 text-xs max-w-xs truncate" title={profile.address}>{profile.address || 'N/A'}</td>
-                    <td className="p-2">{profile.city || 'N/A'}</td>
-                    <td className="p-2">{profile.province || 'N/A'}</td>
+                    <td className="p-2">{profile.business_location || 'N/A'}</td>
                     <td className="p-2 text-xs max-w-xs truncate" title={profile.website_url}>{profile.website_url || 'Auto-generated'}</td>
                     <td className="p-2">
                       <span className="bg-blue-100 px-2 py-1 rounded border border-blue-300 text-xs font-bold">
@@ -516,16 +533,24 @@ export function BulkUploadManager() {
               </div>
             </div>
 
-            {/* Gallery Image */}
+            {/* Gallery Images */}
             <div>
-              <h5 className="font-bold text-black mb-2">Gallery Image (1):</h5>
-              {galleryImage && (
-                <img 
-                  src={URL.createObjectURL(galleryImage)} 
-                  alt="Gallery"
-                  className="w-32 h-24 object-cover rounded border-2 border-black"
-                />
-              )}
+              <h5 className="font-bold text-black mb-2">Gallery Images ({galleryImages.length}):</h5>
+              <div className="grid grid-cols-3 gap-2">
+                {galleryImages.map((image, index) => (
+                  <div key={index} className="relative">
+                    <img 
+                      src={URL.createObjectURL(image)} 
+                      alt={`Gallery ${index + 1}`}
+                      className="w-full h-16 object-cover rounded border-2 border-black"
+                    />
+                    <div className="absolute top-1 right-1 bg-blue-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs font-bold">
+                      {index + 1}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-600 mt-2">Each profile will randomly get one of these images</p>
             </div>
           </div>
 

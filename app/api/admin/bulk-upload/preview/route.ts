@@ -49,8 +49,7 @@ export async function POST(request: NextRequest) {
           email: profile.email,
           phone_number: profile.phone_number,
           address: profile.address,
-          city: profile.city,
-          province: profile.province,
+          business_location: profile.business_location,
           website_url: profile.website_url,
           business_category: profile.business_category,
           facebook_url: profile.facebook_url

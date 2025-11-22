@@ -44,7 +44,7 @@ const defaultProductsByCategory: CategoryProducts = {
       image_url: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=400&h=400&fit=crop&crop=center'
     },
     {
-      name: 'Mince Beef 500g',
+      name: 'Beef Mince 500g',
       description: 'Fresh ground beef',
       price_cents: 4000, // R40.00
       details: 'Lean mince, daily fresh preparation',

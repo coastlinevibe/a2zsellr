@@ -50,7 +50,15 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    const galleryImage = formData.get('galleryImage') as File
+    // Get gallery images
+    const galleryImageCount = parseInt(formData.get('galleryImageCount') as string) || 0
+    const galleryImages: File[] = []
+    for (let i = 0; i < galleryImageCount; i++) {
+      const image = formData.get(`galleryImage${i}`) as File
+      if (image) {
+        galleryImages.push(image)
+      }
+    }
 
     if (productImages.length !== 10) {
       return NextResponse.json(
@@ -59,16 +67,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!galleryImage) {
+    if (galleryImages.length === 0) {
       return NextResponse.json(
-        { error: 'Gallery image is required' },
+        { error: 'At least 1 gallery image is required' },
+        { status: 400 }
+      )
+    }
+
+    if (galleryImages.length > 6) {
+      return NextResponse.json(
+        { error: 'Maximum 6 gallery images allowed' },
         { status: 400 }
       )
     }
 
     console.log(`📊 Bulk upload with tier: ${tier}`)
     console.log(`📸 Product images: ${productImages.length}`)
-    console.log(`🖼️ Gallery image: ${galleryImage.name}`)
+    console.log(`🖼️ Gallery images: ${galleryImages.length}`)
     console.log(`🔑 Service role key available: ${!!process.env.SUPABASE_SERVICE_ROLE_KEY}`)
     console.log(`🌐 Supabase URL: ${process.env.NEXT_PUBLIC_SUPABASE_URL}`)
 
@@ -236,45 +251,52 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Upload gallery image (using same pattern as normal user uploads)
-    const galleryFileName = `bulk-upload/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${galleryImage.name.split('.').pop()}`
-    let galleryImageUrl = ''
+    // Upload gallery images (using same pattern as normal user uploads)
+    const uploadedGalleryImages: string[] = []
     
-    try {
-      console.log(`🖼️ Uploading gallery image: ${galleryFileName} (${galleryImage.size} bytes)`)
+    for (let i = 0; i < galleryImages.length; i++) {
+      const galleryImage = galleryImages[i]
+      const galleryFileName = `bulk-upload/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${galleryImage.name.split('.').pop()}`
       
-      const { data: galleryUploadData, error: galleryUploadError } = await supabaseAdmin.storage
-        .from('gallery')
-        .upload(galleryFileName, galleryImage, {
-          contentType: galleryImage.type,
-          upsert: false
-        })
+      try {
+        console.log(`🖼️ Uploading gallery image ${i + 1}: ${galleryFileName} (${galleryImage.size} bytes)`)
+        
+        const { data: galleryUploadData, error: galleryUploadError } = await supabaseAdmin.storage
+          .from('gallery')
+          .upload(galleryFileName, galleryImage, {
+            cacheControl: '3600',
+            upsert: false
+          })
 
-      if (galleryUploadError) {
-        console.error('❌ Failed to upload gallery image:', galleryUploadError)
-        console.error('Gallery upload error details:', JSON.stringify(galleryUploadError, null, 2))
+        if (galleryUploadError) {
+          console.error(`❌ Failed to upload gallery image ${i + 1}:`, galleryUploadError)
+          return NextResponse.json(
+            { error: `Failed to upload gallery image ${i + 1}`, details: galleryUploadError.message },
+            { status: 500 }
+          )
+        }
+
+        if (!galleryUploadData || !galleryUploadData.path) {
+          console.error(`❌ No upload data returned for gallery image ${i + 1}`)
+          return NextResponse.json(
+            { error: `No upload data returned for gallery image ${i + 1}`, details: 'Upload succeeded but no path returned' },
+            { status: 500 }
+          )
+        }
+
+        const { data: { publicUrl } } = supabaseAdmin.storage
+          .from('gallery')
+          .getPublicUrl(galleryFileName)
+        
+        uploadedGalleryImages.push(publicUrl)
+        console.log(`✅ Uploaded gallery image ${i + 1}: ${galleryFileName} -> ${publicUrl}`)
+      } catch (error) {
+        console.error(`❌ Exception uploading gallery image ${i + 1}:`, error)
         return NextResponse.json(
-          { error: 'Failed to upload gallery image', details: galleryUploadError.message || JSON.stringify(galleryUploadError) },
+          { error: `Exception uploading gallery image ${i + 1}`, details: error instanceof Error ? error.message : 'Unknown error' },
           { status: 500 }
         )
       }
-
-      if (!galleryUploadData || !galleryUploadData.path) {
-        console.error('❌ No upload data returned for gallery image')
-        return NextResponse.json(
-          { error: 'No upload data returned for gallery image', details: 'Upload succeeded but no path returned' },
-          { status: 500 }
-        )
-      }
-
-      galleryImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/gallery/${galleryUploadData.path}`
-      console.log(`✅ Uploaded gallery image: ${galleryFileName} -> ${galleryImageUrl}`)
-    } catch (error) {
-      console.error('❌ Exception uploading gallery image:', error)
-      return NextResponse.json(
-        { error: 'Exception uploading gallery image', details: error instanceof Error ? error.message : 'Unknown error' },
-        { status: 500 }
-      )
     }
 
     // STEP 2: Create auth users FIRST to get their IDs
@@ -292,8 +314,11 @@ export async function POST(request: NextRequest) {
       // Generate default website if missing
       const defaultWebsite = profile.website_url || `https://www.${profile.display_name.toLowerCase().replace(/[^a-z0-9]/g, '')}.co.za`
       
-      // Generate default bio/address if missing
-      const defaultBio = profile.address || `Located in ${profile.city || profile.business_location || 'South Africa'}. Providing quality ${profile.business_category.toLowerCase()} services to our community.`
+      // Generate default bio if missing
+      const defaultBio = `Located in ${profile.city || profile.business_location || 'South Africa'}. Providing quality ${profile.business_category.toLowerCase()} services to our community.`
+      
+      // Use address from CSV for address field
+      const profileAddress = profile.address || ''
       
       try {
         console.log(`🔐 Creating auth for user: ${profile.display_name} (${defaultEmail})`)
@@ -394,15 +419,23 @@ export async function POST(request: NextRequest) {
         }
 
         // STEP 2: Prepare profile with the auth user's ID
+        const finalBusinessLocation = profile.business_location || 'south-africa'
+        
+        console.log(`🔍 Profile ${profile.display_name} business_location:`, {
+          originalBusinessLocation: profile.business_location,
+          finalBusinessLocation: finalBusinessLocation
+        })
+        
         profilesToInsert.push({
           id: authData.user.id, // Use the auth user's ID as the profile ID
           display_name: profile.display_name,
           email: defaultEmail,
           bio: defaultBio,
+          address: profileAddress, // CSV address goes to address column
           phone_number: defaultPhone,
           website_url: defaultWebsite,
           business_category: profile.business_category,
-          business_location: profile.business_location || 'south-africa',
+          business_location: finalBusinessLocation,
           business_hours: 'Mon-Fri: 8:00 AM - 5:00 PM, Sat: 9:00 AM - 2:00 PM',
           avatar_url: generateDefaultAvatar(profile.display_name),
           subscription_tier: tier as 'free' | 'premium' | 'business',
@@ -613,11 +646,15 @@ export async function POST(request: NextRequest) {
       
       console.log(`🖼️ Creating gallery image for profile: ${profile.display_name}`)
       
-      console.log(`🖼️ Gallery image URL: ${galleryImageUrl}`)
+      // Randomly select one of the uploaded gallery images
+      const randomImageIndex = Math.floor(Math.random() * uploadedGalleryImages.length)
+      const selectedGalleryImageUrl = uploadedGalleryImages[randomImageIndex]
+      
+      console.log(`🖼️ Selected gallery image ${randomImageIndex + 1} for ${profile.display_name}: ${selectedGalleryImageUrl}`)
       
       const galleryItem = {
         profile_id: profile.id,
-        image_url: galleryImageUrl,
+        image_url: selectedGalleryImageUrl,
         caption: `${profile.display_name} - ${originalProfile.business_category}`
       }
       
