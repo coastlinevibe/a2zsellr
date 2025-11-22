@@ -138,6 +138,7 @@ export default function ProfilePage() {
   const [reviewText, setReviewText] = useState('')
   const [submittingReview, setSubmittingReview] = useState(false)
   const [reviews, setReviews] = useState<any[]>([])
+  const [showTierTooltip, setShowTierTooltip] = useState(false)
 
   const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 })
 
@@ -834,14 +835,33 @@ Best regards`
                   {profile.display_name}
                 </h1>
                 
-                {/* Business Tier Badge - Mobile (closer to name) */}
-                <div className="flex-shrink-0">
-                  <Badge className={`${tierBadge.className} text-xs`}>
-                    {profile.subscription_tier === 'free' && <Zap className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
-                    {profile.subscription_tier === 'premium' && <Sword className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
-                    {profile.subscription_tier === 'business' && <Crown className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
-                    {tierBadge.text}
-                  </Badge>
+                {/* Business Tier Badge - Mobile (icon only with tooltip) */}
+                <div className="flex-shrink-0 relative">
+                  <div 
+                    className={`w-6 h-6 rounded-full flex items-center justify-center shadow-lg border cursor-pointer transition-transform hover:scale-110 ${
+                      profile.subscription_tier === 'free' 
+                        ? 'bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 border-gray-300' 
+                        : profile.subscription_tier === 'premium'
+                        ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 border-amber-300'
+                        : 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 border-blue-400'
+                    }`}
+                    onClick={() => setShowTierTooltip(!showTierTooltip)}
+                    onMouseEnter={() => setShowTierTooltip(true)}
+                    onMouseLeave={() => setShowTierTooltip(false)}
+                  >
+                    {profile.subscription_tier === 'free' && <Zap className="h-3 w-3 text-white drop-shadow-sm" />}
+                    {profile.subscription_tier === 'premium' && <Sword className="h-3 w-3 text-white drop-shadow-sm" />}
+                    {profile.subscription_tier === 'business' && <Crown className="h-3 w-3 text-white drop-shadow-sm" />}
+                  </div>
+                  
+                  {/* Tooltip */}
+                  {showTierTooltip && (
+                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
+                      {profile.subscription_tier === 'free' ? 'Free user' : 
+                       profile.subscription_tier === 'premium' ? 'Premium user' : 'Business user'}
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+                    </div>
+                  )}
                 </div>
               </div>
               
