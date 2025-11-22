@@ -166,13 +166,13 @@ export async function POST(request: NextRequest) {
       }
       
       const { data: galleryBucketFiles, error: galleryBucketError } = await supabaseAdmin.storage
-        .from('sharelinks')
+        .from('gallery')
         .list('', { limit: 1 })
       
       if (galleryBucketError) {
-        console.error('❌ Cannot access sharelinks bucket:', galleryBucketError)
+        console.error('❌ Cannot access gallery bucket:', galleryBucketError)
         return NextResponse.json(
-          { error: 'Cannot access sharelinks storage bucket', details: galleryBucketError.message },
+          { error: 'Cannot access gallery storage bucket', details: galleryBucketError.message },
           { status: 500 }
         )
       }
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
     // Upload product images
     for (let i = 0; i < productImages.length; i++) {
       const image = productImages[i]
-      const fileName = `bulk-upload-product-${i + 1}-${Date.now()}.${image.name.split('.').pop()}`
+      const fileName = `bulk-upload/${Date.now()}-${Math.random().toString(36).substring(7)}.${image.name.split('.').pop()}`
       
       try {
         console.log(`📸 Uploading product image ${i + 1}: ${fileName} (${image.size} bytes)`)
@@ -199,7 +199,7 @@ export async function POST(request: NextRequest) {
         const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
           .from('product-images')
           .upload(fileName, image, {
-            contentType: image.type,
+            cacheControl: '3600',
             upsert: false
           })
 
@@ -220,7 +220,11 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/${uploadData.path}`
+        const { data: { publicUrl } } = supabaseAdmin.storage
+          .from('product-images')
+          .getPublicUrl(fileName)
+        
+        const imageUrl = publicUrl
         uploadedProductImages.push(imageUrl)
         console.log(`✅ Uploaded product image ${i + 1}: ${fileName} -> ${imageUrl}`)
       } catch (error) {
@@ -232,15 +236,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Upload gallery image
-    const galleryFileName = `bulk-upload-gallery-${Date.now()}.${galleryImage.name.split('.').pop()}`
+    // Upload gallery image (using same pattern as normal user uploads)
+    const galleryFileName = `bulk-upload/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${galleryImage.name.split('.').pop()}`
     let galleryImageUrl = ''
     
     try {
       console.log(`🖼️ Uploading gallery image: ${galleryFileName} (${galleryImage.size} bytes)`)
       
       const { data: galleryUploadData, error: galleryUploadError } = await supabaseAdmin.storage
-        .from('sharelinks')
+        .from('gallery')
         .upload(galleryFileName, galleryImage, {
           contentType: galleryImage.type,
           upsert: false
@@ -263,7 +267,7 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      galleryImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/sharelinks/${galleryUploadData.path}`
+      galleryImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/gallery/${galleryUploadData.path}`
       console.log(`✅ Uploaded gallery image: ${galleryFileName} -> ${galleryImageUrl}`)
     } catch (error) {
       console.error('❌ Exception uploading gallery image:', error)
@@ -612,14 +616,9 @@ export async function POST(request: NextRequest) {
       console.log(`🖼️ Gallery image URL: ${galleryImageUrl}`)
       
       const galleryItem = {
-        id: crypto.randomUUID(),
         profile_id: profile.id,
         image_url: galleryImageUrl,
-        caption: `${profile.display_name} - ${originalProfile.business_category}`,
-        sort_order: 0,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        caption: `${profile.display_name} - ${originalProfile.business_category}`
       }
       
       allGalleryItems.push(galleryItem)
