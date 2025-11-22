@@ -818,8 +818,156 @@ Best regards`
       {/* Business Info Card - Header */}
       <div className="relative bg-white border-b border-gray-100">
         <div className="px-4 max-w-7xl mx-auto py-3">
-          {/* Header Row: Avatar, Name, Badges, Info, Buttons, Cart */}
-          <div className="flex items-center gap-3 justify-between">
+          {/* Mobile Layout */}
+          <div className="block md:hidden">
+            {/* Top Row: Avatar + Name + Business Tier */}
+            <div className="flex items-center gap-3 justify-between mb-2">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                {profile.avatar_url && (
+                  <img 
+                    src={profile.avatar_url} 
+                    alt={profile.display_name} 
+                    className="w-10 h-10 rounded-lg object-cover border border-gray-200 flex-shrink-0"
+                  />
+                )}
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-base font-bold text-gray-900 truncate">
+                    {profile.display_name}
+                  </h1>
+                </div>
+              </div>
+              
+              {/* Business Tier Badge - Mobile */}
+              <div className="flex-shrink-0">
+                <Badge className={`${tierBadge.className} text-xs`}>
+                  {profile.subscription_tier !== 'free' && <Crown className="h-2.5 w-2.5 mr-0.5" />}
+                  {tierBadge.text}
+                </Badge>
+              </div>
+            </div>
+            
+            {/* Second Row: Verified Badge (if exists) */}
+            {profile.verified_seller && (
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className="bg-blue-100 text-blue-700 text-xs">
+                  <Star className="h-2.5 w-2.5 mr-0.5" fill="currentColor" />
+                  Verified
+                </Badge>
+              </div>
+            )}
+            
+            {/* Third Row: Info Line */}
+            <div className="flex items-center gap-2 flex-wrap text-gray-600 text-sm mb-3">
+              {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className={`w-2.5 h-2.5 ${i < Math.round(reviewStats.averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                  ))}
+                  <span className="font-medium">{reviewStats.totalReviews > 0 ? `${reviewStats.averageRating}` : 'N/A'}</span>
+                </div>
+              )}
+              {profile.business_category && (
+                <>
+                  {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
+                    <span className="text-gray-400">•</span>
+                  )}
+                  <span className="truncate">{profile.business_category}</span>
+                </>
+              )}
+              <span className="text-gray-400">•</span>
+              <div className="flex items-center gap-1">
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                <span className="text-green-600 font-medium">Open</span>
+              </div>
+            </div>
+            
+            {/* Fourth Row: Action Buttons + Cart */}
+            <div className="flex items-center gap-2">
+              {profile.phone_number && (
+                <button 
+                  className="p-2.5 bg-emerald-50 text-emerald-700 rounded-lg transition-colors hover:bg-emerald-100"
+                  onClick={() => {
+                    const phoneNumber = profile.phone_number?.replace(/\D/g, '')
+                    const message = `Hi ${profile.display_name}, I found your profile on A2Z Business Directory and would like to get in touch!`
+                    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+                    window.open(whatsappUrl, '_blank')
+                  }}
+                  title="Chat"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                </button>
+              )}
+              
+              {profile.address && (
+                <button 
+                  className="p-2.5 bg-gray-50 text-gray-700 rounded-lg transition-colors hover:bg-gray-100"
+                  onClick={() => {
+                    const addressQuery = profile.address || ''
+                    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`
+                    window.open(mapsUrl, '_blank')
+                  }}
+                  title="Directions"
+                >
+                  <MapPin className="w-4 h-4" />
+                </button>
+              )}
+              
+              <button 
+                className="p-2.5 bg-gray-50 text-gray-700 rounded-lg transition-colors hover:bg-gray-100"
+                onClick={() => {
+                  const shareUrl = createProfileUrl(profile.display_name)
+                  const shareText = `Check out ${profile.display_name}'s business profile on A2Z Business Directory!`
+                  
+                  if (navigator.share) {
+                    navigator.share({
+                      title: `${profile.display_name} - A2Z Business Directory`,
+                      text: shareText,
+                      url: shareUrl,
+                    }).catch(console.error)
+                  } else {
+                    navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
+                      alert('Profile link copied to clipboard!')
+                    }).catch(() => {
+                      prompt('Copy this link to share:', shareUrl)
+                    })
+                  }
+                }}
+                title="Share"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+              
+              {profile.website_url && (
+                <button 
+                  className="p-2.5 bg-gray-50 text-gray-700 rounded-lg transition-colors hover:bg-gray-100"
+                  onClick={() => window.open(ensureAbsoluteUrl(profile.website_url), '_blank')}
+                  title="Website"
+                >
+                  <Globe className="w-4 h-4" />
+                </button>
+              )}
+
+              {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
+                <button 
+                  className="p-2.5 bg-gray-50 text-gray-700 rounded-lg transition-colors hover:bg-gray-100"
+                  onClick={() => setShowReviewModal(true)}
+                  title="Leave A Review"
+                >
+                  <Star className="w-4 h-4" />
+                </button>
+              )}
+              
+              {/* Cart Button - Mobile */}
+              {profile.subscription_tier !== 'free' && (
+                <div className="ml-auto">
+                  <CartButton />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden md:flex items-center gap-3 justify-between">
             {/* Left: Avatar + Name + Badges */}
             <div className="flex items-center gap-3 min-w-0 flex-1">
               {profile.avatar_url && (
