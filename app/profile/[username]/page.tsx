@@ -2127,20 +2127,20 @@ Best regards`
                           <div className="flex gap-3">
                             <button 
                               onClick={() => selectedProduct && handleAddToCart(selectedProduct)}
-                              className="w-1/2 bg-emerald-600 text-white py-3 px-6 rounded-[9px] hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 font-semibold"
+                              className="flex-1 bg-emerald-600 text-white py-3 px-6 rounded-[9px] hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 font-semibold text-sm md:text-base"
                             >
                               <ShoppingBag className="w-5 h-5" />
                               Add to Cart
                             </button>
 
                             {/* Secondary Contact Button for Premium/Business */}
-                            <div className="relative w-1/2">
+                            <div className="relative flex-shrink-0">
                               <button 
                                 onClick={handleContactSeller}
-                                className="w-full bg-gray-600 text-white py-3 px-6 rounded-[9px] hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 font-semibold"
+                                className="w-full bg-gray-600 text-white py-3 px-6 rounded-[9px] hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 font-semibold text-sm md:text-base"
                               >
                                 <MessageCircle className="w-5 h-5" />
-                                Contact Seller
+                                Chat
                               </button>
                               
                               {showContactOptions && (
@@ -2169,10 +2169,10 @@ Best regards`
                         <div className="relative">
                           <button 
                             onClick={handleContactSeller}
-                            className="w-full bg-emerald-600 text-white py-3 px-6 rounded-[9px] hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                            className="w-full bg-emerald-600 text-white py-3 px-6 rounded-[9px] hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
                           >
                             <MessageCircle className="w-5 h-5" />
-                            Contact Seller
+                            Chat
                           </button>
                           
                           {showContactOptions && (
