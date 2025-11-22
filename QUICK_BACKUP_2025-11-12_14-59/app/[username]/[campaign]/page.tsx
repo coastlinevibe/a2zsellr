@@ -561,6 +561,7 @@ export default function CampaignPage({ params }: CampaignPageProps) {
               onChatWithSeller={handleContactShop}
               onViewMenuPopup={() => console.log('Menu popup clicked - backup file')}
               onNewProductsPopup={() => console.log('Products popup clicked - backup file')}
+              onUpgrade={() => console.log('Upgrade clicked - backup file')}
               businessName={profile.display_name}
               listingTitle={listing.title}
             />
