@@ -25,7 +25,7 @@ interface ImageUploadGalleryProps {
 const TIER_LIMITS = {
   free: 3,
   premium: 8,
-  business: 999 // Effectively unlimited
+  business: 12 // Limited to 12 images
 }
 
 const TIER_FEATURES = {

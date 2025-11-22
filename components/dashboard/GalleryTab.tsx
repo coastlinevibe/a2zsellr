@@ -69,7 +69,7 @@ export function GalleryTab({
       const tierLimits = {
         free: 3,
         premium: 8,
-        business: 999 // Effectively unlimited
+        business: 12 // Limited to 12 images
       }
       
       const currentLimit = tierLimits[userTier]
@@ -156,7 +156,7 @@ export function GalleryTab({
   const tierLimits = {
     free: 3,
     premium: 8,
-    business: 999
+    business: 12
   }
   const currentLimit = tierLimits[userTier]
   const isAtLimit = images.length >= currentLimit && (userTier === 'free' || userTier === 'premium')

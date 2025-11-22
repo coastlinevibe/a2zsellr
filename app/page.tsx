@@ -1160,35 +1160,32 @@ export default function HomePage() {
                   </motion.h3>
                 </div>
 
-                {/* Desktop: Businesses + Found Count */}
-                <div className="hidden md:flex md:items-center gap-3">
-                  <motion.h3 
-                    className="text-2xl font-black text-black bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] inline-block"
-                    initial={{ x: -50, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.6 }}
-                  >
-                    BUSINESSES
-                  </motion.h3>
-                  
-                  {/* Found Count */}
-                  <div className="flex flex-col items-start gap-2">
-                    <p className="text-black text-lg bg-green-300 px-4 py-2 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold inline-block">
-                      FOUND {businesses.length}
-                    </p>
-                    {searchResults.tagMatches > 0 && (
-                      <span className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full border-2 border-blue-500 font-bold text-sm">
-                        <Tag className="h-4 w-4" />
-                        {searchResults.tagMatches} found by tags
-                      </span>
-                    )}
+                {/* Centered: Businesses Found Count */}
+                <div className="hidden md:flex md:justify-center md:items-center w-full">
+                  <div className="flex items-center gap-3">
+                    <motion.h3 
+                      className="text-2xl font-black text-black bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] inline-block"
+                      initial={{ x: -50, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ duration: 0.6 }}
+                    >
+                      BUSINESSES
+                    </motion.h3>
+                    
+                    {/* Found Count */}
+                    <div className="flex flex-col items-start gap-2">
+                      <p className="text-black text-lg bg-green-300 px-4 py-2 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold inline-block">
+                        FOUND {businesses.length}
+                      </p>
+                      {searchResults.tagMatches > 0 && (
+                        <span className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full border-2 border-blue-500 font-bold text-sm">
+                          <Tag className="h-4 w-4" />
+                          {searchResults.tagMatches} found by tags
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                
-                {/* Premium Directory - Center (Large) - Hidden on mobile */}
-                <h2 className="hidden md:block text-4xl font-black text-black bg-white p-6 rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)]">
-                  PREMIUM DIRECTORY
-                </h2>
               </div>
               
               {/* Carousel Container with Side Navigation */}

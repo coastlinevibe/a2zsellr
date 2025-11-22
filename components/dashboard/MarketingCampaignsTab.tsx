@@ -263,7 +263,7 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
   const TIER_LIMITS = {
     free: 3,
     premium: 999,
-    business: 999
+    business: 12
   }
   const currentLimit = TIER_LIMITS[userTier]
   const isAtLimit = listings.length >= currentLimit && userTier === 'free'

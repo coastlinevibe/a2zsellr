@@ -320,7 +320,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
     const tierMediaLimits = {
       free: 3,
       premium: 8,
-      business: 999
+      business: 12
     }
     const LISTING_MEDIA_LIMIT = tierMediaLimits[userTier as keyof typeof tierMediaLimits] || 3
 
