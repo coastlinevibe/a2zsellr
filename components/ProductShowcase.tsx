@@ -238,14 +238,15 @@ export function ProductShowcase() {
         <div className="flex gap-3">
           {/* Compact Product Image */}
           <div className="relative flex-shrink-0">
-            <div className="w-24 h-24 bg-white rounded-lg border-2 border-black overflow-hidden shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+            <div className="w-24 h-24 bg-white rounded-lg border-2 border-black overflow-hidden shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)] relative">
               {currentProduct.image_url && currentProduct.image_url.trim() !== '' ? (
                 <Image
                   src={currentProduct.image_url}
                   alt={currentProduct.name}
-                  fill
-                  className="object-cover"
-                  sizes="80px"
+                  width={96}
+                  height={96}
+                  className="object-cover w-full h-full"
+                  sizes="96px"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none'
                   }}

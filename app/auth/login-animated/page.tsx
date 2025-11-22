@@ -157,14 +157,7 @@ export default function LoginPage() {
               <h1 className="text-3xl font-black uppercase">WELCOME BACK!</h1>
               <p className="text-sm font-bold mt-1">ACCESS YOUR SELLER DASHBOARD</p>
             </motion.div>
-            <motion.p 
-              className="text-black font-bold text-sm bg-yellow-300 p-3 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-            >
-              🚀 GROW YOUR ONLINE SALES WITH A2Z SELLR! 🚀
-            </motion.p>
+
           </div>
 
           {/* Error Message */}
@@ -254,10 +247,10 @@ export default function LoginPage() {
                 style={{
                   background: '#5cbdfd',
                   fontFamily: 'inherit',
-                  padding: '0.6em 1.3em',
-                  fontWeight: 900,
-                  fontSize: '18px',
-                  border: '3px solid black',
+                  padding: '0.6em 1em',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  border: '2px solid black',
                   borderRadius: '0.4em',
                   boxShadow: '0.1em 0.1em',
                   cursor: loading ? 'not-allowed' : 'pointer',
@@ -266,7 +259,7 @@ export default function LoginPage() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.5em'
+                  gap: '0.3em'
                 }}
                 onMouseEnter={(e) => {
                   if (!loading) {
