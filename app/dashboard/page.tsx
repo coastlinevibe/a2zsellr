@@ -69,6 +69,8 @@ interface UserProfile {
   bio: string | null
   phone_number: string | null
   website_url: string | null
+  address: string | null
+  business_hours: any
   is_admin: boolean
   created_at?: string
 }
