@@ -147,6 +147,26 @@ export default function ProfilePage() {
   // Cart functionality
   const { addItem, isInCart, getCartItem } = useCart()
 
+  // Helper function to check business hours before actions
+  const checkBusinessHoursBeforeAction = (action: () => void) => {
+    if (!profile?.business_hours) {
+      action()
+      return
+    }
+    
+    const businessStatus = isBusinessOpen(profile.business_hours)
+    if (businessStatus.isOpen) {
+      action()
+    } else {
+      const nextOpening = getNextOpeningTime(profile.business_hours)
+      const message = nextOpening 
+        ? `We're currently closed. We'll be open ${nextOpening}.`
+        : "We're currently closed. Please check our business hours."
+      setClosedModalMessage(message)
+      setShowClosedModal(true)
+    }
+  }
+
   const updateMetaTags = (product?: Product) => {
     if (typeof document === 'undefined') return // Skip on server-side
     
@@ -1664,24 +1684,7 @@ Best regards`
                     <motion.div 
                       key={product.id} 
                       className="bg-white border border-gray-200 rounded-[9px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex-shrink-0 w-48"
-                      onClick={() => {
-                        if (!profile?.business_hours) {
-                          setSelectedProduct(product)
-                          return
-                        }
-                        
-                        const businessStatus = isBusinessOpen(profile.business_hours)
-                        if (businessStatus.isOpen) {
-                          setSelectedProduct(product)
-                        } else {
-                          const nextOpening = getNextOpeningTime(profile.business_hours)
-                          const message = nextOpening 
-                            ? `We're currently closed. We'll be open ${nextOpening}.`
-                            : "We're currently closed. Please check our business hours."
-                          setClosedModalMessage(message)
-                          setShowClosedModal(true)
-                        }
-                      }}
+                      onClick={() => setSelectedProduct(product)}
                       initial={{ opacity: 0, scale: 0.8, y: 20 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.8, y: -20 }}
@@ -2294,7 +2297,7 @@ Best regards`
                           {/* Row: Add to Cart + Contact Seller */}
                           <div className="flex gap-3">
                             <button 
-                              onClick={() => selectedProduct && handleAddToCart(selectedProduct)}
+                              onClick={() => selectedProduct && checkBusinessHoursBeforeAction(() => handleAddToCart(selectedProduct))}
                               className="flex-1 bg-emerald-600 text-white py-3 px-6 rounded-[9px] hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 font-semibold text-sm md:text-base"
                             >
                               <ShoppingBag className="w-5 h-5" />
@@ -2304,7 +2307,7 @@ Best regards`
                             {/* Secondary Contact Button for Premium/Business */}
                             <div className="relative flex-shrink-0">
                               <button 
-                                onClick={handleContactSeller}
+                                onClick={() => checkBusinessHoursBeforeAction(handleContactSeller)}
                                 className="w-full bg-gray-600 text-white py-3 px-6 rounded-[9px] hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 font-semibold text-sm md:text-base"
                               >
                                 <MessageCircle className="w-5 h-5" />
@@ -2314,14 +2317,14 @@ Best regards`
                               {showContactOptions && (
                                 <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-[9px] shadow-lg z-10 overflow-hidden">
                                   <button
-                                    onClick={() => selectedProduct && handleWhatsAppContact(selectedProduct)}
+                                    onClick={() => selectedProduct && checkBusinessHoursBeforeAction(() => handleWhatsAppContact(selectedProduct))}
                                     className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 border-b border-gray-100"
                                   >
                                     <MessageCircle className="w-5 h-5 text-green-600" />
                                     <span className="text-gray-700">WhatsApp</span>
                                   </button>
                                   <button
-                                    onClick={() => selectedProduct && handleEmailContact(selectedProduct)}
+                                    onClick={() => selectedProduct && checkBusinessHoursBeforeAction(() => handleEmailContact(selectedProduct))}
                                     className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
                                   >
                                     <Mail className="w-5 h-5 text-blue-600" />
@@ -2336,7 +2339,7 @@ Best regards`
                         /* Contact Seller only for Free tier or products without price */
                         <div className="relative">
                           <button 
-                            onClick={handleContactSeller}
+                            onClick={() => checkBusinessHoursBeforeAction(handleContactSeller)}
                             className="w-full bg-emerald-600 text-white py-3 px-6 rounded-[9px] hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
                           >
                             <MessageCircle className="w-5 h-5" />
@@ -2346,14 +2349,14 @@ Best regards`
                           {showContactOptions && (
                             <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-[9px] shadow-lg z-10 overflow-hidden">
                               <button
-                                onClick={() => selectedProduct && handleWhatsAppContact(selectedProduct)}
+                                onClick={() => selectedProduct && checkBusinessHoursBeforeAction(() => handleWhatsAppContact(selectedProduct))}
                                 className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 border-b border-gray-100"
                               >
                                 <MessageCircle className="w-5 h-5 text-green-600" />
                                 <span className="text-gray-700">WhatsApp</span>
                               </button>
                               <button
-                                onClick={() => selectedProduct && handleEmailContact(selectedProduct)}
+                                onClick={() => selectedProduct && checkBusinessHoursBeforeAction(() => handleEmailContact(selectedProduct))}
                                 className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
                               >
                                 <Mail className="w-5 h-5 text-blue-600" />
@@ -2569,20 +2572,6 @@ Best regards`
                         <MessageCircle className="w-5 h-5" />
                         <div className="text-left">
                           <div className="font-semibold">WhatsApp Us</div>
-                          <div className="text-sm opacity-90">{profile.phone_number}</div>
-                        </div>
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          window.open(`tel:${profile.phone_number}`, '_self')
-                          setShowClosedModal(false)
-                        }}
-                        className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-3"
-                      >
-                        <Phone className="w-5 h-5" />
-                        <div className="text-left">
-                          <div className="font-semibold">Call Us</div>
                           <div className="text-sm opacity-90">{profile.phone_number}</div>
                         </div>
                       </button>

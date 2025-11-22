@@ -342,6 +342,26 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
     ? products
     : products.filter((product) => (product.category || '').toLowerCase() === selectedCategory)
 
+  // Helper function to check business hours before actions
+  const checkBusinessHoursBeforeAction = (action: () => void) => {
+    if (!profile?.business_hours) {
+      action()
+      return
+    }
+    
+    const businessStatus = isBusinessOpen(profile.business_hours)
+    if (businessStatus.isOpen) {
+      action()
+    } else {
+      const nextOpening = getNextOpeningTime(profile.business_hours)
+      const message = nextOpening 
+        ? `We're currently closed. We'll be open ${nextOpening}.`
+        : "We're currently closed. Please check our business hours."
+      setClosedModalMessage(message)
+      setShowClosedModal(true)
+    }
+  }
+
   if (!profile) {
     return (
       <div className="bg-white rounded-[9px] border border-gray-200 p-6 text-center">
@@ -935,24 +955,7 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
                     <motion.div 
                       key={product.id} 
                       className="bg-white border border-gray-200 rounded-[9px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex-shrink-0 w-48"
-                      onClick={() => {
-                        if (!profile?.business_hours) {
-                          setSelectedProduct(product)
-                          return
-                        }
-                        
-                        const businessStatus = isBusinessOpen(profile.business_hours)
-                        if (businessStatus.isOpen) {
-                          setSelectedProduct(product)
-                        } else {
-                          const nextOpening = getNextOpeningTime(profile.business_hours)
-                          const message = nextOpening 
-                            ? `We're currently closed. We'll be open ${nextOpening}.`
-                            : "We're currently closed. Please check our business hours."
-                          setClosedModalMessage(message)
-                          setShowClosedModal(true)
-                        }
-                      }}
+                      onClick={() => setSelectedProduct(product)}
                       initial={{ opacity: 0, scale: 0.8, y: 20 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.8, y: -20 }}
@@ -1336,20 +1339,6 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
                         <MessageCircle className="w-5 h-5" />
                         <div className="text-left">
                           <div className="font-semibold">WhatsApp Us</div>
-                          <div className="text-sm opacity-90">{profile.phone_number}</div>
-                        </div>
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          window.open(`tel:${profile.phone_number}`, '_self')
-                          setShowClosedModal(false)
-                        }}
-                        className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-3"
-                      >
-                        <Phone className="w-5 h-5" />
-                        <div className="text-left">
-                          <div className="font-semibold">Call Us</div>
                           <div className="text-sm opacity-90">{profile.phone_number}</div>
                         </div>
                       </button>
