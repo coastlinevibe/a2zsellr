@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Head from 'next/head'
 import { supabase } from '@/lib/supabaseClient'
-import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Check, Truck, Shield, MessageCircle } from 'lucide-react'
+import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Check, Truck, Shield, MessageCircle, FileText } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/contexts/CartContext'
@@ -138,9 +138,7 @@ export default function ProfilePage() {
   const [reviewText, setReviewText] = useState('')
   const [submittingReview, setSubmittingReview] = useState(false)
   const [reviews, setReviews] = useState<any[]>([])
-  const [scrollY, setScrollY] = useState(0)
-  const [lastScrollY, setLastScrollY] = useState(0)
-  const [isHeaderSticky, setIsHeaderSticky] = useState(false)
+
   const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 })
 
   // Cart functionality
@@ -406,31 +404,7 @@ Best regards`
     }
   }
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY
-      const heroHeight = 320 // Height of hero gallery
-      
-      // Stick header when scrolling down past hero
-      if (currentScrollY > heroHeight) {
-        // Only stick if scrolling down
-        if (currentScrollY > lastScrollY) {
-          setIsHeaderSticky(true)
-        } else {
-          // Unstick when scrolling up
-          setIsHeaderSticky(false)
-        }
-      } else {
-        setIsHeaderSticky(false)
-      }
-      
-      setLastScrollY(currentScrollY)
-      setScrollY(currentScrollY)
-    }
-    
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [lastScrollY])
+
 
   useEffect(() => {
     if (username) {
@@ -841,85 +815,26 @@ Best regards`
         </Link>
       </motion.div>
 
-      {/* Business Info Card - Sticky Compact Header */}
-      <motion.div 
-        className={`${isHeaderSticky ? 'fixed top-0 left-0 right-0 z-40' : 'relative'} bg-white border-b border-gray-100`}
-        animate={{
-          boxShadow: isHeaderSticky 
-            ? '0 10px 30px rgba(0, 0, 0, 0.12)' 
-            : '0 0px 0px rgba(0, 0, 0, 0)',
-          backgroundColor: isHeaderSticky ? '#ffffff' : '#ffffff'
-        }}
-        transition={{
-          duration: 0.4,
-          ease: [0.34, 1.56, 0.64, 1],
-          boxShadow: { duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }
-        }}
-      >
-        <motion.div 
-          className="px-4 max-w-7xl mx-auto"
-          animate={{
-            paddingTop: isHeaderSticky ? '0.5rem' : '0.75rem',
-            paddingBottom: isHeaderSticky ? '0.5rem' : '0.75rem'
-          }}
-          transition={{
-            duration: 0.4,
-            ease: [0.34, 1.56, 0.64, 1]
-          }}
-        >
-          {/* Compact Row: Avatar, Name, Badges, Info, Buttons, Cart */}
+      {/* Business Info Card - Header */}
+      <div className="relative bg-white border-b border-gray-100">
+        <div className="px-4 max-w-7xl mx-auto py-3">
+          {/* Header Row: Avatar, Name, Badges, Info, Buttons, Cart */}
           <div className="flex items-center gap-3 justify-between">
             {/* Left: Avatar + Name + Badges */}
             <div className="flex items-center gap-3 min-w-0 flex-1">
               {profile.avatar_url && (
-                <motion.img 
+                <img 
                   src={profile.avatar_url} 
                   alt={profile.display_name} 
-                  className="rounded-lg object-cover border border-gray-200 flex-shrink-0"
-                  animate={{
-                    width: isHeaderSticky ? '2.5rem' : '3rem',
-                    height: isHeaderSticky ? '2.5rem' : '3rem'
-                  }}
-                  transition={{
-                    duration: 0.4,
-                    ease: [0.34, 1.56, 0.64, 1]
-                  }}
+                  className="w-12 h-12 rounded-lg object-cover border border-gray-200 flex-shrink-0"
                 />
               )}
               <div className="min-w-0 flex-1">
-                <motion.div 
-                  className="flex items-center gap-2 flex-wrap"
-                  animate={{
-                    gap: isHeaderSticky ? '0.5rem' : '0.5rem'
-                  }}
-                  transition={{
-                    duration: 0.3,
-                    ease: 'easeOut'
-                  }}
-                >
-                  <motion.h1 
-                    className="font-bold text-gray-900"
-                    animate={{
-                      fontSize: isHeaderSticky ? '1rem' : '1.125rem'
-                    }}
-                    transition={{
-                      duration: 0.4,
-                      ease: [0.34, 1.56, 0.64, 1]
-                    }}
-                  >
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-lg font-bold text-gray-900">
                     {profile.display_name}
-                  </motion.h1>
-                  <motion.div 
-                    className="flex gap-1 flex-shrink-0"
-                    animate={{
-                      opacity: isHeaderSticky ? 0.9 : 1,
-                      scale: isHeaderSticky ? 0.95 : 1
-                    }}
-                    transition={{
-                      duration: 0.4,
-                      ease: [0.34, 1.56, 0.64, 1]
-                    }}
-                  >
+                  </h1>
+                  <div className="flex gap-1 flex-shrink-0">
                     <Badge className={`${tierBadge.className} text-xs`}>
                       {profile.subscription_tier !== 'free' && <Crown className="h-2.5 w-2.5 mr-0.5" />}
                       {tierBadge.text}
@@ -930,21 +845,11 @@ Best regards`
                         Verified
                       </Badge>
                     )}
-                  </motion.div>
-                </motion.div>
+                  </div>
+                </div>
                 
-                {/* Compact Info Line */}
-                <motion.div 
-                  className="flex items-center gap-2 flex-wrap text-gray-600"
-                  animate={{
-                    fontSize: isHeaderSticky ? '0.75rem' : '0.875rem',
-                    opacity: isHeaderSticky ? 0.8 : 1
-                  }}
-                  transition={{
-                    duration: 0.4,
-                    ease: [0.34, 1.56, 0.64, 1]
-                  }}
-                >
+                {/* Info Line */}
+                <div className="flex items-center gap-2 flex-wrap text-gray-600 text-sm mt-1">
                   {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
                     <div className="flex items-center gap-1">
                       {[...Array(5)].map((_, i) => (
@@ -964,24 +869,15 @@ Best regards`
                     <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                     <span className="text-green-600 font-medium">Open</span>
                   </div>
-                </motion.div>
+                </div>
               </div>
             </div>
             
-            {/* Right: Action Buttons Row (Compact) */}
-            <motion.div 
-              className="flex items-center gap-1.5 flex-shrink-0"
-              animate={{
-                gap: isHeaderSticky ? '0.375rem' : '0.375rem'
-              }}
-              transition={{
-                duration: 0.3,
-                ease: 'easeOut'
-              }}
-            >
+            {/* Right: Action Buttons Row */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               {profile.phone_number && (
-                <motion.button 
-                  className={`p-2 rounded-lg transition-colors ${isHeaderSticky ? 'hover:bg-gray-100' : 'hover:bg-emerald-50'}`}
+                <button 
+                  className="p-2 rounded-lg transition-colors hover:bg-emerald-50"
                   onClick={() => {
                     const phoneNumber = profile.phone_number?.replace(/\D/g, '')
                     const message = `Hi ${profile.display_name}, I found your profile on A2Z Business Directory and would like to get in touch!`
@@ -989,36 +885,27 @@ Best regards`
                     window.open(whatsappUrl, '_blank')
                   }}
                   title="WhatsApp"
-                  whileHover={{ scale: 1.15, rotate: 5 }}
-                  whileTap={{ scale: 0.9 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 20 }}
                 >
                   <MessageCircle className="w-4 h-4 text-emerald-600" />
-                </motion.button>
+                </button>
               )}
               
               {profile.address && (
-                <motion.button 
-                  className={`p-2 rounded-lg transition-colors ${isHeaderSticky ? 'hover:bg-gray-100' : 'hover:bg-emerald-50'}`}
+                <button 
+                  className="p-2 rounded-lg transition-colors hover:bg-emerald-50"
                   onClick={() => {
                     const addressQuery = profile.address || ''
                     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`
                     window.open(mapsUrl, '_blank')
                   }}
                   title="Directions"
-                  whileHover={{ scale: 1.15, rotate: -5 }}
-                  whileTap={{ scale: 0.9 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                  initial={{ opacity: 0, y: -10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
                 >
                   <MapPin className="w-4 h-4 text-emerald-600" />
-                </motion.button>
+                </button>
               )}
               
-              <motion.button 
-                className={`p-2 rounded-lg transition-colors ${isHeaderSticky ? 'hover:bg-gray-100' : 'hover:bg-emerald-50'}`}
+              <button 
+                className="p-2 rounded-lg transition-colors hover:bg-emerald-50"
                 onClick={() => {
                   const shareUrl = createProfileUrl(profile.display_name)
                   const shareText = `Check out ${profile.display_name}'s business profile on A2Z Business Directory!`
@@ -1038,46 +925,28 @@ Best regards`
                   }
                 }}
                 title="Share"
-                whileHover={{ scale: 1.15, rotate: 5 }}
-                whileTap={{ scale: 0.9 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                initial={{ opacity: 0, y: -10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
               >
                 <Share2 className="w-4 h-4 text-emerald-600" />
-              </motion.button>
+              </button>
               
               {profile.website_url && (
-                <motion.button 
-                  className={`p-2 rounded-lg transition-colors ${isHeaderSticky ? 'hover:bg-gray-100' : 'hover:bg-emerald-50'}`}
+                <button 
+                  className="p-2 rounded-lg transition-colors hover:bg-emerald-50"
                   onClick={() => window.open(ensureAbsoluteUrl(profile.website_url), '_blank')}
                   title="Website"
-                  whileHover={{ scale: 1.15, rotate: -5 }}
-                  whileTap={{ scale: 0.9 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                  initial={{ opacity: 0, y: -10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
                 >
                   <Globe className="w-4 h-4 text-emerald-600" />
-                </motion.button>
+                </button>
               )}
 
               {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
-                <motion.button 
-                  className={`p-2 rounded-lg transition-colors ${isHeaderSticky ? 'hover:bg-gray-100' : 'hover:bg-emerald-50'}`}
+                <button 
+                  className="p-2 rounded-lg transition-colors hover:bg-emerald-50"
                   onClick={() => setShowReviewModal(true)}
                   title="Leave A Review"
-                  whileHover={{ scale: 1.15, rotate: 5 }}
-                  whileTap={{ scale: 0.9 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                  initial={{ opacity: 0, y: -10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
                 >
                   <Star className="w-4 h-4 text-emerald-600" />
-                </motion.button>
+                </button>
               )}
               
               {/* Cart Button */}
@@ -1086,10 +955,10 @@ Best regards`
                   <CartButton />
                 </div>
               )}
-            </motion.div>
+            </div>
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
 
       <style jsx>{`
         .styled-action-button {
@@ -1475,28 +1344,7 @@ Best regards`
                 <div>Services</div>
               </motion.button>
             </motion.div>
-            <motion.div className="cat-btn-wrapper">
-              <motion.button
-                onClick={() => setSelectedCategory('food')}
-                className={`cat-btn ${selectedCategory === 'food' ? 'active' : ''}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-              >
-                <div>Food & Drinks</div>
-              </motion.button>
-            </motion.div>
-            <motion.div className="cat-btn-wrapper">
-              <motion.button
-                onClick={() => setSelectedCategory('retail')}
-                className={`cat-btn ${selectedCategory === 'retail' ? 'active' : ''}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-              >
-                <div>Retail Items</div>
-              </motion.button>
-            </motion.div>
+
           </div>
           
           <AnimatePresence mode="wait">
@@ -1631,26 +1479,39 @@ Best regards`
         viewport={{ once: true, margin: '-100px' }}
         transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
       >
-        {/* Contact Information */}
+        {/* Profile Information */}
         <div className="bg-white rounded-[9px] border border-gray-200 p-4">
-          <h3 className="font-medium text-gray-900 mb-3">Contact Information</h3>
+          <h3 className="font-medium text-gray-900 mb-3">Profile Information</h3>
           <div className="space-y-3">
-            {profile.email && (
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-[9px]">
-                  <Mail className="h-4 w-4 text-red-600" />
+            {/* Company Name */}
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-[9px]">
+                <Crown className="h-4 w-4 text-blue-600" />
+              </div>
+              <span className="text-sm font-medium text-gray-900">{profile.display_name}</span>
+            </div>
+            
+            {/* Description */}
+            {profile.bio && (
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-green-100 rounded-[9px]">
+                  <FileText className="h-4 w-4 text-green-600" />
                 </div>
-                <span className="text-sm text-gray-700">{profile.email}</span>
+                <span className="text-sm text-gray-700">{profile.bio}</span>
               </div>
             )}
-            {profile.business_location && (
+            
+            {/* Address */}
+            {profile.address && (
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-100 rounded-[9px]">
-                  <MapPin className="h-4 w-4 text-emerald-600" />
+                <div className="p-2 bg-gray-100 rounded-[9px]">
+                  <MapPin className="h-4 w-4 text-gray-600" />
                 </div>
-                <span className="text-sm text-gray-700">{profile.business_location}</span>
+                <span className="text-sm text-gray-700">{profile.address}</span>
               </div>
             )}
+            
+            {/* Phone Number */}
             {profile.phone_number && (
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 rounded-[9px]">
@@ -1659,6 +1520,8 @@ Best regards`
                 <span className="text-sm text-gray-700">{profile.phone_number}</span>
               </div>
             )}
+            
+            {/* Website */}
             {profile.website_url && (
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-purple-100 rounded-[9px]">
@@ -1667,6 +1530,16 @@ Best regards`
                 <a href={ensureAbsoluteUrl(profile.website_url)} target="_blank" rel="noopener noreferrer" className="text-sm text-purple-600 hover:underline">
                   {ensureAbsoluteUrl(profile.website_url).replace(/^https?:\/\//, '')}
                 </a>
+              </div>
+            )}
+            
+            {/* Email */}
+            {profile.email && (
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-100 rounded-[9px]">
+                  <Mail className="h-4 w-4 text-red-600" />
+                </div>
+                <span className="text-sm text-gray-700">{profile.email}</span>
               </div>
             )}
             
