@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
-import Image from 'next/image'
 
 export function Header() {
   const [showWelcome, setShowWelcome] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const [logoError, setLogoError] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -44,18 +44,23 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 py-2">
         <div className="flex flex-col justify-between gap-2 md:flex-row md:items-center">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 flex items-center justify-center">
-              <Image 
-                src="/logo.png" 
-                alt="A2Z Sellr Logo" 
-                width={40}
-                height={40}
-                className="object-contain"
-                priority
-                onError={() => {
-                  console.error('Logo failed to load');
-                }}
-              />
+            <div className="w-12 h-12 flex items-center justify-center bg-white rounded-lg border-2 border-black">
+              {!logoError ? (
+                <img 
+                  src="/logo.png" 
+                  alt="A2Z Sellr Logo" 
+                  className="w-10 h-10 object-contain"
+                  onError={(e) => {
+                    console.error('Logo failed to load from /logo.png');
+                    setLogoError(true);
+                  }}
+                  onLoad={() => {
+                    console.log('Logo loaded successfully from /logo.png');
+                  }}
+                />
+              ) : (
+                <div className="text-black font-black text-lg">A2Z</div>
+              )}
             </div>
             <div className="bg-white p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]">
               <p className="text-xs font-black text-black uppercase">
