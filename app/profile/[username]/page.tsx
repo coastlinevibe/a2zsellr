@@ -1417,6 +1417,37 @@ Best regards`
         .action-btn-mini:active {
           transform: scale(0.98);
         }
+
+        /* Custom scrollbar for product modal */
+        .modal-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #d1d5db transparent;
+        }
+
+        .modal-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        .modal-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 16px;
+        }
+
+        .modal-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #d1d5db;
+          border-radius: 16px;
+          border: 2px solid transparent;
+          background-clip: content-box;
+        }
+
+        .modal-scrollbar::-webkit-scrollbar-thumb:hover {
+          background-color: #9ca3af;
+        }
+
+        .modal-scrollbar::-webkit-scrollbar-corner {
+          background: transparent;
+          border-radius: 16px;
+        }
       `}</style>
 
       {/* Products Section */}
@@ -1775,8 +1806,8 @@ Best regards`
       {/* Product Detail Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto modal-scrollbar">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
               <h2 className="text-xl font-semibold text-gray-900">{selectedProduct?.name}</h2>
               <button
                 onClick={closeProductModal}
