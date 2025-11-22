@@ -820,30 +820,38 @@ Best regards`
         <div className="px-4 max-w-7xl mx-auto py-3">
           {/* Mobile Layout */}
           <div className="block md:hidden">
-            {/* Top Row: Avatar + Name + Business Tier */}
-            <div className="flex items-center gap-3 justify-between mb-2">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                {profile.avatar_url && (
-                  <img 
-                    src={profile.avatar_url} 
-                    alt={profile.display_name} 
-                    className="w-10 h-10 rounded-lg object-cover border border-gray-200 flex-shrink-0"
-                  />
-                )}
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-base font-bold text-gray-900 truncate">
-                    {profile.display_name}
-                  </h1>
+            {/* Top Row: PFP + Name + Business Tier + Reviews */}
+            <div className="flex items-center gap-2 mb-2">
+              {profile.avatar_url && (
+                <img 
+                  src={profile.avatar_url} 
+                  alt={profile.display_name} 
+                  className="w-10 h-10 rounded-lg object-cover border border-gray-200 flex-shrink-0"
+                />
+              )}
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <h1 className="text-base font-bold text-gray-900 truncate">
+                  {profile.display_name}
+                </h1>
+                
+                {/* Business Tier Badge - Mobile (closer to name) */}
+                <div className="flex-shrink-0">
+                  <Badge className={`${tierBadge.className} text-xs`}>
+                    {profile.subscription_tier !== 'free' && <Crown className="h-2.5 w-2.5 mr-0.5" />}
+                    {tierBadge.text}
+                  </Badge>
                 </div>
               </div>
               
-              {/* Business Tier Badge - Mobile */}
-              <div className="flex-shrink-0">
-                <Badge className={`${tierBadge.className} text-xs`}>
-                  {profile.subscription_tier !== 'free' && <Crown className="h-2.5 w-2.5 mr-0.5" />}
-                  {tierBadge.text}
-                </Badge>
-              </div>
+              {/* Reviews - Mobile */}
+              {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className={`w-2.5 h-2.5 ${i < Math.round(reviewStats.averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                  ))}
+                  <span className="font-medium text-gray-600 text-sm ml-1">{reviewStats.totalReviews > 0 ? `${reviewStats.averageRating}` : 'N/A'}</span>
+                </div>
+              )}
             </div>
             
             {/* Second Row: Verified Badge (if exists) */}
@@ -856,33 +864,15 @@ Best regards`
               </div>
             )}
             
-            {/* Third Row: Info Line */}
-            <div className="flex items-center gap-2 flex-wrap text-gray-600 text-sm mb-3">
-              {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`w-2.5 h-2.5 ${i < Math.round(reviewStats.averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                  ))}
-                  <span className="font-medium">{reviewStats.totalReviews > 0 ? `${reviewStats.averageRating}` : 'N/A'}</span>
+            {/* Third Row: Cart + Chat + Share + Review + Open Status + Category */}
+            <div className="flex items-center gap-2 text-sm">
+              {/* Cart Button - Mobile */}
+              {profile.subscription_tier !== 'free' && (
+                <div className="flex-shrink-0">
+                  <CartButton />
                 </div>
               )}
-              {profile.business_category && (
-                <>
-                  {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
-                    <span className="text-gray-400">•</span>
-                  )}
-                  <span className="truncate">{profile.business_category}</span>
-                </>
-              )}
-              <span className="text-gray-400">•</span>
-              <div className="flex items-center gap-1">
-                <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                <span className="text-green-600 font-medium">Open</span>
-              </div>
-            </div>
-            
-            {/* Fourth Row: Action Buttons + Cart */}
-            <div className="flex items-center gap-2">
+              
               {profile.phone_number && (
                 <button 
                   className="p-2.5 bg-emerald-50 text-emerald-700 rounded-lg transition-colors hover:bg-emerald-100"
@@ -895,20 +885,6 @@ Best regards`
                   title="Chat"
                 >
                   <MessageCircle className="w-4 h-4" />
-                </button>
-              )}
-              
-              {profile.address && (
-                <button 
-                  className="p-2.5 bg-gray-50 text-gray-700 rounded-lg transition-colors hover:bg-gray-100"
-                  onClick={() => {
-                    const addressQuery = profile.address || ''
-                    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`
-                    window.open(mapsUrl, '_blank')
-                  }}
-                  title="Directions"
-                >
-                  <MapPin className="w-4 h-4" />
                 </button>
               )}
               
@@ -936,16 +912,6 @@ Best regards`
               >
                 <Share2 className="w-4 h-4" />
               </button>
-              
-              {profile.website_url && (
-                <button 
-                  className="p-2.5 bg-gray-50 text-gray-700 rounded-lg transition-colors hover:bg-gray-100"
-                  onClick={() => window.open(ensureAbsoluteUrl(profile.website_url), '_blank')}
-                  title="Website"
-                >
-                  <Globe className="w-4 h-4" />
-                </button>
-              )}
 
               {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
                 <button 
@@ -957,11 +923,18 @@ Best regards`
                 </button>
               )}
               
-              {/* Cart Button - Mobile */}
-              {profile.subscription_tier !== 'free' && (
-                <div className="ml-auto">
-                  <CartButton />
-                </div>
+              {/* Open Status */}
+              <div className="flex items-center gap-1 ml-auto text-gray-600">
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                <span className="text-green-600 font-medium">Open</span>
+              </div>
+              
+              {/* Category */}
+              {profile.business_category && (
+                <>
+                  <span className="text-gray-400">•</span>
+                  <span className="truncate text-gray-600">{profile.business_category}</span>
+                </>
               )}
             </div>
           </div>
