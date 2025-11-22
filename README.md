@@ -7,7 +7,7 @@ South Africa's Premium Business Directory - A modern, mobile-first platform for 
 ### 🏢 Business Profiles & Tiers
 - **Free Tier**: Complete profile with 3 gallery images, 5 products, 3 shared listings, 5-minute reset (testing)
 - **Premium Tier**: Unlimited gallery, full e-commerce, WhatsApp & Facebook marketing, Google Maps
-- **Business Tier**: Multi-location management, Instagram automation, advanced analytics, custom branding
+- **Business Tier**: 12 gallery images, multi-location management, Instagram automation, advanced analytics, custom branding
 
 ### �️ Ev-Commerce & Shopping
 - **Shopping Cart System**: Full cart management with persistent storage
@@ -250,7 +250,7 @@ a2z/
 ### Premium Tier (R149/month)
 - **All Free Tier features** without restrictions
 - **E-Commerce**:
-  - Unlimited products and gallery images
+  - Unlimited products and 12 gallery images
   - Full shopping cart and checkout
   - PayFast payment processing
   - Order management and tracking

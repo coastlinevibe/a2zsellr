@@ -41,8 +41,8 @@ const TIER_FEATURES = {
   },
   business: {
     name: 'Business',
-    limit: 999,
-    description: 'Professional gallery with unlimited images'
+    limit: 12,
+    description: 'Professional gallery with up to 12 images'
   }
 }
 

@@ -45,6 +45,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     interval: 'month',
     features: [
       'Everything in Premium',
+      '12 gallery images (limited)',
       'Multi-location management',
       'Advanced analytics dashboard',
       'Instagram ad automation',

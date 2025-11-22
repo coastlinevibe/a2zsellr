@@ -43,6 +43,7 @@ export default function HomePage() {
   const [dotPage, setDotPage] = useState(0)
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [searchResults, setSearchResults] = useState<{ total: number; tagMatches: number }>({ total: 0, tagMatches: 0 })
+  const [isMobile, setIsMobile] = useState(false)
   const locationDropdownRef = useRef<HTMLDivElement>(null)
   const categoryDropdownRef = useRef<HTMLDivElement>(null)
 
@@ -107,6 +108,7 @@ export default function HomePage() {
       yearlyPrice: 2392, // 20% discount
       features: [
         "Everything in Premium",
+        "12 gallery images",
         "Unlimited products in shop",
         "50 images per product",
         "15 tags per product",
@@ -319,6 +321,18 @@ export default function HomePage() {
     fetchCategoriesAndLocations()
     fetchBusinesses()
     fetchRecentActivities()
+  }, [])
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
   // Handle clicking outside dropdowns
@@ -1006,37 +1020,54 @@ export default function HomePage() {
                   </div>
                 </div>
                 
-                {/* Search Button */}
-                <div className="lg:col-span-1">
+                {/* Search & Clear Buttons */}
+                <div className="lg:col-span-2 flex gap-2">
+                  {/* Search Button */}
                   <motion.button 
                     onClick={handleSearch}
                     disabled={isSearching}
-                    className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white font-black py-3 px-6 rounded-lg transition-colors flex items-center justify-center border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
-                    whileHover={{ 
-                      scale: 1.05,
-                      rotate: 3,
-                      boxShadow: "8px 8px 0px 0px rgba(0,0,0,0.9)",
-                      x: 2,
-                      y: -2
+                    className="flex-1 disabled:opacity-50 text-black font-black py-3 px-4 flex items-center justify-center transition-all"
+                    style={{
+                      background: '#5cbdfd',
+                      fontFamily: 'inherit',
+                      fontWeight: 900,
+                      fontSize: '16px',
+                      border: '3px solid black',
+                      borderRadius: '0.4em',
+                      boxShadow: '0.1em 0.1em',
+                      cursor: 'pointer'
                     }}
-                    whileTap={{ 
-                      scale: 0.95,
-                      rotate: -3,
-                      transition: { duration: 0.1 }
+                    onMouseEnter={(e) => {
+                      if (!isSearching) {
+                        e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                        e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translate(0, 0)';
+                      e.currentTarget.style.boxShadow = '0.1em 0.1em';
+                    }}
+                    onMouseDown={(e) => {
+                      if (!isSearching) {
+                        e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+                        e.currentTarget.style.boxShadow = '0.05em 0.05em';
+                      }
+                    }}
+                    onMouseUp={(e) => {
+                      if (!isSearching) {
+                        e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                        e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                      }
                     }}
                   >
                     {isSearching ? (
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></div>
                     ) : (
-                      <motion.div whileHover={{ rotate: 360, transition: { duration: 0.5 } }}>
-                        <Search className="h-5 w-5" />
-                      </motion.div>
+                      <Search className="h-5 w-5" />
                     )}
                   </motion.button>
-                </div>
 
-                {/* Clear Filters Button */}
-                <div className="lg:col-span-1">
+                  {/* Clear Filters Button */}
                   <motion.button 
                     onClick={() => {
                       setSearchQuery('')
@@ -1045,23 +1076,41 @@ export default function HomePage() {
                       setSelectedTags([])
                     }}
                     disabled={isSearching}
-                    className="w-full bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white font-black py-3 px-6 rounded-lg transition-colors flex items-center justify-center border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
-                    whileHover={{ 
-                      scale: 1.05,
-                      rotate: -3,
-                      boxShadow: "8px 8px 0px 0px rgba(0,0,0,0.9)",
-                      x: -2,
-                      y: -2
+                    className="flex-1 disabled:opacity-50 text-black font-black py-3 px-4 flex items-center justify-center transition-all"
+                    style={{
+                      background: '#ff6b6b',
+                      fontFamily: 'inherit',
+                      fontWeight: 900,
+                      fontSize: '16px',
+                      border: '3px solid black',
+                      borderRadius: '0.4em',
+                      boxShadow: '0.1em 0.1em',
+                      cursor: 'pointer'
                     }}
-                    whileTap={{ 
-                      scale: 0.95,
-                      rotate: 3,
-                      transition: { duration: 0.1 }
+                    onMouseEnter={(e) => {
+                      if (!isSearching) {
+                        e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                        e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translate(0, 0)';
+                      e.currentTarget.style.boxShadow = '0.1em 0.1em';
+                    }}
+                    onMouseDown={(e) => {
+                      if (!isSearching) {
+                        e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+                        e.currentTarget.style.boxShadow = '0.05em 0.05em';
+                      }
+                    }}
+                    onMouseUp={(e) => {
+                      if (!isSearching) {
+                        e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+                        e.currentTarget.style.boxShadow = '0.15em 0.15em';
+                      }
                     }}
                   >
-                    <motion.div whileHover={{ rotate: -360, transition: { duration: 0.5 } }}>
-                      <X className="h-5 w-5" />
-                    </motion.div>
+                    <X className="h-5 w-5" />
                   </motion.button>
                 </div>
               </div>
@@ -1178,8 +1227,8 @@ export default function HomePage() {
                   }}
                 >
                 <motion.div 
-                  className="flex gap-6 justify-center md:justify-start"
-                  animate={{ x: -currentSlide * (320 + 24) }} // 320px card width + 24px gap
+                  className="flex gap-4 md:gap-6 justify-center md:justify-start"
+                  animate={{ x: -currentSlide * (isMobile ? (typeof window !== 'undefined' ? window.innerWidth - 32 : 300) : 320 + 24) }}
                   transition={{ 
                     type: "spring", 
                     stiffness: 300, 
@@ -1205,7 +1254,7 @@ export default function HomePage() {
                     return (
                       <motion.div
                         key={business.id}
-                        className="flex-shrink-0 w-80"
+                        className="flex-shrink-0 w-full md:w-80"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1, duration: 0.5 }}
