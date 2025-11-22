@@ -52,13 +52,19 @@ interface UserProfile {
   youtube?: string | null
 }
 
+interface ProductImage {
+  url: string
+  alt?: string
+  order: number
+}
+
 interface Product {
   id: string
   name: string
   description: string | null
   category: string | null
   image_url: string | null
-  images?: any
+  images?: ProductImage[] | string
   price_cents: number | null
   is_active: boolean
 }
@@ -86,12 +92,13 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch products
+        // Fetch products with tags
         const { data: productsData, error: productsError } = await supabase
-          .from('profile_products')
+          .from('products_with_tags')
           .select('*')
           .eq('profile_id', profile.id)
           .eq('is_active', true)
+          .order('created_at', { ascending: false })
 
         if (productsError) throw productsError
         setProducts(productsData || [])
@@ -239,11 +246,11 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white" style={{ margin: '0 -32px', padding: '0', width: 'calc(100% + 64px)', maxWidth: 'none' }}>
       {/* Hero Gallery Slider */}
       <motion.div 
-        className="relative bg-gray-100 overflow-hidden" 
-        style={{ height: '320px', maxWidth: '1500px', margin: '0 auto' }}
+        className="relative bg-gray-100 overflow-hidden w-full" 
+        style={{ height: '320px' }}
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
@@ -303,8 +310,8 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
       </motion.div>
 
       {/* Business Info Card - Header */}
-      <div className="relative bg-white border-b border-gray-100">
-        <div className="px-4 max-w-7xl mx-auto py-3">
+      <div className="relative bg-white border-b border-gray-100 w-full">
+        <div className="px-4 py-3 w-full">
           {/* Mobile Layout */}
           <div className="block md:hidden">
             {/* Top Row: PFP + Name + Business Tier + Reviews */}
@@ -716,15 +723,15 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
       `}</style>
 
       {/* Products Section */}
-      <motion.div className="bg-white">
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between mb-3">
+      <motion.div className="bg-white w-full">
+        <div className="px-0 md:px-4 py-4 w-full">
+          <div className="flex items-center justify-between mb-3 px-4 md:px-0">
             <h2 className="text-lg font-semibold text-gray-900">Products & Services</h2>
             <span className="text-sm text-gray-500">{products.length} items</span>
           </div>
           
           {/* Category Filter Buttons */}
-          <div className="flex gap-3 mb-4 overflow-x-auto pb-2 pt-2 scrollbar-hide">
+          <div className="flex gap-3 mb-4 overflow-x-auto pb-2 pt-2 scrollbar-hide px-4 md:px-0">
             <motion.div className="cat-btn-wrapper">
               <motion.button
                 onClick={() => setSelectedCategory('all')}
@@ -759,9 +766,10 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
               </motion.button>
             </motion.div>
           </div>
-          
+
+          {/* Products Grid */}
           <AnimatePresence mode="wait">
-            {(selectedCategory === 'all' ? products : products.filter(p => p.category === selectedCategory)).length > 0 ? (
+            {filteredProducts.length > 0 ? (
               <motion.div 
                 className="overflow-x-auto"
                 initial={{ opacity: 0 }}
@@ -770,11 +778,11 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
                 transition={{ duration: 0.3 }}
               >
                 <motion.div 
-                  className="flex gap-4 pb-2" 
+                  className="flex gap-4 pb-2 px-4 md:px-0" 
                   style={{ width: 'max-content' }}
                   layout
                 >
-                  {(selectedCategory === 'all' ? products : products.filter(p => p.category === selectedCategory)).map((product, index) => (
+                  {filteredProducts.map((product, index) => (
                     <motion.div 
                       key={product.id} 
                       className="bg-white border border-gray-200 rounded-[9px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex-shrink-0 w-48"
@@ -789,87 +797,87 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
                       }}
                       whileHover={{ y: -8, boxShadow: '0 12px 24px rgba(0, 0, 0, 0.15)' }}
                     >
-                    {(() => {
-                      // Handle both JSON string and array formats for images
-                      let imagesArray = []
-                      if (product.images) {
-                        if (typeof product.images === 'string') {
-                          try {
-                            imagesArray = JSON.parse(product.images)
-                          } catch (e) {
-                            imagesArray = []
-                          }
-                        } else if (Array.isArray(product.images)) {
-                          imagesArray = product.images
-                        }
-                      }
-                      
-                      const hasImages = imagesArray && imagesArray.length > 0
-                      const imageUrl = hasImages 
-                        ? imagesArray[0]?.url || product.image_url
-                        : product.image_url
-                      
-                      return (hasImages || product.image_url) ? (
-                        <div className="relative">
-                          <img
-                            src={imageUrl}
-                            alt={product.name}
-                            className="w-full h-[146px] object-fill"
-                          />
-                          {/* Image count indicator */}
-                          {(() => {
-                            // Handle both JSON string and array formats for count
-                            let imagesArray = []
-                            if (product.images) {
-                              if (typeof product.images === 'string') {
-                                try {
-                                  imagesArray = JSON.parse(product.images)
-                                } catch (e) {
-                                  imagesArray = []
-                                }
-                              } else if (Array.isArray(product.images)) {
-                                imagesArray = product.images
-                              }
+                      {(() => {
+                        // Handle both JSON string and array formats for images
+                        let imagesArray = []
+                        if (product.images) {
+                          if (typeof product.images === 'string') {
+                            try {
+                              imagesArray = JSON.parse(product.images)
+                            } catch (e) {
+                              imagesArray = []
                             }
-                            
-                            return imagesArray && imagesArray.length > 1 && (
-                              <div className="absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                                <Package className="h-3 w-3" />
-                                {imagesArray.length}
-                              </div>
-                            )
-                          })()}
-                        </div>
-                      ) : (
-                        <div className="w-full h-32 bg-gray-100 flex items-center justify-center">
-                          <ShoppingBag className="w-8 h-8 text-gray-400" />
-                        </div>
-                      )
-                    })()}
-                    <div className="p-3">
-                      <h3 className="font-medium text-gray-900 mb-1 text-sm truncate">{product.name}</h3>
-                      {product.price_cents ? (
-                        <span className="text-sm font-semibold text-emerald-600">
-                          R{(product.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-500">Contact for price</span>
-                      )}
-                      {product.category && (
-                        <div className="mt-1">
-                          <span className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
-                            {product.category}
+                          } else if (Array.isArray(product.images)) {
+                            imagesArray = product.images
+                          }
+                        }
+                        
+                        const hasImages = imagesArray && imagesArray.length > 0
+                        const imageUrl = hasImages 
+                          ? imagesArray[0]?.url || product.image_url
+                          : product.image_url
+                        
+                        return (hasImages || product.image_url) ? (
+                          <div className="relative">
+                            <img
+                              src={imageUrl}
+                              alt={product.name}
+                              className="w-full h-[146px] object-fill"
+                            />
+                            {/* Image count indicator */}
+                            {(() => {
+                              // Handle both JSON string and array formats for count
+                              let imagesArray = []
+                              if (product.images) {
+                                if (typeof product.images === 'string') {
+                                  try {
+                                    imagesArray = JSON.parse(product.images)
+                                  } catch (e) {
+                                    imagesArray = []
+                                  }
+                                } else if (Array.isArray(product.images)) {
+                                  imagesArray = product.images
+                                }
+                              }
+                              
+                              return imagesArray && imagesArray.length > 1 && (
+                                <div className="absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                  <Package className="h-3 w-3" />
+                                  {imagesArray.length}
+                                </div>
+                              )
+                            })()}
+                          </div>
+                        ) : (
+                          <div className="w-full h-32 bg-gray-100 flex items-center justify-center">
+                            <ShoppingBag className="w-8 h-8 text-gray-400" />
+                          </div>
+                        )
+                      })()}
+                      <div className="p-3">
+                        <h3 className="font-medium text-gray-900 mb-1 text-sm truncate">{product.name}</h3>
+                        {product.price_cents ? (
+                          <span className="text-sm font-semibold text-emerald-600">
+                            R{(product.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
+                        ) : (
+                          <span className="text-xs text-gray-500">Contact for price</span>
+                        )}
+                        {product.category && (
+                          <div className="mt-1">
+                            <span className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
+                              {product.category}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
                 </motion.div>
               </motion.div>
             ) : (
               <motion.div 
-                className="bg-gray-50 rounded-[9px] p-8 text-center"
+                className="bg-gray-50 rounded-[9px] p-8 text-center mx-4 md:mx-0"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -886,12 +894,13 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
 
       {/* Business Details */}
       <motion.div 
-        className="bg-gray-50 px-4 py-6 space-y-6"
+        className="bg-gray-50 w-full"
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-100px' }}
         transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
       >
+        <div className="px-4 md:px-4 py-6 space-y-6">
         {/* Profile Information */}
         <div className="bg-white rounded-[9px] border border-gray-200 p-4">
           <h3 className="font-medium text-gray-900 mb-3">Profile Information</h3>
@@ -950,9 +959,9 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
                 <div className="p-2 bg-purple-100 rounded-[9px]">
                   <Globe className="h-4 w-4 text-purple-600" />
                 </div>
-                <span className="text-sm text-purple-600">
+                <a href={ensureAbsoluteUrl(profile.website_url)} target="_blank" rel="noopener noreferrer" className="text-sm text-purple-600 hover:underline">
                   {ensureAbsoluteUrl(profile.website_url).replace(/^https?:\/\//, '')}
-                </span>
+                </a>
               </div>
             )}
             
@@ -972,47 +981,71 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
                 <h4 className="text-sm font-medium text-gray-900 mb-3">Follow Us</h4>
                 <div className="holographic-stack">
                   {profile.facebook && (
-                    <div className="holographic-icon facebook" title="Facebook">
+                    <a
+                      href={ensureAbsoluteUrl(profile.facebook)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="holographic-icon facebook"
+                      title="Facebook"
+                    >
                       <div className="holographic-ring"></div>
                       <div className="holographic-particles"></div>
                       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                       </svg>
                       <div className="holographic-pulse"></div>
-                    </div>
+                    </a>
                   )}
                   
                   {profile.instagram && (
-                    <div className="holographic-icon instagram" title="Instagram">
+                    <a
+                      href={ensureAbsoluteUrl(profile.instagram)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="holographic-icon instagram"
+                      title="Instagram"
+                    >
                       <div className="holographic-ring"></div>
                       <div className="holographic-particles"></div>
                       <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                         <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599s.453.546.598.92c.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92s.546-.453.92-.598c.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334"/>
                       </svg>
                       <div className="holographic-pulse"></div>
-                    </div>
+                    </a>
                   )}
                   
                   {profile.twitter && (
-                    <div className="holographic-icon twitter" title="Twitter/X">
+                    <a
+                      href={ensureAbsoluteUrl(profile.twitter)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="holographic-icon twitter"
+                      title="Twitter/X"
+                    >
                       <div className="holographic-ring"></div>
                       <div className="holographic-particles"></div>
                       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
                       </svg>
                       <div className="holographic-pulse"></div>
-                    </div>
+                    </a>
                   )}
                   
                   {profile.youtube && (
-                    <div className="holographic-icon youtube" title="YouTube">
+                    <a
+                      href={ensureAbsoluteUrl(profile.youtube)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="holographic-icon youtube"
+                      title="YouTube"
+                    >
                       <div className="holographic-ring"></div>
                       <div className="holographic-particles"></div>
                       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                       </svg>
                       <div className="holographic-pulse"></div>
-                    </div>
+                    </a>
                   )}
                 </div>
               </div>
@@ -1037,6 +1070,7 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
               </button>
             </div>
           </div>
+        </div>
         </div>
       </motion.div>
 
