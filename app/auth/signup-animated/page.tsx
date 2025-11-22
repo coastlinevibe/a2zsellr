@@ -598,7 +598,7 @@ export default function AnimatedSignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-green-300 to-blue-300 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-300 via-green-300 to-blue-300 py-4 md:py-12 px-2 sm:px-4 md:px-6 lg:px-8 relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute inset-0" style={{
@@ -609,14 +609,14 @@ export default function AnimatedSignupPage() {
       </div>
       
       {/* Home Link */}
-      <Link href="/" className="absolute top-6 left-6 z-20 bg-white border-2 border-black rounded-lg px-4 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-1 hover:translate-y-1 transition-all flex items-center gap-2 text-black font-black">
-        <Home className="h-5 w-5" />
-        <span>HOME</span>
+      <Link href="/" className="absolute top-2 left-2 md:top-6 md:left-6 z-20 bg-white border-2 border-black rounded-lg px-2 py-1 md:px-4 md:py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-1 hover:translate-y-1 transition-all flex items-center gap-1 md:gap-2 text-black font-black text-sm md:text-base">
+        <Home className="h-4 w-4 md:h-5 md:w-5" />
+        <span className="hidden sm:inline">HOME</span>
       </Link>
       
-      <div className="relative z-10 w-full px-4 flex items-center justify-center">
+      <div className="relative z-10 w-full px-2 sm:px-4 flex items-center justify-center min-h-screen pt-12 md:pt-0">
         <motion.div 
-          className="w-full max-w-md bg-white rounded-2xl border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,0.9)] p-8 transform -rotate-1"
+          className="w-full max-w-md bg-white rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] md:shadow-[12px_12px_0px_0px_rgba(0,0,0,0.9)] p-4 md:p-8 transform -rotate-1"
           initial={{ scale: 0.8, opacity: 0, rotate: 0 }}
           animate={{ scale: 1, opacity: 1, rotate: -1 }}
           transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
@@ -624,29 +624,22 @@ export default function AnimatedSignupPage() {
           <NotificationAlert />
           
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-4 md:mb-8">
             <motion.div 
-              className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-4 rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] mb-4 transform rotate-1"
+              className="bg-gradient-to-r from-green-400 to-blue-500 text-white p-3 md:p-4 rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] mb-3 md:mb-4 transform rotate-1"
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}
             >
-              <h1 className="text-3xl font-black uppercase">REGISTER</h1>
-              <p className="text-sm font-bold mt-1">JOIN THE A2Z SELLR COMMUNITY!</p>
+              <h1 className="text-2xl md:text-3xl font-black uppercase">REGISTER</h1>
+              <p className="text-xs md:text-sm font-bold mt-1">JOIN THE A2Z SELLR COMMUNITY!</p>
             </motion.div>
-            <motion.p 
-              className="text-black font-bold text-sm bg-yellow-300 p-3 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
-            >
-              🚀 JOIN 10,000+ SELLERS GROWING WITH A2Z SELLR 🚀
-            </motion.p>
+
           </div>
 
           {/* Plan Confirmation */}
           <motion.div 
-            className={`mb-6 p-4 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] ${
+            className={`mb-4 md:mb-6 p-3 md:p-4 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] ${
               planConfig.color === 'emerald' ? 'bg-green-400' :
               planConfig.color === 'blue' ? 'bg-blue-400' :
               'bg-gray-400'
@@ -656,12 +649,12 @@ export default function AnimatedSignupPage() {
             transition={{ delay: 0.6, duration: 0.5 }}
           >
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="bg-white p-2 rounded-lg border-2 border-black">
-                  <planConfig.icon className="w-5 h-5 text-black" />
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <div className="bg-white p-1.5 md:p-2 rounded-lg border-2 border-black flex-shrink-0">
+                  <planConfig.icon className="w-4 h-4 md:w-5 md:h-5 text-black" />
                 </div>
-                <div>
-                  <div className="text-black font-black text-sm uppercase">
+                <div className="min-w-0 flex-1">
+                  <div className="text-black font-black text-xs md:text-sm uppercase truncate">
                     {planConfig.name} PLAN
                   </div>
                   <div className="text-black font-bold text-xs">
@@ -669,25 +662,25 @@ export default function AnimatedSignupPage() {
                   </div>
                 </div>
               </div>
-              <div className="bg-white px-3 py-1 rounded-lg border-2 border-black">
+              <div className="bg-white px-2 md:px-3 py-1 rounded-lg border-2 border-black flex-shrink-0">
                 {planConfig.price > 0 ? (
-                  <div className="text-black font-black text-sm">
+                  <div className="text-black font-black text-xs md:text-sm">
                     {formatPrice(planConfig.price)}/MO
                   </div>
                 ) : (
-                  <div className="text-black font-black text-sm">FREE</div>
+                  <div className="text-black font-black text-xs md:text-sm">FREE</div>
                 )}
               </div>
             </div>
             
-            <div className="bg-white p-3 rounded-lg border-2 border-black mb-3">
-              <div className="space-y-2">
+            <div className="bg-white p-2 md:p-3 rounded-lg border-2 border-black mb-3">
+              <div className="space-y-1.5 md:space-y-2">
                 {planConfig.features.slice(0, 3).map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2 text-black">
-                    <div className="bg-green-500 p-1 rounded border border-black">
-                      <Check className="w-3 h-3 text-white" />
+                  <div key={index} className="flex items-start gap-2 text-black">
+                    <div className="bg-green-500 p-0.5 md:p-1 rounded border border-black flex-shrink-0 mt-0.5">
+                      <Check className="w-2.5 h-2.5 md:w-3 md:h-3 text-white" />
                     </div>
-                    <span className="text-xs font-bold">{feature}</span>
+                    <span className="text-xs font-bold leading-tight">{feature}</span>
                   </div>
                 ))}
                 {planConfig.features.length > 3 && (
@@ -704,9 +697,9 @@ export default function AnimatedSignupPage() {
                 style={{
                   background: '#5cbdfd',
                   fontFamily: 'inherit',
-                  padding: '0.6em 1.3em',
+                  padding: '0.5em 1em',
                   fontWeight: 900,
-                  fontSize: '15px',
+                  fontSize: '13px',
                   border: '3px solid black',
                   borderRadius: '0.4em',
                   boxShadow: '0.1em 0.1em',
@@ -739,29 +732,7 @@ export default function AnimatedSignupPage() {
           </motion.div>
 
 
-          {/* Value Proposition */}
-          <motion.div 
-            className="mb-6 p-4 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transform rotate-1"
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.8, duration: 0.5 }}
-          >
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1 mb-2">
-                <Star className="w-5 h-5 text-black fill-current" />
-                <Star className="w-5 h-5 text-black fill-current" />
-                <Star className="w-5 h-5 text-black fill-current" />
-                <Star className="w-5 h-5 text-black fill-current" />
-                <Star className="w-5 h-5 text-black fill-current" />
-              </div>
-              <p className="text-black text-sm font-black mb-1 uppercase">
-                "A2Z HELPED US REACH 300% MORE CUSTOMERS!"
-              </p>
-              <p className="text-black text-xs font-bold">
-                JOIN 10,000+ SELLERS ALREADY GROWING!
-              </p>
-            </div>
-          </motion.div>
+
 
           <motion.form 
             onSubmit={handleSubmit} 
