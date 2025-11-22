@@ -139,6 +139,8 @@ export default function ProfilePage() {
   const [submittingReview, setSubmittingReview] = useState(false)
   const [reviews, setReviews] = useState<any[]>([])
   const [showTierTooltip, setShowTierTooltip] = useState(false)
+  const [showClosedModal, setShowClosedModal] = useState(false)
+  const [closedModalMessage, setClosedModalMessage] = useState('')
 
   const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 })
 
@@ -704,6 +706,57 @@ Best regards`
     } catch (error) {
       // Fallback for old text format - just return closed since we can't parse it reliably
       return { isOpen: false, status: 'Check hours' }
+    }
+  }
+
+  const getNextOpeningTime = (hoursString: string) => {
+    if (!hoursString) return null
+    
+    try {
+      const schedule = JSON.parse(hoursString)
+      const now = new Date()
+      const today = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
+      const todaySchedule = schedule[today]
+      
+      // Convert time to minutes for comparison
+      const timeToMinutes = (time: string) => {
+        const [hours, minutes] = time.split(':').map(Number)
+        return hours * 60 + minutes
+      }
+      
+      const currentTime = now.toTimeString().slice(0, 5)
+      const currentMinutes = timeToMinutes(currentTime)
+      
+      // Check if we can still open today
+      if (todaySchedule && !todaySchedule.closed) {
+        const openMinutes = timeToMinutes(todaySchedule.open)
+        if (currentMinutes < openMinutes) {
+          return `today at ${todaySchedule.open}`
+        }
+      }
+      
+      // Look for next opening day
+      const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+      const todayIndex = days.indexOf(today)
+      
+      for (let i = 1; i <= 7; i++) {
+        const nextDayIndex = (todayIndex + i) % 7
+        const nextDay = days[nextDayIndex]
+        const nextDaySchedule = schedule[nextDay]
+        
+        if (nextDaySchedule && !nextDaySchedule.closed) {
+          const dayName = nextDay.charAt(0).toUpperCase() + nextDay.slice(1)
+          if (i === 1) {
+            return `tomorrow at ${nextDaySchedule.open}`
+          } else {
+            return `${dayName} at ${nextDaySchedule.open}`
+          }
+        }
+      }
+      
+      return null
+    } catch (error) {
+      return null
     }
   }
 
@@ -1611,7 +1664,24 @@ Best regards`
                     <motion.div 
                       key={product.id} 
                       className="bg-white border border-gray-200 rounded-[9px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex-shrink-0 w-48"
-                      onClick={() => setSelectedProduct(product)}
+                      onClick={() => {
+                        if (!profile?.business_hours) {
+                          setSelectedProduct(product)
+                          return
+                        }
+                        
+                        const businessStatus = isBusinessOpen(profile.business_hours)
+                        if (businessStatus.isOpen) {
+                          setSelectedProduct(product)
+                        } else {
+                          const nextOpening = getNextOpeningTime(profile.business_hours)
+                          const message = nextOpening 
+                            ? `We're currently closed. We'll be open ${nextOpening}.`
+                            : "We're currently closed. Please check our business hours."
+                          setClosedModalMessage(message)
+                          setShowClosedModal(true)
+                        }
+                      }}
                       initial={{ opacity: 0, scale: 0.8, y: 20 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.8, y: -20 }}
@@ -2449,6 +2519,103 @@ Best regards`
                     {submittingReview ? 'Submitting...' : 'Submit Review'}
                   </Button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Closed Business Modal */}
+      {showClosedModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-md w-full">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <h2 className="text-xl font-semibold text-gray-900">We're Currently Closed</h2>
+              <button
+                onClick={() => setShowClosedModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="space-y-6">
+                {/* Status Message */}
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Clock className="w-8 h-8 text-red-600" />
+                  </div>
+                  <p className="text-gray-700 mb-4">{closedModalMessage}</p>
+                  <p className="text-sm text-gray-600">
+                    If you want to order now, please contact us directly:
+                  </p>
+                </div>
+
+                {/* Contact Options */}
+                <div className="space-y-3">
+                  {profile?.phone_number && (
+                    <>
+                      <button
+                        onClick={() => {
+                          const phoneNumber = profile.phone_number?.replace(/\D/g, '')
+                          const message = `Hi ${profile.display_name}, I found your profile on A2Z Business Directory and would like to place an order even though you're currently closed.`
+                          const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+                          window.open(whatsappUrl, '_blank')
+                          setShowClosedModal(false)
+                        }}
+                        className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-3"
+                      >
+                        <MessageCircle className="w-5 h-5" />
+                        <div className="text-left">
+                          <div className="font-semibold">WhatsApp Us</div>
+                          <div className="text-sm opacity-90">{profile.phone_number}</div>
+                        </div>
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          window.open(`tel:${profile.phone_number}`, '_self')
+                          setShowClosedModal(false)
+                        }}
+                        className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-3"
+                      >
+                        <Phone className="w-5 h-5" />
+                        <div className="text-left">
+                          <div className="font-semibold">Call Us</div>
+                          <div className="text-sm opacity-90">{profile.phone_number}</div>
+                        </div>
+                      </button>
+                    </>
+                  )}
+                  
+                  {profile?.email && (
+                    <button
+                      onClick={() => {
+                        const subject = `Order Inquiry - ${profile.display_name}`
+                        const body = `Hi ${profile.display_name},\n\nI found your profile on A2Z Business Directory and would like to place an order even though you're currently closed.\n\nPlease let me know when you're available.\n\nThank you!`
+                        const mailtoUrl = `mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+                        window.open(mailtoUrl, '_blank')
+                        setShowClosedModal(false)
+                      }}
+                      className="w-full bg-gray-600 text-white py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center gap-3"
+                    >
+                      <Mail className="w-5 h-5" />
+                      <div className="text-left">
+                        <div className="font-semibold">Email Us</div>
+                        <div className="text-sm opacity-90">{profile.email}</div>
+                      </div>
+                    </button>
+                  )}
+                </div>
+
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowClosedModal(false)}
+                  className="w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Maybe Later
+                </button>
               </div>
             </div>
           </div>
