@@ -860,7 +860,7 @@ export default function AnimatedSignupPage() {
             <AnimatedButton 
               type="submit" 
               disabled={loading || !displayNameAvailable}
-              className=""
+              className="w-full sm:w-auto sm:px-8"
             >
               {loading ? 'Creating Account...' : 'Create Account'}
             </AnimatedButton>

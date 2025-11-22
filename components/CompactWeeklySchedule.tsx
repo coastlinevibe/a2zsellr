@@ -200,14 +200,14 @@ export default function CompactWeeklySchedule({
               <motion.div
                 key={day.key}
                 variants={itemVariants}
-                className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+                className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg border transition-all gap-2 ${
                   isToday 
                     ? 'border-emerald-300 bg-emerald-50' 
                     : 'border-gray-200 bg-gray-50/50 hover:bg-gray-50'
                 }`}
               >
                 {/* Day and Status */}
-                <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="flex items-center justify-between sm:justify-start gap-3 min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className={`font-medium text-sm ${isToday ? 'text-emerald-700' : 'text-gray-700'}`}>
                       {day.label}
@@ -219,8 +219,8 @@ export default function CompactWeeklySchedule({
                     )}
                   </div>
                   
-                  {/* Hours Display */}
-                  <div className="text-sm text-gray-600">
+                  {/* Hours Display - Show on mobile */}
+                  <div className="text-sm text-gray-600 sm:hidden">
                     {daySchedule.closed ? (
                       <span className="text-red-600 font-medium">Closed</span>
                     ) : (
@@ -231,32 +231,44 @@ export default function CompactWeeklySchedule({
                   </div>
                 </div>
 
-                {/* Controls */}
-                <div className="flex items-center gap-3">
+                {/* Hours Display - Show on desktop */}
+                <div className="hidden sm:block text-sm text-gray-600">
+                  {daySchedule.closed ? (
+                    <span className="text-red-600 font-medium">Closed</span>
+                  ) : (
+                    <span className="text-emerald-600 font-medium">
+                      {formatTimeTo12Hour(daySchedule.open)} - {formatTimeTo12Hour(daySchedule.close)}
+                    </span>
+                  )}
+                </div>
+
+                {/* Controls - Mobile Responsive */}
+                <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3">
                   {/* Time Inputs - Only show when open */}
                   <AnimatePresence>
                     {!daySchedule.closed && (
                       <motion.div
-                        initial={{ opacity: 0, width: 0 }}
-                        animate={{ opacity: 1, width: 'auto' }}
-                        exit={{ opacity: 0, width: 0 }}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-1 sm:gap-2"
                       >
                         <div className="flex items-center gap-1">
-                          <Sun className="w-3 h-3 text-amber-500" />
+                          <Sun className="w-3 h-3 text-amber-500 hidden sm:block" />
                           <TimePickerAMPM
                             value={daySchedule.open}
                             onChange={(value) => updateDaySchedule(day.key, 'open', value)}
-                            className="w-20 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                            className="w-16 sm:w-20 px-1 sm:px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
                           />
                         </div>
+                        <span className="text-xs text-gray-400">-</span>
                         <div className="flex items-center gap-1">
-                          <Moon className="w-3 h-3 text-indigo-500" />
+                          <Moon className="w-3 h-3 text-indigo-500 hidden sm:block" />
                           <TimePickerAMPM
                             value={daySchedule.close}
                             onChange={(value) => updateDaySchedule(day.key, 'close', value)}
-                            className="w-20 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                            className="w-16 sm:w-20 px-1 sm:px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
                           />
                         </div>
                       </motion.div>
@@ -265,7 +277,7 @@ export default function CompactWeeklySchedule({
 
                   {/* Open/Closed Toggle */}
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-gray-600 hidden sm:inline">
                       {daySchedule.closed ? 'Closed' : 'Open'}
                     </span>
                     <Switch
@@ -282,11 +294,11 @@ export default function CompactWeeklySchedule({
           })}
         </div>
 
-        {/* Quick Actions - Enhanced */}
+        {/* Quick Actions - Mobile Responsive */}
         <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 border-t border-gray-200">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <span className="text-xs font-medium text-gray-700">Quick setup:</span>
-            <div className="flex gap-2 flex-wrap">
+            <div className="grid grid-cols-1 sm:flex gap-2">
               <motion.button
                 whileHover={{ scale: 1.05, y: -1 }}
                 whileTap={{ scale: 0.95 }}
@@ -304,7 +316,7 @@ export default function CompactWeeklySchedule({
                     })
                   }
                 }}
-                className="px-3 py-1.5 text-xs font-medium bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-md transition-all shadow-sm border border-purple-200"
+                className="px-3 py-2 sm:py-1.5 text-xs font-medium bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-md transition-all shadow-sm border border-purple-200 text-center"
               >
                 Copy Monday to All
               </motion.button>
@@ -318,7 +330,7 @@ export default function CompactWeeklySchedule({
                     updateDaySchedule(day.key, 'close', '17:00')
                   })
                 }}
-                className="px-3 py-1.5 text-xs font-medium bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-md transition-all shadow-sm border border-emerald-200"
+                className="px-3 py-2 sm:py-1.5 text-xs font-medium bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-md transition-all shadow-sm border border-emerald-200 text-center"
               >
                 9-5 Daily
               </motion.button>
@@ -339,7 +351,7 @@ export default function CompactWeeklySchedule({
                   // Set Sunday to closed
                   updateDaySchedule('sunday', 'closed', true)
                 }}
-                className="px-3 py-1.5 text-xs font-medium bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-all shadow-sm border border-blue-200"
+                className="px-3 py-2 sm:py-1.5 text-xs font-medium bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-all shadow-sm border border-blue-200 text-center"
               >
                 Weekdays + Sat AM
               </motion.button>
