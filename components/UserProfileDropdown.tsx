@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
-import { User, Settings, Star, Gift, HelpCircle, LogOut, Crown, CheckCircle } from 'lucide-react'
+import { User, Settings, Star, Gift, HelpCircle, LogOut, Crown, Sword, Zap, CheckCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { PlanSelectionModal } from '@/components/PlanSelectionModal'
@@ -131,12 +131,14 @@ export function UserProfileDropdown({
                   <p className="text-sm text-gray-500">{userHandle}</p>
                   <Badge className={`text-xs mt-1 rounded-[9px] ${
                     tierValue === 'business' 
-                      ? 'bg-blue-100 text-blue-700' 
+                      ? 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white border border-blue-400 shadow-lg font-bold' 
                       : tierValue === 'premium' 
-                      ? 'bg-orange-100 text-orange-700' 
-                      : 'bg-gray-100 text-gray-700'
+                      ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 text-white border border-amber-300 shadow-lg font-bold' 
+                      : 'bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 text-white border border-gray-300 shadow-lg font-bold'
                   }`}>
-                    {tierValue !== 'free' && <Crown className="w-3 h-3 mr-1 inline" />}
+                    {tierValue === 'free' && <Zap className="w-3 h-3 mr-1 inline text-white drop-shadow-sm" />}
+                    {tierValue === 'premium' && <Sword className="w-3 h-3 mr-1 inline text-white drop-shadow-sm" />}
+                    {tierValue === 'business' && <Crown className="w-3 h-3 mr-1 inline text-white drop-shadow-sm" />}
                     {tierLabel}
                   </Badge>
                 </div>
@@ -164,7 +166,7 @@ export function UserProfileDropdown({
                       onClick={() => handleAction('upgrade')}
                       className="w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-3 px-4 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3"
                     >
-                      <Crown className="w-5 h-5" />
+                      <Sword className="w-5 h-5" />
                       <span>UPGRADE TO PREMIUM</span>
                       <Star className="w-4 h-4" />
                     </button>

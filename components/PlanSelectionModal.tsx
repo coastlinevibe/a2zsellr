@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Crown, Building2, Check } from 'lucide-react'
+import { X, Crown, Sword, Building2, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface PlanSelectionModalProps {
@@ -19,7 +19,7 @@ export function PlanSelectionModal({ isOpen, onClose, onSelectPlan, currentTier 
       id: 'premium' as const,
       name: 'Premium',
       price: 149,
-      icon: Crown,
+      icon: Sword,
       color: 'from-yellow-400 to-orange-500',
       features: [
         'Unlimited gallery images',

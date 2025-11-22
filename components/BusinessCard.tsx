@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { Star, MapPin, Phone, Globe, Crown, User, Image } from 'lucide-react'
+import { Star, MapPin, Phone, Globe, Crown, Sword, Zap, User, Image } from 'lucide-react'
 import { ImageGallery } from '@/components/ui/carousel-circular-image-gallery'
 import { Badge } from '@/components/ui/badge'
 import { motion } from 'framer-motion'
@@ -88,7 +88,9 @@ export function BusinessCard({ business, categoryName, locationName, index = 0 }
         transition={{ delay: index * 0.1 + 0.3, type: "spring", stiffness: 200 }}
       >
         <div className={`${tierBadge.className} px-3 py-1 rounded-lg text-xs font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)]`}>
-          {business.subscription_tier !== 'free' && <Crown className="h-3 w-3 mr-1 inline" />}
+          {business.subscription_tier === 'free' && <Zap className="h-3 w-3 mr-1 inline" />}
+          {business.subscription_tier === 'premium' && <Sword className="h-3 w-3 mr-1 inline" />}
+          {business.subscription_tier === 'business' && <Crown className="h-3 w-3 mr-1 inline" />}
           {tierBadge.text}
         </div>
       </motion.div>

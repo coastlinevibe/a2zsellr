@@ -91,9 +91,9 @@ export const UserDropdown = ({
 
   const getTierBadge = (tier: string) => {
     const badges = {
-      free: { text: "Free", className: "bg-gray-100 text-gray-700" },
-      premium: { text: "Premium", className: "bg-emerald-100 text-emerald-700" },
-      business: { text: "Business", className: "bg-blue-100 text-blue-700" }
+      free: { text: "Free", className: "bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 text-white border border-gray-300 shadow-lg font-bold" },
+      premium: { text: "Premium", className: "bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 text-white border border-amber-300 shadow-lg font-bold" },
+      business: { text: "Business", className: "bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white border border-blue-400 shadow-lg font-bold" }
     };
     return badges[tier as keyof typeof badges] || badges.free;
   };

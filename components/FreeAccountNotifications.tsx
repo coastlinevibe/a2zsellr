@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Crown, X, Star, Zap, TrendingUp, Users } from 'lucide-react'
+import { Crown, Sword, X, Star, Zap, TrendingUp, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface FreeAccountNotificationsProps {
@@ -60,7 +60,7 @@ export default function FreeAccountNotifications({
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-orange-100 rounded-full">
-            <Crown className="w-6 h-6 text-orange-600" />
+            <Sword className="w-6 h-6 text-orange-600" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
@@ -113,7 +113,7 @@ export default function FreeAccountNotifications({
       {/* Upgrade Offer */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Crown className="w-5 h-5 text-amber-500" />
+          <Sword className="w-5 h-5 text-amber-500" />
           <div className="text-xl font-black text-gray-900 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
             R149/month
           </div>
@@ -125,7 +125,7 @@ export default function FreeAccountNotifications({
             onClick={onUpgrade}
             className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-3 px-6 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3"
           >
-            <Crown className="w-5 h-5" />
+            <Sword className="w-5 h-5" />
             <span>Upgrade Now</span>
             <Star className="w-4 h-4" />
           </button>

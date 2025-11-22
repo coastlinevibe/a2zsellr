@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, Shield, Crown, Star, Eye, Edit, Trash2, RefreshCw, Search } from 'lucide-react'
+import { Users, Shield, Crown, Sword, Zap, Star, Eye, Edit, Trash2, RefreshCw, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
 import { motion } from 'framer-motion'
 
@@ -763,10 +763,10 @@ export function UserManagement() {
 
   const getTierIcon = (tier: string) => {
     switch (tier) {
-      case 'free': return <Users className="w-4 h-4" />
-      case 'premium': return <Star className="w-4 h-4" />
+      case 'free': return <Zap className="w-4 h-4" />
+      case 'premium': return <Sword className="w-4 h-4" />
       case 'business': return <Crown className="w-4 h-4" />
-      default: return <Users className="w-4 h-4" />
+      default: return <Zap className="w-4 h-4" />
     }
   }
 

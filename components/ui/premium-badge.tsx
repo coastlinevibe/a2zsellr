@@ -1,6 +1,6 @@
 'use client'
 
-import { Crown, Sparkles, Zap } from 'lucide-react'
+import { Crown, Sparkles, Sword, Zap } from 'lucide-react'
 
 interface PremiumBadgeProps {
   tier: 'free' | 'premium' | 'business'
@@ -31,18 +31,24 @@ export function PremiumBadge({
 
   if (tier === 'premium') {
     return (
-      <div className={`inline-flex items-center gap-1.5 bg-orange-100 text-orange-700 rounded-[9px] font-semibold ${sizeClasses[size]} ${className}`}>
-        {showIcon && <Sparkles className={`${iconSizes[size]} text-orange-600`} />}
-        <span>Premium</span>
+      <div className={`inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 text-white rounded-[9px] font-bold shadow-lg border border-amber-300 ${sizeClasses[size]} ${className}`} 
+           style={{ 
+             boxShadow: '0 4px 14px 0 rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)' 
+           }}>
+        {showIcon && <Sword className={`${iconSizes[size]} text-white drop-shadow-sm`} />}
+        <span className="drop-shadow-sm">Premium</span>
       </div>
     )
   }
 
   if (tier === 'business') {
     return (
-      <div className={`inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 rounded-[9px] font-semibold ${sizeClasses[size]} ${className}`}>
-        {showIcon && <Crown className={`${iconSizes[size]} text-blue-600`} />}
-        <span>Business</span>
+      <div className={`inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white rounded-[9px] font-bold shadow-lg border border-blue-400 ${sizeClasses[size]} ${className}`}
+           style={{ 
+             boxShadow: '0 4px 14px 0 rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)' 
+           }}>
+        {showIcon && <Crown className={`${iconSizes[size]} text-white drop-shadow-sm`} />}
+        <span className="drop-shadow-sm">Business</span>
       </div>
     )
   }

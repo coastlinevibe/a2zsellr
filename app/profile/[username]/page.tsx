@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Head from 'next/head'
 import { supabase } from '@/lib/supabaseClient'
-import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Check, Truck, Shield, MessageCircle, FileText } from 'lucide-react'
+import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Sword, Zap, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Check, Truck, Shield, MessageCircle, FileText } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/contexts/CartContext'
@@ -685,9 +685,9 @@ Best regards`
     if (!profile) return { text: 'Free', className: 'bg-gray-100 text-gray-700 rounded-[9px]' }
     
     const badges = {
-      free: { text: 'Free', className: 'bg-gray-100 text-gray-700 rounded-[9px]' },
-      premium: { text: 'Premium', className: 'bg-orange-100 text-orange-700 rounded-[9px]' },
-      business: { text: 'Business', className: 'bg-blue-100 text-blue-700 rounded-[9px]' }
+      free: { text: 'Free', className: 'bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 text-white border border-gray-300 shadow-lg font-bold rounded-[9px]' },
+      premium: { text: 'Premium', className: 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 text-white border border-amber-300 shadow-lg font-bold rounded-[9px]' },
+      business: { text: 'Business', className: 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white border border-blue-400 shadow-lg font-bold rounded-[9px]' }
     }
     const tier = (profile.subscription_tier || 'free') as keyof typeof badges
     return badges[tier]
@@ -837,7 +837,9 @@ Best regards`
                 {/* Business Tier Badge - Mobile (closer to name) */}
                 <div className="flex-shrink-0">
                   <Badge className={`${tierBadge.className} text-xs`}>
-                    {profile.subscription_tier !== 'free' && <Crown className="h-2.5 w-2.5 mr-0.5" />}
+                    {profile.subscription_tier === 'free' && <Zap className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
+                    {profile.subscription_tier === 'premium' && <Sword className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
+                    {profile.subscription_tier === 'business' && <Crown className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
                     {tierBadge.text}
                   </Badge>
                 </div>
@@ -957,7 +959,9 @@ Best regards`
                   </h1>
                   <div className="flex gap-1 flex-shrink-0">
                     <Badge className={`${tierBadge.className} text-xs`}>
-                      {profile.subscription_tier !== 'free' && <Crown className="h-2.5 w-2.5 mr-0.5" />}
+                      {profile.subscription_tier === 'free' && <Zap className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
+                      {profile.subscription_tier === 'premium' && <Sword className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
+                      {profile.subscription_tier === 'business' && <Crown className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
                       {tierBadge.text}
                     </Badge>
                     {profile.verified_seller && (

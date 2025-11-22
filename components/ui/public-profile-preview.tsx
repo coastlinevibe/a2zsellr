@@ -9,6 +9,8 @@ import {
   Clock, 
   Star, 
   Crown,
+  Sword,
+  Zap,
   MessageCircle,
   Share2,
   ShoppingBag,
@@ -222,9 +224,9 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
 
   const tierBadge = (() => {
     const mapping: Record<UserProfile['subscription_tier'], { text: string; className: string }> = {
-      free: { text: 'Free', className: 'bg-gray-100 text-gray-700' },
-      premium: { text: 'Premium', className: 'bg-orange-100 text-orange-700' },
-      business: { text: 'Business', className: 'bg-blue-100 text-blue-700' }
+      free: { text: 'Free', className: 'bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 text-white border border-gray-300 shadow-lg font-bold' },
+      premium: { text: 'Premium', className: 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 text-white border border-amber-300 shadow-lg font-bold' },
+      business: { text: 'Business', className: 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white border border-blue-400 shadow-lg font-bold' }
     }
 
     return mapping[profile.subscription_tier ?? 'free']
@@ -331,7 +333,9 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
                 {/* Business Tier Badge - Mobile (closer to name) */}
                 <div className="flex-shrink-0">
                   <Badge className={`${tierBadge.className} text-xs`}>
-                    {profile.subscription_tier !== 'free' && <Crown className="h-2.5 w-2.5 mr-0.5" />}
+                    {profile.subscription_tier === 'free' && <Zap className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
+                    {profile.subscription_tier === 'premium' && <Sword className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
+                    {profile.subscription_tier === 'business' && <Crown className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
                     {tierBadge.text}
                   </Badge>
                 </div>
@@ -419,7 +423,9 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
                   </h1>
                   <div className="flex gap-1 flex-shrink-0">
                     <Badge className={`${tierBadge.className} text-xs`}>
-                      {profile.subscription_tier !== 'free' && <Crown className="h-2.5 w-2.5 mr-0.5" />}
+                      {profile.subscription_tier === 'free' && <Zap className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
+                      {profile.subscription_tier === 'premium' && <Sword className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
+                      {profile.subscription_tier === 'business' && <Crown className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
                       {tierBadge.text}
                     </Badge>
                     {profile.verified_seller && (
@@ -908,7 +914,9 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
             {/* Company Name */}
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-[9px]">
-                <Crown className="h-4 w-4 text-blue-600" />
+                {profile.subscription_tier === 'free' && <Zap className="h-4 w-4 text-blue-600" />}
+                {profile.subscription_tier === 'premium' && <Sword className="h-4 w-4 text-orange-600" />}
+                {profile.subscription_tier === 'business' && <Crown className="h-4 w-4 text-blue-600" />}
               </div>
               <span className="text-sm font-medium text-gray-900">{profile.display_name || 'Business Name'}</span>
             </div>

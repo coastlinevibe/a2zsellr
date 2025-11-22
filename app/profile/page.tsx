@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabaseClient'
 import { Button } from '@/components/ui/button'
-import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Heart, Check, Truck, Shield, FileText, User, CheckCircle2, AlertTriangle, Building2, Tag, Upload, ArrowLeft, HelpCircle, Image as ImageIcon, ChevronDown, ChevronUp } from 'lucide-react'
+import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Sword, Zap, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Heart, Check, Truck, Shield, FileText, User, CheckCircle2, AlertTriangle, Building2, Tag, Upload, ArrowLeft, HelpCircle, Image as ImageIcon, ChevronDown, ChevronUp } from 'lucide-react'
 import EmojiPicker from '@/components/ui/emoji-picker'
 import { Badge } from '@/components/ui/badge'
 import ProfileCompletenessIndicator from '@/components/ProfileCompletenessIndicator'
@@ -488,9 +488,9 @@ export default function ProfilePage() {
 
   const getTierBadge = () => {
     const badges = {
-      free: { text: 'Free', className: 'bg-gray-100 text-gray-700' },
-      premium: { text: 'Premium', className: 'bg-orange-100 text-orange-700' },
-      business: { text: 'Business', className: 'bg-blue-100 text-blue-700' }
+      free: { text: 'Free', className: 'bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 text-white border border-gray-300 shadow-lg font-bold' },
+      premium: { text: 'Premium', className: 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 text-white border border-amber-300 shadow-lg font-bold' },
+      business: { text: 'Business', className: 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white border border-blue-400 shadow-lg font-bold' }
     }
     return badges[profile?.subscription_tier || 'free']
   }
@@ -1075,7 +1075,9 @@ export default function ProfilePage() {
                 </p>
                 <div className="flex items-center gap-1.5 mt-1.5">
                   <Badge className={`${tierBadge.className} border-0 text-xs py-0.5 rounded-[9px]`}>
-                    {profile?.subscription_tier !== 'free' && <Crown className="h-3 w-3 mr-1" />}
+                    {profile?.subscription_tier === 'free' && <Zap className="h-3 w-3 mr-1 text-white drop-shadow-sm" />}
+                    {profile?.subscription_tier === 'premium' && <Sword className="h-3 w-3 mr-1 text-white drop-shadow-sm" />}
+                    {profile?.subscription_tier === 'business' && <Crown className="h-3 w-3 mr-1 text-white drop-shadow-sm" />}
                     {tierBadge.text}
                   </Badge>
                   {profile?.verified_seller && (
