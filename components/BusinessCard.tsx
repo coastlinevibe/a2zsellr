@@ -1,8 +1,7 @@
 'use client'
 import Link from 'next/link'
-import { Star, MapPin, Phone, Globe, Crown, Sword, Zap, User, Image } from 'lucide-react'
+import { MapPin, Phone, Globe, Crown, Sword, Zap, User } from 'lucide-react'
 import { ImageGallery } from '@/components/ui/carousel-circular-image-gallery'
-import { Badge } from '@/components/ui/badge'
 import { motion } from 'framer-motion'
 
 interface ProfileCardProps {
@@ -28,16 +27,7 @@ interface ProfileCardProps {
 }
 
 export function BusinessCard({ business, categoryName, locationName, index = 0 }: ProfileCardProps) {
-  const getTierBadge = () => {
-    const badges = {
-      free: { text: 'FREE', className: 'bg-gray-500 text-white border-2 border-black' },
-      premium: { text: 'PREMIUM', className: 'bg-orange-500 text-white border-2 border-black' },
-      business: { text: 'BUSINESS', className: 'bg-blue-500 text-white border-2 border-black' }
-    }
-    return badges[business.subscription_tier] || badges.free
-  }
 
-  const tierBadge = getTierBadge()
   const username = business.display_name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'business'
 
   return (
@@ -80,18 +70,32 @@ export function BusinessCard({ business, categoryName, locationName, index = 0 }
         transition: { duration: 0.1 }
       }}
     >
-      {/* Tier Badge - Positioned at top right corner */}
+      {/* Tier Badge - Icon only with tooltip (matching profile view) */}
       <motion.div 
-        className="absolute top-2 right-2 z-10"
+        className="absolute top-2 right-2 z-10 group"
         initial={{ scale: 0, rotate: -180 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ delay: index * 0.1 + 0.3, type: "spring", stiffness: 200 }}
       >
-        <div className={`${tierBadge.className} px-3 py-1 rounded-lg text-xs font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)]`}>
-          {business.subscription_tier === 'free' && <Zap className="h-3 w-3 mr-1 inline" />}
-          {business.subscription_tier === 'premium' && <Sword className="h-3 w-3 mr-1 inline" />}
-          {business.subscription_tier === 'business' && <Crown className="h-3 w-3 mr-1 inline" />}
-          {tierBadge.text}
+        <div 
+          className={`w-8 h-8 rounded-full flex items-center justify-center shadow-lg border cursor-pointer transition-transform hover:scale-110 ${
+            business.subscription_tier === 'free' 
+              ? 'bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 border-gray-300' 
+              : business.subscription_tier === 'premium'
+              ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 border-amber-300'
+              : 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 border-blue-400'
+          }`}
+        >
+          {business.subscription_tier === 'free' && <Zap className="h-4 w-4 text-white drop-shadow-sm" />}
+          {business.subscription_tier === 'premium' && <Sword className="h-4 w-4 text-white drop-shadow-sm" />}
+          {business.subscription_tier === 'business' && <Crown className="h-4 w-4 text-white drop-shadow-sm" />}
+        </div>
+        
+        {/* Tooltip */}
+        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+          {business.subscription_tier === 'free' ? 'Free user' : 
+           business.subscription_tier === 'premium' ? 'Premium user' : 'Business user'}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
         </div>
       </motion.div>
       {/* Header with solid colors based on tier */}

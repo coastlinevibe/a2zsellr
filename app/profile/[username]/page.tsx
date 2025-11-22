@@ -655,6 +655,58 @@ Best regards`
     }
   }
 
+  const isBusinessOpen = (hoursString: string) => {
+    if (!hoursString) return { isOpen: false, status: 'Hours not set' }
+    
+    try {
+      // Try to parse as JSON first (new format)
+      const schedule = JSON.parse(hoursString)
+      const now = new Date()
+      const today = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
+      const todaySchedule = schedule[today]
+      
+      if (!todaySchedule) return { isOpen: false, status: 'Hours not available' }
+      if (todaySchedule.closed) return { isOpen: false, status: 'Closed today' }
+      
+      // Get current time in HH:MM format
+      const currentTime = now.toTimeString().slice(0, 5)
+      const openTime = todaySchedule.open
+      const closeTime = todaySchedule.close
+      
+      // Convert times to minutes for comparison
+      const timeToMinutes = (time: string) => {
+        const [hours, minutes] = time.split(':').map(Number)
+        return hours * 60 + minutes
+      }
+      
+      const currentMinutes = timeToMinutes(currentTime)
+      const openMinutes = timeToMinutes(openTime)
+      const closeMinutes = timeToMinutes(closeTime)
+      
+      // Handle cases where business closes after midnight
+      if (closeMinutes < openMinutes) {
+        // Business is open across midnight (e.g., 22:00 - 02:00)
+        const isOpen = currentMinutes >= openMinutes || currentMinutes <= closeMinutes
+        return { 
+          isOpen, 
+          status: isOpen ? 'Open' : 'Closed',
+          hours: `${openTime} - ${closeTime}`
+        }
+      } else {
+        // Normal business hours (e.g., 09:00 - 17:00)
+        const isOpen = currentMinutes >= openMinutes && currentMinutes <= closeMinutes
+        return { 
+          isOpen, 
+          status: isOpen ? 'Open' : 'Closed',
+          hours: `${openTime} - ${closeTime}`
+        }
+      }
+    } catch (error) {
+      // Fallback for old text format - just return closed since we can't parse it reliably
+      return { isOpen: false, status: 'Check hours' }
+    }
+  }
+
   const getAllHours = (hoursString: string) => {
     if (!hoursString) return []
     
@@ -946,10 +998,18 @@ Best regards`
               )}
               
               {/* Open Status */}
-              <div className="flex items-center gap-1 ml-auto text-gray-600">
-                <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                <span className="text-green-600 font-medium">Open</span>
-              </div>
+              {profile.business_hours && (
+                <div className="flex items-center gap-1 ml-auto text-gray-600">
+                  <div className={`w-1.5 h-1.5 rounded-full ${
+                    isBusinessOpen(profile.business_hours).isOpen ? 'bg-green-500' : 'bg-red-500'
+                  }`}></div>
+                  <span className={`font-medium ${
+                    isBusinessOpen(profile.business_hours).isOpen ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {isBusinessOpen(profile.business_hours).status}
+                  </span>
+                </div>
+              )}
               
               {/* Category */}
               {profile.business_category && (
@@ -1009,11 +1069,21 @@ Best regards`
                       <span>{profile.business_category}</span>
                     </>
                   )}
-                  <span className="text-gray-400">•</span>
-                  <div className="flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                    <span className="text-green-600 font-medium">Open</span>
-                  </div>
+                  {profile.business_hours && (
+                    <>
+                      <span className="text-gray-400">•</span>
+                      <div className="flex items-center gap-1">
+                        <div className={`w-1.5 h-1.5 rounded-full ${
+                          isBusinessOpen(profile.business_hours).isOpen ? 'bg-green-500' : 'bg-red-500'
+                        }`}></div>
+                        <span className={`font-medium ${
+                          isBusinessOpen(profile.business_hours).isOpen ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {isBusinessOpen(profile.business_hours).status}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

@@ -74,9 +74,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (galleryImages.length > 6) {
+    if (galleryImages.length > 30) {
       return NextResponse.json(
-        { error: 'Maximum 6 gallery images allowed' },
+        { error: 'Maximum 30 gallery images allowed' },
         { status: 400 }
       )
     }

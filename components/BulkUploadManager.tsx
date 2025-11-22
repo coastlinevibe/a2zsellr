@@ -78,8 +78,8 @@ export function BulkUploadManager() {
   const handleGalleryImagesSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files || [])
     if (selectedFiles.length > 0) {
-      // Limit to 6 images
-      const limitedFiles = selectedFiles.slice(0, 6)
+      // Limit to 30 images
+      const limitedFiles = selectedFiles.slice(0, 30)
       setGalleryImages(limitedFiles)
     }
   }
@@ -347,7 +347,7 @@ export function BulkUploadManager() {
 
           {/* Gallery Images Upload */}
           <div className="border-4 border-dashed border-blue-500 rounded-xl p-6">
-            <h4 className="text-xl font-black text-black mb-4 uppercase">🖼️ GALLERY IMAGES (1-6 Required)</h4>
+            <h4 className="text-xl font-black text-black mb-4 uppercase">🖼️ GALLERY IMAGES (1-30 Required)</h4>
             <input
               type="file"
               accept="image/*"
@@ -362,26 +362,31 @@ export function BulkUploadManager() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <p className="text-lg font-bold text-black">
-                  {galleryImages.length > 0 ? `${galleryImages.length} Gallery Images Selected` : 'Select Gallery Images (1-6)'}
+                  {galleryImages.length > 0 ? `${galleryImages.length} Gallery Images Selected` : 'Select Gallery Images (1-30)'}
                 </p>
                 <p className="text-gray-600">Each profile will get a random image from this collection</p>
               </div>
             </label>
             
             {galleryImages.length > 0 && (
-              <div className="mt-4 grid grid-cols-3 gap-4">
-                {galleryImages.map((image, index) => (
-                  <div key={index} className="relative">
-                    <img 
-                      src={URL.createObjectURL(image)} 
-                      alt={`Gallery ${index + 1}`}
-                      className="w-full h-24 object-cover rounded border-2 border-black"
-                    />
-                    <div className="absolute top-1 right-1 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
-                      {index + 1}
+              <div className="mt-4">
+                <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 max-h-96 overflow-y-auto">
+                  {galleryImages.map((image, index) => (
+                    <div key={index} className="relative">
+                      <img 
+                        src={URL.createObjectURL(image)} 
+                        alt={`Gallery ${index + 1}`}
+                        className="w-full h-16 object-cover rounded border-2 border-black"
+                      />
+                      <div className="absolute top-1 right-1 bg-blue-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs font-bold">
+                        {index + 1}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                <p className="text-sm text-gray-600 mt-2 text-center">
+                  {galleryImages.length} images selected (max 30)
+                </p>
               </div>
             )}
           </div>
@@ -412,7 +417,7 @@ export function BulkUploadManager() {
               ) : galleryImages.length === 0 ? (
                 <>
                   <FileText className="w-6 h-6 inline-block mr-3" />
-                  NEED GALLERY IMAGES (1-6)
+                  NEED GALLERY IMAGES (1-30)
                 </>
               ) : (
                 <>
@@ -536,15 +541,15 @@ export function BulkUploadManager() {
             {/* Gallery Images */}
             <div>
               <h5 className="font-bold text-black mb-2">Gallery Images ({galleryImages.length}):</h5>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-1 max-h-32 overflow-y-auto">
                 {galleryImages.map((image, index) => (
                   <div key={index} className="relative">
                     <img 
                       src={URL.createObjectURL(image)} 
                       alt={`Gallery ${index + 1}`}
-                      className="w-full h-16 object-cover rounded border-2 border-black"
+                      className="w-full h-12 object-cover rounded border border-black"
                     />
-                    <div className="absolute top-1 right-1 bg-blue-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs font-bold">
+                    <div className="absolute top-0 right-0 bg-blue-500 text-white rounded-full w-3 h-3 flex items-center justify-center text-xs font-bold">
                       {index + 1}
                     </div>
                   </div>
