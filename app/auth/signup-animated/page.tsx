@@ -609,9 +609,45 @@ export default function AnimatedSignupPage() {
       </div>
       
       {/* Home Link */}
-      <Link href="/" className="absolute top-2 left-2 md:top-6 md:left-6 z-20 bg-white border-2 border-black rounded-lg px-2 py-1 md:px-4 md:py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-1 hover:translate-y-1 transition-all flex items-center gap-1 md:gap-2 text-black font-black text-sm md:text-base">
-        <Home className="h-4 w-4 md:h-5 md:w-5" />
-        <span className="hidden sm:inline">HOME</span>
+      <Link 
+        href="/" 
+        className="absolute top-6 left-6 z-20 flex items-center gap-2 text-black font-black"
+        style={{
+          background: '#5cbdfd',
+          fontFamily: 'inherit',
+          padding: '0.6em 1.3em',
+          fontWeight: 900,
+          fontSize: '18px',
+          border: '3px solid black',
+          borderRadius: '0.4em',
+          boxShadow: '0.1em 0.1em',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          textDecoration: 'none',
+          color: 'inherit',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5em'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+          e.currentTarget.style.boxShadow = '0.15em 0.15em';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translate(0, 0)';
+          e.currentTarget.style.boxShadow = '0.1em 0.1em';
+        }}
+        onMouseDown={(e) => {
+          e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
+          e.currentTarget.style.boxShadow = '0.05em 0.05em';
+        }}
+        onMouseUp={(e) => {
+          e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
+          e.currentTarget.style.boxShadow = '0.15em 0.15em';
+        }}
+      >
+        <Home className="h-5 w-5" />
+        <span>HOME</span>
       </Link>
       
       <div className="relative z-10 w-full px-2 sm:px-4 flex items-center justify-center min-h-screen pt-12 md:pt-0">
@@ -820,13 +856,15 @@ export default function AnimatedSignupPage() {
             </div>
           )}
 
-          <AnimatedButton 
-            type="submit" 
-            disabled={loading || !displayNameAvailable}
-            className="w-full"
-          >
-            {loading ? 'Creating Account...' : 'Create Account'}
-          </AnimatedButton>
+          <div className="flex justify-center">
+            <AnimatedButton 
+              type="submit" 
+              disabled={loading || !displayNameAvailable}
+              className=""
+            >
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </AnimatedButton>
+          </div>
 
           <div className="text-center mt-6">
             <p className="text-black font-bold text-sm">
