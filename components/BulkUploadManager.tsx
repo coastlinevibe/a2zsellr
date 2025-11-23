@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { Upload, FileText, CheckCircle, AlertTriangle, Users, Package } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 
 export function BulkUploadManager() {
@@ -15,6 +14,8 @@ export function BulkUploadManager() {
   const [productImageAssignments, setProductImageAssignments] = useState<{[key: number]: File}>({})
   const [galleryImages, setGalleryImages] = useState<File[]>([])
   const [defaultProducts, setDefaultProducts] = useState<any[]>([])
+  const [uploadMode, setUploadMode] = useState<'auto' | 'manual'>('auto')
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState<number>(0)
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]
@@ -85,39 +86,62 @@ export function BulkUploadManager() {
   }
 
   const handlePreview = async () => {
-    if (!file || Object.keys(productImageAssignments).length !== 10 || galleryImages.length === 0) return
+    console.log('🚀 [FRONTEND] Starting preview process...')
+    console.log(`📋 [FRONTEND] Upload mode: ${uploadMode}`)
+    console.log(`📁 [FRONTEND] File: ${file?.name} (${file?.size} bytes)`)
+    
+    if (!file) {
+      console.error('❌ [FRONTEND] No file selected')
+      return
+    }
+    if (uploadMode === 'manual' && (Object.keys(productImageAssignments).length !== 10 || galleryImages.length === 0)) {
+      console.error('❌ [FRONTEND] Manual mode requirements not met')
+      return
+    }
     
     setUploading(true)
     setResults(null)
     
     try {
+      console.log('📦 [FRONTEND] Preparing form data...')
       const formData = new FormData()
       formData.append('file', file)
+      formData.append('uploadMode', uploadMode)
       
-      // Add product images in order
-      for (let i = 0; i < 10; i++) {
-        if (productImageAssignments[i]) {
-          formData.append(`productImage${i}`, productImageAssignments[i])
+      if (uploadMode === 'manual') {
+        console.log('📸 [FRONTEND] Adding manual mode images...')
+        // Add product images in order
+        for (let i = 0; i < 10; i++) {
+          if (productImageAssignments[i]) {
+            formData.append(`productImage${i}`, productImageAssignments[i])
+          }
         }
+        
+        // Add gallery images
+        galleryImages.forEach((image, index) => {
+          formData.append(`galleryImage${index}`, image)
+        })
+        formData.append('galleryImageCount', galleryImages.length.toString())
+        console.log(`📸 [FRONTEND] Added ${Object.keys(productImageAssignments).length} product images and ${galleryImages.length} gallery images`)
       }
       
-      // Add gallery images
-      galleryImages.forEach((image, index) => {
-        formData.append(`galleryImage${index}`, image)
-      })
-      formData.append('galleryImageCount', galleryImages.length.toString())
-      
+      console.log('🌐 [FRONTEND] Sending request to preview API...')
       const response = await fetch('/api/admin/bulk-upload/preview', {
         method: 'POST',
         body: formData
       })
       
+      console.log(`📡 [FRONTEND] Response status: ${response.status} ${response.statusText}`)
       const result = await response.json()
+      console.log('📡 [FRONTEND] Response data:', result)
       
       if (response.ok) {
+        console.log('✅ [FRONTEND] Preview successful')
+        console.log(`✅ [FRONTEND] Categories found: ${result.preview.categoryProducts?.length || 0}`)
         setPreviewData(result.preview)
         setShowPreview(true)
       } else {
+        console.error('❌ [FRONTEND] Preview failed:', result)
         setResults({
           success: false,
           error: result.error || 'Preview failed',
@@ -137,7 +161,8 @@ export function BulkUploadManager() {
   }
 
   const handleConfirmUpload = async () => {
-    if (!file || Object.keys(productImageAssignments).length !== 10 || galleryImages.length === 0) return
+    if (!file) return
+    if (uploadMode === 'manual' && (Object.keys(productImageAssignments).length !== 10 || galleryImages.length === 0)) return
     
     setUploading(true)
     setResults(null)
@@ -147,19 +172,22 @@ export function BulkUploadManager() {
       formData.append('file', file)
       formData.append('confirmed', 'true')
       formData.append('tier', selectedTier)
+      formData.append('uploadMode', uploadMode)
       
-      // Add product images in order
-      for (let i = 0; i < 10; i++) {
-        if (productImageAssignments[i]) {
-          formData.append(`productImage${i}`, productImageAssignments[i])
+      if (uploadMode === 'manual') {
+        // Add product images in order
+        for (let i = 0; i < 10; i++) {
+          if (productImageAssignments[i]) {
+            formData.append(`productImage${i}`, productImageAssignments[i])
+          }
         }
+        
+        // Add gallery images
+        galleryImages.forEach((image, index) => {
+          formData.append(`galleryImage${index}`, image)
+        })
+        formData.append('galleryImageCount', galleryImages.length.toString())
       }
-      
-      // Add gallery images
-      galleryImages.forEach((image, index) => {
-        formData.append(`galleryImage${index}`, image)
-      })
-      formData.append('galleryImageCount', galleryImages.length.toString())
       
       const response = await fetch('/api/admin/bulk-upload', {
         method: 'POST',
@@ -228,6 +256,90 @@ export function BulkUploadManager() {
         </div>
       </motion.div>
 
+      {/* Upload Mode Selection */}
+      <motion.div 
+        className="bg-white rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] p-6 transform rotate-1"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+      >
+        <h3 className="text-2xl font-black text-black mb-4 uppercase">CHOOSE UPLOAD MODE</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <motion.button
+            onClick={() => setUploadMode('auto')}
+            className={`p-6 rounded-xl border-4 border-black font-black text-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all ${
+              uploadMode === 'auto' 
+                ? 'bg-green-500 text-white' 
+                : 'bg-white text-black hover:bg-gray-100'
+            }`}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="text-center">
+              <Package className="w-12 h-12 mx-auto mb-3" />
+              <h4 className="text-xl font-black uppercase mb-2">AUTO IMPORT</h4>
+              <p className="text-sm font-bold">
+                Automatically generate 10 products per business category from CSV (no images imported - add your own later)
+              </p>
+            </div>
+          </motion.button>
+          
+          <motion.button
+            onClick={() => setUploadMode('manual')}
+            className={`p-6 rounded-xl border-4 border-black font-black text-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all ${
+              uploadMode === 'manual' 
+                ? 'bg-blue-500 text-white' 
+                : 'bg-white text-black hover:bg-gray-100'
+            }`}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="text-center">
+              <Upload className="w-12 h-12 mx-auto mb-3" />
+              <h4 className="text-xl font-black uppercase mb-2">MANUAL UPLOAD</h4>
+              <p className="text-sm font-bold">
+                Upload custom product images and gallery images (10 product + gallery images required)
+              </p>
+            </div>
+          </motion.button>
+        </div>
+      </motion.div>
+
+      {/* Debug Panel - Only show in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <motion.div 
+          className="bg-gray-900 text-green-400 rounded-xl border-4 border-gray-700 shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] p-6 mb-6 font-mono text-sm"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <h3 className="text-xl font-black text-green-300 mb-4 uppercase">🐛 DEBUG CONSOLE</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <h4 className="font-bold text-green-300 mb-2">FILE INFO:</h4>
+              <p>Name: {file?.name || 'None'}</p>
+              <p>Size: {file?.size || 0} bytes</p>
+              <p>Type: {file?.type || 'N/A'}</p>
+            </div>
+            <div>
+              <h4 className="font-bold text-green-300 mb-2">SETTINGS:</h4>
+              <p>Mode: {uploadMode}</p>
+              <p>Tier: {selectedTier}</p>
+              <p>Preview: {showPreview ? 'Yes' : 'No'}</p>
+            </div>
+            <div>
+              <h4 className="font-bold text-green-300 mb-2">STATUS:</h4>
+              <p>Uploading: {uploading ? 'Yes' : 'No'}</p>
+              <p>Results: {results ? 'Available' : 'None'}</p>
+              <p>Categories: {previewData?.categoryProducts?.length || 0}</p>
+            </div>
+          </div>
+          <div className="mt-4 p-3 bg-gray-800 rounded border border-gray-600">
+            <p className="text-xs text-gray-400">💡 Check browser console (F12) for detailed logs</p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Upload Interface */}
       <motion.div 
         className="bg-white rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] p-8 transform rotate-1"
@@ -280,13 +392,53 @@ export function BulkUploadManager() {
                 {file ? file.name : 'Select CSV File'}
               </p>
               <p className="text-gray-600">
-                Upload your business profiles CSV file
+                Upload your business profiles CSV file (products created without images)
               </p>
             </label>
           </div>
 
-          {/* Product Images Assignment */}
-          {file && (
+          {/* Auto Mode Information */}
+          {file && uploadMode === 'auto' && (
+            <div className="border-4 border-dashed border-green-500 rounded-xl p-6">
+              <h4 className="text-xl font-black text-black mb-4 uppercase">🤖 AUTO IMPORT MODE</h4>
+              <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h5 className="font-black text-green-800 mb-2">✅ WHAT WILL BE CREATED:</h5>
+                    <ul className="text-sm text-green-700 space-y-1">
+                      <li>• 10 products per business category</li>
+                      <li>• Products with realistic names & prices</li>
+                      <li>• Default product images from Unsplash</li>
+                      <li>• 1 gallery image per profile</li>
+                      <li>• Category-specific product variations</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h5 className="font-black text-green-800 mb-2">📋 SUPPORTED CATEGORIES:</h5>
+                    <div className="text-xs text-green-700 grid grid-cols-2 gap-1">
+                      <span>• Restaurant</span>
+                      <span>• Bakery</span>
+                      <span>• Grocery</span>
+                      <span>• Butchery</span>
+                      <span>• Hardware Store</span>
+                      <span>• Electronics</span>
+                      <span>• Clothing Store</span>
+                      <span>• And many more...</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 p-3 bg-white rounded border border-green-300">
+                  <p className="text-sm text-green-700">
+                    <strong>Note:</strong> Products will be automatically generated based on the business categories in your CSV file. 
+                    No manual image uploads required - all images will be sourced from high-quality stock photos.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Product Images Assignment - Only for Manual Mode */}
+          {file && uploadMode === 'manual' && (
             <div className="border-4 border-dashed border-green-500 rounded-xl p-6">
               <h4 className="text-xl font-black text-black mb-4 uppercase">📦 ASSIGN PRODUCT IMAGES</h4>
               <p className="text-gray-600 mb-4">Assign specific images to each of the 10 products that will be created for every profile</p>
@@ -345,7 +497,8 @@ export function BulkUploadManager() {
             </div>
           )}
 
-          {/* Gallery Images Upload */}
+          {/* Gallery Images Upload - Only for Manual Mode */}
+          {uploadMode === 'manual' && (
           <div className="border-4 border-dashed border-blue-500 rounded-xl p-6">
             <h4 className="text-xl font-black text-black mb-4 uppercase">🖼️ GALLERY IMAGES (1-30 Required)</h4>
             <input
@@ -390,24 +543,30 @@ export function BulkUploadManager() {
               </div>
             )}
           </div>
+          )}
 
           {/* Preview Button */}
           {file && !showPreview && (
             <motion.button
               onClick={handlePreview}
-              disabled={uploading || Object.keys(productImageAssignments).length !== 10 || galleryImages.length === 0}
+              disabled={uploading || (uploadMode === 'manual' && (Object.keys(productImageAssignments).length !== 10 || galleryImages.length === 0))}
               className={`w-full px-8 py-4 rounded-xl border-4 border-black font-black text-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] ${
-                Object.keys(productImageAssignments).length === 10 && galleryImages.length > 0 
+                uploadMode === 'auto' || (Object.keys(productImageAssignments).length === 10 && galleryImages.length > 0)
                   ? 'bg-blue-600 hover:bg-blue-700 text-white' 
                   : 'bg-gray-400 text-gray-600 cursor-not-allowed'
               }`}
-              whileHover={{ scale: (uploading || Object.keys(productImageAssignments).length !== 10 || galleryImages.length === 0) ? 1 : 1.02 }}
-              whileTap={{ scale: (uploading || Object.keys(productImageAssignments).length !== 10 || galleryImages.length === 0) ? 1 : 0.98 }}
+              whileHover={{ scale: (uploading || (uploadMode === 'manual' && (Object.keys(productImageAssignments).length !== 10 || galleryImages.length === 0))) ? 1 : 1.02 }}
+              whileTap={{ scale: (uploading || (uploadMode === 'manual' && (Object.keys(productImageAssignments).length !== 10 || galleryImages.length === 0))) ? 1 : 0.98 }}
             >
               {uploading ? (
                 <>
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white inline-block mr-3"></div>
                   PROCESSING PREVIEW...
+                </>
+              ) : uploadMode === 'auto' ? (
+                <>
+                  <FileText className="w-6 h-6 inline-block mr-3" />
+                  PREVIEW AUTO IMPORT
                 </>
               ) : Object.keys(productImageAssignments).length !== 10 ? (
                 <>
@@ -455,21 +614,179 @@ export function BulkUploadManager() {
               <p className="text-2xl font-black text-orange-600">{previewData.totalCount}</p>
             </div>
             <div className="bg-white p-3 rounded-lg border-2 border-black text-center">
-              <p className="font-black text-black text-sm">TIER</p>
+              <p className="font-black text-black text-sm">SUBSCRIPTION TIER</p>
               <select
                 value={selectedTier}
                 onChange={(e) => setSelectedTier(e.target.value as any)}
-                className="text-lg font-black text-purple-600 bg-transparent border-2 border-purple-600 rounded px-2 py-1 uppercase cursor-pointer"
+                className="text-sm font-black text-purple-600 bg-white border-2 border-purple-600 rounded px-2 py-1 uppercase cursor-pointer hover:bg-purple-50 transition-colors"
               >
-                <option value="free">FREE</option>
-                <option value="premium">PREMIUM</option>
-                <option value="business">BUSINESS</option>
+                <option value="free">FREE (5 products)</option>
+                <option value="premium">PREMIUM (50 products)</option>
+                <option value="business">BUSINESS (unlimited)</option>
               </select>
             </div>
           </div>
+
+          {/* Tier Information */}
+          <div className="bg-purple-50 border-2 border-purple-300 rounded-lg p-4 mb-4">
+            <h4 className="font-black text-purple-800 mb-2 uppercase">🎯 TIER BENEFITS</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className={`p-3 rounded-lg border-2 ${selectedTier === 'free' ? 'border-purple-600 bg-purple-100' : 'border-gray-300 bg-white'}`}>
+                <h5 className="font-bold text-purple-800 mb-1">FREE TIER</h5>
+                <ul className="text-purple-700 text-xs space-y-1">
+                  <li>• 5 products per business</li>
+                  <li>• 1 gallery image</li>
+                  <li>• Basic profile features</li>
+                  <li>• Standard support</li>
+                </ul>
+              </div>
+              <div className={`p-3 rounded-lg border-2 ${selectedTier === 'premium' ? 'border-purple-600 bg-purple-100' : 'border-gray-300 bg-white'}`}>
+                <h5 className="font-bold text-purple-800 mb-1">PREMIUM TIER</h5>
+                <ul className="text-purple-700 text-xs space-y-1">
+                  <li>• 50 products per business</li>
+                  <li>• 10 gallery images</li>
+                  <li>• Advanced analytics</li>
+                  <li>• Priority support</li>
+                </ul>
+              </div>
+              <div className={`p-3 rounded-lg border-2 ${selectedTier === 'business' ? 'border-purple-600 bg-purple-100' : 'border-gray-300 bg-white'}`}>
+                <h5 className="font-bold text-purple-800 mb-1">BUSINESS TIER</h5>
+                <ul className="text-purple-700 text-xs space-y-1">
+                  <li>• Unlimited products</li>
+                  <li>• Unlimited gallery</li>
+                  <li>• Custom branding</li>
+                  <li>• Dedicated support</li>
+                </ul>
+              </div>
+            </div>
+          </div>
           
+          {/* Category Products Preview - Only for Auto Mode */}
+          {uploadMode === 'auto' && previewData.categoryProducts && (
+            <div className="bg-green-50 border-4 border-green-500 rounded-xl p-6 mb-4">
+              <h4 className="text-2xl font-black text-green-800 mb-4 uppercase">🛍️ PRODUCTS BY CATEGORY</h4>
+              <p className="text-green-700 font-bold mb-4">
+                Here are the exact products that will be created for each business category in your CSV:
+              </p>
+              
+              {/* Category Tabs */}
+              <div className="mb-6">
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {previewData.categoryProducts.map((categoryData: any, index: number) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedCategoryTab(index)}
+                      className={`px-4 py-2 rounded-lg border-2 border-black font-black text-sm transition-all ${
+                        selectedCategoryTab === index
+                          ? 'bg-green-600 text-white'
+                          : 'bg-white text-black hover:bg-gray-100'
+                      }`}
+                    >
+                      📂 {categoryData.category}
+                      <span className="ml-2 bg-black bg-opacity-20 px-2 py-1 rounded-full text-xs">
+                        {categoryData.count}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Selected Category Products */}
+                {previewData.categoryProducts[selectedCategoryTab] && (
+                  <div className="bg-white rounded-lg border-2 border-green-600 p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h5 className="text-xl font-black text-green-800 uppercase">
+                        📂 {previewData.categoryProducts[selectedCategoryTab].category}
+                      </h5>
+                      <span className="bg-green-600 text-white px-3 py-1 rounded-full font-black text-sm">
+                        {previewData.categoryProducts[selectedCategoryTab].count} businesses will get these products
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {previewData.categoryProducts[selectedCategoryTab].products.map((product: any, productIndex: number) => (
+                        <div key={productIndex} className="bg-white border-2 border-gray-300 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                          {/* Product Image */}
+                          <div className="mb-3">
+                            <img 
+                              src={product.image_url} 
+                              alt={product.name}
+                              className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop&crop=center';
+                              }}
+                            />
+                          </div>
+                          
+                          {/* Product Header */}
+                          <div className="flex items-start justify-between mb-3">
+                            <h6 className="font-bold text-gray-800 text-base leading-tight">{product.name}</h6>
+                            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-black ml-2 flex-shrink-0">
+                              {product.price}
+                            </span>
+                          </div>
+                          
+                          {/* Product Tags */}
+                          {product.tags && product.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mb-3">
+                              {product.tags.map((tag: any, tagIndex: number) => (
+                                <span 
+                                  key={tagIndex}
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-white"
+                                  style={{ backgroundColor: tag.color }}
+                                >
+                                  {tag.icon && <span>{tag.icon}</span>}
+                                  {tag.name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* Product Description */}
+                          <div className="mb-3">
+                            <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">Description</div>
+                            <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
+                          </div>
+                          
+                          {/* Product Details */}
+                          <div className="bg-gray-50 p-3 rounded-lg border">
+                            <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">Details</div>
+                            <p className="text-xs text-gray-600 leading-relaxed">{product.details}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="p-4 bg-white rounded-lg border-2 border-green-600">
+                <h6 className="font-black text-green-800 mb-2">📊 SUMMARY:</h6>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                  <div>
+                    <p className="text-2xl font-black text-green-600">{previewData.categoryProducts.length}</p>
+                    <p className="text-sm font-bold text-green-700">Categories</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-black text-blue-600">{previewData.totalCount}</p>
+                    <p className="text-sm font-bold text-blue-700">Businesses</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-black text-purple-600">{previewData.expectedProducts}</p>
+                    <p className="text-sm font-bold text-purple-700">Total Products</p>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-black text-orange-600">10</p>
+                    <p className="text-sm font-bold text-orange-700">Per Business</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Profile Data Table */}
           <div className="bg-white p-4 rounded-lg border-2 border-black mb-4 max-h-96 overflow-auto">
+            <h4 className="font-black text-black mb-3 uppercase">📋 BUSINESS PROFILES</h4>
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-white">
                 <tr className="border-b-2 border-black">
@@ -513,50 +830,94 @@ export function BulkUploadManager() {
           <div className="bg-white p-4 rounded-lg border-2 border-black mb-4">
             <h4 className="font-black text-black mb-3 uppercase">📸 IMAGES TO BE USED</h4>
             
-            {/* Product Images */}
-            <div className="mb-4">
-              <h5 className="font-bold text-black mb-2">Product Images (10):</h5>
-              <div className="grid grid-cols-5 gap-4">
-                {defaultProducts.map((product, index) => (
-                  <div key={index} className="bg-gray-50 p-2 rounded border border-black">
-                    <div className="text-center mb-2">
-                      {productImageAssignments[index] ? (
-                        <img 
-                          src={URL.createObjectURL(productImageAssignments[index])} 
-                          alt={product.name}
-                          className="w-full h-16 object-cover rounded border border-green-500"
-                        />
-                      ) : (
-                        <div className="w-full h-16 bg-gray-200 rounded border border-gray-300 flex items-center justify-center">
-                          <span className="text-xs text-gray-500">No Image</span>
+            {uploadMode === 'auto' ? (
+              /* Auto Mode Images Preview */
+              <div className="space-y-4">
+                <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4">
+                  <h5 className="font-bold text-green-800 mb-2">🤖 AUTO MODE - NO IMAGES</h5>
+                  <div className="text-center py-8">
+                    <div className="bg-white p-6 rounded-lg border border-green-500 inline-block">
+                      <div className="text-6xl mb-4">📦</div>
+                      <h6 className="font-bold text-green-800 mb-2">Products Only</h6>
+                      <p className="text-sm text-green-700">10 products per business</p>
+                      <p className="text-xs text-green-600 mt-2">No images imported - add your own later</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 p-3 bg-white rounded border border-green-300">
+                    <p className="text-sm text-green-700">
+                      <strong>✨ Auto Mode Benefits:</strong> Products will be created with professional descriptions, detailed specifications, relevant tags, and realistic South African pricing. 
+                      No images will be imported - you can add your own product and gallery images later.
+                    </p>
+                    <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                      <div className="flex items-center gap-1">
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span>Professional product images</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        <span>Detailed descriptions</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                        <span>Category-specific tags</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                        <span>Realistic pricing</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Manual Mode Images Preview */
+              <div className="space-y-4">
+                {/* Product Images */}
+                <div className="mb-4">
+                  <h5 className="font-bold text-black mb-2">Product Images (10):</h5>
+                  <div className="grid grid-cols-5 gap-4">
+                    {defaultProducts.map((product, index) => (
+                      <div key={index} className="bg-gray-50 p-2 rounded border border-black">
+                        <div className="text-center mb-2">
+                          {productImageAssignments[index] ? (
+                            <img 
+                              src={URL.createObjectURL(productImageAssignments[index])} 
+                              alt={product.name}
+                              className="w-full h-16 object-cover rounded border border-green-500"
+                            />
+                          ) : (
+                            <div className="w-full h-16 bg-gray-200 rounded border border-gray-300 flex items-center justify-center">
+                              <span className="text-xs text-gray-500">No Image</span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <p className="text-xs font-bold text-center">{index + 1}. {product.name}</p>
+                        <p className="text-xs font-bold text-center">{index + 1}. {product.name}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
 
-            {/* Gallery Images */}
-            <div>
-              <h5 className="font-bold text-black mb-2">Gallery Images ({galleryImages.length}):</h5>
-              <div className="grid grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-1 max-h-32 overflow-y-auto">
-                {galleryImages.map((image, index) => (
-                  <div key={index} className="relative">
-                    <img 
-                      src={URL.createObjectURL(image)} 
-                      alt={`Gallery ${index + 1}`}
-                      className="w-full h-12 object-cover rounded border border-black"
-                    />
-                    <div className="absolute top-0 right-0 bg-blue-500 text-white rounded-full w-3 h-3 flex items-center justify-center text-xs font-bold">
-                      {index + 1}
-                    </div>
+                {/* Gallery Images */}
+                <div>
+                  <h5 className="font-bold text-black mb-2">Gallery Images ({galleryImages.length}):</h5>
+                  <div className="grid grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-1 max-h-32 overflow-y-auto">
+                    {galleryImages.map((image, index) => (
+                      <div key={index} className="relative">
+                        <img 
+                          src={URL.createObjectURL(image)} 
+                          alt={`Gallery ${index + 1}`}
+                          className="w-full h-12 object-cover rounded border border-black"
+                        />
+                        <div className="absolute top-0 right-0 bg-blue-500 text-white rounded-full w-3 h-3 flex items-center justify-center text-xs font-bold">
+                          {index + 1}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                  <p className="text-xs text-gray-600 mt-2">Each profile will randomly get one of these images</p>
+                </div>
               </div>
-              <p className="text-xs text-gray-600 mt-2">Each profile will randomly get one of these images</p>
-            </div>
+            )}
           </div>
 
           <div className="flex gap-4">

@@ -19,6 +19,7 @@ interface User {
   last_free_reset: string | null
   business_category: string | null
   business_location: string | null
+  trial_end_date: string | null
 }
 
 export function UserManagement() {
@@ -30,6 +31,8 @@ export function UserManagement() {
   const [updating, setUpdating] = useState<string | null>(null)
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
   const [selectAll, setSelectAll] = useState(false)
+  const [bulkTierModalOpen, setBulkTierModalOpen] = useState(false)
+  const [bulkChangingTier, setBulkChangingTier] = useState(false)
 
   useEffect(() => {
     fetchUsers()
@@ -377,6 +380,75 @@ export function UserManagement() {
       alert(`❌ Failed to complete bulk deletion: ${error}`)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const bulkChangeTier = async (newTier: 'free' | 'premium' | 'business') => {
+    if (selectedUsers.size === 0) {
+      alert('⚠️ Please select users to change tier first.')
+      return
+    }
+
+    const selectedUsersList = users.filter(user => selectedUsers.has(user.id))
+    const userNames = selectedUsersList.map(u => u.display_name).join(', ')
+    
+    console.log(`🔄 BULK TIER CHANGE: ${selectedUsers.size} users to ${newTier}`)
+    
+    if (!confirm(`🔄 Change subscription tier for ${selectedUsers.size} selected users to ${newTier.toUpperCase()}?\n\nUsers:\n${userNames}\n\nThis will:\n- Update their subscription tier\n- Set subscription status to active\n- Remove trial restrictions (if upgrading)\n\nAre you sure?`)) {
+      console.log('❌ User cancelled bulk tier change')
+      return
+    }
+
+    console.log('✅ Confirmation received, starting bulk tier change...')
+    setBulkChangingTier(true)
+    
+    try {
+      console.log(`🔄 Starting bulk tier change to ${newTier} for ${selectedUsers.size} users...`)
+
+      const selectedUserIds = Array.from(selectedUsers)
+      
+      // Update all selected users' subscription tiers
+      const { error: tierUpdateError } = await supabase
+        .from('profiles')
+        .update({
+          subscription_tier: newTier,
+          subscription_status: 'active',
+          trial_end_date: newTier !== 'free' ? null : undefined, // Remove trial restrictions for paid tiers
+          updated_at: new Date().toISOString()
+        })
+        .in('id', selectedUserIds)
+
+      if (tierUpdateError) {
+        console.error('❌ Bulk tier change error:', tierUpdateError)
+        alert(`❌ Failed to change tiers: ${tierUpdateError.message}`)
+        return
+      }
+
+      console.log(`✅ ${selectedUsers.size} users successfully changed to ${newTier} tier`)
+      alert(`✅ BULK TIER CHANGE COMPLETE!\n\nChanged ${selectedUsers.size} users to ${newTier.toUpperCase()} tier:\n${userNames}\n\nAll users now have active ${newTier} subscriptions.`)
+
+      // Update local state
+      setUsers(users.map(user => 
+        selectedUsers.has(user.id) 
+          ? { 
+              ...user, 
+              subscription_tier: newTier, 
+              subscription_status: 'active',
+              trial_end_date: newTier !== 'free' ? null : user.trial_end_date
+            }
+          : user
+      ))
+      
+      // Clear selections
+      setSelectedUsers(new Set())
+      setSelectAll(false)
+      setBulkTierModalOpen(false)
+
+    } catch (error) {
+      console.error('❌ Error during bulk tier change:', error)
+      alert(`❌ Failed to complete bulk tier change: ${error}`)
+    } finally {
+      setBulkChangingTier(false)
     }
   }
 
@@ -910,6 +982,22 @@ export function UserManagement() {
         </div>
         
         <div className="flex gap-4 items-center">
+          {/* Bulk Tier Change Button */}
+          <motion.button
+            onClick={() => setBulkTierModalOpen(true)}
+            disabled={selectedUsers.size === 0}
+            className={`px-6 py-2 rounded-xl border-4 border-black font-black text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] flex items-center gap-2 ${
+              selectedUsers.size === 0 
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }`}
+            whileHover={{ scale: selectedUsers.size === 0 ? 1 : 1.05 }}
+            whileTap={{ scale: selectedUsers.size === 0 ? 1 : 0.95 }}
+          >
+            <Crown className="w-4 h-4" />
+            CHANGE TIER ({selectedUsers.size})
+          </motion.button>
+
           {/* Bulk Delete Button */}
           <motion.button
             onClick={bulkDeleteSelectedUsers}
@@ -1312,6 +1400,119 @@ export function UserManagement() {
                   <Trash2 className="w-5 h-5" />
                   🚨 DELETE USER PERMANENTLY
                 </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Bulk Tier Change Modal */}
+      {bulkTierModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+          <motion.div 
+            className="bg-white rounded-2xl border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,0.9)] max-w-lg w-full transform -rotate-1"
+            initial={{ scale: 0.8, opacity: 0, rotate: 0 }}
+            animate={{ scale: 1, opacity: 1, rotate: -1 }}
+            transition={{ duration: 0.4, type: "spring" }}
+          >
+            <div className="bg-gradient-to-r from-blue-400 to-purple-500 p-6 border-b-4 border-black rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-black text-white uppercase">BULK TIER CHANGE</h3>
+                <motion.button
+                  onClick={() => setBulkTierModalOpen(false)}
+                  className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  ✕
+                </motion.button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Selected Users Info */}
+              <div className="bg-blue-100 p-4 rounded-xl border-2 border-black">
+                <h4 className="font-black text-black mb-3 uppercase">SELECTED USERS ({selectedUsers.size})</h4>
+                <div className="max-h-32 overflow-y-auto space-y-2">
+                  {users.filter(user => selectedUsers.has(user.id)).map((user) => (
+                    <div key={user.id} className="flex justify-between items-center bg-white p-2 rounded border border-black">
+                      <span className="font-bold text-black">{user.display_name}</span>
+                      <div className={`px-2 py-1 rounded border border-black font-black text-xs uppercase text-white ${getTierColor(user.subscription_tier)}`}>
+                        {user.subscription_tier}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tier Selection */}
+              <div className="bg-green-100 p-4 rounded-xl border-2 border-black">
+                <h4 className="font-black text-black mb-4 uppercase">SELECT NEW TIER</h4>
+                <div className="space-y-3">
+                  <motion.button
+                    onClick={() => bulkChangeTier('free')}
+                    disabled={bulkChangingTier}
+                    className="w-full bg-gray-500 hover:bg-gray-600 text-white p-4 rounded-xl border-2 border-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] flex items-center justify-center gap-3 disabled:opacity-50"
+                    whileHover={{ scale: bulkChangingTier ? 1 : 1.02 }}
+                    whileTap={{ scale: bulkChangingTier ? 1 : 0.98 }}
+                  >
+                    {bulkChangingTier ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    ) : (
+                      <>
+                        <Zap className="w-5 h-5" />
+                        CHANGE TO FREE TIER
+                      </>
+                    )}
+                  </motion.button>
+
+                  <motion.button
+                    onClick={() => bulkChangeTier('premium')}
+                    disabled={bulkChangingTier}
+                    className="w-full bg-purple-500 hover:bg-purple-600 text-white p-4 rounded-xl border-2 border-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] flex items-center justify-center gap-3 disabled:opacity-50"
+                    whileHover={{ scale: bulkChangingTier ? 1 : 1.02 }}
+                    whileTap={{ scale: bulkChangingTier ? 1 : 0.98 }}
+                  >
+                    {bulkChangingTier ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    ) : (
+                      <>
+                        <Sword className="w-5 h-5" />
+                        CHANGE TO PREMIUM TIER
+                      </>
+                    )}
+                  </motion.button>
+
+                  <motion.button
+                    onClick={() => bulkChangeTier('business')}
+                    disabled={bulkChangingTier}
+                    className="w-full bg-green-500 hover:bg-green-600 text-white p-4 rounded-xl border-2 border-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] flex items-center justify-center gap-3 disabled:opacity-50"
+                    whileHover={{ scale: bulkChangingTier ? 1 : 1.02 }}
+                    whileTap={{ scale: bulkChangingTier ? 1 : 0.98 }}
+                  >
+                    {bulkChangingTier ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    ) : (
+                      <>
+                        <Crown className="w-5 h-5" />
+                        CHANGE TO BUSINESS TIER
+                      </>
+                    )}
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Warning */}
+              <div className="bg-yellow-100 p-4 rounded-xl border-2 border-orange-500">
+                <h4 className="font-black text-orange-800 mb-2 uppercase flex items-center gap-2">
+                  ⚠️ IMPORTANT NOTES
+                </h4>
+                <ul className="text-orange-700 font-bold text-sm space-y-1">
+                  <li>• All selected users will be changed to the new tier</li>
+                  <li>• Subscription status will be set to "active"</li>
+                  <li>• Trial restrictions will be removed for paid tiers</li>
+                  <li>• This action cannot be undone automatically</li>
+                </ul>
               </div>
             </div>
           </motion.div>

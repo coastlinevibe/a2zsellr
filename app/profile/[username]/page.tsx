@@ -946,8 +946,8 @@ Best regards`
         <div className="px-4 max-w-7xl mx-auto py-3">
           {/* Mobile Layout */}
           <div className="block md:hidden">
-            {/* Top Row: PFP + Name + Business Tier + Reviews */}
-            <div className="flex items-center gap-2 mb-2">
+            {/* Top Row: PFP + Name & Tier + Reviews */}
+            <div className="flex items-start gap-2 mb-2">
               {profile.avatar_url && (
                 <img 
                   src={profile.avatar_url} 
@@ -955,50 +955,65 @@ Best regards`
                   className="w-10 h-10 rounded-lg object-cover border border-gray-200 flex-shrink-0"
                 />
               )}
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <h1 className="text-base font-bold text-gray-900 truncate">
-                  {profile.display_name}
-                </h1>
-                
-                {/* Business Tier Badge - Mobile (icon only with tooltip) */}
-                <div className="flex-shrink-0 relative">
-                  <div 
-                    className={`w-6 h-6 rounded-full flex items-center justify-center shadow-lg border cursor-pointer transition-transform hover:scale-110 ${
-                      profile.subscription_tier === 'free' 
-                        ? 'bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 border-gray-300' 
-                        : profile.subscription_tier === 'premium'
-                        ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 border-amber-300'
-                        : 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 border-blue-400'
-                    }`}
-                    onClick={() => setShowTierTooltip(!showTierTooltip)}
-                    onMouseEnter={() => setShowTierTooltip(true)}
-                    onMouseLeave={() => setShowTierTooltip(false)}
-                  >
-                    {profile.subscription_tier === 'free' && <Zap className="h-3 w-3 text-white drop-shadow-sm" />}
-                    {profile.subscription_tier === 'premium' && <Sword className="h-3 w-3 text-white drop-shadow-sm" />}
-                    {profile.subscription_tier === 'business' && <Crown className="h-3 w-3 text-white drop-shadow-sm" />}
-                  </div>
+              <div className="flex flex-col min-w-0 flex-1">
+                {/* Name + Tier Badge */}
+                <div className="flex items-center gap-2">
+                  <h1 className="text-base font-bold text-gray-900 truncate leading-tight">
+                    {profile.display_name}
+                  </h1>
                   
-                  {/* Tooltip */}
-                  {showTierTooltip && (
-                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
-                      {profile.subscription_tier === 'free' ? 'Free user' : 
-                       profile.subscription_tier === 'premium' ? 'Premium user' : 'Business user'}
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+                  {/* Business Tier Badge - Mobile (icon only with tooltip) */}
+                  <div className="flex-shrink-0 relative">
+                    <div 
+                      className={`w-6 h-6 rounded-full flex items-center justify-center shadow-lg border cursor-pointer transition-transform hover:scale-110 ${
+                        profile.subscription_tier === 'free' 
+                          ? 'bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 border-gray-300' 
+                          : profile.subscription_tier === 'premium'
+                          ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 border-amber-300'
+                          : 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 border-blue-400'
+                      }`}
+                      onClick={() => setShowTierTooltip(!showTierTooltip)}
+                      onMouseEnter={() => setShowTierTooltip(true)}
+                      onMouseLeave={() => setShowTierTooltip(false)}
+                    >
+                      {profile.subscription_tier === 'free' && <Zap className="h-3 w-3 text-white drop-shadow-sm" />}
+                      {profile.subscription_tier === 'premium' && <Sword className="h-3 w-3 text-white drop-shadow-sm" />}
+                      {profile.subscription_tier === 'business' && <Crown className="h-3 w-3 text-white drop-shadow-sm" />}
                     </div>
+                    
+                    {/* Tooltip */}
+                    {showTierTooltip && (
+                      <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
+                        {profile.subscription_tier === 'free' ? 'Free user' : 
+                         profile.subscription_tier === 'premium' ? 'Premium user' : 'Business user'}
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Reviews + Category - Mobile (under name) */}
+                <div className="flex items-center gap-2 mt-0.5">
+                  {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-2.5 h-2.5 ${i < Math.round(reviewStats.averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                      ))}
+                      <span className="font-medium text-gray-600 text-sm ml-1">{reviewStats.totalReviews > 0 ? `${reviewStats.averageRating}` : 'N/A'}</span>
+                    </div>
+                  )}
+                  
+                  {/* Category */}
+                  {profile.business_category && (
+                    <>
+                      {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
+                        <span className="text-gray-400">•</span>
+                      )}
+                      <span className="truncate text-gray-600 text-sm">{profile.business_category}</span>
+                    </>
                   )}
                 </div>
               </div>
-              
-              {/* Reviews - Mobile */}
-              {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`w-2.5 h-2.5 ${i < Math.round(reviewStats.averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                  ))}
-                  <span className="font-medium text-gray-600 text-sm ml-1">{reviewStats.totalReviews > 0 ? `${reviewStats.averageRating}` : 'N/A'}</span>
-                </div>
-              )}
             </div>
             
             {/* Second Row: Verified Badge (if exists) */}
@@ -1011,7 +1026,7 @@ Best regards`
               </div>
             )}
             
-            {/* Third Row: Cart + Chat + Share + Review + Open Status + Category */}
+            {/* Third Row: Cart + Chat + Share + Review + Open Status */}
             <div className="flex items-center gap-2 text-sm">
               {/* Cart Button - Mobile */}
               {profile.subscription_tier !== 'free' && (
@@ -1082,14 +1097,6 @@ Best regards`
                     {isBusinessOpen(profile.business_hours).status}
                   </span>
                 </div>
-              )}
-              
-              {/* Category */}
-              {profile.business_category && (
-                <>
-                  <span className="text-gray-400">•</span>
-                  <span className="truncate text-gray-600">{profile.business_category}</span>
-                </>
               )}
             </div>
           </div>

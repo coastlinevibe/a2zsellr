@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get('file') as File
     const tier = (formData.get('tier') as string) || 'premium'
+    const uploadMode = (formData.get('uploadMode') as string) || 'manual'
 
     if (!file) {
       return NextResponse.json(
@@ -41,51 +42,58 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get uploaded images
-    const productImages: File[] = []
-    for (let i = 0; i < 10; i++) {
-      const image = formData.get(`productImage${i}`) as File
-      if (image) {
-        productImages.push(image)
+    let productImages: File[] = []
+    let galleryImages: File[] = []
+    let uploadedProductImages: string[] = []
+    let uploadedGalleryImages: string[] = []
+
+    if (uploadMode === 'manual') {
+      // Get uploaded images for manual mode
+      for (let i = 0; i < 10; i++) {
+        const image = formData.get(`productImage${i}`) as File
+        if (image) {
+          productImages.push(image)
+        }
+      }
+      
+      // Get gallery images
+      const galleryImageCount = parseInt(formData.get('galleryImageCount') as string) || 0
+      for (let i = 0; i < galleryImageCount; i++) {
+        const image = formData.get(`galleryImage${i}`) as File
+        if (image) {
+          galleryImages.push(image)
+        }
+      }
+
+      if (productImages.length !== 10) {
+        return NextResponse.json(
+          { error: 'Exactly 10 product images are required for manual mode' },
+          { status: 400 }
+        )
+      }
+
+      if (galleryImages.length === 0) {
+        return NextResponse.json(
+          { error: 'At least 1 gallery image is required for manual mode' },
+          { status: 400 }
+        )
+      }
+
+      if (galleryImages.length > 30) {
+        return NextResponse.json(
+          { error: 'Maximum 30 gallery images allowed' },
+          { status: 400 }
+        )
       }
     }
-    
-    // Get gallery images
-    const galleryImageCount = parseInt(formData.get('galleryImageCount') as string) || 0
-    const galleryImages: File[] = []
-    for (let i = 0; i < galleryImageCount; i++) {
-      const image = formData.get(`galleryImage${i}`) as File
-      if (image) {
-        galleryImages.push(image)
-      }
-    }
 
-    if (productImages.length !== 10) {
-      return NextResponse.json(
-        { error: 'Exactly 10 product images are required' },
-        { status: 400 }
-      )
-    }
-
-    if (galleryImages.length === 0) {
-      return NextResponse.json(
-        { error: 'At least 1 gallery image is required' },
-        { status: 400 }
-      )
-    }
-
-    if (galleryImages.length > 30) {
-      return NextResponse.json(
-        { error: 'Maximum 30 gallery images allowed' },
-        { status: 400 }
-      )
-    }
-
-    console.log(`📊 Bulk upload with tier: ${tier}`)
-    console.log(`📸 Product images: ${productImages.length}`)
-    console.log(`🖼️ Gallery images: ${galleryImages.length}`)
-    console.log(`🔑 Service role key available: ${!!process.env.SUPABASE_SERVICE_ROLE_KEY}`)
-    console.log(`🌐 Supabase URL: ${process.env.NEXT_PUBLIC_SUPABASE_URL}`)
+    console.log('🚀 [UPLOAD API] Starting bulk upload process...')
+    console.log(`📊 [UPLOAD API] Bulk upload with tier: ${tier}`)
+    console.log(`🤖 [UPLOAD API] Upload mode: ${uploadMode}`)
+    console.log(`📸 [UPLOAD API] Product images: ${uploadMode === 'manual' ? productImages.length : 'Auto-generated'}`)
+    console.log(`🖼️ [UPLOAD API] Gallery images: ${uploadMode === 'manual' ? galleryImages.length : 'Auto-generated'}`)
+    console.log(`🔑 [UPLOAD API] Service role key available: ${!!process.env.SUPABASE_SERVICE_ROLE_KEY}`)
+    console.log(`🌐 [UPLOAD API] Supabase URL: ${process.env.NEXT_PUBLIC_SUPABASE_URL}`)
 
     // Parse CSV file
     const csvText = await file.text()
@@ -162,141 +170,142 @@ export async function POST(request: NextRequest) {
 
     console.log('🔍 Unique profiles after duplicate check:', uniqueProfiles.length)
 
-    // STEP 1: Upload images to Supabase storage
-    console.log('📸 Uploading images to storage...')
-    
-    // Check if storage buckets exist and are accessible
-    try {
-      console.log('🔍 Checking storage bucket accessibility...')
-      const { data: productBucketFiles, error: productBucketError } = await supabaseAdmin.storage
-        .from('product-images')
-        .list('', { limit: 1 })
+    // STEP 1: Handle images based on upload mode
+    if (uploadMode === 'manual') {
+      console.log('📸 Manual mode: Uploading user-provided images to storage...')
       
-      if (productBucketError) {
-        console.error('❌ Cannot access product-images bucket:', productBucketError)
-        return NextResponse.json(
-          { error: 'Cannot access product-images storage bucket', details: productBucketError.message },
-          { status: 500 }
-        )
-      }
-      
-      const { data: galleryBucketFiles, error: galleryBucketError } = await supabaseAdmin.storage
-        .from('gallery')
-        .list('', { limit: 1 })
-      
-      if (galleryBucketError) {
-        console.error('❌ Cannot access gallery bucket:', galleryBucketError)
-        return NextResponse.json(
-          { error: 'Cannot access gallery storage bucket', details: galleryBucketError.message },
-          { status: 500 }
-        )
-      }
-      
-      console.log('✅ Storage buckets are accessible')
-    } catch (error) {
-      console.error('❌ Exception checking storage buckets:', error)
-      return NextResponse.json(
-        { error: 'Exception checking storage buckets', details: error instanceof Error ? error.message : 'Unknown error' },
-        { status: 500 }
-      )
-    }
-    
-    const uploadedProductImages: string[] = []
-
-    // Upload product images
-    for (let i = 0; i < productImages.length; i++) {
-      const image = productImages[i]
-      const fileName = `bulk-upload/${Date.now()}-${Math.random().toString(36).substring(7)}.${image.name.split('.').pop()}`
-      
+      // Check if storage buckets exist and are accessible
       try {
-        console.log(`📸 Uploading product image ${i + 1}: ${fileName} (${image.size} bytes)`)
-        
-        const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+        console.log('🔍 Checking storage bucket accessibility...')
+        const { data: productBucketFiles, error: productBucketError } = await supabaseAdmin.storage
           .from('product-images')
-          .upload(fileName, image, {
-            cacheControl: '3600',
-            upsert: false
-          })
-
-        if (uploadError) {
-          console.error(`❌ Failed to upload product image ${i + 1}:`, uploadError)
-          console.error('Upload error details:', JSON.stringify(uploadError, null, 2))
+          .list('', { limit: 1 })
+        
+        if (productBucketError) {
+          console.error('❌ Cannot access product-images bucket:', productBucketError)
           return NextResponse.json(
-            { error: `Failed to upload product image ${i + 1}`, details: uploadError.message || JSON.stringify(uploadError) },
+            { error: 'Cannot access product-images storage bucket', details: productBucketError.message },
             { status: 500 }
           )
         }
-
-        if (!uploadData || !uploadData.path) {
-          console.error(`❌ No upload data returned for product image ${i + 1}`)
+        
+        const { data: galleryBucketFiles, error: galleryBucketError } = await supabaseAdmin.storage
+          .from('gallery')
+          .list('', { limit: 1 })
+        
+        if (galleryBucketError) {
+          console.error('❌ Cannot access gallery bucket:', galleryBucketError)
           return NextResponse.json(
-            { error: `No upload data returned for product image ${i + 1}`, details: 'Upload succeeded but no path returned' },
+            { error: 'Cannot access gallery storage bucket', details: galleryBucketError.message },
             { status: 500 }
           )
         }
-
-        const { data: { publicUrl } } = supabaseAdmin.storage
-          .from('product-images')
-          .getPublicUrl(fileName)
         
-        const imageUrl = publicUrl
-        uploadedProductImages.push(imageUrl)
-        console.log(`✅ Uploaded product image ${i + 1}: ${fileName} -> ${imageUrl}`)
+        console.log('✅ Storage buckets are accessible')
       } catch (error) {
-        console.error(`❌ Exception uploading product image ${i + 1}:`, error)
+        console.error('❌ Exception checking storage buckets:', error)
         return NextResponse.json(
-          { error: `Exception uploading product image ${i + 1}`, details: error instanceof Error ? error.message : 'Unknown error' },
+          { error: 'Exception checking storage buckets', details: error instanceof Error ? error.message : 'Unknown error' },
           { status: 500 }
         )
       }
-    }
 
-    // Upload gallery images (using same pattern as normal user uploads)
-    const uploadedGalleryImages: string[] = []
-    
-    for (let i = 0; i < galleryImages.length; i++) {
-      const galleryImage = galleryImages[i]
-      const galleryFileName = `bulk-upload/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${galleryImage.name.split('.').pop()}`
-      
-      try {
-        console.log(`🖼️ Uploading gallery image ${i + 1}: ${galleryFileName} (${galleryImage.size} bytes)`)
+      // Upload product images
+      for (let i = 0; i < productImages.length; i++) {
+        const image = productImages[i]
+        const fileName = `bulk-upload/${Date.now()}-${Math.random().toString(36).substring(7)}.${image.name.split('.').pop()}`
         
-        const { data: galleryUploadData, error: galleryUploadError } = await supabaseAdmin.storage
-          .from('gallery')
-          .upload(galleryFileName, galleryImage, {
-            cacheControl: '3600',
-            upsert: false
-          })
+        try {
+          console.log(`📸 Uploading product image ${i + 1}: ${fileName} (${image.size} bytes)`)
+          
+          const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+            .from('product-images')
+            .upload(fileName, image, {
+              cacheControl: '3600',
+              upsert: false
+            })
 
-        if (galleryUploadError) {
-          console.error(`❌ Failed to upload gallery image ${i + 1}:`, galleryUploadError)
+          if (uploadError) {
+            console.error(`❌ Failed to upload product image ${i + 1}:`, uploadError)
+            console.error('Upload error details:', JSON.stringify(uploadError, null, 2))
+            return NextResponse.json(
+              { error: `Failed to upload product image ${i + 1}`, details: uploadError.message || JSON.stringify(uploadError) },
+              { status: 500 }
+            )
+          }
+
+          if (!uploadData || !uploadData.path) {
+            console.error(`❌ No upload data returned for product image ${i + 1}`)
+            return NextResponse.json(
+              { error: `No upload data returned for product image ${i + 1}`, details: 'Upload succeeded but no path returned' },
+              { status: 500 }
+            )
+          }
+
+          const { data: { publicUrl } } = supabaseAdmin.storage
+            .from('product-images')
+            .getPublicUrl(fileName)
+          
+          const imageUrl = publicUrl
+          uploadedProductImages.push(imageUrl)
+          console.log(`✅ Uploaded product image ${i + 1}: ${fileName} -> ${imageUrl}`)
+        } catch (error) {
+          console.error(`❌ Exception uploading product image ${i + 1}:`, error)
           return NextResponse.json(
-            { error: `Failed to upload gallery image ${i + 1}`, details: galleryUploadError.message },
+            { error: `Exception uploading product image ${i + 1}`, details: error instanceof Error ? error.message : 'Unknown error' },
             { status: 500 }
           )
         }
-
-        if (!galleryUploadData || !galleryUploadData.path) {
-          console.error(`❌ No upload data returned for gallery image ${i + 1}`)
-          return NextResponse.json(
-            { error: `No upload data returned for gallery image ${i + 1}`, details: 'Upload succeeded but no path returned' },
-            { status: 500 }
-          )
-        }
-
-        const { data: { publicUrl } } = supabaseAdmin.storage
-          .from('gallery')
-          .getPublicUrl(galleryFileName)
-        
-        uploadedGalleryImages.push(publicUrl)
-        console.log(`✅ Uploaded gallery image ${i + 1}: ${galleryFileName} -> ${publicUrl}`)
-      } catch (error) {
-        console.error(`❌ Exception uploading gallery image ${i + 1}:`, error)
-        return NextResponse.json(
-          { error: `Exception uploading gallery image ${i + 1}`, details: error instanceof Error ? error.message : 'Unknown error' },
-          { status: 500 }
-        )
       }
+
+      // Upload gallery images
+      for (let i = 0; i < galleryImages.length; i++) {
+        const galleryImage = galleryImages[i]
+        const galleryFileName = `bulk-upload/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${galleryImage.name.split('.').pop()}`
+        
+        try {
+          console.log(`🖼️ Uploading gallery image ${i + 1}: ${galleryFileName} (${galleryImage.size} bytes)`)
+          
+          const { data: galleryUploadData, error: galleryUploadError } = await supabaseAdmin.storage
+            .from('gallery')
+            .upload(galleryFileName, galleryImage, {
+              cacheControl: '3600',
+              upsert: false
+            })
+
+          if (galleryUploadError) {
+            console.error(`❌ Failed to upload gallery image ${i + 1}:`, galleryUploadError)
+            return NextResponse.json(
+              { error: `Failed to upload gallery image ${i + 1}`, details: galleryUploadError.message },
+              { status: 500 }
+            )
+          }
+
+          if (!galleryUploadData || !galleryUploadData.path) {
+            console.error(`❌ No upload data returned for gallery image ${i + 1}`)
+            return NextResponse.json(
+              { error: `No upload data returned for gallery image ${i + 1}`, details: 'Upload succeeded but no path returned' },
+              { status: 500 }
+            )
+          }
+
+          const { data: { publicUrl } } = supabaseAdmin.storage
+            .from('gallery')
+            .getPublicUrl(galleryFileName)
+          
+          uploadedGalleryImages.push(publicUrl)
+          console.log(`✅ Uploaded gallery image ${i + 1}: ${galleryFileName} -> ${publicUrl}`)
+        } catch (error) {
+          console.error(`❌ Exception uploading gallery image ${i + 1}:`, error)
+          return NextResponse.json(
+            { error: `Exception uploading gallery image ${i + 1}`, details: error instanceof Error ? error.message : 'Unknown error' },
+            { status: 500 }
+          )
+        }
+      }
+    } else {
+      // Auto mode: No images will be imported - users will add their own
+      console.log('🤖 Auto mode: No images will be imported - users will add their own')
     }
 
     // STEP 2: Create auth users FIRST to get their IDs
@@ -436,7 +445,15 @@ export async function POST(request: NextRequest) {
           website_url: defaultWebsite,
           business_category: profile.business_category,
           business_location: finalBusinessLocation,
-          business_hours: 'Mon-Fri: 8:00 AM - 5:00 PM, Sat: 9:00 AM - 2:00 PM',
+          business_hours: JSON.stringify({
+            monday: { open: '09:00', close: '17:00', closed: false },
+            tuesday: { open: '09:00', close: '17:00', closed: false },
+            wednesday: { open: '09:00', close: '17:00', closed: false },
+            thursday: { open: '09:00', close: '17:00', closed: false },
+            friday: { open: '09:00', close: '17:00', closed: false },
+            saturday: { open: '09:00', close: '14:00', closed: false },
+            sunday: { open: '10:00', close: '16:00', closed: true }
+          }),
           avatar_url: generateDefaultAvatar(profile.display_name),
           subscription_tier: tier as 'free' | 'premium' | 'business',
           subscription_status: 'active',
@@ -580,21 +597,31 @@ export async function POST(request: NextRequest) {
       const defaultProducts = getDefaultProductsForCategory(originalProfile.business_category)
       console.log(`📦 Generated ${defaultProducts.length} products for category: ${originalProfile.business_category}`)
       
-      const profileProducts = defaultProducts.map((product, productIndex) => ({
-        id: crypto.randomUUID(),
-        profile_id: profile.id,
-        name: product.name,
-        description: product.description,
-        price_cents: product.price_cents,
-        currency: 'ZAR', // South African Rand
-        category: originalProfile.business_category, // Use the actual category from CSV
-        image_url: uploadedProductImages[productIndex] || null, // Use uploaded product image as main image
-        is_active: true,
-        images: uploadedProductImages[productIndex] ? [{ url: uploadedProductImages[productIndex], alt: product.name, order: 0 }] : null, // Images array with uploaded image
-        product_details: product.details || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }))
+      const profileProducts = defaultProducts.map((product, productIndex) => {
+        // Format product details with line breaks instead of commas
+        const formattedDetails = product.details 
+          ? product.details.split(',').map(detail => detail.trim()).join('\n')
+          : null;
+
+        // Don't import images - users will add their own
+        const productImageUrl = null;
+
+        return {
+          id: crypto.randomUUID(),
+          profile_id: profile.id,
+          name: product.name,
+          description: product.description,
+          price_cents: product.price_cents,
+          currency: 'ZAR', // South African Rand
+          category: originalProfile.business_category, // Use the actual category from CSV
+          image_url: productImageUrl,
+          is_active: true,
+          images: null,
+          product_details: formattedDetails,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+      })
       allProducts.push(...profileProducts)
       
       console.log(`✅ Added ${profileProducts.length} products for ${profile.display_name}`)
@@ -618,67 +645,97 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Products inserted successfully:', insertedProducts?.length || 0)
 
-    // STEP 4: Create gallery images for each profile
-    console.log('🖼️ Creating gallery images for profiles...')
-    const allGalleryItems = []
+    // STEP 4.5: Create product tags for each product
+    console.log('🏷️ Creating product tags...')
+    const allProductTags: any[] = []
+    const allProductTagAssignments: any[] = []
 
     for (let i = 0; i < allProfilesForProducts.length; i++) {
       const profile = allProfilesForProducts[i]
-      // Find the corresponding original profile by matching display_name
       const originalProfile = uniqueProfiles.find(up => up.display_name === profile.display_name)
       
-      if (!originalProfile) {
-        console.error(`❌ Could not find original profile for ${profile.display_name}`)
-        continue
+      if (!originalProfile) continue;
+      
+      const defaultProducts = getDefaultProductsForCategory(originalProfile.business_category)
+      const profileProductsFromDB = insertedProducts?.slice(i * 10, (i + 1) * 10) || []
+      
+      for (let j = 0; j < Math.min(defaultProducts.length, profileProductsFromDB.length); j++) {
+        const product = defaultProducts[j]
+        const dbProduct = profileProductsFromDB[j]
+        
+        if (!dbProduct) continue;
+        
+        // Create standard tags for each product
+        const productTags = [
+          {
+            id: crypto.randomUUID(),
+            name: 'Featured',
+            icon: '⭐',
+            color: '#10B981',
+            is_system_tag: true,
+            category: 'status',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: crypto.randomUUID(),
+            name: originalProfile.business_category.charAt(0).toUpperCase() + originalProfile.business_category.slice(1).replace(/-/g, ' '),
+            icon: '🏷️',
+            color: '#3B82F6',
+            is_system_tag: true,
+            category: 'business_category',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: crypto.randomUUID(),
+            name: 'Popular',
+            icon: '🔥',
+            color: '#F59E0B',
+            is_system_tag: true,
+            category: 'status',
+            created_at: new Date().toISOString()
+          }
+        ]
+        
+        allProductTags.push(...productTags)
+        
+        // Create tag assignments
+        productTags.forEach(tag => {
+          allProductTagAssignments.push({
+            product_id: dbProduct.id,
+            tag_id: tag.id,
+            created_at: new Date().toISOString()
+          })
+        })
       }
-      
-      // Check if gallery already exists for this profile
-      const { data: existingGallery } = await supabaseAdmin
-        .from('profile_gallery')
-        .select('id')
-        .eq('profile_id', profile.id)
-        .limit(1)
-      
-      if (existingGallery && existingGallery.length > 0) {
-        console.log(`⚠️ Gallery already exists for ${profile.display_name}, skipping gallery creation`)
-        continue
-      }
-      
-      console.log(`🖼️ Creating gallery image for profile: ${profile.display_name}`)
-      
-      // Randomly select one of the uploaded gallery images
-      const randomImageIndex = Math.floor(Math.random() * uploadedGalleryImages.length)
-      const selectedGalleryImageUrl = uploadedGalleryImages[randomImageIndex]
-      
-      console.log(`🖼️ Selected gallery image ${randomImageIndex + 1} for ${profile.display_name}: ${selectedGalleryImageUrl}`)
-      
-      const galleryItem = {
-        profile_id: profile.id,
-        image_url: selectedGalleryImageUrl,
-        caption: `${profile.display_name} - ${originalProfile.business_category}`
-      }
-      
-      allGalleryItems.push(galleryItem)
-      console.log(`✅ Added gallery item for ${profile.display_name}`)
     }
 
-    console.log(`🖼️ Total gallery items to insert: ${allGalleryItems.length}`)
+    // Insert product tags
+    if (allProductTags.length > 0) {
+      const { error: tagsError } = await supabaseAdmin
+        .from('product_tags')
+        .upsert(allProductTags, { onConflict: 'id' })
 
-    // Insert gallery items using admin client to bypass RLS
-    const { data: insertedGallery, error: galleryError } = await supabaseAdmin
-      .from('profile_gallery')
-      .insert(allGalleryItems)
-      .select('id')
+      if (tagsError) {
+        console.error('❌ Failed to insert product tags:', tagsError)
+      } else {
+        console.log(`✅ Inserted ${allProductTags.length} product tags`)
+      }
 
-    if (galleryError) {
-      console.error('Gallery insertion error:', galleryError)
-      return NextResponse.json(
-        { error: 'Failed to insert gallery items', details: galleryError.message },
-        { status: 500 }
-      )
+      // Insert product tag assignments
+      const { error: assignmentsError } = await supabaseAdmin
+        .from('product_tag_assignments')
+        .upsert(allProductTagAssignments, { onConflict: 'product_id,tag_id' })
+
+      if (assignmentsError) {
+        console.error('❌ Failed to insert product tag assignments:', assignmentsError)
+      } else {
+        console.log(`✅ Inserted ${allProductTagAssignments.length} product tag assignments`)
+      }
     }
 
-    console.log('✅ Gallery items inserted successfully:', insertedGallery?.length || 0)
+    // STEP 5: Skip gallery creation - users will add their own images
+    console.log('🖼️ Skipping gallery creation - users will add their own images')
+    const insertedGallery = [] // Empty array for response
 
     // Check for renamed profiles
     const renamedProfiles = uniqueProfiles
@@ -697,7 +754,7 @@ export async function POST(request: NextRequest) {
       results: {
         profilesCreated: insertedProfiles?.length || 0,
         productsCreated: allProducts.length,
-        galleryCreated: allGalleryItems.length,
+        galleryCreated: 0, // No gallery items created - users add their own
         locationsCreated: locationResults.created,
         authCreated: successfulAuth,
         authFailed: failedAuth.length,
