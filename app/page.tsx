@@ -1023,7 +1023,7 @@ export default function HomePage() {
           </motion.div>
           
           <motion.div 
-            className="max-w-4xl mx-auto"
+            className="max-w-4xl mx-auto -mt-2"
             initial={{ y: 30, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.8 }}
@@ -1231,7 +1231,7 @@ export default function HomePage() {
       </motion.section>
 
       {/* Search Results - Brutalist Style */}
-      <section className="py-6 relative">
+      <section className="py-3 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Loading State */}
           {isSearching && (
