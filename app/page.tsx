@@ -738,7 +738,7 @@ export default function HomePage() {
 
               {/* CTA Buttons */}
               <motion.div 
-                className="flex flex-col sm:flex-row gap-4"
+                className="flex flex-row gap-4 sm:gap-6 justify-center sm:justify-start"
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 1.4 }}
@@ -775,8 +775,8 @@ export default function HomePage() {
                     e.currentTarget.style.boxShadow = '0.15em 0.15em';
                   }}
                 >
-                  START FREE TRIAL
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="mr-2 h-5 w-5" />
+                  REGISTER
                 </Link>
                 <Link
                   href="/auth/signin"
@@ -1159,7 +1159,7 @@ export default function HomePage() {
 
                 {/* Carousel Container */}
                 <div 
-                  className="flex-1 overflow-hidden rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] bg-white p-6"
+                  className="flex-1 overflow-hidden rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] bg-white p-2 md:p-6"
                   onTouchStart={(e) => setTouchStart(e.targetTouches[0].clientX)}
                   onTouchEnd={(e) => {
                     setTouchEnd(e.changedTouches[0].clientX)
@@ -1172,8 +1172,12 @@ export default function HomePage() {
                   }}
                 >
                 <motion.div 
-                  className="flex gap-4 md:gap-6 justify-center md:justify-start"
-                  animate={{ x: -currentSlide * (isMobile ? (typeof window !== 'undefined' ? window.innerWidth - 32 : 300) : 320 + 24) }}
+                  className="flex gap-8 md:gap-6 justify-start"
+                  animate={{ 
+                    x: isMobile 
+                      ? -currentSlide * (typeof window !== 'undefined' ? window.innerWidth - 32 : 300) + 4
+                      : -currentSlide * (320 + 24) 
+                  }}
                   transition={{ 
                     type: "spring", 
                     stiffness: 300, 
@@ -1199,7 +1203,7 @@ export default function HomePage() {
                     return (
                       <motion.div
                         key={business.id}
-                        className="flex-shrink-0 w-full md:w-80"
+                        className="flex-shrink-0 w-[calc(100vw-64px)] md:w-80"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1, duration: 0.5 }}
@@ -1215,73 +1219,7 @@ export default function HomePage() {
                   })}
                 </motion.div>
                 
-                {/* Slide Indicators */}
-                <div className="mt-6">
-                  {/* Desktop: Show all dots */}
-                  <div className="hidden md:flex justify-center gap-2">
-                    {Array.from({ length: Math.max(1, businesses.length - 2) }).map((_, index) => (
-                      <motion.button
-                        key={index}
-                        onClick={() => setCurrentSlide(index)}
-                        className={`w-4 h-4 rounded-full border-2 border-black transition-all ${
-                          currentSlide === index 
-                            ? 'bg-yellow-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]' 
-                            : 'bg-white hover:bg-gray-200'
-                        }`}
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
-                      />
-                    ))}
-                  </div>
 
-                  {/* Mobile: Show 6 dots with pagination */}
-                  <div className="md:hidden flex items-center justify-center gap-2">
-                    <motion.button
-                      onClick={() => setDotPage(Math.max(0, dotPage - 1))}
-                      disabled={dotPage === 0}
-                      className={`p-2 rounded-lg border-2 border-black font-black text-sm ${
-                        dotPage === 0 
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                          : 'bg-blue-400 text-white hover:bg-blue-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]'
-                      }`}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      ←
-                    </motion.button>
-
-                    <div className="flex gap-2">
-                      {Array.from({ length: Math.min(6, Math.max(1, businesses.length - 2) - dotPage * 6) }).map((_, i) => {
-                        const index = dotPage * 6 + i
-                        return (
-                          <motion.button
-                            key={index}
-                            onClick={() => setCurrentSlide(index)}
-                            className={`w-3 h-3 rounded-full border-2 border-black transition-all ${
-                              currentSlide === index 
-                                ? 'bg-yellow-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]' 
-                                : 'bg-white hover:bg-gray-200'
-                            }`}
-                            whileHover={{ scale: 1.2 }}
-                            whileTap={{ scale: 0.9 }}
-                          />
-                        )
-                      })}
-                    </div>
-
-                    <motion.button
-                      onClick={() => setDotPage(dotPage + 1)}
-                      disabled={dotPage * 6 + 6 >= Math.max(1, businesses.length - 2)}
-                      className={`p-2 rounded-lg border-2 border-black font-black text-sm ${
-                        dotPage * 6 + 6 >= Math.max(1, businesses.length - 2)
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                          : 'bg-blue-400 text-white hover:bg-blue-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]'
-                      }`}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      →
-                    </motion.button>
-                  </div>
-                </div>
                 </div>
 
                 {/* Right Navigation Button */}
@@ -2065,7 +2003,7 @@ export default function HomePage() {
                     e.currentTarget.style.boxShadow = '0.15em 0.15em';
                   }}
                 >
-                  START FREE TRIAL
+                  REGISTER
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
                 <a
