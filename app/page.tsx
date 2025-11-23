@@ -79,7 +79,7 @@ export default function HomePage() {
         "3 gallery images",
         "5 products in shop",
         "1 image per product",
-        "2 tags per product",
+        "3 tags per product",
         "3 marketing listings"
       ],
       isPopular: false,
@@ -94,7 +94,7 @@ export default function HomePage() {
         "Unlimited gallery images",
         "20 products in shop",
         "8 images per product",
-        "5 tags per product",
+        "3 tags per product",
         "WhatsApp & Facebook campaigns",
         "Advanced analytics",
         "E-commerce features"
@@ -111,7 +111,7 @@ export default function HomePage() {
         "12 gallery images",
         "Unlimited products in shop",
         "50 images per product",
-        "15 tags per product",
+        "3 tags per product",
         "Instagram ad automation",
         "Bulk campaign management",
         "Priority support",
@@ -905,15 +905,7 @@ export default function HomePage() {
             >
               FIND LOCAL BUSINESSES
             </motion.h2>
-            <motion.p 
-              className="text-lg text-black max-w-2xl mx-auto bg-green-300 p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold"
-              initial={{ y: 20, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              viewport={{ once: true }}
-            >
-              SEARCH OUR DIRECTORY TO DISCOVER VERIFIED BUSINESSES ACROSS SOUTH AFRICA
-            </motion.p>
+
           </motion.div>
           
           <motion.div 

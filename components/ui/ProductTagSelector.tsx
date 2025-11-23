@@ -46,9 +46,9 @@ const ProductTagSelector: React.FC<ProductTagSelectorProps> = ({
 
   // Tier-based tag limits
   const TAG_LIMITS = {
-    free: 2,
-    premium: 5,
-    business: 15
+    free: 3,
+    premium: 3,
+    business: 3
   };
 
   const maxTags = TAG_LIMITS[userTier];
@@ -228,9 +228,7 @@ const ProductTagSelector: React.FC<ProductTagSelectorProps> = ({
             <div>
               <p className="text-sm font-medium text-amber-800">Tag Limit Reached</p>
               <p className="text-xs text-amber-700">
-                {userTier === 'free' && 'Free accounts can add up to 2 tags per product. Upgrade to Premium for 5 tags.'}
-                {userTier === 'premium' && 'Premium accounts can add up to 5 tags per product. Upgrade to Business for 15 tags.'}
-                {userTier === 'business' && 'You\'ve reached the maximum of 15 tags per product.'}
+                You've reached the maximum of 3 tags per product.
               </p>
             </div>
           </div>

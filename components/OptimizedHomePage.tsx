@@ -348,9 +348,7 @@ export default function OptimizedHomePage() {
             <h2 className="text-3xl font-black text-black mb-4 bg-white p-4 rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] inline-block">
               FIND LOCAL BUSINESSES
             </h2>
-            <p className="text-lg text-black max-w-2xl mx-auto bg-green-300 p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold">
-              SEARCH OUR DIRECTORY TO DISCOVER VERIFIED BUSINESSES ACROSS SOUTH AFRICA
-            </p>
+
           </motion.div>
           
           <div className="max-w-4xl mx-auto">
