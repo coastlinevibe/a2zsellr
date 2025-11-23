@@ -1524,8 +1524,6 @@ export function getDefaultProductsForCategory(category: string): DefaultProduct[
     'motor-vehicle-dealer': 'car-dealer',
     'computer-support-and-services': 'software-company',
 
-    'supermarket': 'grocery',
-
     'real-estate-agent': 'property-management-company',
 
     'life-coach': 'business-management-consultant',
