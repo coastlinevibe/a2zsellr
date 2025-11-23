@@ -97,9 +97,9 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch products with tags
+        // Fetch products
         const { data: productsData, error: productsError } = await supabase
-          .from('products_with_tags')
+          .from('profile_products')
           .select('*')
           .eq('profile_id', profile.id)
           .eq('is_active', true)

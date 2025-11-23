@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Head from 'next/head'
 import { supabase } from '@/lib/supabaseClient'
-import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Sword, Zap, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Check, Truck, Shield, MessageCircle, FileText } from 'lucide-react'
+import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Sword, Zap, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Check, Truck, Shield, MessageCircle, FileText, Search } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useCart } from '@/contexts/CartContext'
@@ -52,14 +52,6 @@ interface ProductImage {
   order: number
 }
 
-interface ProductTag {
-  id: string
-  name: string
-  icon?: string
-  color: string
-  is_system_tag: boolean
-}
-
 interface Product {
   id: string
   name: string
@@ -68,7 +60,6 @@ interface Product {
   category: string | null
   image_url: string | null
   images?: ProductImage[]
-  tags?: ProductTag[]
   price_cents: number | null
   is_active: boolean
 }
@@ -124,7 +115,7 @@ export default function ProfilePage() {
   const [quantity, setQuantity] = useState(1)
   const [showContactOptions, setShowContactOptions] = useState(false)
   const [currentProductImageIndex, setCurrentProductImageIndex] = useState(0)
-  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const [tierBadge, setTierBadge] = useState({ text: '', className: '' })
   const [metaTags, setMetaTags] = useState({
     title: '',
@@ -542,9 +533,9 @@ Best regards`
         setGalleryItems(formattedGallery)
       }
 
-      // Fetch products with tags
+      // Fetch products
       const { data: productsData, error: productsError } = await supabase
-        .from('products_with_tags')
+        .from('profile_products')
         .select('*')
         .eq('profile_id', profileData.id)
         .eq('is_active', true)
@@ -1632,49 +1623,39 @@ Best regards`
             <span className="text-sm text-gray-500">{products.length} items</span>
           </div>
           
-          {/* Category Filter Buttons */}
-          <div className="flex gap-3 mb-4 overflow-x-auto pb-2 pt-2 scrollbar-hide">
-            <motion.div className="cat-btn-wrapper">
-              <motion.button
-                onClick={() => setSelectedCategory('all')}
-                className={`cat-btn ${selectedCategory === 'all' ? 'active' : ''}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-              >
-                <div>All Products</div>
-              </motion.button>
-            </motion.div>
-            <motion.div className="cat-btn-wrapper">
-              <motion.button
-                onClick={() => setSelectedCategory('products')}
-                className={`cat-btn ${selectedCategory === 'products' ? 'active' : ''}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-              >
-                <div>Products</div>
-              </motion.button>
-            </motion.div>
-            <motion.div className="cat-btn-wrapper">
-              <motion.button
-                onClick={() => setSelectedCategory('services')}
-                className={`cat-btn ${selectedCategory === 'services' ? 'active' : ''}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-              >
-                <div>Services</div>
-              </motion.button>
-            </motion.div>
-
+          {/* Search Bar */}
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search products by name, description, or details..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+              />
+            </div>
           </div>
           
           <AnimatePresence mode="wait">
-            {(selectedCategory === 'all' ? products : products.filter(p => p.category === selectedCategory)).length > 0 ? (
+            {(() => {
+              const filteredProducts = products.filter(product => {
+                const query = searchQuery.toLowerCase()
+                if (!query) return true
+                
+                // Search in product name
+                if (product.name.toLowerCase().includes(query)) return true
+                
+                // Search in product description
+                if (product.description && product.description.toLowerCase().includes(query)) return true
+                
+                // Search in product details
+                if (product.product_details && product.product_details.toLowerCase().includes(query)) return true
+                
+                return false
+              })
+              
+              return filteredProducts.length > 0 ? (
               <motion.div 
                 className="overflow-x-auto"
                 initial={{ opacity: 0 }}
@@ -1687,7 +1668,7 @@ Best regards`
                   style={{ width: 'max-content' }}
                   layout
                 >
-                  {(selectedCategory === 'all' ? products : products.filter(p => p.category === selectedCategory)).map((product, index) => (
+                  {filteredProducts.map((product, index) => (
                     <motion.div 
                       key={product.id} 
                       className="bg-white border border-gray-200 rounded-[9px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex-shrink-0 w-48"
@@ -1780,19 +1761,26 @@ Best regards`
                 ))}
                 </motion.div>
               </motion.div>
-            ) : (
-              <motion.div 
-                className="bg-gray-50 rounded-[9px] p-8 text-center"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
-              >
-                <ShoppingBag className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <h3 className="text-sm font-medium text-gray-900 mb-1">No products available</h3>
-                <p className="text-xs text-gray-500">This business hasn't added any products yet.</p>
-              </motion.div>
-            )}
+              ) : (
+                <motion.div 
+                  className="bg-gray-50 rounded-[9px] p-8 text-center"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+                >
+                  <ShoppingBag className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <h3 className="text-sm font-medium text-gray-900 mb-1">
+                    {searchQuery ? 'No products found' : 'No products available'}
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    {searchQuery 
+                      ? 'Try adjusting your search terms' 
+                      : "This business hasn't added any products yet."}
+                  </p>
+                </motion.div>
+              )
+            })()}
           </AnimatePresence>
         </div>
       </motion.div>
@@ -2209,19 +2197,8 @@ Best regards`
                               {selectedProduct?.category}
                             </span>
                           )}
-                          {/* Display product tags */}
-                          {selectedProduct?.tags && selectedProduct.tags.length > 0 && (
-                            selectedProduct.tags.map((tag: any) => (
-                              <span
-                                key={tag.id}
-                                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium text-white"
-                                style={{ backgroundColor: tag.color }}
-                              >
-                                {tag.icon && <span>{tag.icon}</span>}
-                                {tag.name}
-                              </span>
-                            ))
-                          )}
+
+
                         </div>
                       </div>
                     )}

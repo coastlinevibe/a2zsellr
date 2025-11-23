@@ -726,22 +726,6 @@ export function BulkUploadManager() {
                             </span>
                           </div>
                           
-                          {/* Product Tags */}
-                          {product.tags && product.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mb-3">
-                              {product.tags.map((tag: any, tagIndex: number) => (
-                                <span 
-                                  key={tagIndex}
-                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-white"
-                                  style={{ backgroundColor: tag.color }}
-                                >
-                                  {tag.icon && <span>{tag.icon}</span>}
-                                  {tag.name}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                          
                           {/* Product Description */}
                           <div className="mb-3">
                             <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">Description</div>
@@ -845,7 +829,7 @@ export function BulkUploadManager() {
                   </div>
                   <div className="mt-3 p-3 bg-white rounded border border-green-300">
                     <p className="text-sm text-green-700">
-                      <strong>✨ Auto Mode Benefits:</strong> Products will be created with professional descriptions, detailed specifications, relevant tags, and realistic South African pricing. 
+                      <strong>✨ Auto Mode Benefits:</strong> Products will be created with professional descriptions, detailed specifications, and realistic South African pricing. 
                       No images will be imported - you can add your own product and gallery images later.
                     </p>
                     <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
