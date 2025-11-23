@@ -831,7 +831,7 @@ export default function BusinessShop({
                 <div className="flex items-center justify-between mb-3">
                   <label className="block text-sm font-semibold text-gray-800 flex items-center gap-2">
                     <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                    Product Images ({(Array.isArray(productImages) ? productImages.length : 0) + imageFiles.length}/{userTier === 'free' ? 1 : userTier === 'premium' ? 8 : 50})
+                    Product Images ({(Array.isArray(productImages) ? productImages.length : 0) + imageFiles.length}/{userTier === 'free' ? 1 : userTier === 'premium' ? 8 : 12})
                   </label>
                   <div className="flex items-center gap-2">
                     <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
@@ -888,7 +888,7 @@ export default function BusinessShop({
                 )}
 
                 {/* Upload Button - Compact */}
-                {(productImages.length + imageFiles.length) < (userTier === 'free' ? 1 : userTier === 'premium' ? 8 : 50) && (
+                {(productImages.length + imageFiles.length) < (userTier === 'free' ? 1 : userTier === 'premium' ? 8 : 12) && (
                   <label className="flex items-center justify-center gap-2 w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:border-emerald-500 hover:bg-emerald-50 transition-colors">
                     <Upload className="h-4 w-4 text-gray-400" />
                     <span className="text-xs text-gray-600">

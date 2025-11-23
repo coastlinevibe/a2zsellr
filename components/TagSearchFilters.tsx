@@ -58,10 +58,6 @@ const TagSearchFilters: React.FC<TagSearchFiltersProps> = ({
 
       {/* Instructional Text */}
       <div>
-        <div className="flex items-center gap-2 mb-3">
-          <Tag className="h-4 w-4 text-gray-600" />
-          <span className="text-sm font-bold text-gray-700">Use, separated keywords for best results eg.. Meat, beef, 500g</span>
-        </div>
       </div>
     </div>
   );

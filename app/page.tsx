@@ -197,7 +197,6 @@ export default function HomePage() {
         "3 gallery images",
         "5 products in shop",
         "1 image per product",
-        "3 tags per product",
         "3 marketing listings"
       ],
       isPopular: false,
@@ -209,11 +208,10 @@ export default function HomePage() {
       yearlyPrice: 1192, // 20% discount
       features: [
         "Everything in Free",
-        "Unlimited gallery images",
+        "8 gallery images",
         "20 products in shop",
         "8 images per product",
-        "3 tags per product",
-        "WhatsApp & Facebook campaigns",
+        "All social media link sharing",
         "Advanced analytics",
         "E-commerce features"
       ],
@@ -228,8 +226,7 @@ export default function HomePage() {
         "Everything in Premium",
         "12 gallery images",
         "Unlimited products in shop",
-        "50 images per product",
-        "3 tags per product",
+        "12 images per product",
         "Instagram ad automation",
         "Bulk campaign management",
         "Priority support",
@@ -999,7 +996,7 @@ export default function HomePage() {
       {/* Directory Search Section - Brutalist Style */}
       <motion.section 
         id="directory"
-        className="py-16 relative"
+        className="py-8 relative"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
@@ -1007,14 +1004,14 @@ export default function HomePage() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div 
-            className="text-center mb-12"
+            className="text-center mb-6"
             initial={{ y: 30, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
           >
             <motion.h2 
-              className="text-3xl font-black text-black mb-4 bg-white p-4 rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] inline-block"
+              className="text-2xl font-black text-black mb-2 bg-white p-4 rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] inline-block"
               initial={{ scale: 0, rotate: -10 }}
               whileInView={{ scale: 1, rotate: 0 }}
               transition={{ duration: 0.6, delay: 0.4, type: "spring", stiffness: 200 }}
@@ -1039,7 +1036,7 @@ export default function HomePage() {
                 selectedTags={selectedTags}
                 onTagRemove={handleTagRemove}
               />
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 items-end">
                 {/* Search Input */}
                 <div className="lg:col-span-4">
                   <label className="block text-sm font-black text-black mb-2 flex items-center justify-between">
@@ -1052,7 +1049,7 @@ export default function HomePage() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black" />
                     <input
                       type="text"
-                      placeholder="Use, separated keywords for best results eg.. Meat, beef, 500g"
+                      placeholder="Search businesses..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 border-2 border-black rounded-lg focus:ring-0 focus:border-green-500 bg-white font-bold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
