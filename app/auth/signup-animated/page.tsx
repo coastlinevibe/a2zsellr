@@ -33,6 +33,7 @@ export default function AnimatedSignupPage() {
   
   // Get selected plan from URL params
   const selectedPlan = searchParams?.get('plan') || 'free'
+  const billingPeriod = searchParams?.get('billing') || 'monthly'
   const referralParam = searchParams?.get('ref')
 
   // Store referral code persistently during signup process
@@ -194,8 +195,8 @@ export default function AnimatedSignupPage() {
           name: 'Premium',
           icon: Crown,
           color: 'emerald',
-          price: TIER_PRICING.premium.monthly,
-          originalPrice: TIER_PRICING.premium.monthly,
+          price: billingPeriod === 'yearly' ? TIER_PRICING.premium.yearly : TIER_PRICING.premium.monthly,
+          originalPrice: billingPeriod === 'yearly' ? TIER_PRICING.premium.yearly : TIER_PRICING.premium.monthly,
           features: [
             '✨ Everything in Free Plan',
             '🚀 Premium Directory Placement',
@@ -213,8 +214,8 @@ export default function AnimatedSignupPage() {
           name: 'Business',
           icon: Users,
           color: 'blue',
-          price: TIER_PRICING.business.monthly,
-          originalPrice: TIER_PRICING.business.monthly,
+          price: billingPeriod === 'yearly' ? TIER_PRICING.business.yearly : TIER_PRICING.business.monthly,
+          originalPrice: billingPeriod === 'yearly' ? TIER_PRICING.business.yearly : TIER_PRICING.business.monthly,
           features: [
             '💎 Everything in Premium Plan',
             '🏪 Multi-Location Management',
@@ -590,7 +591,7 @@ export default function AnimatedSignupPage() {
             isOpen={showPaymentModal}
             onClose={() => setShowPaymentModal(false)}
             selectedTier={selectedPlan as 'premium' | 'business'}
-            billingCycle="monthly"
+            billingCycle={billingPeriod as 'monthly' | 'yearly'}
           />
         )}
       </div>
@@ -701,7 +702,7 @@ export default function AnimatedSignupPage() {
               <div className="bg-white px-2 md:px-3 py-1 rounded-lg border-2 border-black flex-shrink-0">
                 {planConfig.price > 0 ? (
                   <div className="text-black font-black text-xs md:text-sm">
-                    {formatPrice(planConfig.price)}/MO
+                    {formatPrice(planConfig.price)}/{billingPeriod === 'yearly' ? 'YR' : 'MO'}
                   </div>
                 ) : (
                   <div className="text-black font-black text-xs md:text-sm">FREE</div>
@@ -917,7 +918,7 @@ export default function AnimatedSignupPage() {
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         selectedTier={selectedPlan === 'business' ? 'business' : 'premium'}
-        billingCycle="monthly"
+        billingCycle={billingPeriod as 'monthly' | 'yearly'}
       />
     </div>
   )

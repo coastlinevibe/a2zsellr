@@ -232,7 +232,9 @@ const PricingCard = ({
                     <div className="text-lg font-black">R
                         <Counter from={previousPrice} to={currentPrice} />
                     </div>
-                    <div className="text-[10px] font-bold">/{isYearly ? 'yr' : 'mo'}</div>
+                    <div className="text-[10px] font-bold">
+                        {currentPrice === 0 ? 'Trial' : `/${isYearly ? 'yr' : 'mo'}`}
+                    </div>
                 </div>
             </motion.div>
 
@@ -293,9 +295,9 @@ const PricingCard = ({
 
             {/* CTA Button */}
             <Link
-                href={plan.name === 'Free' ? '/auth/signup-animated?plan=free' : 
-                      plan.name === 'Premium' ? '/auth/signup-animated?plan=premium' : 
-                      '/auth/signup-animated?plan=business'}
+                href={plan.name === 'Free Tier' ? '/auth/signup-animated?plan=free' : 
+                      plan.name === 'Premium Tier' ? `/auth/signup-animated?plan=premium&billing=${isYearly ? 'yearly' : 'monthly'}` : 
+                      `/auth/signup-animated?plan=business&billing=${isYearly ? 'yearly' : 'monthly'}`}
                 className="block w-full"
                 style={{
                     background: '#5cbdfd',

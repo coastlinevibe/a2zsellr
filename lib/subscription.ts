@@ -57,9 +57,9 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
 ]
 
 export const TIER_PRICING = {
-  free: { monthly: 0 },
-  premium: { monthly: 149 },
-  business: { monthly: 299 }
+  free: { monthly: 0, yearly: 0 },
+  premium: { monthly: 149, yearly: 1192 },
+  business: { monthly: 299, yearly: 2392 }
 }
 
 
@@ -122,9 +122,9 @@ export function getPlanFeatures(planId: string): string[] {
   return plan?.features || []
 }
 
-export function getPlanPrice(planId: string): number {
+export function getPlanPrice(planId: string, billing: 'monthly' | 'yearly' = 'monthly'): number {
   const pricing = TIER_PRICING[planId as keyof typeof TIER_PRICING]
-  return pricing?.monthly || 0
+  return pricing?.[billing] || 0
 }
 
 export function formatPrice(price: number): string {

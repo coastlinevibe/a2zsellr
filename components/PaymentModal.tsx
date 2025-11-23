@@ -10,7 +10,7 @@ interface PaymentModalProps {
   isOpen: boolean
   onClose: () => void
   selectedTier: 'premium' | 'business'
-  billingCycle: 'monthly' | 'annual'
+  billingCycle: 'monthly' | 'yearly'
 }
 
 export function PaymentModal({ isOpen, onClose, selectedTier, billingCycle }: PaymentModalProps) {
@@ -25,8 +25,8 @@ export function PaymentModal({ isOpen, onClose, selectedTier, billingCycle }: Pa
 
   // Pricing data
   const pricing = {
-    premium: { monthly: 14900, annual: 14900 }, // In cents - R149
-    business: { monthly: 29900, annual: 29900 } // In cents - R299
+    premium: { monthly: 14900, yearly: 119200 }, // In cents - R149/month, R1192/year
+    business: { monthly: 29900, yearly: 239200 } // In cents - R299/month, R2392/year
   }
 
   const amount = pricing[selectedTier][billingCycle]

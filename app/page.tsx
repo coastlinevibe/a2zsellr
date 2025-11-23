@@ -189,7 +189,7 @@ export default function HomePage() {
   // Pricing plans data
   const pricingPlans: PricingPlan[] = [
     {
-      name: "Free",
+      name: "Free Tier",
       monthlyPrice: 0,
       yearlyPrice: 0,
       features: [
@@ -197,29 +197,13 @@ export default function HomePage() {
         "3 gallery images",
         "5 products in shop",
         "1 image per product",
-        "3 marketing listings"
+        "3 product/services share links"
       ],
       isPopular: false,
       accent: "bg-gray-500"
     },
     {
-      name: "Premium",
-      monthlyPrice: 149,
-      yearlyPrice: 1192, // 20% discount
-      features: [
-        "Everything in Free",
-        "8 gallery images",
-        "20 products in shop",
-        "8 images per product",
-        "All social media link sharing",
-        "Advanced analytics",
-        "E-commerce features"
-      ],
-      isPopular: true,
-      accent: "bg-green-500"
-    },
-    {
-      name: "Business",
+      name: "Business Tier",
       monthlyPrice: 299,
       yearlyPrice: 2392, // 20% discount
       features: [
@@ -227,13 +211,28 @@ export default function HomePage() {
         "12 gallery images",
         "Unlimited products in shop",
         "12 images per product",
-        "Instagram ad automation",
+        "Advanced marketing channels",
         "Bulk campaign management",
-        "Priority support",
-        "Business marketing listing"
+        "Priority support"
       ],
       isPopular: false,
       accent: "bg-blue-500"
+    },
+    {
+      name: "Premium Tier",
+      monthlyPrice: 149,
+      yearlyPrice: 1192, // 20% discount
+      features: [
+        "Everything in Free",
+        "8 gallery images",
+        "20 products in shop",
+        "8 images per product",
+        "Multi platform link sharing",
+        "Advanced analytics",
+        "E-commerce features"
+      ],
+      isPopular: true,
+      accent: "bg-green-500"
     }
   ]
 
