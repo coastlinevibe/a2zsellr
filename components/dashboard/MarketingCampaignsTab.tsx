@@ -186,7 +186,7 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
   const getListingUrl = (listing: Listing) => {
     const baseUrl = 'https://a2zsellr.life'
     const displayName = businessProfile?.display_name || 'business'
-    const usernameSlug = displayName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+    const usernameSlug = encodeURIComponent(displayName.toLowerCase().trim())
     // Use url_slug if available, otherwise generate from title
     const listingSlug = (listing as any).url_slug || listing.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
     return `${baseUrl}/${usernameSlug}/${listingSlug}`

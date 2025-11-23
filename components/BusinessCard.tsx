@@ -28,7 +28,7 @@ interface ProfileCardProps {
 
 export function BusinessCard({ business, categoryName, locationName, index = 0 }: ProfileCardProps) {
 
-  const username = business.display_name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'business'
+  const username = encodeURIComponent(business.display_name?.toLowerCase().trim() || 'business')
 
   return (
     <motion.div 

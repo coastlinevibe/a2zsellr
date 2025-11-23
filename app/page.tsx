@@ -13,6 +13,123 @@ import { ProductShowcase } from '@/components/ProductShowcase'
 import TagSearchFilters from '@/components/TagSearchFilters'
 import { motion } from 'framer-motion'
 
+// Function to normalize Unicode characters to ASCII for searching
+const normalizeUnicode = (text: string): string => {
+  if (!text) return ''
+  
+  let result = ''
+  
+  // Process each character
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i]
+    const code = char.charCodeAt(0)
+    
+    // Mathematical Alphanumeric Symbols (U+1D400–U+1D7FF)
+    // These are in the supplementary multilingual plane, represented as surrogate pairs
+    if (i < text.length - 1) {
+      const nextChar = text[i + 1]
+      const nextCode = nextChar.charCodeAt(0)
+      
+      // Check for surrogate pair (high surrogate followed by low surrogate)
+      if (code >= 0xD800 && code <= 0xDBFF && nextCode >= 0xDC00 && nextCode <= 0xDFFF) {
+        // Decode surrogate pair to get the actual Unicode code point
+        const codePoint = 0x10000 + ((code - 0xD800) << 10) + (nextCode - 0xDC00)
+        
+        // Mathematical Alphanumeric Symbols ranges
+        // Bold: U+1D400–U+1D433 (A-Z, a-z)
+        // Italic: U+1D434–U+1D467
+        // Bold Italic: U+1D468–U+1D49B
+        // Fraktur: U+1D504–U+1D537
+        // Double-struck: U+1D538–U+1D56B
+        // Script: U+1D49C–U+1D4CF
+        // Sans-serif: U+1D5A0–U+1D5D3
+        // Sans-serif Bold: U+1D5D4–U+1D607
+        // Sans-serif Italic: U+1D608–U+1D63B
+        // Sans-serif Bold Italic: U+1D63C–U+1D66F
+        // Monospace: U+1D670–U+1D6A3
+        
+        // Map to ASCII (a=97, z=122, A=65, Z=90)
+        if (codePoint >= 0x1D400 && codePoint <= 0x1D419) {
+          // Bold A-Z
+          result += String.fromCharCode(65 + (codePoint - 0x1D400))
+          i++ // Skip next character (low surrogate)
+          continue
+        } else if (codePoint >= 0x1D41A && codePoint <= 0x1D433) {
+          // Bold a-z
+          result += String.fromCharCode(97 + (codePoint - 0x1D41A))
+          i++
+          continue
+        } else if (codePoint >= 0x1D434 && codePoint <= 0x1D44D) {
+          // Italic A-Z
+          result += String.fromCharCode(65 + (codePoint - 0x1D434))
+          i++
+          continue
+        } else if (codePoint >= 0x1D44E && codePoint <= 0x1D467) {
+          // Italic a-z
+          result += String.fromCharCode(97 + (codePoint - 0x1D44E))
+          i++
+          continue
+        } else if (codePoint >= 0x1D468 && codePoint <= 0x1D481) {
+          // Bold Italic A-Z
+          result += String.fromCharCode(65 + (codePoint - 0x1D468))
+          i++
+          continue
+        } else if (codePoint >= 0x1D482 && codePoint <= 0x1D49B) {
+          // Bold Italic a-z
+          result += String.fromCharCode(97 + (codePoint - 0x1D482))
+          i++
+          continue
+        } else if (codePoint >= 0x1D504 && codePoint <= 0x1D51D) {
+          // Fraktur A-Z
+          result += String.fromCharCode(65 + (codePoint - 0x1D504))
+          i++
+          continue
+        } else if (codePoint >= 0x1D51E && codePoint <= 0x1D537) {
+          // Fraktur a-z
+          result += String.fromCharCode(97 + (codePoint - 0x1D51E))
+          i++
+          continue
+        } else if (codePoint >= 0x1D56C && codePoint <= 0x1D585) {
+          // Bold Fraktur A-Z
+          result += String.fromCharCode(65 + (codePoint - 0x1D56C))
+          i++
+          continue
+        } else if (codePoint >= 0x1D586 && codePoint <= 0x1D59F) {
+          // Bold Fraktur a-z
+          result += String.fromCharCode(97 + (codePoint - 0x1D586))
+          i++
+          continue
+        } else if (codePoint >= 0x1D538 && codePoint <= 0x1D551) {
+          // Double-struck A-Z
+          result += String.fromCharCode(65 + (codePoint - 0x1D538))
+          i++
+          continue
+        } else if (codePoint >= 0x1D552 && codePoint <= 0x1D56B) {
+          // Double-struck a-z
+          result += String.fromCharCode(97 + (codePoint - 0x1D552))
+          i++
+          continue
+        } else if (codePoint >= 0x1D5A0 && codePoint <= 0x1D5B9) {
+          // Sans-serif A-Z
+          result += String.fromCharCode(65 + (codePoint - 0x1D5A0))
+          i++
+          continue
+        } else if (codePoint >= 0x1D5BA && codePoint <= 0x1D5D3) {
+          // Sans-serif a-z
+          result += String.fromCharCode(97 + (codePoint - 0x1D5BA))
+          i++
+          continue
+        }
+      }
+    }
+    
+    // Regular ASCII characters
+    result += char.toLowerCase()
+  }
+  
+  return result
+}
+
 type RecentActivity = {
   id: string
   name: string
@@ -250,62 +367,52 @@ export default function HomePage() {
         .in('subscription_tier', ['free', 'premium', 'business']) // All subscription tiers
         .not('display_name', 'is', null) // Only profiles with display names
 
-      // Apply search filters - enhanced with tag searching
-      if (searchQuery && searchQuery.trim() !== '') {
-        const searchTerm = searchQuery.trim()
-        
-        // Search for profiles that have products with matching tags
-        const { data: matchingProducts } = await supabase
-          .from('products_with_tags')
-          .select('profile_id, tags')
-          .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,product_details.ilike.%${searchTerm}%`)
-        
-        // Also search for products where tags contain the search term
-        const { data: tagMatchingProducts } = await supabase
-          .from('products_with_tags')
-          .select('profile_id, tags')
-          .not('tags', 'is', null)
-        
-        // Filter products that have tags matching the search term
-        const tagFilteredProducts = tagMatchingProducts?.filter(product => {
-          if (!product.tags || !Array.isArray(product.tags)) return false
-          return product.tags.some((tag: any) => 
-            tag.name?.toLowerCase().includes(searchTerm.toLowerCase())
-          )
-        }) || []
-        
-        // Combine profile IDs from both searches
-        const allMatchingProducts = [...(matchingProducts || []), ...tagFilteredProducts]
-        const profileIdMap: { [key: string]: boolean } = {}
-        allMatchingProducts.forEach(p => { profileIdMap[p.profile_id] = true })
-        const profileIds = Object.keys(profileIdMap)
-        
-        if (profileIds.length > 0) {
-          // Include profiles that have matching products/tags OR match the basic profile search
-          query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%,id.in.(${profileIds.join(',')})`)
-        } else {
-          // Fallback to basic profile search
-          query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
-        }
-      }
-
+      // Note: We skip database search filtering for Unicode support
+      // All filtering will be done client-side to handle special characters
+      
+      // Apply category filter
       if (selectedCategory && selectedCategory !== 'all') {
         query = query.eq('business_category', selectedCategory)
       }
 
+      // Apply location filter
       if (selectedLocation && selectedLocation !== 'all') {
         query = query.eq('business_location', selectedLocation)
       }
 
-      const { data, error } = await query
+      // Execute the query
+      const { data: profiles, error } = await query
         .order('created_at', { ascending: false })
-        .limit(50)
+        .limit(500)
 
       if (error) {
         console.error('Error fetching businesses:', error)
         setBusinesses([])
+        return
+      }
+      
+      // If there's a search query, also do client-side filtering for better Unicode support
+      if (searchQuery && searchQuery.trim() !== '' && profiles) {
+        const searchTerm = searchQuery.trim().toLowerCase()
+        const normalizedSearchTerm = normalizeUnicode(searchTerm)
+        
+        const filteredProfiles = profiles.filter(profile => {
+          // Check if display name contains the search term (case-insensitive)
+          if (profile.display_name?.toLowerCase().includes(searchTerm)) return true
+          // Check normalized display name (for Unicode characters)
+          if (normalizeUnicode(profile.display_name || '').includes(normalizedSearchTerm)) return true
+          // Check if bio contains the search term
+          if (profile.bio?.toLowerCase().includes(searchTerm)) return true
+          // Check if category contains the search term
+          if (profile.business_category?.toLowerCase().includes(searchTerm)) return true
+          // Check if location contains the search term
+          if (profile.business_location?.toLowerCase().includes(searchTerm)) return true
+          return false
+        })
+        
+        setBusinesses(filteredProfiles)
       } else {
-        setBusinesses(data || [])
+        setBusinesses(profiles || [])
       }
     } catch (error) {
       console.error('Error fetching businesses:', error)
@@ -570,9 +677,10 @@ export default function HomePage() {
         .in('subscription_tier', ['free', 'premium', 'business']) // All active profiles
         .not('display_name', 'is', null) // Only profiles with display names
 
-      // Apply search query filter - enhanced to include tag matches
+      // Apply search query filter - enhanced to include tag matches and Unicode normalization
       if (searchQuery.trim()) {
         const searchTerm = searchQuery.trim()
+        const normalizedSearchTerm = normalizeUnicode(searchTerm)
         
         // Check if this is a comma-separated product search
         const keywords = searchTerm.split(',').map(keyword => keyword.trim()).filter(keyword => keyword.length > 0)
@@ -588,7 +696,14 @@ export default function HomePage() {
           }
         } else {
           // No product matches found, fallback to basic profile search
-          query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
+          // Always include both original and normalized search terms for Unicode support
+          if (normalizedSearchTerm !== searchTerm.toLowerCase()) {
+            // Search for both original term and normalized term
+            query = query.or(`display_name.ilike.%${searchTerm}%,display_name.ilike.%${normalizedSearchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
+          } else {
+            // Only search for original term if normalization didn't change it
+            query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
+          }
         }
       }
 
@@ -606,7 +721,7 @@ export default function HomePage() {
       query = query
         .order('verified_seller', { ascending: false })
         .order('updated_at', { ascending: false })
-        .limit(24) // Show more results
+        .limit(500) // Show all results
 
       const { data, error } = await query
 
@@ -628,7 +743,7 @@ export default function HomePage() {
           .not('display_name', 'is', null)
           .order('verified_seller', { ascending: false })
           .order('updated_at', { ascending: false })
-          .limit(12)
+          .limit(500)
         
         const { data: fallbackData } = await fallbackQuery
         setBusinesses(fallbackData || [])

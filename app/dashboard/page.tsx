@@ -474,8 +474,8 @@ export default function DashboardPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  // Convert display name to URL-friendly slug
-                  const profileSlug = profile.display_name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'profile'
+                  // Convert display name to URL-friendly slug using encodeURIComponent
+                  const profileSlug = encodeURIComponent(profile.display_name?.toLowerCase().trim() || 'profile')
                   const profileUrl = `https://www.a2zsellr.life/profile/${profileSlug}`
                   navigator.clipboard.writeText(profileUrl)
                   alert('Profile link copied to clipboard!')

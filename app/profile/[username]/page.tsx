@@ -67,7 +67,8 @@ interface Product {
 // Helper function to create consistent profile URLs
 const createProfileUrl = (displayName: string, productSlug?: string) => {
   // Convert display name to URL-friendly slug
-  const profileSlug = displayName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+  // Use encodeURIComponent to preserve Unicode characters
+  const profileSlug = encodeURIComponent(displayName.toLowerCase().trim())
   const baseUrl = `https://www.a2zsellr.life/profile/${profileSlug}`
   return productSlug ? `${baseUrl}?product=${encodeURIComponent(productSlug)}` : baseUrl
 }
@@ -486,7 +487,7 @@ Best regards`
             if (allProfiles && !allProfilesError) {
               // Find profile where the generated slug matches the URL slug
               const matchingProfile = allProfiles.find(profile => {
-                const profileSlug = profile.display_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+                const profileSlug = encodeURIComponent(profile.display_name.toLowerCase().trim())
                 return profileSlug === cleanUsername.toLowerCase()
               })
               

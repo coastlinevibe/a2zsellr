@@ -1,5 +1,76 @@
 import { createClient } from '@supabase/supabase-js'
 
+// Function to normalize Unicode characters to ASCII for searching
+const normalizeUnicode = (text: string): string => {
+  if (!text) return ''
+  
+  let result = ''
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i]
+    const code = char.charCodeAt(0)
+    
+    // Mathematical Alphanumeric Symbols (U+1D400–U+1D7FF)
+    // These are in the supplementary multilingual plane, represented as surrogate pairs
+    if (i < text.length - 1) {
+      const nextChar = text[i + 1]
+      const nextCode = nextChar.charCodeAt(0)
+      
+      // Check if this is a high surrogate followed by a low surrogate
+      if (code >= 0xD800 && code <= 0xDBFF && nextCode >= 0xDC00 && nextCode <= 0xDFFF) {
+        const codePoint = 0x10000 + ((code - 0xD800) << 10) + (nextCode - 0xDC00)
+        
+        // Mathematical Alphanumeric Symbols ranges
+        if (codePoint >= 0x1D400 && codePoint <= 0x1D419) {
+          // Bold A-Z
+          result += String.fromCharCode(65 + (codePoint - 0x1D400))
+          i++
+          continue
+        } else if (codePoint >= 0x1D41A && codePoint <= 0x1D433) {
+          // Bold a-z
+          result += String.fromCharCode(97 + (codePoint - 0x1D41A))
+          i++
+          continue
+        } else if (codePoint >= 0x1D434 && codePoint <= 0x1D44D) {
+          // Italic A-Z
+          result += String.fromCharCode(65 + (codePoint - 0x1D434))
+          i++
+          continue
+        } else if (codePoint >= 0x1D44E && codePoint <= 0x1D467) {
+          // Italic a-z
+          result += String.fromCharCode(97 + (codePoint - 0x1D44E))
+          i++
+          continue
+        } else if (codePoint >= 0x1D504 && codePoint <= 0x1D51D) {
+          // Fraktur A-Z
+          result += String.fromCharCode(65 + (codePoint - 0x1D504))
+          i++
+          continue
+        } else if (codePoint >= 0x1D51E && codePoint <= 0x1D537) {
+          // Fraktur a-z
+          result += String.fromCharCode(97 + (codePoint - 0x1D51E))
+          i++
+          continue
+        } else if (codePoint >= 0x1D56C && codePoint <= 0x1D585) {
+          // Bold Fraktur A-Z
+          result += String.fromCharCode(65 + (codePoint - 0x1D56C))
+          i++
+          continue
+        } else if (codePoint >= 0x1D586 && codePoint <= 0x1D59F) {
+          // Bold Fraktur a-z
+          result += String.fromCharCode(97 + (codePoint - 0x1D586))
+          i++
+          continue
+        }
+      }
+    }
+    
+    // For regular characters, just add them as-is
+    result += char
+  }
+  
+  return result.toLowerCase()
+}
+
 // Performance-optimized Supabase configuration
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dcfgdlwhixdruyewywly.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjZmdkbHdoaXhkcnV5ZXd5d2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1MjU1NjYsImV4cCI6MjA3NjEwMTU2Nn0.wMGq2FpoVFMnLemUP13763iodoXNu-gx8I0rRpTubG4'
@@ -194,10 +265,17 @@ export async function searchBusinessesFast(
 
   query = query.not('display_name', 'is', null)
 
-  // Apply search query filter
+  // Apply search query filter with Unicode normalization
   if (searchQuery.trim()) {
     const searchTerm = searchQuery.trim()
-    query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
+    const normalizedSearchTerm = normalizeUnicode(searchTerm)
+    
+    // Include both original and normalized search terms
+    if (normalizedSearchTerm !== searchTerm) {
+      query = query.or(`display_name.ilike.%${searchTerm}%,display_name.ilike.%${normalizedSearchTerm}%,bio.ilike.%${searchTerm}%,bio.ilike.%${normalizedSearchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
+    } else {
+      query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
+    }
   }
 
   query = query

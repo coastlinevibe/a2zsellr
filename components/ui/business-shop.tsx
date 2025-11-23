@@ -258,7 +258,7 @@ export default function BusinessShop({
       const businessName = profile?.display_name || 'Business'
       // Create URL with product parameter to open the product modal
       const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-      const businessSlug = businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+      const businessSlug = encodeURIComponent(businessName.toLowerCase().trim())
       const shareUrl = `https://www.a2zsellr.life/profile/${businessSlug}?product=${encodeURIComponent(productSlug)}`
       const shareText = `Check out "${product.name}" from ${businessName} on A2Z Business Directory!`
       

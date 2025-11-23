@@ -157,8 +157,7 @@ export const validationRules = {
   displayName: {
     required: true,
     minLength: 3,
-    maxLength: 30,
-    pattern: /^[a-zA-Z0-9\s\-_]+$/
+    maxLength: 50
   },
   bio: {
     required: true,

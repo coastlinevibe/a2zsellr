@@ -278,16 +278,9 @@ export default function ProfilePage() {
       return
     }
 
-    if (displayName.length > 30) {
+    if (displayName.length > 50) {
       setDisplayNameAvailable(false)
-      setDisplayNameError('Display name must be less than 30 characters')
-      return
-    }
-
-    // Check for valid characters (letters, numbers, spaces, hyphens, underscores)
-    if (!/^[a-zA-Z0-9\s\-_]+$/.test(displayName)) {
-      setDisplayNameAvailable(false)
-      setDisplayNameError('Only letters, numbers, spaces, hyphens, and underscores allowed')
+      setDisplayNameError('Display name must be less than 50 characters')
       return
     }
 
