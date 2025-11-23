@@ -221,6 +221,28 @@ export default function AdminDashboard() {
                 </svg>
                 BACK
               </motion.button>
+              <motion.button
+                onClick={async () => {
+                  await supabase.auth.signOut()
+                  router.push('/')
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg border-2 border-black font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center gap-2"
+                whileHover={{ 
+                  scale: 1.05,
+                  y: -2,
+                  transition: { duration: 0.2 }
+                }}
+                whileTap={{ 
+                  scale: 0.95,
+                  transition: { duration: 0.1 }
+                }}
+                title="Log Out"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                LOG OUT
+              </motion.button>
               <div>
                 <h1 className="text-4xl font-black text-white uppercase">A2Z ADMIN DASHBOARD</h1>
                 <p className="text-white font-bold bg-black px-3 py-1 rounded border-2 border-white inline-block mt-2">

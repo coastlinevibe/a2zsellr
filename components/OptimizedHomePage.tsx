@@ -356,7 +356,12 @@ export default function OptimizedHomePage() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
                 {/* Search Input */}
                 <div className="lg:col-span-5">
-                  <label className="block text-sm font-black text-black mb-2">FIND BUSINESSES</label>
+                  <label className="block text-sm font-black text-black mb-2 flex items-center justify-between">
+                    <span>FIND BUSINESSES</span>
+                    <span className="text-xs bg-green-300 px-2 py-1 rounded border border-black">
+                      FOUND {businesses.length}
+                    </span>
+                  </label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black" />
                     <input

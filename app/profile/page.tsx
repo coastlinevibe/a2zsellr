@@ -41,7 +41,7 @@ const tabs = [
 ]
 
 export default function ProfilePage() {
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -1144,6 +1144,16 @@ export default function ProfilePage() {
                   variant="outline"
                 >
                   Cancel
+                </Button>
+                <Button
+                  onClick={async () => {
+                    await signOut()
+                    router.push('/')
+                  }}
+                  variant="outline"
+                  className="border-red-300 text-red-700 hover:bg-red-50 hover:border-red-400"
+                >
+                  Log Out
                 </Button>
               </div>
 

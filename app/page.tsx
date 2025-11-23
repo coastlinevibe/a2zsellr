@@ -44,6 +44,7 @@ export default function HomePage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [searchResults, setSearchResults] = useState<{ total: number; tagMatches: number }>({ total: 0, tagMatches: 0 })
   const [isMobile, setIsMobile] = useState(false)
+  const [featuresSlide, setFeaturesSlide] = useState(0)
   const locationDropdownRef = useRef<HTMLDivElement>(null)
   const categoryDropdownRef = useRef<HTMLDivElement>(null)
 
@@ -777,7 +778,8 @@ export default function HomePage() {
                   START FREE TRIAL
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
-                <button 
+                <Link
+                  href="/auth/signin"
                   className="inline-flex items-center justify-center"
                   style={{
                     background: '#5cbdfd',
@@ -809,8 +811,8 @@ export default function HomePage() {
                   }}
                 >
                   <Eye className="mr-2 h-5 w-5" />
-                  WATCH DEMO
-                </button>
+                  LOGIN
+                </Link>
               </motion.div>
             </motion.div>
 
@@ -925,12 +927,17 @@ export default function HomePage() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
                 {/* Search Input */}
                 <div className="lg:col-span-4">
-                  <label className="block text-sm font-black text-black mb-2">FIND BUSINESSES</label>
+                  <label className="block text-sm font-black text-black mb-2 flex items-center justify-between">
+                    <span>FIND BUSINESSES</span>
+                    <span className="text-xs bg-green-300 px-2 py-1 rounded border border-black">
+                      FOUND {businesses.length}
+                    </span>
+                  </label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black" />
                     <input
                       type="text"
-                      placeholder="Use example tags or type in search bar to search for products in businesses..."
+                      placeholder="Use, separated keywords for best results eg.. Meat, beef, 500g"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 border-2 border-black rounded-lg focus:ring-0 focus:border-green-500 bg-white font-bold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
@@ -1127,58 +1134,7 @@ export default function HomePage() {
           {/* Business Cards Carousel */}
           {!isSearching && businesses.length > 0 && (
             <div className="relative">
-              {/* Carousel Header */}
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-                {/* Mobile: Found Count (Left) + Businesses (Right) */}
-                <div className="flex md:hidden items-center justify-between gap-3">
-                  <div className="flex flex-col gap-1">
-                    <p className="text-black text-sm bg-green-300 px-4 py-2 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold">
-                      FOUND {businesses.length}
-                    </p>
-                    {searchResults.tagMatches > 0 && (
-                      <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full border border-blue-500 font-bold text-xs">
-                        <Tag className="h-3 w-3" />
-                        {searchResults.tagMatches} by tags
-                      </span>
-                    )}
-                  </div>
-                  <motion.h3 
-                    className="text-xl font-black text-black bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]"
-                    initial={{ x: 50, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ duration: 0.6 }}
-                  >
-                    BUSINESSES
-                  </motion.h3>
-                </div>
 
-                {/* Centered: Businesses Found Count */}
-                <div className="hidden md:flex md:justify-center md:items-center w-full">
-                  <div className="flex items-center gap-3">
-                    <motion.h3 
-                      className="text-2xl font-black text-black bg-white p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] inline-block"
-                      initial={{ x: -50, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ duration: 0.6 }}
-                    >
-                      BUSINESSES
-                    </motion.h3>
-                    
-                    {/* Found Count */}
-                    <div className="flex flex-col items-start gap-2">
-                      <p className="text-black text-lg bg-green-300 px-4 py-2 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold inline-block">
-                        FOUND {businesses.length}
-                      </p>
-                      {searchResults.tagMatches > 0 && (
-                        <span className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full border-2 border-blue-500 font-bold text-sm">
-                          <Tag className="h-4 w-4" />
-                          {searchResults.tagMatches} found by tags
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
               
               {/* Carousel Container with Side Navigation */}
               <div className="flex items-center gap-4">
@@ -1434,7 +1390,211 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* Mobile Carousel */}
+          <div className="md:hidden">
+            <div className="relative">
+              <div className="overflow-hidden">
+                <div 
+                  className="flex transition-transform duration-300 ease-in-out"
+                  style={{ transform: `translateX(-${featuresSlide * 100}%)` }}
+                >
+                  {/* Feature 1 - Mobile Card */}
+                  <div className="w-full flex-shrink-0 px-4">
+                    <div className="bg-white p-6 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]">
+                      <div className="w-12 h-12 bg-green-500 rounded-lg border-2 border-black flex items-center justify-center mb-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]">
+                        <Search className="h-6 w-6 text-white" />
+                      </div>
+                      <h3 className="text-xl font-black text-black mb-3">SMART DIRECTORY</h3>
+                      <p className="text-black mb-4 leading-relaxed font-bold">
+                        GET DISCOVERED BY CUSTOMERS WITH OUR INTELLIGENT SEARCH AND FILTERING SYSTEM. PREMIUM PLACEMENT FOR VERIFIED BUSINESSES.
+                      </p>
+                      <ul className="space-y-2 text-sm text-black">
+                        <li className="flex items-center gap-2 bg-green-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">MULTI-LOCATION COVERAGE</span>
+                        </li>
+                        <li className="flex items-center gap-2 bg-green-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">VERIFIED BUSINESS BADGES</span>
+                        </li>
+                        <li className="flex items-center gap-2 bg-green-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">CUSTOMER REVIEWS & RATINGS</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Feature 2 - Mobile Card */}
+                  <div className="w-full flex-shrink-0 px-4">
+                    <div className="bg-white p-6 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]">
+                      <div className="w-12 h-12 bg-blue-500 rounded-lg border-2 border-black flex items-center justify-center mb-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]">
+                        <ShoppingBag className="h-6 w-6 text-white" />
+                      </div>
+                      <h3 className="text-xl font-black text-black mb-3">PRODUCT SHOWCASE</h3>
+                      <p className="text-black mb-4 leading-relaxed font-bold">
+                        DISPLAY YOUR PRODUCTS AND SERVICES WITH BEAUTIFUL GALLERIES, DETAILED DESCRIPTIONS, AND INTEGRATED SHOPPING FEATURES.
+                      </p>
+                      <ul className="space-y-2 text-sm text-black">
+                        <li className="flex items-center gap-2 bg-blue-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">UNLIMITED PRODUCT LISTINGS</span>
+                        </li>
+                        <li className="flex items-center gap-2 bg-blue-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">HIGH-QUALITY IMAGE GALLERIES</span>
+                        </li>
+                        <li className="flex items-center gap-2 bg-blue-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">DIRECT WHATSAPP INTEGRATION</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Feature 3 - Mobile Card */}
+                  <div className="w-full flex-shrink-0 px-4">
+                    <div className="bg-white p-6 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]">
+                      <div className="w-12 h-12 bg-yellow-500 rounded-lg border-2 border-black flex items-center justify-center mb-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]">
+                        <Share2 className="h-6 w-6 text-black" />
+                      </div>
+                      <h3 className="text-xl font-black text-black mb-3">MARKETING AUTOMATION</h3>
+                      <p className="text-black mb-4 leading-relaxed font-bold">
+                        CREATE STUNNING MARKETING CAMPAIGNS AND SHARE THEM ACROSS WHATSAPP, FACEBOOK, INSTAGRAM, AND MORE WITH ONE CLICK.
+                      </p>
+                      <ul className="space-y-2 text-sm text-black">
+                        <li className="flex items-center gap-2 bg-yellow-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">CAMPAIGN SCHEDULING</span>
+                        </li>
+                        <li className="flex items-center gap-2 bg-yellow-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">MULTI-PLATFORM SHARING</span>
+                        </li>
+                        <li className="flex items-center gap-2 bg-yellow-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">PERFORMANCE ANALYTICS</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Feature 4 - Mobile Card */}
+                  <div className="w-full flex-shrink-0 px-4">
+                    <div className="bg-white p-6 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]">
+                      <div className="w-12 h-12 bg-purple-500 rounded-lg border-2 border-black flex items-center justify-center mb-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]">
+                        <BarChart3 className="h-6 w-6 text-white" />
+                      </div>
+                      <h3 className="text-xl font-black text-black mb-3">ANALYTICS DASHBOARD</h3>
+                      <p className="text-black mb-4 leading-relaxed font-bold">
+                        TRACK YOUR BUSINESS PERFORMANCE WITH DETAILED INSIGHTS ON VIEWS, ENGAGEMENT, AND CUSTOMER INTERACTIONS.
+                      </p>
+                      <ul className="space-y-2 text-sm text-black">
+                        <li className="flex items-center gap-2 bg-purple-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">REAL-TIME METRICS</span>
+                        </li>
+                        <li className="flex items-center gap-2 bg-purple-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">CUSTOMER BEHAVIOR INSIGHTS</span>
+                        </li>
+                        <li className="flex items-center gap-2 bg-purple-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">ROI TRACKING</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Feature 5 - Mobile Card */}
+                  <div className="w-full flex-shrink-0 px-4">
+                    <div className="bg-white p-6 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]">
+                      <div className="w-12 h-12 bg-pink-500 rounded-lg border-2 border-black flex items-center justify-center mb-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]">
+                        <Smartphone className="h-6 w-6 text-white" />
+                      </div>
+                      <h3 className="text-xl font-black text-black mb-3">MOBILE-FIRST DESIGN</h3>
+                      <p className="text-black mb-4 leading-relaxed font-bold">
+                        OPTIMIZED FOR MOBILE DEVICES WITH LIGHTNING-FAST LOADING AND INTUITIVE TOUCH NAVIGATION FOR THE BEST USER EXPERIENCE.
+                      </p>
+                      <ul className="space-y-2 text-sm text-black">
+                        <li className="flex items-center gap-2 bg-pink-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">RESPONSIVE DESIGN</span>
+                        </li>
+                        <li className="flex items-center gap-2 bg-pink-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">FAST LOADING TIMES</span>
+                        </li>
+                        <li className="flex items-center gap-2 bg-pink-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">TOUCH-OPTIMIZED INTERFACE</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Feature 6 - Mobile Card */}
+                  <div className="w-full flex-shrink-0 px-4">
+                    <div className="bg-white p-6 rounded-2xl border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]">
+                      <div className="w-12 h-12 bg-red-500 rounded-lg border-2 border-black flex items-center justify-center mb-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]">
+                        <Shield className="h-6 w-6 text-white" />
+                      </div>
+                      <h3 className="text-xl font-black text-black mb-3">SECURE & RELIABLE</h3>
+                      <p className="text-black mb-4 leading-relaxed font-bold">
+                        ENTERPRISE-GRADE SECURITY WITH 99.9% UPTIME GUARANTEE. YOUR BUSINESS DATA IS PROTECTED WITH INDUSTRY-LEADING ENCRYPTION.
+                      </p>
+                      <ul className="space-y-2 text-sm text-black">
+                        <li className="flex items-center gap-2 bg-red-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">SSL ENCRYPTION</span>
+                        </li>
+                        <li className="flex items-center gap-2 bg-red-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">99.9% UPTIME</span>
+                        </li>
+                        <li className="flex items-center gap-2 bg-red-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
+                          <CheckCircle className="h-4 w-4 text-black" />
+                          <span className="font-black">REGULAR BACKUPS</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Navigation Arrows */}
+              <button
+                onClick={() => setFeaturesSlide(Math.max(0, featuresSlide - 1))}
+                disabled={featuresSlide === 0}
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white border-2 border-black rounded-full p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] disabled:opacity-50"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setFeaturesSlide(Math.min(5, featuresSlide + 1))}
+                disabled={featuresSlide === 5}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white border-2 border-black rounded-full p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] disabled:opacity-50"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+              
+              {/* Dots Indicator */}
+              <div className="flex justify-center mt-6 space-x-2">
+                {[0, 1, 2, 3, 4, 5].map((index) => (
+                  <button
+                    key={index}
+                    onClick={() => setFeaturesSlide(index)}
+                    className={`w-3 h-3 rounded-full border-2 border-black ${
+                      featuresSlide === index ? 'bg-black' : 'bg-white'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Grid */}
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Feature 1 */}
             <div className="bg-white p-8 rounded-2xl border-4 border-black hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] transition-all duration-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] group">
               <motion.div 
@@ -2098,7 +2258,27 @@ export default function HomePage() {
                 </a>
               </motion.div>
               <motion.button 
-                onClick={() => setShowAdminModal(true)}
+                onClick={async () => {
+                  try {
+                    // Auto-login with admin credentials
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                      email: 'admin@out.com',
+                      password: '123456'
+                    })
+                    
+                    if (error) {
+                      console.error('Admin login error:', error)
+                      alert('Failed to login as admin')
+                      return
+                    }
+                    
+                    // Redirect to admin dashboard
+                    window.location.href = '/admin'
+                  } catch (error) {
+                    console.error('Admin login error:', error)
+                    alert('Failed to login as admin')
+                  }
+                }}
                 className="bg-gray-600 hover:bg-gray-700 text-white font-black px-4 py-2 rounded-lg border-2 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.9)] transition-all"
                 whileHover={{ 
                   scale: 1.05,

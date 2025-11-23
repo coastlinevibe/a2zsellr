@@ -789,7 +789,12 @@ export default function HomePage() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
                 {/* Search Input */}
                 <div className="lg:col-span-5">
-                  <label className="block text-sm font-black text-black mb-2">FIND BUSINESSES</label>
+                  <label className="block text-sm font-black text-black mb-2 flex items-center justify-between">
+                    <span>FIND BUSINESSES</span>
+                    <span className="text-xs bg-green-300 px-2 py-1 rounded border border-black">
+                      FOUND {businesses.length}
+                    </span>
+                  </label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black" />
                     <input
@@ -943,13 +948,7 @@ export default function HomePage() {
                   PREMIUM DIRECTORY
                 </h2>
                 
-                {/* Found Profiles - Right */}
-                <p className="text-black text-lg bg-green-300 p-3 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold">
-                  FOUND {businesses.length} PROFILE{businesses.length !== 1 ? 'S' : ''} 
-                  {searchQuery && ` MATCHING "${searchQuery.toUpperCase()}"`}
-                  {selectedCategory !== 'all' && ` IN ${categories.find(c => c.slug === selectedCategory)?.name?.toUpperCase()}`}
-                  {selectedLocation !== 'all' && ` IN ${locations.find(l => l.slug === selectedLocation)?.city?.toUpperCase()}`}
-                </p>
+
               </div>
               
               {/* Carousel Container with Side Navigation */}
