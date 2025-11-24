@@ -13,7 +13,7 @@ interface SubscriptionUpgradeProps {
 export function SubscriptionUpgrade({ currentTier, onUpgrade }: SubscriptionUpgradeProps) {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [selectedTier, setSelectedTier] = useState<'premium' | 'business'>('premium')
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly')
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
 
   const tiers = {
     premium: {
@@ -54,7 +54,7 @@ export function SubscriptionUpgrade({ currentTier, onUpgrade }: SubscriptionUpgr
     setShowPaymentModal(true)
   }
 
-  const getPrice = (tier: 'premium' | 'business', cycle: 'monthly' | 'annual') => {
+  const getPrice = (tier: 'premium' | 'business', cycle: 'monthly' | 'yearly') => {
     return cycle === 'monthly' ? tiers[tier].monthlyPrice : tiers[tier].annualPrice
   }
 
@@ -85,9 +85,9 @@ export function SubscriptionUpgrade({ currentTier, onUpgrade }: SubscriptionUpgr
             Monthly
           </button>
           <button
-            onClick={() => setBillingCycle('annual')}
+            onClick={() => setBillingCycle('yearly')}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              billingCycle === 'annual'
+              billingCycle === 'yearly'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
