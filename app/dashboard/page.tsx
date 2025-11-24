@@ -52,7 +52,6 @@ import PublicProfilePreview from '@/components/ui/public-profile-preview'
 import { DashboardTour } from '@/components/DashboardTour'
 import ResetCountdownBanner from '@/components/ResetCountdownBanner'
 import TrialTimer from '@/components/TrialTimer'
-import ResetNotificationModal from '@/components/ResetNotificationModal'
 import { resetUserData } from '@/lib/trialManager'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 
@@ -1067,15 +1066,7 @@ export default function DashboardPage() {
         <MarkTourComplete userId={user?.id} />
       )}
 
-      {/* Reset Notification Modal */}
-      {profile && (
-        <ResetNotificationModal
-          profileCreatedAt={profile.created_at || new Date().toISOString()}
-          lastResetAt={null}
-          subscriptionTier={profile.subscription_tier}
-          onUpgrade={() => setShowPlanModal(true)}
-        />
-      )}
+
 
       {/* Plan Selection Modal */}
       <PlanSelectionModal
