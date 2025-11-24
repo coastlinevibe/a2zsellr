@@ -2309,44 +2309,6 @@ export default function HomePage() {
                   DIRECTORY
                 </a>
               </motion.div>
-              <motion.button 
-                onClick={async () => {
-                  try {
-                    // Auto-login with admin credentials
-                    const { data, error } = await supabase.auth.signInWithPassword({
-                      email: 'admin@out.com',
-                      password: '123456'
-                    })
-                    
-                    if (error) {
-                      console.error('Admin login error:', error)
-                      alert('Failed to login as admin')
-                      return
-                    }
-                    
-                    // Redirect to admin dashboard
-                    window.location.href = '/admin'
-                  } catch (error) {
-                    console.error('Admin login error:', error)
-                    alert('Failed to login as admin')
-                  }
-                }}
-                className="bg-gray-600 hover:bg-gray-700 text-white font-black px-4 py-2 rounded-lg border-2 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.9)] transition-all"
-                whileHover={{ 
-                  scale: 1.05,
-                  rotate: -2,
-                  boxShadow: "6px 6px 0px 0px rgba(255,255,255,0.9)",
-                  x: 3,
-                  y: -3
-                }}
-                whileTap={{ 
-                  scale: 0.95,
-                  rotate: 2,
-                  transition: { duration: 0.1 }
-                }}
-              >
-                ADMIN
-              </motion.button>
             </motion.div>
             
             {/* Stats Section */}
