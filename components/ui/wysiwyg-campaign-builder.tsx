@@ -77,9 +77,10 @@ interface WYSIWYGCampaignBuilderProps {
   onRefresh?: () => void
   userTier?: 'free' | 'premium' | 'business'
   onGoToListings?: () => void // Callback to navigate to My Listings tab
+  onUpgrade?: () => void // Callback to open upgrade modal
 }
 
-const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, editListing, onRefresh, userTier = 'free', onGoToListings }: WYSIWYGCampaignBuilderProps) => {
+const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, editListing, onRefresh, userTier = 'free', onGoToListings, onUpgrade }: WYSIWYGCampaignBuilderProps) => {
   const [campaignTitle, setCampaignTitle] = useState(editListing?.title || 'Mid-Month Growth Blast')
   const [selectedLayout, setSelectedLayout] = useState(editListing?.layout_type || 'gallery-mosaic')
   const [messageTemplate, setMessageTemplate] = useState(editListing?.message_template || 'Hey there! We just launched new services tailored for you. Tap to explore what\'s hot this week.')
@@ -113,6 +114,9 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
   // Confirmation popup state
   const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false)
   const [pendingListingData, setPendingListingData] = useState<any>(null)
+
+  // POPI consent toggle state
+  const [enableMessageConsent, setEnableMessageConsent] = useState(editListing?.enable_message_consent !== false)
 
   // Handle template image upload
   const handleTemplateImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -309,15 +313,43 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
   }
 
   // Auto-generated URL based on current values
-  const ctaUrl = generateCampaignUrl(
-    businessProfile?.display_name || 'business', 
-    campaignTitle
-  )
+  // If single product is selected, link to that product
+  // If multiple products are selected, link to profile
+  // Otherwise, link to the listing
+  const ctaUrl = (() => {
+    const baseUrl = 'https://a2zsellr.life'
+    const displayName = businessProfile?.display_name || 'business'
+    
+    if (selectedProducts.length === 1) {
+      // Single product - link to product on profile
+      const product = selectedProducts[0]
+      const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+      const profileSlug = encodeURIComponent(displayName.toLowerCase().trim())
+      return `${baseUrl}/profile/${profileSlug}?product=${encodeURIComponent(productSlug)}`
+    } else if (selectedProducts.length > 1) {
+      // Multiple products - link to profile
+      const profileSlug = encodeURIComponent(displayName.toLowerCase().trim())
+      return `${baseUrl}/profile/${profileSlug}`
+    } else {
+      // No products - link to listing
+      return generateCampaignUrl(displayName, campaignTitle)
+    }
+  })()
 
   // Handle file upload with proper storage
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
     if (!files) return
+
+    // Prevent media upload if products are selected
+    if (selectedProducts.length > 0) {
+      showError(
+        'You cannot add media when products are selected',
+        'Remove all products first to add media files'
+      )
+      event.target.value = ''
+      return
+    }
 
     const fileArray = Array.from(files)
     const currentMediaCount = uploadedMedia.length + selectedProducts.length
@@ -334,7 +366,10 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
     // Check for video files and user tier
     const hasVideoFiles = fileArray.some(file => file.type.startsWith('video/'))
     if (hasVideoFiles && userTier === 'free') {
-      alert('🎥 Video uploads are available for Premium and Business users only.\n\nUpgrade your plan to unlock video features!')
+      showError(
+        '🎥 Video uploads are available for Premium and Business users only',
+        'Upgrade your plan to unlock video features!'
+      )
       // Reset the file input
       event.target.value = ''
       return
@@ -342,7 +377,10 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
 
     // Check if adding these files would exceed the 5-image limit for listings
     if (currentMediaCount + fileArray.length > LISTING_MEDIA_LIMIT) {
-      alert(`You can only have up to ${LISTING_MEDIA_LIMIT} media items in a listing. You currently have ${currentMediaCount} items.`)
+      showError(
+        `You can only have up to ${LISTING_MEDIA_LIMIT} media items in a listing`,
+        `You currently have ${currentMediaCount} items.`
+      )
       // Reset the file input
       event.target.value = ''
       return
@@ -640,7 +678,8 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
       } : null,
       video_url: videoUrl.trim() || null,
       video_type: videoUrl.trim() ? videoType : null,
-      menu_images: menuImage ? [menuImage] : null
+      menu_images: menuImage ? [menuImage] : null,
+      enable_message_consent: enableMessageConsent
     }
   }
 
@@ -1329,7 +1368,19 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
                   📐 1200×800px
                 </span>
                 <span className="text-xs bg-blue-400 text-blue-100 px-2 py-1 rounded-full">
-                  {uploadedMedia.length + selectedProducts.length}/{userTier === 'free' ? 3 : userTier === 'premium' ? 8 : 999} items
+                  {(() => {
+                    if (selectedProducts.length > 0) {
+                      // Showing products - display product count and limit
+                      const productLimits = { free: 2, premium: 3, business: 4 }
+                      const maxProducts = productLimits[userTier as keyof typeof productLimits]
+                      return `${selectedProducts.length}/${maxProducts} products`
+                    } else {
+                      // Showing images - display image count and limit
+                      const tierMediaLimits = { free: 3, premium: 8, business: 12 }
+                      const maxImages = tierMediaLimits[userTier as keyof typeof tierMediaLimits] || 3
+                      return `${uploadedMedia.length}/${maxImages} images`
+                    }
+                  })()}
                 </span>
                 {businessProfile?.subscription_tier === 'free' && (
                   <span className="text-xs bg-yellow-500 text-yellow-900 px-2 py-1 rounded-full">
@@ -1414,7 +1465,13 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
                   onClick={() => setShowMediaSelector(!showMediaSelector)}
                   variant="outline"
                   className="border-blue-300 text-blue-100 hover:bg-blue-500 rounded-[9px] flex-1"
-                  disabled={(uploadedMedia.length + selectedProducts.length) >= (userTier === 'free' ? 3 : userTier === 'premium' ? 8 : 999)}
+                  disabled={(() => {
+                    const productLimits = { free: 2, premium: 3, business: 4 }
+                    const maxProducts = productLimits[userTier as keyof typeof productLimits]
+                    const mediaLimit = userTier === 'free' ? 3 : userTier === 'premium' ? 8 : 999
+                    const currentMediaCount = uploadedMedia.length + selectedProducts.length
+                    return selectedProducts.length >= maxProducts || currentMediaCount >= mediaLimit
+                  })()}
                 >
                   <ShoppingBag className="w-4 h-4 mr-2" />
                   Select from Shop ({products.length} items)
@@ -1422,8 +1479,9 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
                 <Button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingFiles.length > 0 || (uploadedMedia.length + selectedProducts.length) >= (userTier === 'free' ? 3 : userTier === 'premium' ? 8 : 999)}
+                  disabled={uploadingFiles.length > 0 || selectedProducts.length > 0 || (uploadedMedia.length + selectedProducts.length) >= (userTier === 'free' ? 3 : userTier === 'premium' ? 8 : 999)}
                   className="bg-blue-500 hover:bg-blue-400 text-white border border-blue-400 rounded-[9px] flex-1 disabled:opacity-50"
+                  title={selectedProducts.length > 0 ? "Remove products first to add media" : ""}
                 >
                   {uploadingFiles.length > 0 ? (
                     <>
@@ -1463,11 +1521,30 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
                             if (isSelected) {
                               setSelectedProducts(prev => prev.filter(p => p.id !== product.id))
                             } else {
+                              // Check product limit per tier
+                              const productLimits = {
+                                free: 2,
+                                premium: 3,
+                                business: 4
+                              }
+                              const maxProducts = productLimits[userTier as keyof typeof productLimits]
+                              
+                              if (selectedProducts.length >= maxProducts) {
+                                showError(
+                                  `You can only add up to ${maxProducts} product${maxProducts > 1 ? 's' : ''} per listing on ${userTier === 'free' ? 'Free' : userTier === 'premium' ? 'Premium' : 'Business'} tier`,
+                                  'Product Limit Reached'
+                                )
+                                return
+                              }
+                              
                               const currentMediaCount = uploadedMedia.length + selectedProducts.length
                               const LISTING_MEDIA_LIMIT = userTier === 'free' ? 3 : userTier === 'premium' ? 8 : 999
                               
                               if (currentMediaCount >= LISTING_MEDIA_LIMIT) {
-                                alert(`You can only have up to ${LISTING_MEDIA_LIMIT} media items in a listing. You currently have ${currentMediaCount} items.`)
+                                showError(
+                                  `You can only have up to ${LISTING_MEDIA_LIMIT} total media items in a listing. You currently have ${currentMediaCount} items.`,
+                                  'Media Limit Reached'
+                                )
                                 return
                               }
                               
@@ -1522,6 +1599,22 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
             </div>
           </div>
 
+          {/* POPI Consent Toggle */}
+          <div>
+            <label className="block text-sm font-medium text-blue-100 mb-2">Message consent (POPI)</label>
+            <div className="flex items-center justify-between bg-blue-500/60 border border-blue-400 rounded-[9px] px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-white">Show message consent popup</p>
+                <p className="text-xs text-blue-200">Display "wants to share a message with you" popup when listing is opened.</p>
+              </div>
+              <Switch
+                checked={enableMessageConsent}
+                onCheckedChange={setEnableMessageConsent}
+                className="data-[state=checked]:bg-emerald-500"
+              />
+            </div>
+          </div>
+
           {/* CTA Configuration */}
           <div className="space-y-4">
             <div>
@@ -1544,14 +1637,33 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
           </div>
 
           {/* Schedule */}
-          <div>
-            <label className="block text-sm font-medium text-blue-100 mb-2">Schedule (optional)</label>
-            <DateTimePicker
-              value={scheduleDate}
-              onChange={setScheduleDate}
-              className="w-full"
-            />
-          </div>
+          {userTier === 'free' ? (
+            <div className="bg-blue-500/30 border border-blue-400 rounded-[9px] p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-blue-100">Listing Scheduling</p>
+                  <p className="text-xs text-blue-200 mt-1">Available on Premium & Business tiers</p>
+                </div>
+                <button
+                  onClick={onUpgrade}
+                  className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-2 px-4 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 text-xs"
+                >
+                  <Crown className="w-3 h-3" />
+                  UPGRADE
+                  <Star className="w-2 h-2" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-blue-100 mb-2">Schedule (optional)</label>
+              <DateTimePicker
+                value={scheduleDate}
+                onChange={setScheduleDate}
+                className="w-full"
+              />
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex items-center gap-3 pt-4">

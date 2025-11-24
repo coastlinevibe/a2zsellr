@@ -198,7 +198,8 @@ export default function HomePage() {
         "5 products in shop",
         "1 image per product",
         "3 product/services share links",
-        "Limited sharing days (Mon-Fri only)"
+        "Limited sharing days (Mon-Fri only)",
+        "Per listing: 2 products OR 3 images"
       ],
       isPopular: false,
       accent: "bg-gray-500"
@@ -215,7 +216,8 @@ export default function HomePage() {
         "8 product/services share links",
         "Multi platform link sharing",
         "Advanced analytics",
-        "E-commerce features"
+        "E-commerce features",
+        "Per listing: 3 products OR 8 images"
       ],
       isPopular: true,
       accent: "bg-green-500"
@@ -232,7 +234,8 @@ export default function HomePage() {
         "20 product/services share links",
         "Advanced marketing channels",
         "Bulk campaign management",
-        "Priority support"
+        "Priority support",
+        "Per listing: 4 products OR 12 images"
       ],
       isPopular: false,
       accent: "bg-blue-500"
@@ -2558,18 +2561,7 @@ export default function HomePage() {
               </p>
               
               <div className="space-y-3 mb-6">
-                <div className="flex items-center gap-2 text-sm font-bold text-green-800">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  30-day money-back guarantee
-                </div>
-                <div className="flex items-center gap-2 text-sm font-bold text-green-800">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  No setup fees or hidden costs
-                </div>
-                <div className="flex items-center gap-2 text-sm font-bold text-green-800">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  Cancel anytime
-                </div>
+
               </div>
               
               <Link

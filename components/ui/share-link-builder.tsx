@@ -20,7 +20,7 @@ interface Product {
   category: string | null
 }
 
-const ShareLinkBuilder = ({ products = [], businessProfile, editListing, onRefresh, onGoToListings }: { products: Product[], businessProfile: any, editListing?: any, onRefresh?: () => void, onGoToListings?: () => void }) => {
+const ShareLinkBuilder = ({ products = [], businessProfile, editListing, onRefresh, onGoToListings, onUpgrade }: { products: Product[], businessProfile: any, editListing?: any, onRefresh?: () => void, onGoToListings?: () => void, onUpgrade?: () => void }) => {
   const [activeTab, setActiveTab] = useState('create')
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['whatsapp'])
 
@@ -67,6 +67,7 @@ const ShareLinkBuilder = ({ products = [], businessProfile, editListing, onRefre
                 onRefresh={onRefresh}
                 userTier={businessProfile?.subscription_tier || 'free'}
                 onGoToListings={onGoToListings}
+                onUpgrade={onUpgrade}
               />
             </div>
           </div>

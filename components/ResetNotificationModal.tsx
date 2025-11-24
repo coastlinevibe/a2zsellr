@@ -213,7 +213,7 @@ export default function ResetNotificationModal({
             {onUpgrade && (
               <div className="mt-4 text-center">
                 <p className="text-sm text-gray-600">
-                  Only <span className="font-bold text-orange-600">R149/month</span> • Cancel anytime
+                  Only <span className="font-bold text-orange-600">R149/month</span>
                 </p>
               </div>
             )}

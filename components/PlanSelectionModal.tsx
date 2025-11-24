@@ -22,12 +22,15 @@ export function PlanSelectionModal({ isOpen, onClose, onSelectPlan, currentTier 
       icon: Sword,
       color: 'from-yellow-400 to-orange-500',
       features: [
-        'Unlimited gallery images',
-        'Unlimited products in shop',
-        'WhatsApp marketing tools',
-        'Facebook campaign tools',
-        'Premium directory placement',
-        'Advanced analytics'
+        'Everything in Free',
+        '8 gallery images',
+        '20 products in shop',
+        '8 images per product',
+        '8 product/services share links',
+        'Multi platform link sharing',
+        'Advanced analytics',
+        'E-commerce features',
+        'Per listing: 3 products OR 8 images'
       ]
     },
     {
@@ -38,12 +41,14 @@ export function PlanSelectionModal({ isOpen, onClose, onSelectPlan, currentTier 
       color: 'from-purple-500 to-indigo-600',
       features: [
         'Everything in Premium',
-        'Multi-location management',
-        'Instagram ad automation',
-        'Custom branding options',
+        '12 gallery images',
+        'Unlimited products in shop',
+        '12 images per product',
+        '20 product/services share links',
+        'Advanced marketing channels',
+        'Bulk campaign management',
         'Priority support',
-        'Business marketing listing',
-        'Advanced reporting'
+        'Per listing: 4 products OR 12 images'
       ]
     }
   ]
@@ -136,9 +141,7 @@ export function PlanSelectionModal({ isOpen, onClose, onSelectPlan, currentTier 
             <p className="text-sm font-bold text-gray-600 mb-2">
               🔒 Secure payment powered by PayFast
             </p>
-            <p className="text-xs text-gray-500">
-              Cancel anytime • No setup fees • 30-day money-back guarantee
-            </p>
+
           </div>
         </div>
       </div>

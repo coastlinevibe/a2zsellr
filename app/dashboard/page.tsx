@@ -564,6 +564,7 @@ export default function DashboardPage() {
                 editListing={editListing}
                 onRefresh={fetchDashboardMetrics}
                 onGoToListings={() => setMarketingActiveView('campaigns')}
+                onUpgrade={() => setShowPlanModal(true)}
               />
             )}
 

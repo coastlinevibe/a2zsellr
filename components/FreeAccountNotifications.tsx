@@ -132,14 +132,7 @@ export default function FreeAccountNotifications({
         )}
       </div>
 
-      {/* Trust Indicators */}
-      <div className="mt-4 pt-4 border-t border-orange-200">
-        <div className="flex items-center justify-center gap-6 text-xs text-gray-500">
-          <span>✓ Cancel anytime</span>
-          <span>✓ 30-day money back</span>
-          <span>✓ No setup fees</span>
-        </div>
-      </div>
+
     </div>
   )
 }

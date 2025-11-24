@@ -573,7 +573,7 @@ export default function CampaignPage({ params }: CampaignPageProps) {
       />
 
       <MessageConsentPopup
-        isOpen={messageConsent.isOpen}
+        isOpen={messageConsent.isOpen && listing?.enable_message_consent !== false}
         onClose={messageConsent.handleClose}
         onAccept={messageConsent.handleAccept}
         onDecline={messageConsent.handleDecline}
