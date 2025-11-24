@@ -152,7 +152,6 @@ export default function HomePage() {
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
   const [currentSlide, setCurrentSlide] = useState(0)
-  const [showExitIntent, setShowExitIntent] = useState(false)
   const [chatWidgetCollapsed, setChatWidgetCollapsed] = useState(false)
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([])
   const [touchStart, setTouchStart] = useState(0)
@@ -459,23 +458,6 @@ export default function HomePage() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
-
-  // Exit intent detection
-  useEffect(() => {
-    let hasShownExitIntent = false
-    
-    function handleMouseLeave(event: MouseEvent) {
-      if (event.clientY <= 0 && !hasShownExitIntent) {
-        setShowExitIntent(true)
-        hasShownExitIntent = true
-      }
-    }
-
-    document.addEventListener('mouseleave', handleMouseLeave)
-    return () => {
-      document.removeEventListener('mouseleave', handleMouseLeave)
     }
   }, [])
 
@@ -2522,95 +2504,7 @@ export default function HomePage() {
         </Link>
       </motion.div>
 
-      {/* Exit Intent Popup */}
-      {showExitIntent && (
-        <motion.div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <motion.div 
-            className="bg-white p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] max-w-md mx-4 relative"
-            initial={{ scale: 0.5, y: 50 }}
-            animate={{ scale: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          >
-            <button 
-              onClick={() => setShowExitIntent(false)}
-              className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-full border-2 border-black font-black text-sm hover:bg-red-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]"
-            >
-              ×
-            </button>
-            
-            <div className="text-center">
-              <motion.div 
-                className="text-4xl mb-4"
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 0.5, repeat: 2 }}
-              >
-                🛑
-              </motion.div>
-              
-              <h3 className="text-2xl font-black text-black mb-4">
-                Wait! Don't Miss Out!
-              </h3>
-              
-              <p className="text-black font-bold mb-6">
-                Get your <span className="bg-yellow-300 px-2 py-1 rounded border-2 border-black">first month FREE</span> and start boosting your sales today!
-              </p>
-              
-              <div className="space-y-3 mb-6">
 
-              </div>
-              
-              <Link
-                href="/auth/signup-animated?plan=premium&promo=FIRSTFREE"
-                className="block w-full text-center font-black mb-3"
-                style={{
-                  background: '#5cbdfd',
-                  fontFamily: 'inherit',
-                  padding: '0.6em 1.3em',
-                  fontWeight: 900,
-                  fontSize: '15px',
-                  border: '3px solid black',
-                  borderRadius: '0.4em',
-                  boxShadow: '0.1em 0.1em',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  textDecoration: 'none',
-                  color: 'inherit'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
-                  e.currentTarget.style.boxShadow = '0.15em 0.15em';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translate(0, 0)';
-                  e.currentTarget.style.boxShadow = '0.1em 0.1em';
-                }}
-                onMouseDown={(e) => {
-                  e.currentTarget.style.transform = 'translate(0.05em, 0.05em)';
-                  e.currentTarget.style.boxShadow = '0.05em 0.05em';
-                }}
-                onMouseUp={(e) => {
-                  e.currentTarget.style.transform = 'translate(-0.05em, -0.05em)';
-                  e.currentTarget.style.boxShadow = '0.15em 0.15em';
-                }}
-              >
-                🎉 CLAIM YOUR FREE MONTH NOW!
-              </Link>
-              
-              <button 
-                onClick={() => setShowExitIntent(false)}
-                className="text-gray-500 text-sm font-bold hover:text-gray-700"
-              >
-                No thanks, I'll pay full price later
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
     </motion.div>
   )
 }

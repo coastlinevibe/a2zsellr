@@ -1,11 +1,7 @@
 import { motion } from 'framer-motion'
 import { ChevronRight, ChevronLeft, Upload, X } from 'lucide-react'
-import { useState } from 'react'
-
-const CATEGORIES = [
-  'Restaurants', 'Retail', 'Services', 'Healthcare', 'Technology',
-  'Beauty & Wellness', 'Education', 'Real Estate', 'Automotive', 'Other'
-]
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabaseClient'
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
@@ -40,12 +36,6 @@ export function WelcomeScreen({ username, onStart, onSkip }: any) {
               ➡️ Start Setup
               <ChevronRight className="h-5 w-5" />
             </button>
-            <button
-              onClick={onSkip}
-              className="w-full bg-gray-300 text-black px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all"
-            >
-              ❌ Skip for now
-            </button>
           </div>
         </motion.div>
       </div>
@@ -54,6 +44,33 @@ export function WelcomeScreen({ username, onStart, onSkip }: any) {
 }
 
 export function BusinessBasicsStep({ data, setData, onNext, onBack }: StepProps) {
+  const [categories, setCategories] = useState<any[]>([])
+  const [loadingCategories, setLoadingCategories] = useState(true)
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data: categoriesData, error } = await supabase
+          .from('categories')
+          .select('id, name, slug')
+          .eq('is_active', true)
+          .order('name')
+        
+        if (error) {
+          console.error('Error fetching categories:', error)
+        } else {
+          setCategories(categoriesData || [])
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err)
+      } finally {
+        setLoadingCategories(false)
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
   const isValid = data.displayName.trim() && data.description.trim().length >= 20 && data.category
 
   return (
@@ -97,11 +114,12 @@ export function BusinessBasicsStep({ data, setData, onNext, onBack }: StepProps)
             value={data.category}
             onChange={(e) => setData({ ...data, category: e.target.value })}
             className="w-full px-4 py-3 border-2 border-black rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={loadingCategories}
             required
           >
-            <option value="">Select a category</option>
-            {CATEGORIES.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
+            <option value="">{loadingCategories ? 'Loading categories...' : 'Select a category'}</option>
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.name}>{cat.name}</option>
             ))}
           </select>
         </div>
