@@ -739,8 +739,8 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
     if (!editListing) {
       const tierLimits = {
         free: 3,
-        premium: 999, // Keep unlimited for listings
-        business: 999
+        premium: 8,
+        business: 20
       }
       
       const currentLimit = tierLimits[userTier as keyof typeof tierLimits]

@@ -35,23 +35,23 @@ export default function FreeAccountNotifications({
   const features = [
     {
       icon: Star,
-      title: 'Premium Gallery',
-      description: 'Unlimited images with slider showcase'
+      title: '8 Gallery Images',
+      description: 'Showcase your business with more photos'
     },
     {
       icon: Zap,
-      title: 'Marketing Tools',
-      description: 'WhatsApp & Facebook automation'
+      title: '20 Products in Shop',
+      description: 'Expand your product catalog'
     },
     {
       icon: TrendingUp,
-      title: 'Analytics',
-      description: 'Track views, clicks, and engagement'
+      title: '8 Marketing Listings',
+      description: 'Create more product/services share links'
     },
     {
       icon: Users,
-      title: 'Priority Support',
-      description: '24/7 customer support access'
+      title: 'Multi-platform Sharing',
+      description: 'Share on WhatsApp, Facebook, Instagram & more'
     }
   ]
 
@@ -100,13 +100,13 @@ export default function FreeAccountNotifications({
 
       {/* Current Limitations */}
       <div className="bg-white rounded-lg border border-orange-100 p-4 mb-6">
-        <h4 className="font-medium text-gray-900 mb-2 text-sm">Current Free Plan Limits:</h4>
+        <h4 className="font-medium text-gray-900 mb-2 text-sm">Your Free Plan Includes:</h4>
         <ul className="text-sm text-gray-600 space-y-1">
-          <li>• Only 3 gallery images</li>
-          <li>• Maximum 5 products in shop</li>
-          <li>• Maximum 3 marketing listings</li>
-          <li>• No sharing on Wednesday, Saturday, Sunday</li>
-          <li>• Profile resets every Sunday (products & listings cleared)</li>
+          <li>• 3 gallery images</li>
+          <li>• 5 products in shop</li>
+          <li>• 1 image per product</li>
+          <li>• 3 product/services share links</li>
+          <li>• Limited sharing days (Mon-Fri only)</li>
         </ul>
       </div>
 

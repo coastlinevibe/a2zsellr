@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Head from 'next/head'
 import { supabase } from '@/lib/supabaseClient'
-import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Sword, Zap, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Check, Truck, Shield, MessageCircle, FileText, Search } from 'lucide-react'
+import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Sword, Zap, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Check, Truck, Shield, MessageCircle, FileText, Search, MessageSquare } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon'
 import { useCart } from '@/contexts/CartContext'
 import CartButton from '@/components/CartButton'
 import Link from 'next/link'
@@ -1036,9 +1037,9 @@ Best regards`
                     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
                     window.open(whatsappUrl, '_blank')
                   }}
-                  title="Chat"
+                  title="WhatsApp"
                 >
-                  <MessageCircle className="w-4 h-4" />
+                  <WhatsAppIcon className="w-4 h-4" />
                 </button>
               )}
               
@@ -1842,7 +1843,21 @@ Best regards`
                 <div className="p-2 bg-blue-100 rounded-[9px]">
                   <Phone className="h-4 w-4 text-blue-600" />
                 </div>
-                <span className="text-sm text-gray-700">{profile.phone_number}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-700">{profile.phone_number}</span>
+                  <button
+                    onClick={() => {
+                      const phoneNumber = profile.phone_number?.replace(/\D/g, '')
+                      const message = `Hi ${profile.display_name}, I found your profile on A2Z Business Directory and would like to get in touch!`
+                      const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+                      window.open(whatsappUrl, '_blank')
+                    }}
+                    className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
+                    title="Chat on WhatsApp"
+                  >
+                    <WhatsAppIcon className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             )}
             

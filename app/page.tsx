@@ -197,26 +197,11 @@ export default function HomePage() {
         "3 gallery images",
         "5 products in shop",
         "1 image per product",
-        "3 product/services share links"
+        "3 product/services share links",
+        "Limited sharing days (Mon-Fri only)"
       ],
       isPopular: false,
       accent: "bg-gray-500"
-    },
-    {
-      name: "Business Tier",
-      monthlyPrice: 299,
-      yearlyPrice: 2392, // 20% discount
-      features: [
-        "Everything in Premium",
-        "12 gallery images",
-        "Unlimited products in shop",
-        "12 images per product",
-        "Advanced marketing channels",
-        "Bulk campaign management",
-        "Priority support"
-      ],
-      isPopular: false,
-      accent: "bg-blue-500"
     },
     {
       name: "Premium Tier",
@@ -227,12 +212,30 @@ export default function HomePage() {
         "8 gallery images",
         "20 products in shop",
         "8 images per product",
+        "8 product/services share links",
         "Multi platform link sharing",
         "Advanced analytics",
         "E-commerce features"
       ],
       isPopular: true,
       accent: "bg-green-500"
+    },
+    {
+      name: "Business Tier",
+      monthlyPrice: 299,
+      yearlyPrice: 2392, // 20% discount
+      features: [
+        "Everything in Premium",
+        "12 gallery images",
+        "Unlimited products in shop",
+        "12 images per product",
+        "20 product/services share links",
+        "Advanced marketing channels",
+        "Bulk campaign management",
+        "Priority support"
+      ],
+      isPopular: false,
+      accent: "bg-blue-500"
     }
   ]
 
