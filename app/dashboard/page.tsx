@@ -518,10 +518,10 @@ export default function DashboardPage() {
         .select('rating')
         .eq('profile_id', targetProfileId)
       
-      // Calculate average rating (default to 4.5 if no reviews)
+      // Calculate average rating (default to 0 if no reviews)
       const avgRating = reviewsData && reviewsData.length > 0 
         ? reviewsData.reduce((sum: number, review: any) => sum + review.rating, 0) / reviewsData.length
-        : 4.5 // Default rating for new businesses
+        : 0 // No rating for new businesses
       
       setDashboardMetrics({
         profileViews: totalViews,
@@ -1238,23 +1238,25 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-          <div className="bg-yellow-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-black text-black">Store Rating</p>
-                <p className="text-2xl font-black text-black">
-                  {metricsLoading ? (
-                    <span className="animate-pulse">...</span>
-                  ) : (
-                    dashboardMetrics.storeRating === 0 ? '0.0' : dashboardMetrics.storeRating
-                  )}
-                </p>
-              </div>
-              <div className="bg-yellow-600 rounded-full p-2 border-2 border-black">
-                <Star className="h-5 w-5 text-white" />
+          {profile?.subscription_tier !== 'free' && (
+            <div className="bg-yellow-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-black text-black">Store Rating</p>
+                  <p className="text-2xl font-black text-black">
+                    {metricsLoading ? (
+                      <span className="animate-pulse">...</span>
+                    ) : (
+                      dashboardMetrics.storeRating === 0 ? '0.0' : dashboardMetrics.storeRating
+                    )}
+                  </p>
+                </div>
+                <div className="bg-yellow-600 rounded-full p-2 border-2 border-black">
+                  <Star className="h-5 w-5 text-white" />
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Stats - Mobile (Compact) */}
@@ -1310,23 +1312,25 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-          <div className="bg-yellow-100 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] p-3">
-            <div className="flex items-center justify-between gap-2">
-              <div>
-                <p className="text-xs font-black text-black">Rating</p>
-                <p className="text-lg font-black text-black">
-                  {metricsLoading ? (
-                    <span className="animate-pulse">...</span>
-                  ) : (
-                    dashboardMetrics.storeRating === 0 ? '0.0' : dashboardMetrics.storeRating
-                  )}
-                </p>
-              </div>
-              <div className="bg-yellow-600 rounded-full p-1.5 border-2 border-black flex-shrink-0">
-                <Star className="h-4 w-4 text-white" />
+          {profile?.subscription_tier !== 'free' && (
+            <div className="bg-yellow-100 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] p-3">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-xs font-black text-black">Rating</p>
+                  <p className="text-lg font-black text-black">
+                    {metricsLoading ? (
+                      <span className="animate-pulse">...</span>
+                    ) : (
+                      dashboardMetrics.storeRating === 0 ? '0.0' : dashboardMetrics.storeRating
+                    )}
+                  </p>
+                </div>
+                <div className="bg-yellow-600 rounded-full p-1.5 border-2 border-black flex-shrink-0">
+                  <Star className="h-4 w-4 text-white" />
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Quick Action Buttons - Desktop */}
