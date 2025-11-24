@@ -145,7 +145,7 @@ export function MarketingActionBar({
 
       <div className={cn(
         'grid gap-2 sm:gap-3 justify-center',
-        actions.length === 1 && 'grid-cols-1 max-w-xs mx-auto',
+        actions.length === 1 && 'grid-cols-1 w-fit mx-auto',
         actions.length === 2 && 'grid-cols-2 max-w-sm mx-auto',
         actions.length === 3 && 'grid-cols-2 sm:grid-cols-3 max-w-md mx-auto',
         actions.length === 4 && 'grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto',

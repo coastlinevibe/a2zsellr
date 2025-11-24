@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { ConfirmationPopup } from '@/components/ui/ConfirmationPopup'
 import { TierLimitDisplay } from '@/components/ui/premium-badge'
 import { supabase } from '@/lib/supabaseClient'
 import { useAuth } from '@/lib/auth'
@@ -61,6 +62,13 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
     totalViews: 0,
     totalClicks: 0
   })
+  
+  // Confirmation popup states
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showEditConfirm, setShowEditConfirm] = useState(false)
+  const [showCopyConfirm, setShowCopyConfirm] = useState(false)
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null)
+  const [copiedUrl, setCopiedUrl] = useState<string>('')
 
   // Fetch campaigns from database
   useEffect(() => {
@@ -106,20 +114,25 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
     }
   }
 
-  const deleteListing = async (listingId: string) => {
-    if (!confirm('Are you sure you want to delete this listing?')) return
+  const handleDeleteClick = (listing: Listing) => {
+    setSelectedListing(listing)
+    setShowDeleteConfirm(true)
+  }
+
+  const performDelete = async () => {
+    if (!selectedListing) return
 
     try {
       const { error } = await supabase
         .from('profile_listings')
         .delete()
-        .eq('id', listingId)
+        .eq('id', selectedListing.id)
         .eq('profile_id', user?.id)
 
       if (error) throw error
       
       // Update local state
-      const updatedListings = listings.filter(c => c.id !== listingId)
+      const updatedListings = listings.filter(c => c.id !== selectedListing.id)
       setListings(updatedListings)
       
       // If no listings remain, reset all analytics data
@@ -154,6 +167,9 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
       if (onRefresh) {
         onRefresh()
       }
+      
+      setShowDeleteConfirm(false)
+      setSelectedListing(null)
     } catch (err: any) {
       console.error('Error deleting listing:', err)
       alert('Error deleting listing: ' + err.message)
@@ -194,10 +210,11 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
 
   const copyListingLink = async (listing: Listing) => {
     const shareUrl = getListingUrl(listing)
+    setCopiedUrl(shareUrl)
     
     try {
       await navigator.clipboard.writeText(shareUrl)
-      alert('✅ Link copied to clipboard!\n\n' + shareUrl + '\n\nYou can now paste this link anywhere!')
+      setShowCopyConfirm(true)
     } catch (err) {
       // Fallback if clipboard API fails
       const textArea = document.createElement('textarea')
@@ -206,7 +223,7 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
       textArea.select()
       try {
         document.execCommand('copy')
-        alert('✅ Link copied to clipboard!\n\n' + shareUrl + '\n\nYou can now paste this link anywhere!')
+        setShowCopyConfirm(true)
       } catch (e) {
         alert('Copy this link:\n\n' + shareUrl)
       }
@@ -448,13 +465,8 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
                 </button>
                 <button 
                   onClick={() => {
-                    if (onEditListing) {
-                      onEditListing(listing)
-                    } else {
-                      // Fallback: switch to builder tab
-                      onCreateNew()
-                      alert('📝 Edit functionality: Please implement onEditListing prop to enable editing.')
-                    }
+                    setSelectedListing(listing)
+                    setShowEditConfirm(true)
                   }}
                   className="bg-yellow-100 text-yellow-700 px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-xs hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-yellow-200 transition-all"
                 >
@@ -462,7 +474,7 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
                   Edit
                 </button>
                 <button 
-                  onClick={() => deleteListing(listing.id)}
+                  onClick={() => handleDeleteClick(listing)}
                   className="bg-red-100 text-red-700 px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-xs hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-red-200 transition-all"
                 >
                   <Trash2 className="w-3 h-3" />
@@ -504,6 +516,63 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
           </div>
         ))}
       </div>
+
+      {/* Delete Confirmation Popup */}
+      <ConfirmationPopup
+        isOpen={showDeleteConfirm}
+        title="Delete Listing"
+        message={`"${selectedListing?.title}" will be permanently deleted`}
+        description="This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={performDelete}
+        onCancel={() => {
+          setShowDeleteConfirm(false)
+          setSelectedListing(null)
+        }}
+        isDangerous={true}
+      />
+
+      {/* Edit Confirmation Popup */}
+      <ConfirmationPopup
+        isOpen={showEditConfirm}
+        title="Edit Listing"
+        message={`Ready to edit "${selectedListing?.title}"?`}
+        description="You'll be taken to the Listing Builder to make changes."
+        confirmLabel="Go to Editor"
+        cancelLabel="Cancel"
+        onConfirm={() => {
+          if (selectedListing && onEditListing) {
+            onEditListing(selectedListing)
+          }
+          setShowEditConfirm(false)
+          setSelectedListing(null)
+        }}
+        onCancel={() => {
+          setShowEditConfirm(false)
+          setSelectedListing(null)
+        }}
+        isDangerous={false}
+      />
+
+      {/* Copy URL Confirmation Popup */}
+      <ConfirmationPopup
+        isOpen={showCopyConfirm}
+        title="Link Copied"
+        message="Your listing URL has been copied to clipboard"
+        description={copiedUrl}
+        confirmLabel="Done"
+        cancelLabel="Close"
+        onConfirm={() => {
+          setShowCopyConfirm(false)
+          setCopiedUrl('')
+        }}
+        onCancel={() => {
+          setShowCopyConfirm(false)
+          setCopiedUrl('')
+        }}
+        isDangerous={false}
+      />
     </div>
   )
 }

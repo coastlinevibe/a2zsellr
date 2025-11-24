@@ -537,7 +537,7 @@ export default function CampaignPage({ params }: CampaignPageProps) {
               onUpgrade={() => console.log('Upgrade clicked')}
               businessName={profile.display_name}
               listingTitle={listing.title}
-              userTier="premium"
+              userTier={(profile.subscription_tier as 'free' | 'premium' | 'business') || 'free'}
             />
           )}
 

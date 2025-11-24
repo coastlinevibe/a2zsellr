@@ -34,12 +34,14 @@ import {
   Globe,
   Mail,
   MessageCircle,
+  MessageSquare,
   Share2,
   ChevronDown,
   ChevronUp
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
+import { ConfirmationPopup } from '@/components/ui/ConfirmationPopup'
 import { supabase } from '@/lib/supabaseClient'
 import { useAuth } from '@/lib/auth'
 import { useGlobalNotifications } from '@/contexts/NotificationContext'
@@ -74,9 +76,10 @@ interface WYSIWYGCampaignBuilderProps {
   editListing?: any // Optional listing data for editing
   onRefresh?: () => void
   userTier?: 'free' | 'premium' | 'business'
+  onGoToListings?: () => void // Callback to navigate to My Listings tab
 }
 
-const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, editListing, onRefresh, userTier = 'free' }: WYSIWYGCampaignBuilderProps) => {
+const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, editListing, onRefresh, userTier = 'free', onGoToListings }: WYSIWYGCampaignBuilderProps) => {
   const [campaignTitle, setCampaignTitle] = useState(editListing?.title || 'Mid-Month Growth Blast')
   const [selectedLayout, setSelectedLayout] = useState(editListing?.layout_type || 'gallery-mosaic')
   const [messageTemplate, setMessageTemplate] = useState(editListing?.message_template || 'Hey there! We just launched new services tailored for you. Tap to explore what\'s hot this week.')
@@ -106,6 +109,10 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
   const [useGlobalMenu, setUseGlobalMenu] = useState(false)
   const [uploadingVideo, setUploadingVideo] = useState(false)
   const [uploadingMenuImage, setUploadingMenuImage] = useState(false)
+
+  // Confirmation popup state
+  const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false)
+  const [pendingListingData, setPendingListingData] = useState<any>(null)
 
   // Handle template image upload
   const handleTemplateImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -606,6 +613,109 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
     return ''
   }
 
+  // Prepare campaign data for saving
+  const prepareCampaignData = () => {
+    return {
+      profile_id: businessProfile.id,
+      title: campaignTitle.trim(),
+      layout_type: selectedLayout,
+      message_template: messageTemplate.trim(),
+      target_platforms: selectedPlatforms,
+      cta_label: ctaLabel.trim() || 'Learn More',
+      cta_url: ctaUrl,
+      scheduled_for: scheduleDate ? new Date(scheduleDate).toISOString() : null,
+      status: scheduleDate ? 'scheduled' : 'active',
+      uploaded_media: uploadedMedia.map(m => ({
+        id: m.id,
+        name: m.name,
+        url: m.url,
+        type: m.type,
+        storage_path: m.storagePath
+      })),
+      selected_products: selectedProducts.length > 0 ? selectedProducts.map(p => p.id) : [],
+      delivery_available: deliveryAvailable,
+      template_data: selectedLayout === 'custom-template' && selectedTemplate ? {
+        backgroundImage: selectedTemplate.backgroundImage,
+        interactions: selectedTemplate.interactions || []
+      } : null,
+      video_url: videoUrl.trim() || null,
+      video_type: videoUrl.trim() ? videoType : null,
+      menu_images: menuImage ? [menuImage] : null
+    }
+  }
+
+  // Actually save the listing to database
+  const performSave = async (campaignData: any) => {
+    try {
+      console.log('Saving listing with:', {
+        title: campaignData.title,
+        layout_type: campaignData.layout_type,
+        selected_products_count: selectedProducts.length,
+        selected_product_ids: campaignData.selected_products,
+        uploaded_media_count: uploadedMedia.length,
+        template_data: campaignData.template_data,
+        selectedTemplate: selectedTemplate,
+        isEditing: !!editListing
+      })
+
+      if (editListing) {
+        // Update existing listing
+        const { data: listing, error: listingError } = await supabase
+          .from('profile_listings')
+          .update(campaignData)
+          .eq('id', editListing.id)
+          .eq('profile_id', businessProfile.id)
+          .select('id, title, selected_products, uploaded_media')
+          .single()
+
+        if (listingError) {
+          console.error('Database update error:', listingError)
+          throw new Error(`Failed to update listing: ${listingError.message}`)
+        }
+
+        console.log('Listing updated successfully:', listing)
+        
+        showSuccess(
+          `Listing "${campaignTitle}" updated successfully!`,
+          `• ${uploadedMedia.length} files • ${selectedProducts.length} products • ${selectedLayout} layout • View in Marketing > My Listings tab!`
+        )
+        
+        if (onRefresh) {
+          onRefresh()
+        }
+      } else {
+        // Create new listing
+        const { data: listing, error: listingError } = await supabase
+          .from('profile_listings')
+          .insert(campaignData)
+          .select('id, title, selected_products, uploaded_media')
+          .single()
+
+        if (listingError) {
+          console.error('Database error:', listingError)
+          throw new Error(`Failed to save listing: ${listingError.message}`)
+        }
+
+        console.log('Listing saved successfully:', listing)
+        
+        showSuccess(
+          `Listing "${campaignTitle}" saved successfully!`,
+          `• ${uploadedMedia.length} files • ${selectedProducts.length} products • ${selectedLayout} layout • View in Marketing > My Listings tab!`
+        )
+        
+        if (onRefresh) {
+          onRefresh()
+        }
+      }
+    } catch (error: any) {
+      console.error('Error saving listing:', error)
+      showError(
+        'Error saving listing',
+        `${error.message} - Check console for details.`
+      )
+    }
+  }
+
   // Save listing to database
   const handleSaveDraft = async () => {
     // Check day-based restrictions for free tier
@@ -651,148 +761,20 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
     if (!editListing) {
       const isDuplicate = await checkDuplicateTitle(campaignTitle.trim())
       if (isDuplicate) {
-        const shouldContinue = confirm(
-          `⚠️ A listing with the title "${campaignTitle}" already exists.\n\n` +
-          `Do you want to create it anyway? This will create a duplicate listing.`
-        )
-        if (!shouldContinue) {
-          return
-        }
-      }
-    }
-
-    // Prepare listing data with all required fields including media
-    // IMPORTANT: Only save explicitly selected products, never auto-include any products
-    const campaignData = {
-        profile_id: businessProfile.id,
-        title: campaignTitle.trim(),
-        layout_type: selectedLayout,
-        message_template: messageTemplate.trim(),
-        target_platforms: selectedPlatforms,
-        cta_label: ctaLabel.trim() || 'Learn More',
-        cta_url: ctaUrl,
-        scheduled_for: scheduleDate ? new Date(scheduleDate).toISOString() : null,
-        status: scheduleDate ? 'scheduled' : 'active',
-        // Fix: Use 'uploaded_media' instead of 'media_items' to match database schema
-        uploaded_media: uploadedMedia.map(m => ({
-          id: m.id,
-          name: m.name,
-          url: m.url,
-          type: m.type,
-          storage_path: m.storagePath
-        })),
-      // Only save products that were explicitly selected by user (never auto-select)
-      selected_products: selectedProducts.length > 0 ? selectedProducts.map(p => p.id) : [],
-      delivery_available: deliveryAvailable,
-      // Save template data for custom templates
-      template_data: selectedLayout === 'custom-template' && selectedTemplate ? {
-        backgroundImage: selectedTemplate.backgroundImage,
-        interactions: selectedTemplate.interactions || []
-      } : null,
-      // Video and menu data
-      video_url: videoUrl.trim() || null,
-      video_type: videoUrl.trim() ? videoType : null,
-      menu_images: menuImage ? [menuImage] : null
-    }
-    
-    // Debug: Log what we're saving to catch any unwanted auto-selection
-    console.log('Saving listing with:', {
-      title: campaignData.title,
-      layout_type: campaignData.layout_type,
-      selected_products_count: selectedProducts.length,
-      selected_product_ids: campaignData.selected_products,
-      uploaded_media_count: uploadedMedia.length,
-      template_data: campaignData.template_data,
-      selectedTemplate: selectedTemplate,
-      isEditing: !!editListing
-    })
-
-    try {
-      if (editListing) {
-        // Update existing listing
-        const { data: listing, error: listingError } = await supabase
-          .from('profile_listings')
-          .update(campaignData)
-          .eq('id', editListing.id)
-          .eq('profile_id', businessProfile.id)
-          .select('id, title, selected_products, uploaded_media')
-          .single()
-
-        if (listingError) {
-          console.error('Database update error:', listingError)
-          throw new Error(`Failed to update listing: ${listingError.message}`)
-        }
-
-        console.log('Listing updated successfully:', listing)
-        
-        // Show success message
-        showSuccess(
-          `Listing "${campaignTitle}" updated successfully!`,
-          `• ${uploadedMedia.length} files • ${selectedProducts.length} products • ${selectedLayout} layout • View in Marketing > My Listings tab!`
-        )
-        
-        // Notify parent component to refresh metrics
-        if (onRefresh) {
-          onRefresh()
-        }
-      } else {
-        // Create new listing
-        const { data: listing, error: listingError } = await supabase
-          .from('profile_listings')
-          .insert(campaignData)
-          .select('id, title, selected_products, uploaded_media')
-          .single()
-
-        if (listingError) {
-          console.error('Database error:', listingError)
-          throw new Error(`Failed to save listing: ${listingError.message}`)
-        }
-
-        console.log('Listing saved successfully:', listing)
-        
-        // Show success message
-        showSuccess(
-          `Listing "${campaignTitle}" saved successfully!`,
-          `• ${uploadedMedia.length} files • ${selectedProducts.length} products • ${selectedLayout} layout • View in Marketing > My Listings tab!`
-        )
-        
-        // Notify parent component to refresh metrics
-        if (onRefresh) {
-          onRefresh()
-        }
-      }
-      
-    } catch (error: any) {
-      console.error('Error saving listing:', error)
-      showError(
-        'Error saving listing',
-        `${error.message} - Check console for details.`
-      )
-    }
-  }
-
-  // Preview in Browser - only preview existing saved listings
-  const handleBrowserPreview = async () => {
-    // Check if listing already exists
-    try {
-      const { data: existingListing, error } = await supabase
-        .from('profile_listings')
-        .select('id, title')
-        .eq('profile_id', businessProfile?.id)
-        .eq('title', campaignTitle.trim())
-        .single()
-      
-      if (error || !existingListing) {
-        alert('⚠️ Please save your listing first using "Save Listing Draft", then try preview again.\n\nThe preview button only works for saved listings.')
+        setShowDuplicateConfirm(true)
         return
       }
-      
-      // Listing exists, open preview
-      window.open(ctaUrl, '_blank')
-      
-    } catch (error) {
-      console.error('Error checking for existing listing:', error)
-      alert('⚠️ Please save your listing first using "Save Listing Draft", then try preview again.')
+    }
+
+    // Prepare and save the listing
+    const campaignData = prepareCampaignData()
+    await performSave(campaignData)
+  }
+
+  // Go to My Listings tab
+  const handleGoToListings = () => {
+    if (onGoToListings) {
+      onGoToListings()
     }
   }
   
@@ -1581,12 +1563,12 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
               {editListing ? 'Update Listing' : scheduleDate ? 'Schedule Listing' : 'Post Listing'}
             </Button>
             <Button
-              onClick={handleBrowserPreview}
+              onClick={handleGoToListings}
               variant="outline"
               className="border-blue-300 text-blue-100 hover:bg-blue-500 rounded-[9px]"
             >
-              <Eye className="w-4 h-4 mr-2" />
-              Preview in Browser
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Go to my listings
             </Button>
           </div>
 
@@ -1632,6 +1614,23 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
         </div>
       )}
       </div>
+
+      {/* Duplicate Listing Confirmation Popup */}
+      <ConfirmationPopup
+        isOpen={showDuplicateConfirm}
+        title="Duplicate Title"
+        message={`"${campaignTitle}" already exists`}
+        description="Please use a different title for your listing."
+        confirmLabel="Got it"
+        cancelLabel="Close"
+        onConfirm={() => {
+          setShowDuplicateConfirm(false)
+        }}
+        onCancel={() => {
+          setShowDuplicateConfirm(false)
+        }}
+        isDangerous={true}
+      />
     </div>
   )
 }

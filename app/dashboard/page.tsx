@@ -563,6 +563,7 @@ export default function DashboardPage() {
                 businessProfile={profile} 
                 editListing={editListing}
                 onRefresh={fetchDashboardMetrics}
+                onGoToListings={() => setMarketingActiveView('campaigns')}
               />
             )}
 

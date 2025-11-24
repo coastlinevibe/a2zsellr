@@ -372,7 +372,38 @@ export default function BusinessShop({
 
 
   const handleSaveProduct = async () => {
-    if (!productForm.name.trim()) return
+    // Validate required fields
+    const missingFields: string[] = []
+    
+    if (!productForm.name.trim()) {
+      missingFields.push('Product Name')
+    }
+    if (!productForm.category.trim()) {
+      missingFields.push('Category')
+    }
+    
+    if (missingFields.length > 0) {
+      showError(
+        `Missing required field${missingFields.length > 1 ? 's' : ''}: ${missingFields.join(', ')}`,
+        'Incomplete Form'
+      )
+      return
+    }
+
+    // Check for duplicate product name (only for new products)
+    if (!editingProduct) {
+      const isDuplicate = products.some(p => 
+        p.name.toLowerCase().trim() === productForm.name.toLowerCase().trim()
+      )
+      
+      if (isDuplicate) {
+        showError(
+          `A product named "${productForm.name}" already exists`,
+          'Duplicate Product Name'
+        )
+        return
+      }
+    }
 
     // Enforce tier limits on save (server-side validation)
     const tierLimits = {
