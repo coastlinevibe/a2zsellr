@@ -70,6 +70,7 @@ interface Listing {
       height?: number
     }>
   }
+  enable_message_consent?: boolean
 }
 
 interface Profile {
@@ -78,6 +79,7 @@ interface Profile {
   avatar_url: string | null
   bio: string | null
   phone_number: string | null
+  subscription_tier?: string | null
   global_video_url?: string
   global_video_type?: 'youtube' | 'upload'
   global_menu_images?: Array<{
