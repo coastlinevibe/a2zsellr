@@ -217,20 +217,20 @@ export default function OnboardingPage() {
                 bytes[i] = binaryString.charCodeAt(i)
               }
               
-              const fileName = `gallery-${user.id}-${Date.now()}-${Math.random()}.jpg`
+              const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`
               const { error: uploadError } = await supabase.storage
-                .from('profile')
-                .upload(`gallery/${fileName}`, bytes, {
+                .from('gallery')
+                .upload(fileName, bytes, {
                   contentType: 'image/jpeg'
                 })
 
               if (uploadError) throw uploadError
               
-              const { data: publicUrlData } = supabase.storage
-                .from('profile')
-                .getPublicUrl(`gallery/${fileName}`)
+              const { data: { publicUrl } } = supabase.storage
+                .from('gallery')
+                .getPublicUrl(fileName)
               
-              galleryImageUrls.push(publicUrlData.publicUrl)
+              galleryImageUrls.push(publicUrl)
             } catch (error) {
               console.error('Error uploading gallery image:', error)
             }
@@ -268,12 +268,28 @@ export default function OnboardingPage() {
           twitter: data.twitter,
           youtube: data.youtube,
           avatar_url: profileImageUrl,
-          global_menu_images: JSON.stringify(galleryImageUrls),
-          onboarding_completed: true
+          global_menu_images: JSON.stringify(galleryImageUrls)
         })
         .eq('id', user.id)
 
       if (updateError) throw updateError
+
+      // Save gallery images to profile_gallery table
+      if (galleryImageUrls.length > 0) {
+        const galleryEntries = galleryImageUrls.map((url, index) => ({
+          profile_id: user.id,
+          image_url: url,
+          caption: `Gallery Image ${index + 1}`
+        }))
+
+        const { error: galleryError } = await supabase
+          .from('profile_gallery')
+          .insert(galleryEntries)
+
+        if (galleryError) {
+          console.error('Error saving gallery images:', galleryError)
+        }
+      }
       
       // Move to success screen
       setStep(7)

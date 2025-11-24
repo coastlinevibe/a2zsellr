@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import ShareLinkBuilder from '@/components/ui/share-link-builder'
 import CampaignScheduler from '@/components/ui/campaign-scheduler'
 import AnalyticsDashboard from '@/components/ui/analytics-dashboard'
@@ -48,6 +49,7 @@ import FreeAccountNotifications from '@/components/FreeAccountNotifications'
 import { GalleryTab } from '@/components/dashboard/GalleryTab'
 import { MarketingCampaignsTab } from '@/components/dashboard/MarketingCampaignsTab'
 import PublicProfilePreview from '@/components/ui/public-profile-preview'
+import { DashboardTour } from '@/components/DashboardTour'
 import ResetCountdownBanner from '@/components/ResetCountdownBanner'
 import TrialTimer from '@/components/TrialTimer'
 import ResetNotificationModal from '@/components/ResetNotificationModal'
@@ -55,7 +57,7 @@ import { resetUserData } from '@/lib/trialManager'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 
 type SubscriptionTier = 'free' | 'premium' | 'business'
-type DashboardTab = 'profile' | 'gallery' | 'shop' | 'marketing'
+type DashboardTab = 'profile' | 'products' | 'branding' | 'listings'
 
 interface UserProfile {
   id: string
@@ -73,14 +75,15 @@ interface UserProfile {
   address: string | null
   business_hours: any
   is_admin: boolean
+  onboarding_completed?: boolean
   created_at?: string
 }
 
-const dashboardTabs: { key: DashboardTab; label: string; icon: typeof Users }[] = [
-  { key: 'profile', label: 'Profile', icon: Users },
-  { key: 'gallery', label: 'Gallery', icon: ImageIcon },
-  { key: 'shop', label: 'Shop', icon: ShoppingBag },
-  { key: 'marketing', label: 'Marketing', icon: MessageSquare }
+const dashboardTabs: { key: DashboardTab; label: string; subtitle: string; icon: typeof Users }[] = [
+  { key: 'profile', label: 'Profile', subtitle: 'Business info & settings', icon: Users },
+  { key: 'products', label: 'Products', subtitle: 'Manage your product catalog', icon: ShoppingBag },
+  { key: 'branding', label: 'Branding', subtitle: 'Banner images & visual setup', icon: ImageIcon },
+  { key: 'listings', label: 'Listings', subtitle: 'Create & share marketing campaigns', icon: MessageSquare }
 ]
 
 export default function DashboardPage() {
@@ -89,7 +92,19 @@ export default function DashboardPage() {
   const searchParams = useSearchParams()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [profileLoading, setProfileLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<DashboardTab>('profile')
+  const [activeTab, setActiveTab] = useState<DashboardTab>('products')
+  const [carouselIndex, setCarouselIndex] = useState(0)
+  
+  // Welcome animation state
+  const [showWelcome, setShowWelcome] = useState(true)
+  const [welcomePhase, setWelcomePhase] = useState<'text' | 'transition' | 'done'>('text')
+  
+  // Tour state
+  const [showTour, setShowTour] = useState(false)
+  const [tourStep, setTourStep] = useState(0)
+  const [tourComplete, setTourComplete] = useState(false)
+  const [showCompletionToast, setShowCompletionToast] = useState(false)
+  const [showMobileOnboarding, setShowMobileOnboarding] = useState(true)
   
   // Gallery state
   const [galleryItems, setGalleryItems] = useState<any[]>([])
@@ -123,7 +138,122 @@ export default function DashboardPage() {
     impersonatedUserId: null,
     impersonatedUserName: null
   })
-  
+
+  // Welcome messages
+  const welcomeMessages = [
+    "Welcome to your dashboard",
+    "Let's grow your business",
+    "Time to shine online",
+    "Your success starts here",
+    "Ready to boost sales?",
+    "Welcome aboard, entrepreneur",
+    "Let's make magic happen",
+    "Your empire awaits",
+    "Time to dominate",
+    "Welcome to the future"
+  ]
+
+  const randomWelcomeMessage = useMemo(() => {
+    return welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)]
+  }, [])
+
+  // Tour steps definition
+  const tourSteps = [
+    {
+      target: 'tour-stats',
+      title: '📊 Your Dashboard Stats',
+      description: 'Here you can see your profile views, active products, listings, and store rating at a glance.',
+      action: 'Next'
+    },
+    {
+      target: 'tour-quick-actions',
+      title: '⚡ Quick Actions',
+      description: 'These buttons let you quickly add products, create listings, upload branding, and view your profile.',
+      action: 'Next'
+    },
+    {
+      target: 'tour-tabs',
+      title: '🗂️ Navigation Tabs',
+      description: 'Click on these tabs to navigate between different sections of your dashboard.',
+      action: 'Next'
+    },
+    {
+      target: 'tour-products-tab',
+      title: '📦 Products Tab',
+      description: 'Click here to manage your product catalog. Add, edit, or remove products.',
+      action: 'Next',
+      preAction: () => setActiveTab('products')
+    },
+    {
+      target: 'tour-branding-tab',
+      title: '🎨 Branding Tab',
+      description: 'Upload banner images and visual assets here. These are NOT product photos - they\'re for your profile branding.',
+      action: 'Next',
+      preAction: () => setActiveTab('branding')
+    },
+    {
+      target: 'tour-listings-tab',
+      title: '📣 Listings Tab',
+      description: 'Create marketing campaigns and share links to WhatsApp, social media, and more.',
+      action: 'Next',
+      preAction: () => setActiveTab('listings')
+    },
+    {
+      target: 'tour-profile-tab',
+      title: '👤 Profile Tab',
+      description: 'Update your business information, contact details, and settings here.',
+      action: 'Finish Tour',
+      preAction: () => setActiveTab('profile')
+    }
+  ]
+
+  // Welcome animation effect
+  useEffect(() => {
+    if (!showWelcome) return
+
+    // Text phase: 2 seconds
+    const textTimer = setTimeout(() => {
+      setWelcomePhase('transition')
+    }, 2000)
+
+    // Transition phase: 1.5 seconds
+    const transitionTimer = setTimeout(() => {
+      setWelcomePhase('done')
+      setShowWelcome(false)
+    }, 3500)
+
+    return () => {
+      clearTimeout(textTimer)
+      clearTimeout(transitionTimer)
+    }
+  }, [showWelcome])
+
+  // Start tour after welcome animation if onboarding not completed
+  useEffect(() => {
+    if (showWelcome || welcomePhase !== 'done' || profile?.onboarding_completed) return
+    
+    // Only start tour on desktop
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+      setShowTour(true)
+    }
+  }, [welcomePhase, profile?.onboarding_completed, showWelcome])
+
+  // Execute preAction when tour step changes
+  useEffect(() => {
+    if (!showTour || tourStep >= tourSteps.length) return
+    
+    const currentStep = tourSteps[tourStep]
+    if (currentStep.preAction) {
+      currentStep.preAction()
+    }
+  }, [tourStep, showTour, tourSteps])
+
+  // Set tourComplete when tour reaches the end
+  useEffect(() => {
+    if (tourStep >= tourSteps.length) {
+      setTourComplete(true)
+    }
+  }, [tourStep, tourSteps.length])
 
   // Check for admin impersonation cookies
   useEffect(() => {
@@ -244,9 +374,9 @@ export default function DashboardPage() {
     }
   }, [profile?.id])
 
-  // Also fetch products when marketing tab becomes active
+  // Also fetch products when listings tab becomes active
   useEffect(() => {
-    if (activeTab === 'marketing' && marketingActiveView === 'builder' && profile?.id && marketingProducts.length === 0) {
+    if (activeTab === 'listings' && marketingActiveView === 'builder' && profile?.id && marketingProducts.length === 0) {
       // Trigger a re-fetch by updating the dependency
       const fetchProducts = async () => {
         try {
@@ -271,7 +401,7 @@ export default function DashboardPage() {
   // Handle product creation modal from URL
   useEffect(() => {
     if (searchParams.get('modal') === 'product-creation') {
-      setActiveTab('shop')
+      setActiveTab('products')
     }
   }, [searchParams])
 
@@ -438,8 +568,6 @@ export default function DashboardPage() {
 
   const renderProfileTab = () => (
     <div className="space-y-8">
-
-      
       <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 overflow-hidden w-full max-w-sm profile-management-glow">
         <div className="p-3 border-b border-gray-200">
           <h2 className="text-base font-semibold text-gray-900">Profile Management</h2>
@@ -460,39 +588,6 @@ export default function DashboardPage() {
           </Link>
         </div>
       </div>
-
-      {/* Public Profile Preview */}
-      {profile && (
-        <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Eye className="w-5 h-5 text-emerald-600" />
-                <h2 className="text-lg font-semibold text-gray-900">Public Profile Preview</h2>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  // Convert display name to URL-friendly slug using encodeURIComponent
-                  const profileSlug = encodeURIComponent(profile.display_name?.toLowerCase().trim() || 'profile')
-                  const profileUrl = `https://www.a2zsellr.life/profile/${profileSlug}`
-                  navigator.clipboard.writeText(profileUrl)
-                  alert('Profile link copied to clipboard!')
-                }}
-                className="flex items-center gap-2"
-              >
-                <Copy className="w-4 h-4" />
-                Copy Profile Link
-              </Button>
-            </div>
-            <p className="text-sm text-gray-600 mt-1">This is how visitors see your profile when they click on your listing card</p>
-          </div>
-          <div className="p-6">
-            <PublicProfilePreview profile={profile} />
-          </div>
-        </div>
-      )}
     </div>
   )
 
@@ -784,7 +879,14 @@ export default function DashboardPage() {
     switch (activeTab) {
       case 'profile':
         return renderProfileTab()
-      case 'gallery':
+      case 'products':
+        return <BusinessShop 
+          businessId={profile?.id || ''} 
+          isOwner={true} 
+          userTier={profile?.subscription_tier || 'free'}
+          onRefresh={fetchDashboardMetrics}
+        />
+      case 'branding':
         return <GalleryTab 
           galleryItems={galleryItems}
           galleryLoading={galleryLoading}
@@ -806,14 +908,7 @@ export default function DashboardPage() {
           }}
           onUpgrade={() => setShowPlanModal(true)}
         />
-      case 'shop':
-        return <BusinessShop 
-          businessId={profile?.id || ''} 
-          isOwner={true} 
-          userTier={profile?.subscription_tier || 'free'}
-          onRefresh={fetchDashboardMetrics}
-        />
-      case 'marketing':
+      case 'listings':
         return renderMarketingTab()
       default:
         return renderProfileTab()
@@ -833,6 +928,145 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Welcome Animation Overlay */}
+      <AnimatePresence>
+        {showWelcome && (
+          <motion.div
+            key="welcome-overlay"
+            className="fixed inset-0 z-[9999] flex items-center justify-center"
+            initial={{ backgroundColor: 'rgba(255, 255, 255, 1)' }}
+            animate={{
+              backgroundColor: welcomePhase === 'transition' 
+                ? 'rgba(255, 255, 255, 1)' 
+                : 'rgba(255, 255, 255, 1)'
+            }}
+            exit={{ backgroundColor: 'rgba(255, 255, 255, 0)' }}
+            transition={{ duration: 0.8 }}
+          >
+            {/* Background animation grid */}
+            <motion.div
+              className="absolute inset-0 overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: welcomePhase === 'transition' ? 1 : 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-blue-500/10 to-purple-500/10" />
+              <motion.div
+                className="absolute inset-0"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 0.3 }}
+                transition={{ duration: 1.2, ease: 'easeOut' }}
+              >
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_50%)]" />
+              </motion.div>
+            </motion.div>
+
+            {/* Welcome text content */}
+            <motion.div
+              className="relative z-10 text-center px-4"
+              initial={{ opacity: 1, scale: 1 }}
+              animate={{
+                opacity: welcomePhase === 'text' ? 1 : 0,
+                scale: welcomePhase === 'text' ? 1 : 0.95
+              }}
+              transition={{ duration: 0.6 }}
+            >
+              <motion.h1
+                className="text-5xl md:text-6xl font-black text-black mb-4"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+              >
+                Hello, {profile?.display_name?.split(' ')[0] || 'there'}! 👋
+              </motion.h1>
+              
+              <motion.p
+                className="text-2xl md:text-3xl font-bold text-gray-700 mb-8"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+              >
+                {randomWelcomeMessage}
+              </motion.p>
+
+              <motion.div
+                className="flex justify-center gap-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+              >
+                {[...Array(3)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="w-3 h-3 rounded-full bg-emerald-500"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                  />
+                ))}
+              </motion.div>
+            </motion.div>
+
+            {/* Transition animation */}
+            {welcomePhase === 'transition' && (
+              <>
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-t from-emerald-500 via-blue-500 to-purple-500"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 0.3, 0] }}
+                  transition={{ duration: 1.5 }}
+                />
+                <motion.div
+                  className="absolute inset-0"
+                  initial={{ scale: 1 }}
+                  animate={{ scale: [1, 1.1, 1.2] }}
+                  transition={{ duration: 1.5 }}
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.3),transparent_70%)]" />
+                </motion.div>
+              </>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Dashboard Tour */}
+      <DashboardTour
+        isOpen={showTour}
+        currentStep={tourStep}
+        steps={tourSteps}
+        onNext={() => {
+          if (tourStep + 1 >= tourSteps.length) {
+            setShowTour(false)
+            setShowCompletionToast(true)
+            setTimeout(() => setShowCompletionToast(false), 4000)
+          } else {
+            setTourStep(tourStep + 1)
+          }
+        }}
+        onPrev={() => setTourStep(Math.max(0, tourStep - 1))}
+        onClose={() => {
+          setShowTour(false)
+          setTourStep(0)
+        }}
+      />
+
+      {/* Completion Toast */}
+      {showCompletionToast && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          className="fixed bottom-8 right-8 z-50 bg-emerald-500 text-white px-8 py-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-black text-lg"
+        >
+          🎉 Tour Complete! You're all set!
+        </motion.div>
+      )}
+
+      {/* Mark tour as complete in Supabase when desktop tour finishes */}
+      {showCompletionToast && (
+        <MarkTourComplete userId={user?.id} />
+      )}
+
       {/* Reset Notification Modal */}
       {profile && (
         <ResetNotificationModal
@@ -913,6 +1147,20 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              {/* Restart Tour Button */}
+              <Button 
+                onClick={() => {
+                  setTourStep(0)
+                  setShowTour(true)
+                }}
+                variant="outline"
+                size="sm"
+                className="border-blue-200 text-blue-700 hover:bg-blue-50 hidden md:flex"
+                title="Restart the guided tour"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Tour
+              </Button>
               {/* Admin Dashboard Button - Only show for admin users or when impersonating */}
               {((profile && (profile.is_admin || profile.email === 'admin@out.com')) || impersonationData.isImpersonating) && (
                 <Button 
@@ -936,9 +1184,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        {/* Stats - Desktop */}
+        <div id="tour-stats" className="hidden md:grid grid-cols-4 gap-4 mb-6">
           <div className="bg-blue-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -1009,31 +1257,342 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex flex-wrap gap-4 mb-8">
+        {/* Stats - Mobile (Compact) */}
+        <div className="md:hidden grid grid-cols-2 gap-2 mb-4">
+          <div className="bg-blue-100 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-black text-black">Views</p>
+                <p className="text-lg font-black text-black">
+                  {metricsLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    dashboardMetrics.profileViews.toLocaleString()
+                  )}
+                </p>
+              </div>
+              <div className="bg-blue-600 rounded-full p-1.5 border-2 border-black flex-shrink-0">
+                <Eye className="h-4 w-4 text-white" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-emerald-100 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-black text-black">Products</p>
+                <p className="text-lg font-black text-black">
+                  {metricsLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    dashboardMetrics.activeProducts
+                  )}
+                </p>
+              </div>
+              <div className="bg-emerald-600 rounded-full p-1.5 border-2 border-black flex-shrink-0">
+                <Building2 className="h-4 w-4 text-white" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-purple-100 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-black text-black">Listings</p>
+                <p className="text-lg font-black text-black">
+                  {metricsLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    dashboardMetrics.activeListings
+                  )}
+                </p>
+              </div>
+              <div className="bg-purple-600 rounded-full p-1.5 border-2 border-black flex-shrink-0">
+                <TrendingUp className="h-4 w-4 text-white" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-yellow-100 rounded-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-black text-black">Rating</p>
+                <p className="text-lg font-black text-black">
+                  {metricsLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    dashboardMetrics.storeRating === 0 ? '0.0' : dashboardMetrics.storeRating
+                  )}
+                </p>
+              </div>
+              <div className="bg-yellow-600 rounded-full p-1.5 border-2 border-black flex-shrink-0">
+                <Star className="h-4 w-4 text-white" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Action Buttons - Desktop */}
+        <div id="tour-quick-actions" className="hidden md:grid grid-cols-4 gap-3 mb-8">
+          <Link
+            href="/dashboard?modal=product-creation"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Add Product
+          </Link>
+          <button
+            onClick={() => setActiveTab('listings')}
+            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
+          >
+            <MessageSquare className="w-4 h-4" />
+            Create Listing
+          </button>
+          <button
+            onClick={() => setActiveTab('branding')}
+            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
+          >
+            <ImageIcon className="w-4 h-4" />
+            Upload Branding
+          </button>
+          <Link
+            href={`/profile/${encodeURIComponent(profile?.display_name?.toLowerCase().trim() || 'profile')}`}
+            className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
+          >
+            <Eye className="w-4 h-4" />
+            View Profile
+          </Link>
+        </div>
+
+        {/* Quick Action Buttons - Mobile (Compact) */}
+        <div className="md:hidden grid grid-cols-2 gap-2 mb-6">
+          <Link
+            href="/dashboard?modal=product-creation"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
+          >
+            <Plus className="w-3 h-3" />
+            Add Product
+          </Link>
+          <button
+            onClick={() => setActiveTab('listings')}
+            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
+          >
+            <MessageSquare className="w-3 h-3" />
+            Create Listing
+          </button>
+          <button
+            onClick={() => setActiveTab('branding')}
+            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
+          >
+            <ImageIcon className="w-3 h-3" />
+            Upload Branding
+          </button>
+          <Link
+            href={`/profile/${encodeURIComponent(profile?.display_name?.toLowerCase().trim() || 'profile')}`}
+            className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
+          >
+            <Eye className="w-3 h-3" />
+            View Profile
+          </Link>
+        </div>
+
+        {/* Mobile Onboarding Card */}
+        {showMobileOnboarding && !profile?.onboarding_completed && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="md:hidden mb-6 bg-white rounded-lg border-2 border-black p-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)]"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1">
+                <h3 className="text-sm font-black text-black mb-1">👋 Welcome to Your Dashboard!</h3>
+                <p className="text-xs text-gray-700 font-bold mb-3">
+                  Start by adding a product, then create a listing to share with customers.
+                </p>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-black">
+                    <span className="bg-emerald-500 rounded-full w-5 h-5 flex items-center justify-center text-xs font-black text-white">1</span>
+                    Add your first product
+                  </div>
+                  <div className="flex items-center gap-2 text-xs font-bold text-black">
+                    <span className="bg-emerald-500 rounded-full w-5 h-5 flex items-center justify-center text-xs font-black text-white">2</span>
+                    Create a listing
+                  </div>
+                  <div className="flex items-center gap-2 text-xs font-bold text-black">
+                    <span className="bg-emerald-500 rounded-full w-5 h-5 flex items-center justify-center text-xs font-black text-white">3</span>
+                    Share & grow!
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowMobileOnboarding(false)}
+                className="flex-shrink-0 text-black hover:bg-black/10 p-1 rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Tabs - Desktop View */}
+        <div id="tour-tabs" className="hidden md:flex flex-wrap gap-4 mb-8">
           {dashboardTabs.map((tab) => {
             const IconComponent = tab.icon
             const isActive = activeTab === tab.key
+            const tourId = `tour-${tab.key}-tab`
 
             return (
               <button
                 key={tab.key}
+                id={tourId}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-2 px-6 py-3 rounded-[9px] border-2 border-black font-bold transition-all hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] ${
+                className={`flex flex-col items-start gap-1 px-6 py-3 rounded-[9px] border-2 border-black font-bold transition-all hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] ${
                   isActive
                     ? 'bg-emerald-500 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]'
                     : 'bg-white text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:bg-gray-100'
                 }`}
               >
-                <IconComponent className="w-5 h-5" />
-                {tab.label}
+                <div className="flex items-center gap-2">
+                  <IconComponent className="w-5 h-5" />
+                  {tab.label}
+                </div>
+                <span className={`text-xs font-normal ${isActive ? 'text-emerald-100' : 'text-gray-600'}`}>
+                  {tab.subtitle}
+                </span>
               </button>
             )
           })}
         </div>
 
+        {/* Tabs - Mobile Carousel View */}
+        <div className="md:hidden mb-6">
+          <div className="relative">
+            {/* Carousel Container */}
+            <div className="overflow-hidden">
+              <div 
+                className="flex transition-transform duration-300 ease-out"
+                style={{
+                  transform: `translateX(calc(-${carouselIndex * 100}% + ${carouselIndex > 0 ? '4px' : '0px'}))`
+                }}
+              >
+                {dashboardTabs.map((tab) => {
+                  const IconComponent = tab.icon
+                  const isActive = activeTab === tab.key
+
+                  return (
+                    <div
+                      key={tab.key}
+                      className="w-full flex-shrink-0 px-1"
+                    >
+                      <button
+                        onClick={() => {
+                          setActiveTab(tab.key)
+                          setCarouselIndex(dashboardTabs.findIndex(t => t.key === tab.key))
+                        }}
+                        className={`w-full flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-black font-bold transition-all ${
+                          isActive
+                            ? 'bg-emerald-500 text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)]'
+                            : 'bg-white text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)]'
+                        }`}
+                      >
+                        <div className={`rounded-full p-2 border-2 border-black ${
+                          isActive 
+                            ? 'bg-white' 
+                            : 'bg-gradient-to-br from-blue-400 to-blue-600'
+                        }`}>
+                          <IconComponent className={`w-5 h-5 ${isActive ? 'text-emerald-500' : 'text-white'}`} />
+                        </div>
+                        <div className="text-center">
+                          <h3 className="text-sm font-black leading-tight">{tab.label}</h3>
+                          <p className={`text-xs font-normal mt-0.5 ${isActive ? 'text-emerald-100' : 'text-gray-600'}`}>
+                            {tab.subtitle}
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Carousel Navigation Dots */}
+            <div className="flex justify-center gap-1.5 mt-3">
+              {dashboardTabs.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setCarouselIndex(index)
+                    setActiveTab(dashboardTabs[index].key)
+                  }}
+                  className={`rounded-full transition-all ${
+                    carouselIndex === index
+                      ? 'bg-emerald-500 w-5 h-2'
+                      : 'bg-gray-300 w-2 h-2 hover:bg-gray-400'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div>{renderActiveTab()}</div>
+
+        {/* Public Profile Preview - Below all tabs */}
+        {profile && (
+          <div className="mt-12 bg-white rounded-[9px] shadow-sm border border-gray-200 overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Eye className="w-5 h-5 text-emerald-600" />
+                  <h2 className="text-lg font-semibold text-gray-900">How Your Profile Looks to Customers</h2>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // Convert display name to URL-friendly slug using encodeURIComponent
+                    const profileSlug = encodeURIComponent(profile.display_name?.toLowerCase().trim() || 'profile')
+                    const profileUrl = `https://www.a2zsellr.life/profile/${profileSlug}`
+                    navigator.clipboard.writeText(profileUrl)
+                    alert('Profile link copied to clipboard!')
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Copy className="w-4 h-4" />
+                  Copy Profile Link
+                </Button>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">This is exactly how customers see your profile when they click on your listing card or search results</p>
+            </div>
+            <div className="p-6">
+              <PublicProfilePreview profile={profile} />
+            </div>
+          </div>
+        )}
+
+        {/* Tour End Marker */}
+        <div id="tour-end" className="mt-8" />
       </div>
     </div>
   )
+}
+
+// Helper component to mark tour as complete in Supabase
+function MarkTourComplete({ userId }: { userId?: string }) {
+  useEffect(() => {
+    if (!userId) return
+
+    const markComplete = async () => {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ onboarding_completed: true })
+          .eq('id', userId)
+      } catch (error) {
+        console.error('Error marking tour as complete:', error)
+      }
+    }
+
+    markComplete()
+  }, [userId])
+
+  return null
 }
