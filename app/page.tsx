@@ -896,7 +896,7 @@ export default function HomePage() {
                   REGISTER
                 </Link>
                 <Link
-                  href="/auth/signin"
+                  href="/auth/login-animated"
                   className="inline-flex items-center justify-center"
                   style={{
                     background: '#5cbdfd',
