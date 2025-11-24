@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Badge } from '@/components/ui/badge'
 import { TierLimitDisplay } from '@/components/ui/premium-badge'
@@ -70,13 +71,15 @@ export default function BusinessShop({
   userTier = 'free',
   onRefresh
 }: BusinessShopProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const { addItem } = useCart()
   const { showError, showWarning, showSuccess } = usePopup()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [showAddProduct, setShowAddProduct] = useState(false)
+  const [showAddProduct, setShowAddProduct] = useState(searchParams.get('modal') === 'product-creation')
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [manageMode, setManageMode] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -106,6 +109,12 @@ export default function BusinessShop({
     fetchProducts()
     fetchBusinessName()
   }, [businessId])
+
+  useEffect(() => {
+    // Watch for URL changes to open/close product modal
+    const isProductCreationModal = searchParams.get('modal') === 'product-creation'
+    setShowAddProduct(isProductCreationModal)
+  }, [searchParams])
 
   const fetchBusinessName = async () => {
     try {
@@ -162,6 +171,11 @@ export default function BusinessShop({
     showSuccess(`${product.name} added to cart!`, 'Added to Cart')
   }
 
+  const closeProductModal = () => {
+    setShowAddProduct(false)
+    router.push('?', { scroll: false })
+  }
+
   const handleAddProduct = () => {
     // Enforce tier limits
     const currentLimit = TIER_LIMITS[userTier]
@@ -187,6 +201,7 @@ export default function BusinessShop({
     setImageFiles([])
     setEditingProduct(null)
     setShowAddProduct(true)
+    router.push('?modal=product-creation', { scroll: false })
   }
 
   const handleViewProduct = (product: Product) => {
@@ -461,7 +476,7 @@ export default function BusinessShop({
       }
 
       fetchProducts()
-      setShowAddProduct(false)
+      closeProductModal()
       setImageFiles([])
       setProductImages([])
       
@@ -765,7 +780,7 @@ export default function BusinessShop({
                 </div>
               </div>
               <button 
-                onClick={() => setShowAddProduct(false)} 
+                onClick={closeProductModal} 
                 className="hover:bg-white/80 rounded-lg p-2 transition-colors"
               >
                 <X className="h-5 w-5 text-gray-500" />
@@ -941,7 +956,7 @@ export default function BusinessShop({
             {/* Enhanced Footer */}
             <div className="flex gap-4 p-6 border-t border-gray-200 flex-shrink-0 bg-gradient-to-r from-gray-50 to-white">
               <Button
-                onClick={() => setShowAddProduct(false)}
+                onClick={closeProductModal}
                 variant="outline"
                 className="flex-1 rounded-lg border-2 hover:bg-gray-50 transition-colors py-3"
               >

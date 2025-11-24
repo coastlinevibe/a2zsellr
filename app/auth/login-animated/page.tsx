@@ -38,11 +38,14 @@ export default function LoginPage() {
         try {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('subscription_tier')
+            .select('subscription_tier, onboarding_completed')
             .eq('id', data.user.id)
             .single()
 
-          if (profile && profile.subscription_tier && profile.subscription_tier !== 'free') {
+          // If onboarding is not completed, redirect to onboarding
+          if (profile && !profile.onboarding_completed) {
+            router.push('/onboarding')
+          } else if (profile && profile.subscription_tier && profile.subscription_tier !== 'free') {
             router.push('/profile')
           } else {
             router.push('/dashboard')

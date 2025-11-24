@@ -1,0 +1,584 @@
+import { motion } from 'framer-motion'
+import { ChevronRight, ChevronLeft, Upload, X } from 'lucide-react'
+import { useState } from 'react'
+
+const CATEGORIES = [
+  'Restaurants', 'Retail', 'Services', 'Healthcare', 'Technology',
+  'Beauty & Wellness', 'Education', 'Real Estate', 'Automotive', 'Other'
+]
+
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+interface StepProps {
+  data: any
+  setData: (data: any) => void
+  onNext: () => void
+  onBack: () => void
+}
+
+export function WelcomeScreen({ username, onStart, onSkip }: any) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="min-h-screen flex items-center justify-center"
+    >
+      <div className="bg-white p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] max-w-md w-full text-center">
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <h1 className="text-4xl font-black text-black mb-2">👋 Welcome, {username}!</h1>
+          <p className="text-black font-bold mb-8">Let's set up your business profile. A completed profile gets 3× more customer inquiries.</p>
+          
+          <div className="space-y-3">
+            <button
+              onClick={onStart}
+              className="w-full bg-blue-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2"
+            >
+              ➡️ Start Setup
+              <ChevronRight className="h-5 w-5" />
+            </button>
+            <button
+              onClick={onSkip}
+              className="w-full bg-gray-300 text-black px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all"
+            >
+              ❌ Skip for now
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </motion.div>
+  )
+}
+
+export function BusinessBasicsStep({ data, setData, onNext, onBack }: StepProps) {
+  const isValid = data.displayName.trim() && data.description.trim().length >= 20 && data.category
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="bg-white p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]"
+    >
+      <h2 className="text-3xl font-black text-black mb-2">Your Business Basics</h2>
+      <p className="text-black font-bold mb-6">Tell us what customers should know first.</p>
+
+      <div className="space-y-4 mb-8">
+        <div>
+          <label className="block text-black font-black mb-2">Business Display Name <span className="text-red-500">*</span></label>
+          <input
+            type="text"
+            value={data.displayName}
+            onChange={(e) => setData({ ...data, displayName: e.target.value })}
+            className="w-full px-4 py-3 border-2 border-black rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Your business name"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-black font-black mb-2">Business Description (20–500 chars) <span className="text-red-500">*</span></label>
+          <textarea
+            value={data.description}
+            onChange={(e) => setData({ ...data, description: e.target.value.slice(0, 500) })}
+            className="w-full px-4 py-3 border-2 border-black rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            rows={4}
+            placeholder="What does your business do?"
+            required
+          />
+          <p className="text-sm text-gray-600 mt-1">{data.description.length}/500 {data.description.length < 20 && <span className="text-red-500">(minimum 20 required)</span>}</p>
+        </div>
+
+        <div>
+          <label className="block text-black font-black mb-2">Business Category <span className="text-red-500">*</span></label>
+          <select
+            value={data.category}
+            onChange={(e) => setData({ ...data, category: e.target.value })}
+            className="w-full px-4 py-3 border-2 border-black rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          >
+            <option value="">Select a category</option>
+            {CATEGORIES.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          onClick={onBack}
+          className="flex-1 bg-gray-300 text-black px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2"
+        >
+          <ChevronLeft className="h-5 w-5" />
+          Back
+        </button>
+        <button
+          onClick={onNext}
+          disabled={!isValid}
+          className={`flex-1 px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] flex items-center justify-center gap-2 transition-all ${
+            isValid 
+              ? 'bg-blue-500 text-white hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)]' 
+              : 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
+          }`}
+        >
+          Next
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
+export function LocationContactStep({ data, setData, onNext, onBack }: StepProps) {
+  const isValid = data.phoneNumber.trim() && data.city.trim()
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="bg-white p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]"
+    >
+      <h2 className="text-3xl font-black text-black mb-2">Where can customers reach you?</h2>
+      <p className="text-black font-bold mb-6">This helps customers find local businesses like yours.</p>
+
+      <div className="space-y-4 mb-8">
+        <div>
+          <label className="block text-black font-black mb-2">Phone Number <span className="text-red-500">*</span></label>
+          <input
+            type="tel"
+            value={data.phoneNumber}
+            onChange={(e) => setData({ ...data, phoneNumber: e.target.value })}
+            className="w-full px-4 py-3 border-2 border-black rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="+27 123 456 7890"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-black font-black mb-2">City / Area <span className="text-red-500">*</span></label>
+          <input
+            type="text"
+            value={data.city}
+            onChange={(e) => setData({ ...data, city: e.target.value })}
+            className="w-full px-4 py-3 border-2 border-black rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="e.g., Johannesburg"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-black font-black mb-2">Full Business Address (optional)</label>
+          <input
+            type="text"
+            value={data.address}
+            onChange={(e) => setData({ ...data, address: e.target.value })}
+            className="w-full px-4 py-3 border-2 border-black rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Street address"
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          onClick={onBack}
+          className="flex-1 bg-gray-300 text-black px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2"
+        >
+          <ChevronLeft className="h-5 w-5" />
+          Back
+        </button>
+        <button
+          onClick={onNext}
+          disabled={!isValid}
+          className={`flex-1 px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] flex items-center justify-center gap-2 transition-all ${
+            isValid 
+              ? 'bg-blue-500 text-white hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)]' 
+              : 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
+          }`}
+        >
+          Next
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
+export function OperatingHoursStep({ data, setData, onNext, onBack }: StepProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="bg-white p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]"
+    >
+      <h2 className="text-3xl font-black text-black mb-2">When are you open?</h2>
+      <p className="text-black font-bold mb-6">Let customers know the best time to contact or visit you.</p>
+
+      <div className="space-y-3 mb-8 max-h-96 overflow-y-auto">
+        {DAYS.map(day => (
+          <div key={day} className="flex items-center gap-3 p-3 border-2 border-black rounded-lg">
+            <label className="flex items-center gap-2 flex-1">
+              <input
+                type="checkbox"
+                checked={data.hours[day].open}
+                onChange={(e) => setData({
+                  ...data,
+                  hours: {
+                    ...data.hours,
+                    [day]: { ...data.hours[day], open: e.target.checked }
+                  }
+                })}
+                className="w-5 h-5 border-2 border-black rounded"
+              />
+              <span className="font-black text-black">{day}</span>
+            </label>
+            {data.hours[day].open && (
+              <div className="flex gap-2">
+                <input
+                  type="time"
+                  value={data.hours[day].start}
+                  onChange={(e) => setData({
+                    ...data,
+                    hours: {
+                      ...data.hours,
+                      [day]: { ...data.hours[day], start: e.target.value }
+                    }
+                  })}
+                  className="px-2 py-1 border-2 border-black rounded font-bold"
+                />
+                <span className="font-black">–</span>
+                <input
+                  type="time"
+                  value={data.hours[day].end}
+                  onChange={(e) => setData({
+                    ...data,
+                    hours: {
+                      ...data.hours,
+                      [day]: { ...data.hours[day], end: e.target.value }
+                    }
+                  })}
+                  className="px-2 py-1 border-2 border-black rounded font-bold"
+                />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          onClick={onBack}
+          className="flex-1 bg-gray-300 text-black px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2"
+        >
+          <ChevronLeft className="h-5 w-5" />
+          Back
+        </button>
+        <button
+          onClick={onNext}
+          className="flex-1 bg-blue-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2"
+        >
+          Next
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
+export function BrandingStep({ data, setData, onNext, onBack }: StepProps) {
+  const [preview, setPreview] = useState<string | null>(data.profileImage)
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const result = event.target?.result as string
+        setPreview(result)
+        setData({ ...data, profileImage: result })
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="bg-white p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]"
+    >
+      <h2 className="text-3xl font-black text-black mb-2">Add your business profile image <span className="text-red-500">*</span></h2>
+      <p className="text-black font-bold mb-6">Profiles with photos get 42% more trust from customers.</p>
+
+      <div className="mb-8">
+        {preview ? (
+          <div className="relative">
+            <img src={preview} alt="Preview" className="w-full h-64 object-cover rounded-lg border-2 border-black" />
+            <button
+              onClick={() => {
+                setPreview(null)
+                setData({ ...data, profileImage: null })
+              }}
+              className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full border-2 border-black"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        ) : (
+          <label className="border-4 border-dashed border-black rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors">
+            <Upload className="h-12 w-12 text-black mx-auto mb-2" />
+            <p className="font-black text-black">Click to upload image</p>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              required
+            />
+          </label>
+        )}
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          onClick={onBack}
+          className="flex-1 bg-gray-300 text-black px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2"
+        >
+          <ChevronLeft className="h-5 w-5" />
+          Back
+        </button>
+        <button
+          onClick={onNext}
+          disabled={!preview}
+          className={`flex-1 px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] flex items-center justify-center gap-2 transition-all ${
+            preview 
+              ? 'bg-blue-500 text-white hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)]' 
+              : 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
+          }`}
+        >
+          Next
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
+export function GalleryUploadStep({ galleryImages, setGalleryImages, onNext, onBack }: any) {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (files) {
+      Array.from(files).forEach(file => {
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          const result = event.target?.result as string
+          setGalleryImages((prev: string[]) => [...prev, result])
+        }
+        reader.readAsDataURL(file)
+      })
+    }
+  }
+
+  const removeImage = (index: number) => {
+    setGalleryImages((prev: string[]) => prev.filter((_, i) => i !== index))
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="bg-white p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]"
+    >
+      <h2 className="text-3xl font-black text-black mb-2">Add Gallery Images <span className="text-red-500">*</span></h2>
+      <p className="text-black font-bold mb-6">Showcase your products and services with beautiful gallery images.</p>
+
+      <div className="mb-8">
+        <label className="border-4 border-dashed border-black rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors block">
+          <Upload className="h-12 w-12 text-black mx-auto mb-2" />
+          <p className="font-black text-black">Click to upload images</p>
+          <p className="text-sm text-gray-600 mt-1">You can select multiple images (at least 1 required)</p>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImageUpload}
+            className="hidden"
+            required
+          />
+        </label>
+      </div>
+
+      {galleryImages.length > 0 && (
+        <div className="mb-8">
+          <p className="font-black text-black mb-3">Gallery Preview ({galleryImages.length} images)</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {galleryImages.map((image: string, index: number) => (
+              <div key={index} className="relative">
+                <img src={image} alt={`Gallery ${index}`} className="w-full h-24 object-cover rounded-lg border-2 border-black" />
+                <button
+                  onClick={() => removeImage(index)}
+                  className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full border-2 border-black"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="flex gap-3">
+        <button
+          onClick={onBack}
+          className="flex-1 bg-gray-300 text-black px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2"
+        >
+          <ChevronLeft className="h-5 w-5" />
+          Back
+        </button>
+        <button
+          onClick={onNext}
+          disabled={galleryImages.length === 0}
+          className={`flex-1 px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] flex items-center justify-center gap-2 transition-all ${
+            galleryImages.length > 0
+              ? 'bg-blue-500 text-white hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)]' 
+              : 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'
+          }`}
+        >
+          Next
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
+export function SocialLinksStep({ data, setData, onBack, onFinish }: any) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="bg-white p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]"
+    >
+      <h2 className="text-3xl font-black text-black mb-2">Add links (optional)</h2>
+      <p className="text-black font-bold mb-6">Help customers connect with you on social media.</p>
+
+      <div className="space-y-4 mb-8">
+        <div>
+          <label className="block text-black font-black mb-2">Website URL</label>
+          <input
+            type="url"
+            value={data.website}
+            onChange={(e) => setData({ ...data, website: e.target.value })}
+            className="w-full px-4 py-3 border-2 border-black rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="https://yourwebsite.com"
+          />
+        </div>
+
+        <div>
+          <label className="block text-black font-black mb-2">Facebook</label>
+          <input
+            type="url"
+            value={data.facebook}
+            onChange={(e) => setData({ ...data, facebook: e.target.value })}
+            className="w-full px-4 py-3 border-2 border-black rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="https://facebook.com/yourpage"
+          />
+        </div>
+
+        <div>
+          <label className="block text-black font-black mb-2">Instagram</label>
+          <input
+            type="url"
+            value={data.instagram}
+            onChange={(e) => setData({ ...data, instagram: e.target.value })}
+            className="w-full px-4 py-3 border-2 border-black rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="https://instagram.com/yourprofile"
+          />
+        </div>
+
+        <div>
+          <label className="block text-black font-black mb-2">X / Twitter</label>
+          <input
+            type="url"
+            value={data.twitter}
+            onChange={(e) => setData({ ...data, twitter: e.target.value })}
+            className="w-full px-4 py-3 border-2 border-black rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="https://x.com/yourprofile"
+          />
+        </div>
+
+        <div>
+          <label className="block text-black font-black mb-2">YouTube</label>
+          <input
+            type="url"
+            value={data.youtube}
+            onChange={(e) => setData({ ...data, youtube: e.target.value })}
+            className="w-full px-4 py-3 border-2 border-black rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="https://youtube.com/yourchannel"
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          onClick={onBack}
+          className="flex-1 bg-gray-300 text-black px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2"
+        >
+          <ChevronLeft className="h-5 w-5" />
+          Back
+        </button>
+        <button
+          onClick={onFinish}
+          className="flex-1 bg-blue-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2"
+        >
+          Finish
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
+export function SuccessScreen({ onDashboard, onAddProduct, onViewProfile }: any) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="min-h-screen flex items-center justify-center"
+    >
+      <div className="bg-white p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] max-w-md w-full text-center">
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <h1 className="text-4xl font-black text-black mb-2">🎉 Your Profile is Ready!</h1>
+          <p className="text-black font-bold mb-8">You're all set! Explore your dashboard and start posting your listings.</p>
+          
+          <div className="space-y-3">
+            <button
+              onClick={onAddProduct}
+              className="w-full bg-green-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all"
+            >
+              ➕ Add Your First Product
+            </button>
+            <button
+              onClick={onViewProfile}
+              className="w-full bg-purple-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all"
+            >
+              👀 View My Profile
+            </button>
+            <button
+              onClick={onDashboard}
+              className="w-full bg-blue-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all"
+            >
+              Go to Dashboard
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </motion.div>
+  )
+}

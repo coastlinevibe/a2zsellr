@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import ShareLinkBuilder from '@/components/ui/share-link-builder'
 import CampaignScheduler from '@/components/ui/campaign-scheduler'
 import AnalyticsDashboard from '@/components/ui/analytics-dashboard'
@@ -86,6 +86,7 @@ const dashboardTabs: { key: DashboardTab; label: string; icon: typeof Users }[] 
 export default function DashboardPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [profileLoading, setProfileLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<DashboardTab>('profile')
@@ -266,6 +267,13 @@ export default function DashboardPage() {
       fetchProducts()
     }
   }, [activeTab, marketingActiveView, profile?.id])
+
+  // Handle product creation modal from URL
+  useEffect(() => {
+    if (searchParams.get('modal') === 'product-creation') {
+      setActiveTab('shop')
+    }
+  }, [searchParams])
 
   // Fetch dashboard metrics when profile is loaded
   useEffect(() => {

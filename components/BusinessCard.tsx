@@ -136,9 +136,11 @@ export function BusinessCard({ business, categoryName, locationName, index = 0 }
           <h3 className="text-sm font-black leading-tight uppercase truncate pr-2">
             {business.display_name}
           </h3>
-          <p className="text-xs font-bold leading-tight uppercase truncate pr-2">
-            {categoryName || business.business_category || 'PROFESSIONAL'}
-          </p>
+          {(categoryName || business.business_category) && (
+            <p className="text-xs font-bold leading-tight uppercase truncate pr-2">
+              {categoryName || business.business_category}
+            </p>
+          )}
           {business.bio && (
             <p className="text-xs font-bold mt-0.5 line-clamp-1 leading-tight truncate pr-2">
               {business.bio}
