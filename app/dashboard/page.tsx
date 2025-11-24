@@ -82,7 +82,7 @@ interface UserProfile {
 const dashboardTabs: { key: DashboardTab; label: string; subtitle: string; icon: typeof Users }[] = [
   { key: 'profile', label: 'Profile', subtitle: 'Business info & settings', icon: Users },
   { key: 'products', label: 'Products', subtitle: 'Manage your product catalog', icon: ShoppingBag },
-  { key: 'branding', label: 'Branding', subtitle: 'Banner images & visual setup', icon: ImageIcon },
+  { key: 'branding', label: 'Profile Image', subtitle: 'Your business profile photo', icon: ImageIcon },
   { key: 'listings', label: 'Listings', subtitle: 'Create & share marketing campaigns', icon: MessageSquare }
 ]
 
@@ -186,8 +186,8 @@ export default function DashboardPage() {
     },
     {
       target: 'tour-branding-tab',
-      title: '🎨 Branding Tab',
-      description: 'Upload banner images and visual assets here. These are NOT product photos - they\'re for your profile branding.',
+      title: '🖼️ Profile Image Tab',
+      description: 'Upload your business profile photo here. This is the main image customers see on your profile.',
       action: 'Next',
       preAction: () => setActiveTab('branding')
     },
@@ -1414,7 +1414,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-2 text-xs font-bold text-black">
                     <span className="bg-emerald-500 rounded-full w-5 h-5 flex items-center justify-center text-xs font-black text-white">2</span>
-                    Create a listing
+                    Upload profile image
                   </div>
                   <div className="flex items-center gap-2 text-xs font-bold text-black">
                     <span className="bg-emerald-500 rounded-full w-5 h-5 flex items-center justify-center text-xs font-black text-white">3</span>
@@ -1535,8 +1535,8 @@ export default function DashboardPage() {
 
         <div>{renderActiveTab()}</div>
 
-        {/* Public Profile Preview - Below all tabs */}
-        {profile && (
+        {/* Public Profile Preview - Below all tabs (only on Profile tab) */}
+        {profile && activeTab === 'profile' && (
           <div className="mt-12 bg-white rounded-[9px] shadow-sm border border-gray-200 overflow-hidden">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">

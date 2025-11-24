@@ -151,7 +151,33 @@ export function BusinessBasicsStep({ data, setData, onNext, onBack }: StepProps)
 }
 
 export function LocationContactStep({ data, setData, onNext, onBack }: StepProps) {
+  const [locations, setLocations] = useState<any[]>([])
+  const [loadingLocations, setLoadingLocations] = useState(true)
   const isValid = data.phoneNumber.trim() && data.city.trim()
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const { data: locationsData, error } = await supabase
+          .from('locations')
+          .select('id, city, slug')
+          .eq('is_active', true)
+          .order('city')
+        
+        if (error) {
+          console.error('Error fetching locations:', error)
+        } else {
+          setLocations(locationsData || [])
+        }
+      } catch (err) {
+        console.error('Error fetching locations:', err)
+      } finally {
+        setLoadingLocations(false)
+      }
+    }
+
+    fetchLocations()
+  }, [])
 
   return (
     <motion.div
@@ -176,15 +202,19 @@ export function LocationContactStep({ data, setData, onNext, onBack }: StepProps
         </div>
 
         <div>
-          <label className="block text-black font-black mb-2">City / Area <span className="text-red-500">*</span></label>
-          <input
-            type="text"
+          <label className="block text-black font-black mb-2">Location <span className="text-red-500">*</span></label>
+          <select
             value={data.city}
             onChange={(e) => setData({ ...data, city: e.target.value })}
             className="w-full px-4 py-3 border-2 border-black rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="e.g., Johannesburg"
+            disabled={loadingLocations}
             required
-          />
+          >
+            <option value="">{loadingLocations ? 'Loading locations...' : 'Select a location'}</option>
+            {locations.map(loc => (
+              <option key={loc.id} value={loc.city}>{loc.city}</option>
+            ))}
+          </select>
         </div>
 
         <div>
