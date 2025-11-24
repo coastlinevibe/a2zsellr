@@ -1009,16 +1009,6 @@ export default function HomePage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <motion.h2 
-              className="text-2xl font-black text-black mb-2 bg-white p-4 rounded-xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] inline-block"
-              initial={{ scale: 0, rotate: -10 }}
-              whileInView={{ scale: 1, rotate: 0 }}
-              transition={{ duration: 0.6, delay: 0.4, type: "spring", stiffness: 200 }}
-              viewport={{ once: true }}
-            >
-              FIND LOCAL BUSINESSES
-            </motion.h2>
-
           </motion.div>
           
           <motion.div 
@@ -1029,6 +1019,13 @@ export default function HomePage() {
             viewport={{ once: true }}
           >
             <div className="bg-white rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] p-6">
+              {/* Search Description */}
+              <div className="mb-4 p-3 bg-blue-50 border-2 border-blue-300 rounded-lg">
+                <p className="text-sm text-gray-700">
+                  <span className="font-bold text-black">💡 Tip:</span> Use keywords to do a perfect search. Example: <span className="font-mono bg-white px-2 py-1 rounded border border-gray-300">meat, beef, 500g</span>
+                </p>
+              </div>
+
               {/* Tag Search Filters */}
               <TagSearchFilters
                 onTagSelect={handleTagSelect}

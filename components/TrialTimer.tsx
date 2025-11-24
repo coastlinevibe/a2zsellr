@@ -26,24 +26,7 @@ export default function TrialTimer({
 
     const checkStatus = async () => {
       const status = await checkTrialStatus(userId)
-      
-      // If trial is expired, reset user data immediately
-      if (status.isExpired) {
-        console.log('🔄 Trial expired, resetting user data...')
-        const resetSuccess = await resetUserData(userId)
-        if (resetSuccess) {
-          // Check status again after reset to get new trial end date
-          const newStatus = await checkTrialStatus(userId)
-          setTrialStatus(newStatus)
-          // Force page reload to update product counts
-          window.location.reload()
-        } else {
-          setTrialStatus(status)
-        }
-      } else {
-        setTrialStatus(status)
-      }
-      
+      setTrialStatus(status)
       setLoading(false)
     }
 

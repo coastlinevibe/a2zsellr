@@ -37,12 +37,10 @@ export default function ResetNotificationModal({
     const baseDate = lastResetAt || profileCreatedAt
     const resetInfo = calculateResetInfo(baseDate, subscriptionTier)
 
-    // Determine notification level
+    // Determine notification level - don't show "expired" notification
     let notificationLevel: string | null = null
     
-    if (resetInfo.shouldReset) {
-      notificationLevel = 'expired'
-    } else if (resetInfo.hoursRemaining <= 1) {
+    if (resetInfo.hoursRemaining <= 1) {
       notificationLevel = '1hour'
     } else if (resetInfo.daysRemaining <= 1) {
       notificationLevel = '1day'
@@ -61,9 +59,7 @@ export default function ResetNotificationModal({
       const updatedInfo = calculateResetInfo(baseDate, subscriptionTier)
       
       let newLevel: string | null = null
-      if (updatedInfo.shouldReset) {
-        newLevel = 'expired'
-      } else if (updatedInfo.hoursRemaining <= 1) {
+      if (updatedInfo.hoursRemaining <= 1) {
         newLevel = '1hour'
       } else if (updatedInfo.daysRemaining <= 1) {
         newLevel = '1day'
@@ -92,18 +88,7 @@ export default function ResetNotificationModal({
   const resetInfo = calculateResetInfo(baseDate, subscriptionTier)
 
   const getNotificationContent = () => {
-    if (resetInfo.shouldReset) {
-      return {
-        icon: AlertTriangle,
-        iconColor: 'text-red-600',
-        bgColor: 'bg-red-50',
-        borderColor: 'border-red-200',
-        title: '⚠️ Your Free Tier Has Reset',
-        message: 'All your products, listings, and gallery images have been cleared as part of the 7-day free tier cycle.',
-        action: 'Upgrade to Premium to keep your content permanently and unlock unlimited features.',
-        urgency: 'critical'
-      }
-    } else if (resetInfo.hoursRemaining <= 1) {
+    if (resetInfo.hoursRemaining <= 1) {
       return {
         icon: AlertTriangle,
         iconColor: 'text-red-600',
@@ -115,13 +100,18 @@ export default function ResetNotificationModal({
         urgency: 'critical'
       }
     } else if (resetInfo.daysRemaining <= 1) {
+      // Calculate hours and minutes remaining for display
+      const msRemaining = resetInfo.resetDate.getTime() - new Date().getTime()
+      const hoursRemaining = Math.floor(msRemaining / (60 * 60 * 1000))
+      const minutesRemaining = Math.floor((msRemaining % (60 * 60 * 1000)) / (60 * 1000))
+      
       return {
         icon: Clock,
         iconColor: 'text-orange-600',
         bgColor: 'bg-orange-50',
         borderColor: 'border-orange-200',
         title: '⏰ Reset Tomorrow!',
-        message: `Your free tier will reset in ${resetInfo.hoursRemaining > 20 ? '1 day' : `${resetInfo.hoursRemaining} hours`}. All your products, listings, and gallery images will be cleared.`,
+        message: `Your free tier will reset in ${hoursRemaining}h ${minutesRemaining}m. All your products, listings, and gallery images will be cleared.`,
         action: 'Upgrade to Premium today to keep your content forever.',
         urgency: 'high'
       }
@@ -159,11 +149,14 @@ export default function ResetNotificationModal({
                   <h3 className="text-lg font-bold text-gray-900">
                     {content.title}
                   </h3>
-                  {!resetInfo.shouldReset && (
-                    <div className="text-sm font-mono font-semibold text-gray-700 mt-1">
-                      {resetInfo.hoursRemaining > 20 ? '1 day' : `${resetInfo.hoursRemaining}h`} remaining
-                    </div>
-                  )}
+                  <div className="text-sm font-mono font-semibold text-gray-700 mt-1">
+                    {(() => {
+                      const msRemaining = resetInfo.resetDate.getTime() - new Date().getTime()
+                      const hoursRemaining = Math.floor(msRemaining / (60 * 60 * 1000))
+                      const minutesRemaining = Math.floor((msRemaining % (60 * 60 * 1000)) / (60 * 1000))
+                      return `${hoursRemaining}h ${minutesRemaining}m remaining`
+                    })()}
+                  </div>
                 </div>
               </div>
               <button

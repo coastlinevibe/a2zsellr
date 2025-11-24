@@ -9,6 +9,7 @@ import AnalyticsDashboard from '@/components/ui/analytics-dashboard'
 import TemplateEditor from '@/components/ui/template-editor'
 import {
   AlertTriangle,
+  ArrowRight,
   Building2,
   Calendar,
   CheckCircle2,
@@ -429,35 +430,26 @@ export default function DashboardPage() {
 
   const renderProfileTab = () => (
     <div className="space-y-8">
-      {/* Reset Countdown Banner for Free Tier */}
-      {profile && profile.subscription_tier === 'free' && (
-        <ResetCountdownBanner
-          profileCreatedAt={profile.created_at || new Date().toISOString()}
-          subscriptionTier={profile.subscription_tier}
-          onUpgradeClick={() => router.push('/dashboard')}
-        />
-      )}
+
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 overflow-hidden max-w-md">
-          <div className="p-3 border-b border-gray-200">
-            <h2 className="text-base font-semibold text-gray-900">Profile Management</h2>
-          </div>
-          <div className="p-3">
-            <Link
-              href="/profile"
-              className="flex items-center justify-between p-2 bg-gray-50 rounded-[9px] hover:bg-gray-100 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <Edit className="w-4 h-4 text-gray-600" />
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900">Update Business Profile</h3>
-                  <p className="text-xs text-gray-600">Keep your information fresh and verified.</p>
-                </div>
+      <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 overflow-hidden w-full max-w-sm profile-management-glow">
+        <div className="p-3 border-b border-gray-200">
+          <h2 className="text-base font-semibold text-gray-900">Profile Management</h2>
+        </div>
+        <div className="p-3">
+          <Link
+            href="/profile"
+            className="flex items-center justify-between p-2 bg-gray-50 rounded-[9px] hover:bg-gray-100 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Edit className="w-4 h-4 text-gray-600" />
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Update Business Profile</h3>
+                <p className="text-xs text-gray-600">Keep your information fresh and verified.</p>
               </div>
-              <div className="text-gray-400 text-sm">→</div>
-            </Link>
-          </div>
+            </div>
+            <div className="text-gray-400 text-sm">→</div>
+          </Link>
         </div>
       </div>
 

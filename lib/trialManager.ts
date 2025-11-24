@@ -186,14 +186,16 @@ export async function resetUserData(userId: string): Promise<boolean> {
       console.log(`✅ Deleted analytics data`)
     }
 
-    // Extend trial by 24 hours
+    // Extend trial by 24 hours and update last_free_reset timestamp
     console.log('🔄 Extending trial by 24 hours...')
+    const now = new Date().toISOString()
     const newTrialEnd = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
     
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
-        trial_end_date: newTrialEnd
+        trial_end_date: newTrialEnd,
+        last_free_reset: now
       })
       .eq('id', userId)
 
@@ -202,6 +204,7 @@ export async function resetUserData(userId: string): Promise<boolean> {
       return false
     } else {
       console.log(`✅ Trial extended to: ${newTrialEnd}`)
+      console.log(`✅ Last reset timestamp recorded: ${now}`)
     }
 
     // Try to log to reset history (optional - table might not exist)

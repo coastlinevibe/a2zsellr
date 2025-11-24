@@ -16,17 +16,20 @@ export default function ResetCountdownBanner({
   onUpgradeClick 
 }: ResetCountdownBannerProps) {
   const [resetInfo, setResetInfo] = useState<ResetInfo | null>(null)
+  const [message, setMessage] = useState<string>('')
 
   useEffect(() => {
     // Calculate reset info
     const info = calculateResetInfo(profileCreatedAt, subscriptionTier)
     setResetInfo(info)
+    setMessage(getResetMessage(info))
 
-    // Update every minute
+    // Update every 10 seconds to keep timer fresh
     const interval = setInterval(() => {
       const updatedInfo = calculateResetInfo(profileCreatedAt, subscriptionTier)
       setResetInfo(updatedInfo)
-    }, 60000) // Update every minute
+      setMessage(getResetMessage(updatedInfo))
+    }, 10000) // Update every 10 seconds
 
     return () => clearInterval(interval)
   }, [profileCreatedAt, subscriptionTier])
@@ -38,7 +41,6 @@ export default function ResetCountdownBanner({
   if (!shouldShowResetWarning(resetInfo)) return null
 
   const severity = getWarningSeverity(resetInfo)
-  const message = getResetMessage(resetInfo)
 
   const severityStyles = {
     info: {
@@ -76,7 +78,7 @@ export default function ResetCountdownBanner({
         <Icon className={`w-5 h-5 ${style.iconColor} flex-shrink-0 mt-0.5`} />
         <div className="flex-1">
           <h4 className={`font-semibold ${style.text}`}>
-            {resetInfo.shouldReset ? '✅ Reset Done' : `⏰ ${message}`}
+            {resetInfo.shouldReset ? '✅ Reset Done' : `⏰ ${message || 'Calculating...'}`}
           </h4>
           <p className={`text-sm ${style.subtext} mt-1`}>
             {resetInfo.shouldReset ? (
@@ -86,7 +88,7 @@ export default function ResetCountdownBanner({
               </>
             ) : (
               <>
-                Free tier accounts reset every 5 minutes for testing. All products and listings will be cleared at{' '}
+                Free tier accounts reset every 24 hours. All products and listings will be cleared at{' '}
                 <strong>{resetInfo.resetDate.toLocaleTimeString()}</strong>.
               </>
             )}

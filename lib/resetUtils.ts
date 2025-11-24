@@ -9,7 +9,7 @@ export interface ResetInfo {
 
 /**
  * Calculate time remaining until reset for free tier users
- * Free tier profiles reset every 24 hours (daily reset)
+ * The createdAt parameter is the actual reset deadline, not the creation date
  */
 export function calculateResetInfo(createdAt: string | Date, subscriptionTier: string): ResetInfo {
   // Premium and business users never reset
@@ -23,20 +23,18 @@ export function calculateResetInfo(createdAt: string | Date, subscriptionTier: s
   }
 
   const now = new Date()
-  const createdDate = new Date(createdAt)
+  let resetDate = new Date(createdAt)
   
-  // Calculate next reset (24 hours from creation or last reset)
-  const resetInterval = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
-  const timeSinceCreation = now.getTime() - createdDate.getTime()
-  const intervalsPassed = Math.floor(timeSinceCreation / resetInterval)
-  const nextResetTime = createdDate.getTime() + ((intervalsPassed + 1) * resetInterval)
-  
-  const resetDate = new Date(nextResetTime)
-  
+  // If reset date is in the past, extend it by 24 hours
   const msRemaining = resetDate.getTime() - now.getTime()
-  const daysRemaining = Math.floor(msRemaining / (24 * 60 * 60 * 1000))
-  const hoursRemaining = Math.floor(msRemaining / (60 * 60 * 1000))
-  const shouldReset = msRemaining <= 0
+  if (msRemaining <= 0) {
+    resetDate = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+  }
+  
+  const msRemainingUpdated = resetDate.getTime() - now.getTime()
+  const daysRemaining = Math.floor(msRemainingUpdated / (24 * 60 * 60 * 1000))
+  const hoursRemaining = Math.floor(msRemainingUpdated / (60 * 60 * 1000))
+  const shouldReset = msRemainingUpdated <= 0
 
   return {
     daysRemaining: Math.max(0, daysRemaining),
@@ -55,35 +53,28 @@ export function getResetMessage(resetInfo: ResetInfo): string {
     const hoursRemaining = Math.floor(msRemaining / (60 * 60 * 1000))
     const minutesRemaining = Math.floor((msRemaining % (60 * 60 * 1000)) / (60 * 1000))
     
-    if (hoursRemaining > 0) {
-      return `Your free tier resets in ${hoursRemaining}h ${minutesRemaining}m`
-    } else {
-      return `Your free tier resets in ${minutesRemaining}m`
-    }
+    return `Your free tier resets in ${hoursRemaining}h ${minutesRemaining}m`
   }
   return 'Your free tier has reset'
 }
 
 /**
- * Check if user should see reset warning (2 hours before reset)
+ * Check if user should see reset warning (always show for free tier)
  */
 export function shouldShowResetWarning(resetInfo: ResetInfo): boolean {
   if (resetInfo.shouldReset) return true
-  const msRemaining = resetInfo.resetDate.getTime() - new Date().getTime()
-  const hoursRemaining = Math.floor(msRemaining / (60 * 60 * 1000))
-  if (hoursRemaining <= 2) return true // Show warning in last 2 hours
-  return false
+  return true // Always show reset countdown for free tier users
 }
 
 /**
- * Get warning severity level (TESTING: adjusted for 5-minute resets)
+ * Get warning severity level based on time remaining
  */
 export function getWarningSeverity(resetInfo: ResetInfo): 'info' | 'warning' | 'danger' {
   if (resetInfo.shouldReset) return 'danger'
   const msRemaining = resetInfo.resetDate.getTime() - new Date().getTime()
-  const minutesRemaining = Math.floor(msRemaining / (60 * 1000))
+  const hoursRemaining = Math.floor(msRemaining / (60 * 60 * 1000))
   
-  if (minutesRemaining <= 1) return 'danger'  // Critical: less than 1 minute
-  if (minutesRemaining <= 2) return 'warning' // Warning: less than 2 minutes
-  return 'info'
+  if (hoursRemaining <= 1) return 'danger'   // Critical: less than 1 hour
+  if (hoursRemaining <= 3) return 'warning'  // Warning: less than 3 hours
+  return 'info'                               // Info: more than 3 hours
 }
