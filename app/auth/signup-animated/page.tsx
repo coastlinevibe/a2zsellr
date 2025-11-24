@@ -871,7 +871,7 @@ export default function AnimatedSignupPage() {
             <p className="text-black font-bold text-sm">
               ALREADY HAVE AN ACCOUNT?{' '}
               <Link 
-                href={`/auth/login-animated${selectedPlan ? `?plan=${selectedPlan}` : ''}`} 
+                href="/auth/login-animated" 
                 style={{
                   background: '#5cbdfd',
                   fontFamily: 'inherit',
