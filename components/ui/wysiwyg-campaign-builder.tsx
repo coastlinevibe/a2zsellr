@@ -118,6 +118,9 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
   // POPI consent toggle state
   const [enableMessageConsent, setEnableMessageConsent] = useState(editListing?.enable_message_consent !== false)
 
+  // Save as template state - default to true for custom templates
+  const [saveAsTemplate, setSaveAsTemplate] = useState(editListing?.layout_type === 'custom-template' ? editListing?.is_template !== false : false)
+
   // Handle template image upload
   const handleTemplateImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -206,8 +209,22 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
       if (editListing.menu_images && editListing.menu_images.length > 0) {
         setMenuImage(editListing.menu_images[0])
       }
+
+      // Initialize template data for custom templates
+      if (editListing.template_data) {
+        console.log('Loading template data:', editListing.template_data)
+        setSelectedTemplate(editListing.template_data)
+        setIsTemplateEditMode(true)
+      }
     }
   }, [editListing, products])
+
+  // Auto-enable saveAsTemplate when custom-template layout is selected
+  React.useEffect(() => {
+    if (selectedLayout === 'custom-template') {
+      setSaveAsTemplate(true)
+    }
+  }, [selectedLayout])
 
   // Initialize global preferences and load global content
   React.useEffect(() => {
@@ -679,7 +696,8 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
       video_url: videoUrl.trim() || null,
       video_type: videoUrl.trim() ? videoType : null,
       menu_images: menuImage ? [menuImage] : null,
-      enable_message_consent: enableMessageConsent
+      enable_message_consent: enableMessageConsent,
+      is_template: saveAsTemplate
     }
   }
 
@@ -694,7 +712,9 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
         uploaded_media_count: uploadedMedia.length,
         template_data: campaignData.template_data,
         selectedTemplate: selectedTemplate,
-        isEditing: !!editListing
+        isEditing: !!editListing,
+        is_template: campaignData.is_template,
+        saveAsTemplate: saveAsTemplate
       })
 
       if (editListing) {
@@ -737,10 +757,17 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
 
         console.log('Listing saved successfully:', listing)
         
-        showSuccess(
-          `Listing "${campaignTitle}" saved successfully!`,
-          `• ${uploadedMedia.length} files • ${selectedProducts.length} products • ${selectedLayout} layout • View in Marketing > My Listings tab!`
-        )
+        if (saveAsTemplate) {
+          showSuccess(
+            `Template "${campaignTitle}" saved successfully!`,
+            `✨ Your custom template has been saved and will appear in My Templates tab!`
+          )
+        } else {
+          showSuccess(
+            `Listing "${campaignTitle}" saved successfully!`,
+            `• ${uploadedMedia.length} files • ${selectedProducts.length} products • ${selectedLayout} layout • View in Marketing > My Listings tab!`
+          )
+        }
         
         if (onRefresh) {
           onRefresh()
@@ -1027,7 +1054,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
               <option value="vertical-slider">Vertical Slider</option>
               {userTier !== 'free' && <option value="before-after">Before & After</option>}
               {userTier !== 'free' && <option value="video-spotlight">Video Spotlight</option>}
-              {userTier !== 'free' && <option value="custom-template">🎨 Custom Template</option>}
+              {(userTier === 'business' || userTier === 'premium') && <option value="custom-template">🎨 Custom Template</option>}
             </select>
           </div>
 
@@ -1665,6 +1692,21 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
             </div>
           )}
 
+          {/* Save as Template Option */}
+          {selectedLayout === 'custom-template' && (
+            <div className="flex items-center justify-between bg-blue-500/60 border border-blue-400 rounded-[9px] px-4 py-3 mb-4">
+              <div>
+                <p className="text-sm font-semibold text-white">Save as Template</p>
+                <p className="text-xs text-blue-200">Save this custom template to reuse later</p>
+              </div>
+              <Switch
+                checked={saveAsTemplate}
+                onCheckedChange={setSaveAsTemplate}
+                className="data-[state=checked]:bg-emerald-500"
+              />
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex items-center gap-3 pt-4">
             <Button
@@ -1672,7 +1714,7 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
               className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-[9px] flex-1"
             >
               <Save className="w-4 h-4 mr-2" />
-              {editListing ? 'Update Listing' : scheduleDate ? 'Schedule Listing' : 'Post Listing'}
+              {editListing ? 'Update Listing' : saveAsTemplate ? 'Save as Template' : scheduleDate ? 'Schedule Listing' : 'Post Listing'}
             </Button>
             <Button
               onClick={handleGoToListings}

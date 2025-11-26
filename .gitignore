@@ -2,6 +2,9 @@
 
 # dependencies
 /node_modules
+/server/node_modules
+/server/tokens
+/QUICK_BACKUP*
 /.pnp
 .pnp.js
 

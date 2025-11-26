@@ -1,0 +1,25 @@
+{
+  "name": "social-integrations-server",
+  "version": "1.0.0",
+  "description": "Backend server for social media integrations (WhatsApp, Facebook, Instagram)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "build": "echo 'No build needed'"
+  },
+  "keywords": ["whatsapp", "facebook", "instagram", "integrations"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@wppconnect-team/wppconnect": "https://github.com/wppconnect-team/wppconnect/releases/download/nightly/wppconnect-nightly.tgz",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "socket.io": "^4.7.2",
+    "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

@@ -33,7 +33,11 @@ import {
   X,
   Clipboard,
   Shield,
-  Package
+  Package,
+  Plug,
+  Facebook,
+  Instagram,
+  Loader2
 } from 'lucide-react'
 
 import { useAuth } from '@/lib/auth'
@@ -54,9 +58,12 @@ import ResetCountdownBanner from '@/components/ResetCountdownBanner'
 import TrialTimer from '@/components/TrialTimer'
 import { resetUserData } from '@/lib/trialManager'
 import { PremiumBadge } from '@/components/ui/premium-badge'
+import WhatsAppIntegration from '@/components/integrations/WhatsAppIntegration'
+import FacebookIntegration from '@/components/integrations/FacebookIntegration'
+import InstagramIntegration from '@/components/integrations/InstagramIntegration'
 
 type SubscriptionTier = 'free' | 'premium' | 'business'
-type DashboardTab = 'profile' | 'products' | 'branding' | 'listings'
+type DashboardTab = 'profile' | 'products' | 'branding' | 'listings' | 'integrations'
 
 interface UserProfile {
   id: string
@@ -78,11 +85,12 @@ interface UserProfile {
   created_at?: string
 }
 
-const dashboardTabs: { key: DashboardTab; label: string; subtitle: string; icon: typeof Users }[] = [
+const dashboardTabs: { key: DashboardTab; label: string; subtitle: string; icon: typeof Users; premiumOnly?: boolean }[] = [
   { key: 'profile', label: 'Profile', subtitle: 'Business info & settings', icon: Users },
   { key: 'products', label: 'Products', subtitle: 'Manage your product catalog', icon: ShoppingBag },
   { key: 'branding', label: 'Profile Image', subtitle: 'Your business profile photo', icon: ImageIcon },
-  { key: 'listings', label: 'Listings', subtitle: 'Create & share marketing campaigns', icon: MessageSquare }
+  { key: 'listings', label: 'Listings', subtitle: 'Create & share marketing campaigns', icon: MessageSquare },
+  { key: 'integrations', label: 'Social Integrations', subtitle: 'Connect social & messaging apps', icon: Plug, premiumOnly: true }
 ]
 
 export default function DashboardPage() {
@@ -112,6 +120,13 @@ export default function DashboardPage() {
   const [marketingActiveView, setMarketingActiveView] = useState('builder')
   const [marketingProducts, setMarketingProducts] = useState<any[]>([])
   const [editListing, setEditListing] = useState<any>(null)
+  
+  // Saved templates state
+  const [savedTemplates, setSavedTemplates] = useState<any[]>([])
+  const [templatesLoading, setTemplatesLoading] = useState(false)
+  
+  // Social integrations state
+  const [socialIntegrationView, setSocialIntegrationView] = useState<'whatsapp' | 'facebook' | 'instagram'>('whatsapp')
   
   // Upgrade modal states
   const [showPlanModal, setShowPlanModal] = useState(false)
@@ -411,6 +426,13 @@ export default function DashboardPage() {
     }
   }, [profile?.id])
 
+  // Fetch saved templates when templates tab becomes active
+  useEffect(() => {
+    if (activeTab === 'listings' && marketingActiveView === 'templates' && profile?.id) {
+      fetchSavedTemplates()
+    }
+  }, [activeTab, marketingActiveView, profile?.id])
+
   const completePendingReferrals = async (userId: string) => {
     try {
       // Find any pending referrals where this user was referred
@@ -536,6 +558,28 @@ export default function DashboardPage() {
     }
   }
 
+  const fetchSavedTemplates = async () => {
+    if (!profile?.id) return
+    
+    setTemplatesLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('profile_listings')
+        .select('*')
+        .eq('profile_id', profile.id)
+        .eq('is_template', true)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setSavedTemplates(data || [])
+      console.log('📋 Saved templates loaded:', data?.length || 0)
+    } catch (error) {
+      console.error('Error fetching saved templates:', error)
+    } finally {
+      setTemplatesLoading(false)
+    }
+  }
+
   const getTierBadge = () => {
     if (!profile) return { text: 'Free', className: 'bg-gray-100 text-gray-700' }
 
@@ -589,6 +633,49 @@ export default function DashboardPage() {
       </div>
     </div>
   )
+
+  const renderIntegrationsTab = () => {
+    const integrations = [
+      { id: 'whatsapp', label: 'WhatsApp', color: 'green' },
+      { id: 'facebook', label: 'Facebook', color: 'blue' },
+      { id: 'instagram', label: 'Instagram', color: 'pink' }
+    ]
+
+    return (
+      <div className="space-y-8">
+        <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-900">Social Integrations</h2>
+            <p className="text-gray-600 mt-1">Connect social and messaging apps to reach more customers</p>
+          </div>
+          
+          {/* Sub-tabs */}
+          <div className="border-b border-gray-200 p-4 flex gap-2 flex-wrap">
+            {integrations.map((integration) => (
+              <button
+                key={integration.id}
+                onClick={() => setSocialIntegrationView(integration.id as any)}
+                className={`px-6 py-2 rounded-lg border-2 font-bold transition-all ${
+                  socialIntegrationView === integration.id
+                    ? `bg-${integration.color}-500 text-white border-${integration.color}-600 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)]`
+                    : 'bg-white text-gray-900 border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                {integration.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Content */}
+          <div className="p-6">
+            {socialIntegrationView === 'whatsapp' && <WhatsAppIntegration />}
+            {socialIntegrationView === 'facebook' && <FacebookIntegration />}
+            {socialIntegrationView === 'instagram' && <InstagramIntegration />}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const renderMarketingTab = () => {
     const userTier = profile?.subscription_tier || 'free'
@@ -683,6 +770,10 @@ export default function DashboardPage() {
                   setMarketingActiveView('builder')
                   console.log('Editing listing:', listing)
                 }}
+                onDelete={() => {
+                  // Clear edit state when a listing is deleted
+                  setEditListing(null)
+                }}
                 userTier={profile?.subscription_tier || 'free'} 
                 businessProfile={profile || undefined}
                 onRefresh={fetchDashboardMetrics}
@@ -698,8 +789,8 @@ export default function DashboardPage() {
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">My Templates</h3>
                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
                     {userTier === 'free' 
-                      ? 'Access professional templates to create stunning marketing pages. Only available on Business tier.'
-                      : 'Advanced template management is only available on Business tier. Upgrade to unlock professional templates and customization options.'
+                      ? 'Access professional templates to create stunning marketing pages. Only available on Business tier and above.'
+                      : 'Advanced template management is only available on Business tier and above. Upgrade to unlock professional templates and customization options.'
                     }
                   </p>
                   <button
@@ -713,88 +804,57 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between">
+                  <div>
                     <h3 className="text-xl font-semibold text-gray-900">My Templates</h3>
-                    <button 
-                      onClick={() => setMarketingActiveView('builder')}
-                      className="bg-blue-500 text-white px-6 py-3 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] hover:bg-blue-600 transition-all"
-                    >
-                      <Plus className="w-4 h-4 mr-2 inline" />
-                      Create New Template
-                    </button>
+                    <p className="text-sm text-gray-600 mt-1">Templates you create in the Listing Builder will appear here</p>
                   </div>
                   
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Health Insurance Template */}
-                    <div className="bg-blue-100 border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all">
-                      <div className="flex items-center mb-4">
-                        <div className="bg-blue-600 p-2 rounded-full border-2 border-black mr-3">
-                          <Shield className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <h4 className="font-black text-black">Health Insurance</h4>
-                          <p className="text-sm font-bold text-black">Professional service template</p>
-                        </div>
-                      </div>
-                      <p className="text-black text-sm mb-4 font-medium">
-                        Complete health insurance landing page with plan comparisons, testimonials, and trust indicators.
-                      </p>
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => window.open('/template-preview/health-insurance', '_blank')}
-                          className="flex-1 bg-white text-black px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-sm hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all"
-                        >
-                          <Eye className="w-4 h-4 mr-1 inline" />
-                          Preview
-                        </button>
-                        <button 
-                          onClick={() => {
-                            setMarketingActiveView('template_editor')
-                          }}
-                          className="flex-1 bg-blue-500 text-white px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-sm hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-blue-600 transition-all"
-                        >
-                          Use Template
-                        </button>
-                      </div>
+                  {templatesLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
                     </div>
-
-                    {/* Coming Soon Templates */}
-                    <div className="bg-gray-100 border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6">
-                      <div className="flex items-center mb-4">
-                        <div className="bg-gray-600 p-2 rounded-full border-2 border-black mr-3">
-                          <Package className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <h4 className="font-black text-black">Product Showcase</h4>
-                          <p className="text-sm font-bold text-black">Coming soon</p>
-                        </div>
-                      </div>
-                      <p className="text-black text-sm mb-4 font-medium">
-                        Perfect for retail businesses showcasing multiple products with pricing and features.
-                      </p>
-                      <button disabled className="w-full bg-gray-300 text-gray-600 px-4 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] font-bold text-sm cursor-not-allowed">
-                        Coming Soon
+                  ) : savedTemplates.length === 0 ? (
+                    <div className="text-center py-12 bg-gray-50 rounded-[9px] border-2 border-dashed border-gray-300">
+                      <Clipboard className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">No templates yet</h4>
+                      <p className="text-gray-600 mb-6">Create a custom template in the Listing Builder and save it to see it here</p>
+                      <button
+                        onClick={() => setMarketingActiveView('builder')}
+                        className="bg-blue-500 text-white px-6 py-2 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] font-bold hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all inline-flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Go to Listing Builder
                       </button>
                     </div>
-
-                    <div className="bg-gray-100 border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6">
-                      <div className="flex items-center mb-4">
-                        <div className="bg-gray-600 p-2 rounded-full border-2 border-black mr-3">
-                          <Users className="w-6 h-6 text-white" />
+                  ) : (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {savedTemplates.map((template) => (
+                        <div key={template.id} className="bg-white border-2 border-black rounded-[9px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-6 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all">
+                          <div className="mb-4">
+                            <h4 className="font-black text-black text-lg">{template.title}</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {template.layout_type === 'custom-template' ? '🎨 Custom Template' : `Layout: ${template.layout_type}`}
+                            </p>
+                          </div>
+                          <p className="text-black text-sm mb-4 font-medium line-clamp-2">
+                            {template.message_template || 'No description'}
+                          </p>
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => {
+                                setEditListing(template)
+                                setMarketingActiveView('builder')
+                              }}
+                              className="flex-1 bg-blue-500 text-white px-3 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] font-bold text-sm hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:bg-blue-600 transition-all"
+                            >
+                              <Edit className="w-4 h-4 mr-1 inline" />
+                              Use Template
+                            </button>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-black text-black">Service Business</h4>
-                          <p className="text-sm font-bold text-black">Coming soon</p>
-                        </div>
-                      </div>
-                      <p className="text-black text-sm mb-4 font-medium">
-                        Ideal for salons, consultants, and service providers with booking capabilities.
-                      </p>
-                      <button disabled className="w-full bg-gray-300 text-gray-600 px-4 py-2 rounded-[6px] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] font-bold text-sm cursor-not-allowed">
-                        Coming Soon
-                      </button>
+                      ))}
                     </div>
-                  </div>
+                  )}
                 </div>
               )
             )}
@@ -909,6 +969,8 @@ export default function DashboardPage() {
         />
       case 'listings':
         return renderMarketingTab()
+      case 'integrations':
+        return renderIntegrationsTab()
       default:
         return renderProfileTab()
     }
@@ -1430,6 +1492,16 @@ export default function DashboardPage() {
         {/* Tabs - Desktop View */}
         <div id="tour-tabs" className="hidden md:flex flex-wrap gap-4 mb-8">
           {dashboardTabs.map((tab) => {
+            // Hide premium-only tabs for free tier users
+            if (tab.premiumOnly && profile?.subscription_tier === 'free') {
+              return null
+            }
+
+            // Hide integrations tab for non-admin users
+            if (tab.key === 'integrations' && !profile?.is_admin) {
+              return null
+            }
+
             const IconComponent = tab.icon
             const isActive = activeTab === tab.key
             const tourId = `tour-${tab.key}-tab`
@@ -1469,6 +1541,16 @@ export default function DashboardPage() {
                 }}
               >
                 {dashboardTabs.map((tab) => {
+                  // Hide premium-only tabs for free tier users
+                  if (tab.premiumOnly && profile?.subscription_tier === 'free') {
+                    return null
+                  }
+
+                  // Hide integrations tab for non-admin users
+                  if (tab.key === 'integrations' && !profile?.is_admin) {
+                    return null
+                  }
+
                   const IconComponent = tab.icon
                   const isActive = activeTab === tab.key
 
@@ -1480,7 +1562,8 @@ export default function DashboardPage() {
                       <button
                         onClick={() => {
                           setActiveTab(tab.key)
-                          setCarouselIndex(dashboardTabs.findIndex(t => t.key === tab.key))
+                          const visibleTabs = dashboardTabs.filter(t => (!t.premiumOnly || profile?.subscription_tier !== 'free') && (t.key !== 'integrations' || profile?.is_admin))
+                          setCarouselIndex(visibleTabs.findIndex(t => t.key === tab.key))
                         }}
                         className={`w-full flex flex-col items-center gap-2 p-3 rounded-lg border-2 border-black font-bold transition-all ${
                           isActive
@@ -1510,20 +1593,34 @@ export default function DashboardPage() {
 
             {/* Carousel Navigation Dots */}
             <div className="flex justify-center gap-1.5 mt-3">
-              {dashboardTabs.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setCarouselIndex(index)
-                    setActiveTab(dashboardTabs[index].key)
-                  }}
-                  className={`rounded-full transition-all ${
-                    carouselIndex === index
-                      ? 'bg-emerald-500 w-5 h-2'
-                      : 'bg-gray-300 w-2 h-2 hover:bg-gray-400'
-                  }`}
-                />
-              ))}
+              {dashboardTabs.map((tab, index) => {
+                // Hide dots for premium-only tabs for free tier users
+                if (tab.premiumOnly && profile?.subscription_tier === 'free') {
+                  return null
+                }
+
+                // Hide dots for integrations tab for non-admin users
+                if (tab.key === 'integrations' && !profile?.is_admin) {
+                  return null
+                }
+
+                return (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      const visibleTabs = dashboardTabs.filter(t => (!t.premiumOnly || profile?.subscription_tier !== 'free') && (t.key !== 'integrations' || profile?.is_admin))
+                      const visibleIndex = visibleTabs.findIndex(t => t.key === tab.key)
+                      setCarouselIndex(visibleIndex)
+                      setActiveTab(tab.key)
+                    }}
+                    className={`rounded-full transition-all ${
+                      carouselIndex === index
+                        ? 'bg-emerald-500 w-5 h-2'
+                        : 'bg-gray-300 w-2 h-2 hover:bg-gray-400'
+                    }`}
+                  />
+                )
+              })}
             </div>
           </div>
         </div>

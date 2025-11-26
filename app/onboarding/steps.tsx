@@ -17,18 +17,26 @@ export function WelcomeScreen({ username, onStart, onSkip }: any) {
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="min-h-screen flex items-center justify-center"
+      className="min-h-screen flex items-center justify-center p-4"
     >
-      <div className="bg-white p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] max-w-md w-full text-center">
+      <div className="bg-white p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] w-full max-w-md text-center">
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
+          className="space-y-4"
         >
-          <h1 className="text-4xl font-black text-black mb-2">👋 Welcome, {username}!</h1>
-          <p className="text-black font-bold mb-8">Let's set up your business profile. A completed profile gets 3× more customer inquiries.</p>
+          <div className="text-5xl">👋</div>
+          <div className="min-h-16 flex items-center justify-center">
+            <h1 className="text-2xl sm:text-3xl font-black text-black break-words line-clamp-3">
+              Welcome, {username}!
+            </h1>
+          </div>
+          <p className="text-black font-bold text-sm sm:text-base leading-relaxed">
+            Let's set up your business profile. A completed profile gets 3× more customer inquiries.
+          </p>
           
-          <div className="space-y-3">
+          <div className="space-y-3 pt-4">
             <button
               onClick={onStart}
               className="w-full bg-blue-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2"
@@ -259,73 +267,77 @@ export function OperatingHoursStep({ data, setData, onNext, onBack }: StepProps)
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="bg-white p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]"
+      className="bg-white p-6 sm:p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] w-full"
     >
-      <h2 className="text-3xl font-black text-black mb-2">When are you open?</h2>
-      <p className="text-black font-bold mb-6">Let customers know the best time to contact or visit you.</p>
+      <h2 className="text-2xl sm:text-3xl font-black text-black mb-2">When are you open?</h2>
+      <p className="text-black font-bold mb-6 text-sm sm:text-base">Let customers know the best time to contact or visit you.</p>
 
-      <div className="space-y-3 mb-8 max-h-96 overflow-y-auto">
+      <div className="space-y-2 mb-8 max-h-96 overflow-y-auto pr-2">
         {DAYS.map(day => (
-          <div key={day} className="flex items-center gap-3 p-3 border-2 border-black rounded-lg">
-            <label className="flex items-center gap-2 flex-1">
-              <input
-                type="checkbox"
-                checked={data.hours[day].open}
-                onChange={(e) => setData({
-                  ...data,
-                  hours: {
-                    ...data.hours,
-                    [day]: { ...data.hours[day], open: e.target.checked }
-                  }
-                })}
-                className="w-5 h-5 border-2 border-black rounded"
-              />
-              <span className="font-black text-black">{day}</span>
-            </label>
-            {data.hours[day].open && (
-              <div className="flex gap-2">
+          <div key={day} className="bg-gray-50 border-2 border-black rounded-lg p-3 sm:p-4 hover:bg-gray-100 transition-colors">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <label className="flex items-center gap-2 min-w-fit">
                 <input
-                  type="time"
-                  value={data.hours[day].start}
+                  type="checkbox"
+                  checked={data.hours[day].open}
                   onChange={(e) => setData({
                     ...data,
                     hours: {
                       ...data.hours,
-                      [day]: { ...data.hours[day], start: e.target.value }
+                      [day]: { ...data.hours[day], open: e.target.checked }
                     }
                   })}
-                  className="px-2 py-1 border-2 border-black rounded font-bold"
+                  className="w-5 h-5 border-2 border-black rounded cursor-pointer"
                 />
-                <span className="font-black">–</span>
-                <input
-                  type="time"
-                  value={data.hours[day].end}
-                  onChange={(e) => setData({
-                    ...data,
-                    hours: {
-                      ...data.hours,
-                      [day]: { ...data.hours[day], end: e.target.value }
-                    }
-                  })}
-                  className="px-2 py-1 border-2 border-black rounded font-bold"
-                />
-              </div>
-            )}
+                <span className="font-black text-black text-sm sm:text-base whitespace-nowrap">{day}</span>
+              </label>
+              
+              {data.hours[day].open && (
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 flex-1">
+                  <input
+                    type="time"
+                    value={data.hours[day].start}
+                    onChange={(e) => setData({
+                      ...data,
+                      hours: {
+                        ...data.hours,
+                        [day]: { ...data.hours[day], start: e.target.value }
+                      }
+                    })}
+                    className="px-3 py-2 border-2 border-black rounded font-bold text-sm sm:text-base flex-1 sm:flex-none"
+                  />
+                  <span className="font-black text-black hidden sm:inline">–</span>
+                  <span className="font-black text-black sm:hidden">to</span>
+                  <input
+                    type="time"
+                    value={data.hours[day].end}
+                    onChange={(e) => setData({
+                      ...data,
+                      hours: {
+                        ...data.hours,
+                        [day]: { ...data.hours[day], end: e.target.value }
+                      }
+                    })}
+                    className="px-3 py-2 border-2 border-black rounded font-bold text-sm sm:text-base flex-1 sm:flex-none"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <button
           onClick={onBack}
-          className="flex-1 bg-gray-300 text-black px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2"
+          className="flex-1 bg-gray-300 text-black px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
         >
           <ChevronLeft className="h-5 w-5" />
           Back
         </button>
         <button
           onClick={onNext}
-          className="flex-1 bg-blue-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2"
+          className="flex-1 bg-blue-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
         >
           Next
           <ChevronRight className="h-5 w-5" />
@@ -416,71 +428,61 @@ export function BrandingStep({ data, setData, onNext, onBack }: StepProps) {
 
 export function GalleryUploadStep({ galleryImages, setGalleryImages, onNext, onBack }: any) {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (files) {
-      Array.from(files).forEach(file => {
-        const reader = new FileReader()
-        reader.onload = (event) => {
-          const result = event.target?.result as string
-          setGalleryImages((prev: string[]) => [...prev, result])
-        }
-        reader.readAsDataURL(file)
-      })
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const result = event.target?.result as string
+        setGalleryImages([result])
+      }
+      reader.readAsDataURL(file)
     }
   }
 
-  const removeImage = (index: number) => {
-    setGalleryImages((prev: string[]) => prev.filter((_, i) => i !== index))
+  const removeImage = () => {
+    setGalleryImages([])
   }
 
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="bg-white p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)]"
+      className="bg-white p-6 sm:p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] w-full"
     >
-      <h2 className="text-3xl font-black text-black mb-2">Add Gallery Images <span className="text-red-500">*</span></h2>
-      <p className="text-black font-bold mb-6">Showcase your products and services with beautiful gallery images.</p>
+      <h2 className="text-2xl sm:text-3xl font-black text-black mb-2">Add a Gallery Image <span className="text-red-500">*</span></h2>
+      <p className="text-black font-bold mb-6 text-sm sm:text-base">Add your first gallery image. You can add more images in your dashboard later.</p>
 
       <div className="mb-8">
-        <label className="border-4 border-dashed border-black rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors block">
-          <Upload className="h-12 w-12 text-black mx-auto mb-2" />
-          <p className="font-black text-black">Click to upload images</p>
-          <p className="text-sm text-gray-600 mt-1">You can select multiple images (at least 1 required)</p>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleImageUpload}
-            className="hidden"
-            required
-          />
-        </label>
+        {galleryImages.length === 0 ? (
+          <label className="border-4 border-dashed border-black rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors block">
+            <Upload className="h-12 w-12 text-black mx-auto mb-2" />
+            <p className="font-black text-black text-sm sm:text-base">Click to upload image</p>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">JPG, PNG or GIF (max 5MB)</p>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              required
+            />
+          </label>
+        ) : (
+          <div className="relative inline-block w-full">
+            <img src={galleryImages[0]} alt="Gallery preview" className="w-full h-64 object-cover rounded-lg border-2 border-black" />
+            <button
+              onClick={removeImage}
+              className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] transition-all"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        )}
       </div>
 
-      {galleryImages.length > 0 && (
-        <div className="mb-8">
-          <p className="font-black text-black mb-3">Gallery Preview ({galleryImages.length} images)</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {galleryImages.map((image: string, index: number) => (
-              <div key={index} className="relative">
-                <img src={image} alt={`Gallery ${index}`} className="w-full h-24 object-cover rounded-lg border-2 border-black" />
-                <button
-                  onClick={() => removeImage(index)}
-                  className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full border-2 border-black"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <button
           onClick={onBack}
-          className="flex-1 bg-gray-300 text-black px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2"
+          className="flex-1 bg-gray-300 text-black px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
         >
           <ChevronLeft className="h-5 w-5" />
           Back
@@ -488,7 +490,7 @@ export function GalleryUploadStep({ galleryImages, setGalleryImages, onNext, onB
         <button
           onClick={onNext}
           disabled={galleryImages.length === 0}
-          className={`flex-1 px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] flex items-center justify-center gap-2 transition-all text-sm sm:text-base ${
             galleryImages.length > 0
               ? 'bg-blue-500 text-white hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)]' 
               : 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-50'

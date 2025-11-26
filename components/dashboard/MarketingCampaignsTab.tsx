@@ -45,6 +45,7 @@ interface Listing {
 interface MarketingCampaignsTabProps {
   onCreateNew: () => void
   onEditListing?: (listing: Listing) => void
+  onDelete?: () => void
   userTier?: 'free' | 'premium' | 'business'
   businessProfile?: {
     display_name: string | null
@@ -53,7 +54,7 @@ interface MarketingCampaignsTabProps {
   onRefresh?: () => void
 }
 
-export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = 'free', businessProfile, onRefresh }: MarketingCampaignsTabProps) {
+export function MarketingCampaignsTab({ onCreateNew, onEditListing, onDelete, userTier = 'free', businessProfile, onRefresh }: MarketingCampaignsTabProps) {
   const { user } = useAuth()
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
@@ -166,6 +167,11 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, userTier = '
       // Notify parent component to refresh metrics
       if (onRefresh) {
         onRefresh()
+      }
+
+      // Clear edit state if the deleted listing was being edited
+      if (onDelete) {
+        onDelete()
       }
       
       setShowDeleteConfirm(false)
