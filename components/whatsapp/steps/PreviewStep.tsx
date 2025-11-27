@@ -1,11 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { MessageSquare, Users, Settings, CheckCircle2, AlertCircle, ShoppingCart } from 'lucide-react'
+import { MessageSquare, Users, Settings, CheckCircle2, AlertCircle, ShoppingCart, Crown } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
+import { useAuth } from '@/lib/auth'
 
 interface PreviewStepProps {
   state: any
+}
+
+interface UserProfile {
+  subscription_tier: 'free' | 'premium' | 'business'
 }
 
 interface Product {
@@ -24,9 +29,41 @@ interface Listing {
 }
 
 export default function PreviewStep({ state }: PreviewStepProps) {
+  const { user } = useAuth()
   const [products, setProducts] = useState<Product[]>([])
   const [listings, setListings] = useState<Listing[]>([])
   const [loadingItems, setLoadingItems] = useState(false)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+
+  // Fetch user profile to check tier
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.id) return
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('subscription_tier')
+          .eq('id', user.id)
+          .single()
+        
+        if (error) {
+          console.error('Profile fetch error:', error)
+          return
+        }
+        
+        setProfile(data as UserProfile)
+      } catch (error) {
+        console.error('Error fetching profile:', error)
+      }
+    }
+
+    fetchProfile()
+  }, [user?.id])
+
+  const userTier = profile?.subscription_tier || 'free'
+  const maxGroups = userTier === 'business' ? Infinity : userTier === 'premium' ? 2 : 0
+  const groupsExceedLimit = state.recipientType === 'groups' && state.selectedGroups.length > maxGroups
+  const tierViolation = groupsExceedLimit || (state.recipientType === 'groups' && userTier === 'free')
 
   // Fetch products and listings
   useEffect(() => {
@@ -102,6 +139,30 @@ export default function PreviewStep({ state }: PreviewStepProps) {
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Review Your Campaign</h2>
         <p className="text-gray-600">Verify all details before sending</p>
       </div>
+
+      {/* Tier Violation Warning */}
+      {tierViolation && (
+        <div className="bg-red-50 border-2 border-red-300 rounded-lg p-6">
+          <div className="flex items-start gap-3">
+            <Crown className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-red-900 mb-2">Tier Limit Exceeded</p>
+              {userTier === 'free' && (
+                <p className="text-sm text-red-800">
+                  Free tier cannot send to groups. Please upgrade to Premium (2 groups) or Business (unlimited groups).
+                </p>
+              )}
+              {userTier === 'premium' && groupsExceedLimit && (
+                <p className="text-sm text-red-800">
+                  Premium tier allows maximum 2 groups. You have selected {state.selectedGroups.length} groups. Please reduce your selection or upgrade to Business.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+
 
       {/* Campaign Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

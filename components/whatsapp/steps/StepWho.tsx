@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Users, Phone, Hash, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Users, Phone, Hash, X, Crown } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 
 interface StepWhoProps {
@@ -24,14 +24,53 @@ interface Contact {
   groups: string[]
 }
 
+interface UserProfile {
+  subscription_tier: 'free' | 'premium' | 'business'
+}
+
 export default function StepWho({ state, onUpdate, groups: passedGroups = [], contacts: passedContacts = [] }: StepWhoProps) {
   const { user } = useAuth()
   const [groups, setGroups] = useState<Group[]>(passedGroups)
   const [contacts, setContacts] = useState<Contact[]>(passedContacts)
   const [loadingGroups, setLoadingGroups] = useState(false)
   const [loadingContacts, setLoadingContacts] = useState(false)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
 
   const sessionId = user?.id
+
+  // Fetch user profile to check tier
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.id) return
+      try {
+        const { supabase } = await import('@/lib/supabaseClient')
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('subscription_tier')
+          .eq('id', user.id)
+          .single()
+        
+        if (error) {
+          console.error('Profile fetch error:', error)
+          return
+        }
+        
+        setProfile(data as UserProfile)
+      } catch (error) {
+        console.error('Error fetching profile:', error)
+      }
+    }
+
+    fetchProfile()
+  }, [user?.id])
+
+  const userTier = profile?.subscription_tier || 'free'
+  const maxGroups = userTier === 'business' ? Infinity : userTier === 'premium' ? 2 : 0
+  const maxContacts = userTier === 'premium' ? 80 : userTier === 'business' ? Infinity : 0
+  const canSelectGroups = userTier === 'premium' || userTier === 'business'
+  const canSelectContacts = userTier === 'premium' || userTier === 'business'
+  const contactsExceedLimit = state.recipientType === 'contacts' && state.selectedContacts.length > maxContacts && maxContacts !== Infinity
 
   const recipientOptions = [
     {
@@ -149,10 +188,26 @@ export default function StepWho({ state, onUpdate, groups: passedGroups = [], co
       {/* Groups Selection */}
       {state.recipientType === 'groups' && (
         <div className="space-y-4 p-6 bg-blue-50 rounded-lg border-2 border-blue-200">
+          {!canSelectGroups && (
+            <div className="p-4 bg-red-100 border-2 border-red-300 rounded-lg mb-4">
+              <div className="flex items-start gap-3">
+                <Crown className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-red-900">Premium or Business Required</p>
+                  <p className="text-sm text-red-800 mt-1">Upgrade your account to send messages to groups.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-gray-900">Select Groups</h3>
-            <span className="text-sm text-gray-600">
-              {state.selectedGroups.length} selected
+            <span className={`text-sm ${
+              state.selectedGroups.length >= maxGroups && maxGroups !== Infinity
+                ? 'text-red-600 font-semibold'
+                : 'text-gray-600'
+            }`}>
+              {state.selectedGroups.length}{maxGroups !== Infinity ? `/${maxGroups}` : ''} selected
             </span>
           </div>
 
@@ -185,11 +240,18 @@ export default function StepWho({ state, onUpdate, groups: passedGroups = [], co
 
           {groups.length > 0 ? (
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {groups.map((group) => (
+              {groups.map((group) => {
+                const isSelected = state.selectedGroups.includes(group.id)
+                const isAtLimit = state.selectedGroups.length >= maxGroups && !isSelected && maxGroups !== Infinity
+                const isDisabled = !canSelectGroups || isAtLimit
+
+                return (
                 <button
                   key={group.id}
                   onClick={() => {
-                    if (state.selectedGroups.includes(group.id)) {
+                    if (isDisabled && !isSelected) return
+                    
+                    if (isSelected) {
                       onUpdate({
                         selectedGroups: state.selectedGroups.filter((id: string) => id !== group.id)
                       })
@@ -199,9 +261,12 @@ export default function StepWho({ state, onUpdate, groups: passedGroups = [], co
                       })
                     }
                   }}
+                  disabled={isDisabled}
                   className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                    state.selectedGroups.includes(group.id)
+                    isSelected
                       ? 'border-blue-500 bg-blue-100'
+                      : isDisabled
+                      ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
                       : 'border-gray-200 bg-white hover:border-blue-300'
                   }`}
                 >
@@ -210,7 +275,7 @@ export default function StepWho({ state, onUpdate, groups: passedGroups = [], co
                       <h4 className="font-semibold text-gray-900">{group.name}</h4>
                       <p className="text-sm text-gray-600">👥 {group.participants} members</p>
                     </div>
-                    {state.selectedGroups.includes(group.id) && (
+                    {isSelected && (
                       <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
                         <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -219,7 +284,8 @@ export default function StepWho({ state, onUpdate, groups: passedGroups = [], co
                     )}
                   </div>
                 </button>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <div className="bg-white border-2 border-dashed border-blue-300 rounded-lg p-8 text-center">
@@ -232,10 +298,26 @@ export default function StepWho({ state, onUpdate, groups: passedGroups = [], co
       {/* Contacts Selection */}
       {state.recipientType === 'contacts' && (
         <div className="space-y-4 p-6 bg-green-50 rounded-lg border-2 border-green-200">
+          {!canSelectContacts && (
+            <div className="p-4 bg-red-100 border-2 border-red-300 rounded-lg mb-4">
+              <div className="flex items-start gap-3">
+                <Crown className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-red-900">Premium or Business Required</p>
+                  <p className="text-sm text-red-800 mt-1">Upgrade your account to send direct messages.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-gray-900">Select Contacts</h3>
-            <span className="text-sm text-gray-600">
-              {state.selectedContacts.length} selected
+            <span className={`text-sm ${
+              state.selectedContacts.length >= maxContacts && maxContacts !== Infinity
+                ? 'text-red-600 font-semibold'
+                : 'text-gray-600'
+            }`}>
+              {state.selectedContacts.length}{maxContacts !== Infinity ? `/${maxContacts}` : ''} selected
             </span>
           </div>
 
@@ -268,11 +350,18 @@ export default function StepWho({ state, onUpdate, groups: passedGroups = [], co
 
           {contacts.length > 0 ? (
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {contacts.map((contact) => (
+              {contacts.map((contact) => {
+                const isSelected = state.selectedContacts.includes(contact.userId)
+                const isAtLimit = state.selectedContacts.length >= maxContacts && !isSelected && maxContacts !== Infinity
+                const isDisabled = !canSelectContacts || isAtLimit
+
+                return (
                 <button
                   key={contact.userId}
                   onClick={() => {
-                    if (state.selectedContacts.includes(contact.userId)) {
+                    if (isDisabled && !isSelected) return
+                    
+                    if (isSelected) {
                       onUpdate({
                         selectedContacts: state.selectedContacts.filter((id: string) => id !== contact.userId)
                       })
@@ -282,9 +371,12 @@ export default function StepWho({ state, onUpdate, groups: passedGroups = [], co
                       })
                     }
                   }}
+                  disabled={isDisabled}
                   className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                    state.selectedContacts.includes(contact.userId)
+                    isSelected
                       ? 'border-green-500 bg-green-100'
+                      : isDisabled
+                      ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
                       : 'border-gray-200 bg-white hover:border-green-300'
                   }`}
                 >
@@ -293,7 +385,7 @@ export default function StepWho({ state, onUpdate, groups: passedGroups = [], co
                       <h4 className="font-semibold text-gray-900">{contact.name}</h4>
                       <p className="text-sm text-gray-600">{contact.phoneNumber}</p>
                     </div>
-                    {state.selectedContacts.includes(contact.userId) && (
+                    {isSelected && (
                       <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                         <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -302,7 +394,8 @@ export default function StepWho({ state, onUpdate, groups: passedGroups = [], co
                     )}
                   </div>
                 </button>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <div className="bg-white border-2 border-dashed border-green-300 rounded-lg p-8 text-center">
@@ -334,9 +427,29 @@ export default function StepWho({ state, onUpdate, groups: passedGroups = [], co
 
       {/* Tier Limits Info */}
       <div className="p-4 bg-amber-50 border-2 border-amber-200 rounded-lg">
-        <p className="text-sm text-amber-900">
-          <span className="font-semibold">📋 Tier Limits:</span> Premium users can send to max 8 groups/contacts. Business users can send to max 12 groups/contacts.
+        <p className="text-sm text-amber-900 mb-2">
+          <span className="font-semibold">📋 Your Tier Limits:</span>
         </p>
+        <div className="space-y-2 text-sm text-amber-800">
+          {userTier === 'free' && (
+            <>
+              <p>❌ Free tier: Cannot send to groups or DMs. Upgrade to Premium or Business.</p>
+            </>
+          )}
+          {userTier === 'premium' && (
+            <>
+              <p>✅ Groups: Max <span className="font-bold">2 groups</span></p>
+              <p>✅ Contacts: Max <span className="font-bold">80 contacts</span></p>
+            </>
+          )}
+          {userTier === 'business' && (
+            <>
+              <p>✅ Groups: <span className="font-bold">Unlimited</span></p>
+              <p>✅ Contacts: <span className="font-bold">Unlimited</span></p>
+              <p>✅ Hourly: <span className="font-bold">Unlimited sends</span></p>
+            </>
+          )}
+        </div>
       </div>
     </div>
   )

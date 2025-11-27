@@ -24,10 +24,15 @@ interface WizardState {
   recipientInterval: 'slow' | 'medium' | 'fast' | 'veryfast' | null
 }
 
+interface UserProfile {
+  subscription_tier: 'free' | 'premium' | 'business'
+}
+
 export default function WhatsAppPage() {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<'dashboard' | 'send' | 'history' | 'settings'>('dashboard')
   const [currentStep, setCurrentStep] = useState<WizardStep>('what')
+  const [profile, setProfile] = useState<UserProfile | null>(null)
   const [wizardState, setWizardState] = useState<WizardState>({
     contentType: null,
     selectedProducts: [],
@@ -89,6 +94,33 @@ export default function WhatsAppPage() {
     }
   }, [])
 
+  // Fetch user profile to check tier
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.id) return
+      try {
+        const { supabase } = await import('@/lib/supabaseClient')
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('subscription_tier')
+          .eq('id', user.id)
+          .single()
+        
+        if (error) {
+          console.error('Profile fetch error:', error)
+          return
+        }
+        
+        setProfile(data as UserProfile)
+      } catch (error) {
+        console.error('Error fetching profile:', error)
+      }
+    }
+
+    fetchProfile()
+  }, [user?.id])
+
   // Get interval delay in milliseconds for messages
   const getIntervalDelay = (interval: string | null): number => {
     switch (interval) {
@@ -139,6 +171,8 @@ export default function WhatsAppPage() {
     resetWizard()
     setActiveTab('history')
   }
+
+
 
   // Background function to send messages
   const sendMessagesInBackground = async (messageId: string, userId: string) => {
@@ -630,6 +664,33 @@ export default function WhatsAppPage() {
     setActiveTab('dashboard')
   }
 
+  // Check if tier limits are exceeded
+  const checkTierLimits = (): { valid: boolean; message?: string } => {
+    const userTier = profile?.subscription_tier || 'free'
+    
+    if (wizardState.recipientType === 'groups') {
+      if (userTier === 'free') {
+        return { valid: false, message: 'Free tier cannot send to groups. Upgrade to Premium or Business.' }
+      }
+      if (userTier === 'premium' && wizardState.selectedGroups.length > 2) {
+        return { valid: false, message: `Premium tier allows max 2 groups. You selected ${wizardState.selectedGroups.length}.` }
+      }
+    }
+    
+    if (wizardState.recipientType === 'contacts') {
+      if (userTier === 'free') {
+        return { valid: false, message: 'Free tier cannot send DMs. Upgrade to Premium or Business.' }
+      }
+    }
+    
+    return { valid: true }
+  }
+
+
+
+  const tierCheck = checkTierLimits()
+  const canSend = tierCheck.valid && !sending
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
       {/* Header */}
@@ -855,8 +916,19 @@ export default function WhatsAppPage() {
               </button>
 
               <button
-                onClick={currentStep === 'preview' ? sendMessage : handleNext}
-                disabled={currentStep === 'preview' && sending}
+                onClick={() => {
+                  if (currentStep === 'preview') {
+                    if (!tierCheck.valid) {
+                      alert(tierCheck.message)
+                      return
+                    }
+                    sendMessage()
+                  } else {
+                    handleNext()
+                  }
+                }}
+                disabled={currentStep === 'preview' && !canSend}
+                title={currentStep === 'preview' && !tierCheck.valid ? tierCheck.message : ''}
                 className="px-6 py-3 rounded-lg bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-semibold transition-all flex items-center gap-2"
               >
                 {currentStep === 'preview' ? (
