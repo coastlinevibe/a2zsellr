@@ -1,4 +1,4 @@
-'use client'
+ 'use client'
 
 import { useState, useEffect } from 'react'
 import { MessageSquare, Send, History, Settings, ArrowLeft, Plus, CheckCircle2, Users, Phone, QrCode, Loader2 } from 'lucide-react'
@@ -20,6 +20,8 @@ interface WizardState {
   sendMode: 'now' | 'schedule' | null
   deliveryMode: 'safe' | 'fast' | null
   scheduleDateTime: string | null
+  messageInterval: 'slow' | 'medium' | 'fast' | 'veryfast' | null
+  recipientInterval: 'slow' | 'medium' | 'fast' | 'veryfast' | null
 }
 
 export default function WhatsAppPage() {
@@ -38,6 +40,8 @@ export default function WhatsAppPage() {
     sendMode: null,
     deliveryMode: null,
     scheduleDateTime: null,
+    messageInterval: null,
+    recipientInterval: null,
   })
   const [whatsappGroups, setWhatsappGroups] = useState<any[]>([])
   const [whatsappContacts, setWhatsappContacts] = useState<any[]>([])
@@ -46,17 +50,408 @@ export default function WhatsAppPage() {
   const [showQRModal, setShowQRModal] = useState(false)
   const [qrCode, setQrCode] = useState<string | null>(null)
   const [connecting, setConnecting] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [messageHistory, setMessageHistory] = useState<any[]>([])
+
+  // Message tracking interface
+  interface MessageRecord {
+    id: string
+    timestamp: number
+    scheduledTime?: number
+    status: 'pending' | 'scheduled' | 'sending' | 'sent' | 'failed'
+    contentType: string
+    recipientType: string
+    recipientCount: number
+    recipients: string[]
+    message: string
+    successCount: number
+    failureCount: number
+    error?: string
+  }
+
+  // Add message to history
+  const addMessageToHistory = (record: MessageRecord) => {
+    setMessageHistory(prev => [record, ...prev])
+    // Save to localStorage for persistence
+    const updated = [record, ...messageHistory]
+    localStorage.setItem('whatsapp_message_history', JSON.stringify(updated))
+  }
+
+  // Load message history from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('whatsapp_message_history')
+    if (saved) {
+      try {
+        setMessageHistory(JSON.parse(saved))
+      } catch (error) {
+        console.error('Error loading message history:', error)
+      }
+    }
+  }, [])
+
+  // Get interval delay in milliseconds for messages
+  const getIntervalDelay = (interval: string | null): number => {
+    switch (interval) {
+      case 'slow':
+        return Math.random() * (5 * 60 * 1000 - 3 * 60 * 1000) + 3 * 60 * 1000 // 3-5 min
+      case 'medium':
+        return Math.random() * (2 * 60 * 1000 - 1 * 60 * 1000) + 1 * 60 * 1000 // 1-2 min
+      case 'fast':
+        return Math.random() * (60 * 1000 - 30 * 1000) + 30 * 1000 // 30-60 sec
+      case 'veryfast':
+        return Math.random() * (20 * 1000 - 10 * 1000) + 10 * 1000 // 10-20 sec
+      default:
+        return 1000 // 1 sec default
+    }
+  }
+
+  // Get interval delay in milliseconds for recipients
+  const getRecipientIntervalDelay = (interval: string | null): number => {
+    switch (interval) {
+      case 'slow':
+        return Math.random() * (5 * 60 * 1000 - 3 * 60 * 1000) + 3 * 60 * 1000 // 3-5 min
+      case 'medium':
+        return Math.random() * (2 * 60 * 1000 - 1 * 60 * 1000) + 1 * 60 * 1000 // 1-2 min
+      case 'fast':
+        return Math.random() * (60 * 1000 - 30 * 1000) + 30 * 1000 // 30-60 sec
+      case 'veryfast':
+        return Math.random() * (20 * 1000 - 10 * 1000) + 10 * 1000 // 10-20 sec
+      default:
+        return 1000 // 1 sec default
+    }
+  }
+
+  // Send message to groups/contacts
+  const sendMessage = async () => {
+    if (!user?.id) {
+      alert('User not loaded')
+      return
+    }
+
+    setSending(true)
+    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const userId = user.id
+    
+    // Start sending in background and immediately go to history
+    sendMessagesInBackground(messageId, userId)
+    
+    // Reset wizard and go to history tab immediately
+    resetWizard()
+    setActiveTab('history')
+  }
+
+  // Background function to send messages
+  const sendMessagesInBackground = async (messageId: string, userId: string) => {
+    try {
+      console.log('📨 Starting to send messages with state:', wizardState)
+
+      // Determine recipients
+      let recipients: string[] = []
+      
+      if (wizardState.recipientType === 'groups') {
+        recipients = wizardState.selectedGroups
+      } else if (wizardState.recipientType === 'contacts') {
+        recipients = wizardState.selectedContacts
+      } else if (wizardState.recipientType === 'custom') {
+        recipients = wizardState.customNumbers
+      }
+
+      if (recipients.length === 0) {
+        alert('No recipients selected')
+        setSending(false)
+        return
+      }
+
+      // Build list of messages to send
+      let messagesToSend: string[] = []
+      
+      if (wizardState.contentType === 'custom') {
+        messagesToSend = [wizardState.customMessage]
+      } else if (wizardState.contentType === 'product') {
+        // Create a message for each selected product
+        messagesToSend = wizardState.selectedProducts.map((_, index) => 
+          `📦 Product ${index + 1}\n\nCheck out this amazing product!\n\nYou have been selected to receive this special offer.`
+        )
+      } else if (wizardState.contentType === 'listing') {
+        // Create a message for each selected listing
+        messagesToSend = wizardState.selectedListings.map((_, index) => 
+          `📢 Listing ${index + 1}\n\nCheck out this amazing listing!\n\nYou have been selected to receive this special offer.`
+        )
+      }
+
+      if (messagesToSend.length === 0) {
+        alert('No messages to send')
+        setSending(false)
+        return
+      }
+
+      // Add initial message to history
+      const initialRecord: MessageRecord = {
+        id: messageId,
+        timestamp: Date.now(),
+        status: 'pending',
+        contentType: wizardState.contentType || 'unknown',
+        recipientType: wizardState.recipientType || 'unknown',
+        recipientCount: recipients.length * messagesToSend.length,
+        recipients: recipients,
+        message: `${messagesToSend.length} message(s) to ${recipients.length} recipient(s)`,
+        successCount: 0,
+        failureCount: 0,
+      }
+      addMessageToHistory(initialRecord)
+
+      // Check if scheduled
+      let scheduledTime: number | undefined
+      if (wizardState.sendMode === 'schedule' && wizardState.scheduleDateTime) {
+        // Parse the datetime-local value correctly (it's in local time, not UTC)
+        const dateStr = wizardState.scheduleDateTime
+        const [datePart, timePart] = dateStr.split('T')
+        const [year, month, day] = datePart.split('-')
+        const [hours, minutes] = timePart.split(':')
+        
+        // Create date in local timezone
+        scheduledTime = new Date(
+          parseInt(year),
+          parseInt(month) - 1,
+          parseInt(day),
+          parseInt(hours),
+          parseInt(minutes)
+        ).getTime()
+        
+        const now = Date.now()
+        
+        console.log(`⏰ Scheduled time: ${new Date(scheduledTime).toLocaleString()} (${scheduledTime})`)
+        console.log(`⏰ Current time: ${new Date(now).toLocaleString()} (${now})`)
+        console.log(`⏰ Difference: ${scheduledTime - now}ms`)
+        
+        if (scheduledTime > now) {
+          const delayMs = scheduledTime - now
+          console.log(`⏳ Waiting ${Math.round(delayMs / 1000)} seconds before sending...`)
+          
+          // Update message status to scheduled
+          setMessageHistory(prev => prev.map(msg => 
+            msg.id === messageId 
+              ? { ...msg, status: 'scheduled' as const, scheduledTime: scheduledTime } 
+              : msg
+          ))
+          
+          // Wait until scheduled time
+          await new Promise(resolve => setTimeout(resolve, delayMs))
+          console.log(`✅ Scheduled time reached, sending now...`)
+        } else {
+          console.log(`⚠️ Scheduled time is in the past, sending immediately...`)
+        }
+      }
+
+      // Send each message to all recipients
+      let successCount = 0
+      let failureCount = 0
+      let lastError = ''
+
+      // Update message status to sending
+      setMessageHistory(prev => prev.map(msg => 
+        msg.id === messageId ? { ...msg, status: 'sending' as const } : msg
+      ))
+
+      // Get interval delays
+      const messageIntervalDelay = getIntervalDelay(wizardState.messageInterval)
+      const recipientIntervalDelay = getRecipientIntervalDelay(wizardState.recipientInterval)
+
+      // Determine if single message or multiple messages
+      const isSingleMessage = messagesToSend.length === 1
+
+      if (isSingleMessage) {
+        // Single message to multiple recipients: send to each recipient with interval
+        const messageContent = messagesToSend[0]
+        console.log(`📨 Sending single message to ${recipients.length} recipients`)
+        
+        // Use selected recipientInterval or default to 'slow' if not set
+        const effectiveRecipientInterval = wizardState.recipientInterval || 'slow'
+        const effectiveRecipientIntervalDelay = getRecipientIntervalDelay(effectiveRecipientInterval)
+        console.log(`⏱️ Using recipient interval: ${effectiveRecipientInterval} (${Math.round(effectiveRecipientIntervalDelay / 1000)}s)`)
+
+        for (let recipientIndex = 0; recipientIndex < recipients.length; recipientIndex++) {
+          const recipient = recipients[recipientIndex]
+          try {
+            console.log(`📤 Sending message to recipient ${recipientIndex + 1}/${recipients.length}...`)
+            const response = await fetch(`/api/whatsapp/send-message/${userId}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chatId: recipient,
+                message: messageContent,
+                options: {
+                  delay: 1000,
+                }
+              })
+            })
+
+            if (response.ok) {
+              console.log(`✅ Message sent to recipient ${recipientIndex + 1}`)
+              successCount++
+            } else {
+              const error = await response.text()
+              console.error(`❌ Failed to send to recipient ${recipientIndex + 1}:`, error)
+              failureCount++
+              lastError = error
+            }
+
+            // Add delay between recipients (but not after the last recipient)
+            if (recipientIndex < recipients.length - 1) {
+              const delaySeconds = Math.round(effectiveRecipientIntervalDelay / 1000)
+              console.log(`⏳ Waiting ${delaySeconds}s before next recipient...`)
+              await new Promise(resolve => setTimeout(resolve, effectiveRecipientIntervalDelay))
+            }
+          } catch (error) {
+            console.error(`Error sending to recipient ${recipientIndex + 1}:`, error)
+            failureCount++
+            lastError = error instanceof Error ? error.message : 'Unknown error'
+          }
+        }
+      } else {
+        // Multiple messages to recipients: send each message to all recipients with intervals
+        for (let msgIndex = 0; msgIndex < messagesToSend.length; msgIndex++) {
+          const messageContent = messagesToSend[msgIndex]
+          console.log(`📨 Sending message ${msgIndex + 1}/${messagesToSend.length} to ${recipients.length} recipients`)
+
+          // Send to each recipient
+          for (let recipientIndex = 0; recipientIndex < recipients.length; recipientIndex++) {
+            const recipient = recipients[recipientIndex]
+            try {
+              console.log(`📤 Sending message ${msgIndex + 1} to recipient ${recipientIndex + 1}/${recipients.length}...`)
+              const response = await fetch(`/api/whatsapp/send-message/${userId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  chatId: recipient,
+                  message: messageContent,
+                  options: {
+                    delay: 1000,
+                  }
+                })
+              })
+
+              if (response.ok) {
+                console.log(`✅ Message ${msgIndex + 1} sent to recipient ${recipientIndex + 1}`)
+                successCount++
+              } else {
+                const error = await response.text()
+                console.error(`❌ Failed to send message ${msgIndex + 1} to recipient ${recipientIndex + 1}:`, error)
+                failureCount++
+                lastError = error
+              }
+
+              // Add delay between recipients (but not after the last recipient)
+              if (recipientIndex < recipients.length - 1) {
+                const delaySeconds = Math.round(recipientIntervalDelay / 1000)
+                console.log(`⏳ Waiting ${delaySeconds}s before next recipient...`)
+                await new Promise(resolve => setTimeout(resolve, recipientIntervalDelay))
+              }
+            } catch (error) {
+              console.error(`Error sending message ${msgIndex + 1} to recipient ${recipientIndex + 1}:`, error)
+              failureCount++
+              lastError = error instanceof Error ? error.message : 'Unknown error'
+            }
+          }
+
+          // Add interval between messages (but not after the last message)
+          if (msgIndex < messagesToSend.length - 1) {
+            const delaySeconds = Math.round(messageIntervalDelay / 1000)
+            console.log(`⏳ Waiting ${delaySeconds}s before next message...`)
+            await new Promise(resolve => setTimeout(resolve, messageIntervalDelay))
+          }
+        }
+      }
+
+      // Update message history with final status
+      setMessageHistory(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { 
+              ...msg, 
+              status: failureCount === 0 ? 'sent' : failureCount === successCount ? 'failed' : 'sent',
+              successCount,
+              failureCount,
+              error: lastError
+            } 
+          : msg
+      ))
+
+      // Save to localStorage
+      const updated = messageHistory.map(msg => 
+        msg.id === messageId 
+          ? { 
+              ...msg, 
+              status: failureCount === 0 ? 'sent' : failureCount === successCount ? 'failed' : 'sent',
+              successCount,
+              failureCount,
+              error: lastError
+            } 
+          : msg
+      )
+      localStorage.setItem('whatsapp_message_history', JSON.stringify(updated))
+
+      console.log(`✅ Campaign complete! Sent: ${successCount}, Failed: ${failureCount}`)
+    } catch (error) {
+      console.error('Error sending messages:', error)
+      // Update message history with error
+      setMessageHistory(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { 
+              ...msg, 
+              status: 'failed' as const,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            } 
+          : msg
+      ))
+    } finally {
+      setSending(false)
+    }
+  }
 
   // Load groups and contacts on mount with dynamic polling
   const loadGroupsAndContacts = async () => {
-    if (!user?.id) return
+    if (!user?.id) {
+      console.log('⚠️ No user ID available')
+      return
+    }
 
     try {
-      // Load groups
-      const groupsResponse = await fetch(`/api/whatsapp/groups/${user.id}`)
-      if (!groupsResponse.ok) throw new Error('Failed to load groups')
-      const groupsData = await groupsResponse.json()
-      setWhatsappGroups(groupsData.groups || [])
+      // Load groups with polling until we get results
+      console.log(`📨 Fetching groups for user: ${user.id}`)
+      let groupsList: any[] = []
+      let groupsAttempts = 0
+      const maxGroupsAttempts = 20 // Increased from 5 to 20
+      
+      while (groupsAttempts < maxGroupsAttempts) {
+        const groupsResponse = await fetch(`/api/whatsapp/groups/${user.id}`)
+        if (!groupsResponse.ok) {
+          const errorText = await groupsResponse.text()
+          throw new Error(`Failed to load groups: ${errorText}`)
+        }
+        const groupsData = await groupsResponse.json()
+        console.log(`📊 Groups response (attempt ${groupsAttempts}):`, groupsData)
+        
+        // Handle both { groups: [...] } and direct array responses
+        groupsList = Array.isArray(groupsData) ? groupsData : (groupsData.groups || [])
+        
+        if (groupsList.length > 0) {
+          console.log(`✅ Groups found on attempt ${groupsAttempts}:`, groupsList.length)
+          break
+        }
+        
+        if (groupsAttempts < maxGroupsAttempts - 1) {
+          console.log(`⏳ No groups found, retrying... (attempt ${groupsAttempts + 1}/${maxGroupsAttempts})`)
+          await new Promise(resolve => setTimeout(resolve, 500))
+          groupsAttempts++
+        } else {
+          console.log(`⚠️ Max attempts reached, no groups found`)
+          break
+        }
+      }
+      
+      console.log('✅ Groups list:', groupsList)
+      setWhatsappGroups(groupsList)
+      console.log('✅ Groups loaded:', groupsList.length)
 
       // Start polling for contacts with exponential backoff
       setLoadingContacts(true)
@@ -68,15 +463,21 @@ export default function WhatsAppPage() {
       while (!contactsLoaded && pollAttempts < maxAttempts) {
         try {
           const contactsResponse = await fetch(`/api/whatsapp/group-contacts/${user.id}`)
-          if (!contactsResponse.ok) throw new Error('Failed to load contacts')
+          if (!contactsResponse.ok) {
+            const errorText = await contactsResponse.text()
+            console.error(`❌ Contacts API error (${contactsResponse.status}):`, errorText)
+            throw new Error(`Failed to load contacts: ${contactsResponse.status}`)
+          }
           
           const contactsData = await contactsResponse.json()
+          console.log(`📱 Contacts response (attempt ${pollAttempts}):`, contactsData)
           
           if (contactsData.contacts && contactsData.contacts.length > 0) {
             setWhatsappContacts(contactsData.contacts)
             contactsLoaded = true
             console.log(`✅ Contacts loaded after ${pollAttempts} attempts:`, contactsData.contacts.length)
           } else {
+            console.log(`⚠️ No contacts in response, retrying...`)
             pollAttempts++
             if (pollAttempts < maxAttempts) {
               console.log(`⏳ Waiting for contacts... (attempt ${pollAttempts}/${maxAttempts})`)
@@ -86,9 +487,10 @@ export default function WhatsAppPage() {
             }
           }
         } catch (error) {
-          console.error('Error polling contacts:', error)
+          console.error(`Error polling contacts (attempt ${pollAttempts}):`, error)
           pollAttempts++
           if (pollAttempts < maxAttempts) {
+            console.log(`⏳ Retrying contacts... (attempt ${pollAttempts}/${maxAttempts})`)
             await new Promise(resolve => setTimeout(resolve, pollDelay))
             pollDelay = Math.min(pollDelay + 500, 5000)
           }
@@ -177,6 +579,8 @@ export default function WhatsAppPage() {
   }
 
   useEffect(() => {
+    if (!user?.id) return
+    
     checkConnection()
     loadGroupsAndContacts()
   }, [user?.id])
@@ -220,6 +624,8 @@ export default function WhatsAppPage() {
       sendMode: null,
       deliveryMode: null,
       scheduleDateTime: null,
+      messageInterval: null,
+      recipientInterval: null,
     })
     setActiveTab('dashboard')
   }
@@ -316,7 +722,13 @@ export default function WhatsAppPage() {
                     <p className="text-sm text-gray-600">Groups Connected</p>
                     <p className="text-3xl font-bold text-gray-900">{whatsappGroups.length}</p>
                   </div>
-                  <Users className="w-12 h-12 text-blue-100" />
+                  <button
+                    onClick={loadGroupsAndContacts}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Refresh groups"
+                  >
+                    <Users className="w-12 h-12 text-blue-100" />
+                  </button>
                 </div>
               </div>
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -443,10 +855,27 @@ export default function WhatsAppPage() {
               </button>
 
               <button
-                onClick={currentStep === 'preview' ? resetWizard : handleNext}
-                className="px-6 py-3 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold transition-all"
+                onClick={currentStep === 'preview' ? sendMessage : handleNext}
+                disabled={currentStep === 'preview' && sending}
+                className="px-6 py-3 rounded-lg bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-semibold transition-all flex items-center gap-2"
               >
-                {currentStep === 'preview' ? '✓ Done' : 'Next →'}
+                {currentStep === 'preview' ? (
+                  <>
+                    {sending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Send Now
+                      </>
+                    )}
+                  </>
+                ) : (
+                  'Next →'
+                )}
               </button>
             </div>
           </div>
@@ -454,20 +883,111 @@ export default function WhatsAppPage() {
 
         {/* History Tab */}
         {activeTab === 'history' && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-            <div className="text-center space-y-4">
-              <div className="flex justify-center">
-                <div className="bg-blue-100 p-6 rounded-full">
-                  <History className="w-12 h-12 text-blue-600" />
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Message History & Queue</h2>
+                  <p className="text-gray-600 mt-1">Track sent messages and scheduled campaigns</p>
                 </div>
+                <button
+                  onClick={() => {
+                    setMessageHistory([])
+                    localStorage.removeItem('whatsapp_message_history')
+                  }}
+                  className="px-4 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                >
+                  Clear History
+                </button>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">Message History</h2>
-              <p className="text-gray-600">
-                Your sent messages will appear here so you can track what you've sent.
-              </p>
-              <div className="mt-8 p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                <p className="text-gray-500">No messages sent yet</p>
-              </div>
+
+              {messageHistory.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="flex justify-center mb-4">
+                    <div className="bg-blue-100 p-6 rounded-full">
+                      <History className="w-12 h-12 text-blue-600" />
+                    </div>
+                  </div>
+                  <p className="text-gray-600">No messages sent yet</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {messageHistory.map((msg) => {
+                    const statusColors = {
+                      pending: { bg: 'bg-gray-100', text: 'text-gray-700', badge: 'bg-gray-200' },
+                      scheduled: { bg: 'bg-blue-100', text: 'text-blue-700', badge: 'bg-blue-200' },
+                      sending: { bg: 'bg-yellow-100', text: 'text-yellow-700', badge: 'bg-yellow-200' },
+                      sent: { bg: 'bg-green-100', text: 'text-green-700', badge: 'bg-green-200' },
+                      failed: { bg: 'bg-red-100', text: 'text-red-700', badge: 'bg-red-200' },
+                    }
+                    const colors = statusColors[msg.status as keyof typeof statusColors]
+                    const scheduledDate = msg.scheduledTime ? new Date(msg.scheduledTime).toLocaleString() : null
+                    const sentDate = new Date(msg.timestamp).toLocaleString()
+
+                    return (
+                      <div key={msg.id} className={`p-4 rounded-lg border-2 ${colors.bg}`}>
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className={`px-3 py-1 rounded-full text-xs font-bold ${colors.badge} ${colors.text}`}>
+                                {msg.status.toUpperCase()}
+                              </span>
+                              {msg.status === 'scheduled' && (
+                                <span className="text-xs text-gray-600">
+                                  Scheduled for {scheduledDate}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm font-medium text-gray-900 mb-1">
+                              {msg.contentType === 'custom' ? 'Custom Message' : `${msg.contentType.charAt(0).toUpperCase() + msg.contentType.slice(1)}`}
+                            </p>
+                            <p className="text-sm text-gray-700 line-clamp-2 mb-2">{msg.message}</p>
+                            <div className="flex gap-4 text-xs text-gray-600">
+                              <span>📤 {msg.recipientCount} recipient{msg.recipientCount !== 1 ? 's' : ''}</span>
+                              <span>📍 {msg.recipientType}</span>
+                              <span>🕐 {sentDate}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {(msg.status === 'sent' || msg.status === 'failed') && (
+                          <div className="mt-3 pt-3 border-t border-gray-300 flex gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                <span className="text-sm font-medium text-gray-900">Sent: {msg.successCount}</span>
+                              </div>
+                            </div>
+                            {msg.failureCount > 0 && (
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                  <span className="text-sm font-medium text-gray-900">Failed: {msg.failureCount}</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {msg.status === 'sending' && (
+                          <div className="mt-3 pt-3 border-t border-gray-300">
+                            <div className="flex items-center gap-2">
+                              <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                              <span className="text-sm text-gray-700">Sending messages...</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {msg.error && (
+                          <div className="mt-3 pt-3 border-t border-gray-300">
+                            <p className="text-xs text-red-700">Error: {msg.error}</p>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}

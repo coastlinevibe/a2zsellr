@@ -161,9 +161,6 @@ class WhatsAppService {
       
       console.log(`📱 Fetching all group contacts for ${sessionId}...`);
       
-      // Wait for store to be ready (longer wait for contacts processing)
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
       // Get all chats (which includes groups)
       let chats = [];
       try {
@@ -181,116 +178,69 @@ class WhatsAppService {
         }
       }
       
-      // Filter for groups only and get member counts
+      // Filter for groups only
       let groups = chats.filter(chat => chat.isGroup);
       console.log(`📊 Found ${groups.length} groups`);
-      
-      // Store group ID, fetch member count, and try to get invite link
-      for (const group of groups) {
-        group.groupId = group.id._serialized;
-        console.log(`📋 Group: ${group.name} - ID: ${group.groupId}`);
-        
-        try {
-          console.log(`👥 Fetching members for ${group.name}...`);
-          const members = await client.getGroupMembers(group.id._serialized);
-          group.memberCount = Array.isArray(members) ? members.length : 0;
-          console.log(`✅ ${group.name}: ${group.memberCount} members`);
-        } catch (err) {
-          console.log(`⚠️ Could not get members for ${group.name}: ${err.message}`);
-          group.memberCount = 0;
-        }
-        
-        try {
-          console.log(`🔗 Trying to get invite link for ${group.name}...`);
-          const inviteLink = await client.getGroupInviteLink(group.id._serialized);
-          group.inviteLink = inviteLink;
-          console.log(`✅ Got invite link for ${group.name}`);
-        } catch (err) {
-          console.log(`⚠️ Cannot get invite link for ${group.name} (not admin): ${err.message}`);
-          group.inviteLink = null;
-        }
-      }
       
       const allContacts = new Map(); // Use Map to deduplicate by phone number
       
       // Extract contacts from each group
       for (const group of groups) {
         try {
-          console.log(`👥 Processing group: ${group.name} (${group.id._serialized})`);
+          console.log(`👥 Processing group: ${group.name}`);
           
-          // Use WPP.group.getParticipants to fetch participants
+          // Get participants from the group
           let participants = [];
           try {
             participants = await client.getGroupMembers(group.id._serialized);
-            console.log(`   ✅ Got ${participants.length} participants`);
-            if (participants.length > 0) {
-              console.log(`   📋 Sample participant:`, JSON.stringify(participants[0], null, 2));
-            }
+            console.log(`   ✅ Got ${participants.length} participants from ${group.name}`);
           } catch (err) {
-            console.log(`   ⚠️ Could not get participants: ${err.message}`);
+            console.log(`   ⚠️ Could not get participants from ${group.name}: ${err.message}`);
             participants = group.participants || [];
           }
           
+          // Process each participant
           for (const participant of participants) {
-            // Skip if it's the user themselves
-            if (participant.isMe) {
-              continue;
-            }
-            
-            // Extract phone number from participant ID
-            let phoneNumber = null;
-            let userId = null;
-            
             try {
-              const lid = participant.id._serialized;
-              
-              // Try to get phone number from LID entry
-              try {
-                const entry = await client.getPnLidEntry(lid);
-                if (entry) {
-                  // entry might be a string (phone number) or an object
-                  if (typeof entry === 'string') {
-                    phoneNumber = entry.replace(/[\s\-+]/g, '');
-                  } else if (entry.phoneNumber && typeof entry.phoneNumber === 'string') {
-                    phoneNumber = entry.phoneNumber.replace(/[\s\-+]/g, '');
-                  }
-                }
-              } catch (err) {
-                // If getPnLidEntry fails, try to extract from LID directly
-                console.log(`   Could not resolve LID for ${participant.pushname}: ${err.message}`);
+              // Skip if it's the user themselves
+              if (participant.isMe) {
+                continue;
               }
               
-              // If we got a phone number, use it; otherwise use the LID as the user ID
-              if (phoneNumber && /^\d+$/.test(phoneNumber) && phoneNumber.length >= 10) {
-                userId = phoneNumber;
+              // Get the participant ID
+              const participantId = participant.id?._serialized || participant.id;
+              if (!participantId) {
+                console.log(`   ⚠️ Participant has no ID`);
+                continue;
+              }
+              
+              // Extract phone number from ID (format: 27123456789@c.us or similar)
+              const phoneMatch = participantId.match(/^(\d+)@/);
+              const phoneNumber = phoneMatch ? phoneMatch[1] : participantId;
+              
+              // Use phone number as unique ID
+              if (!allContacts.has(phoneNumber)) {
+                allContacts.set(phoneNumber, {
+                  phoneNumber: phoneNumber,
+                  userId: phoneNumber,
+                  name: participant.name || participant.pushname || 'Unknown',
+                  groups: [group.name]
+                });
               } else {
-                // Use the LID as the user ID (format: number@lid)
-                userId = lid;
-              }
-              
-              // Add contact with either phone number or LID
-              if (userId) {
-                if (!allContacts.has(userId)) {
-                  allContacts.set(userId, {
-                    phoneNumber: phoneNumber || lid,
-                    userId: userId,
-                    name: participant.name || participant.pushname || 'Unknown',
-                    groups: [group.name]
-                  });
-                } else {
-                  // Add group to existing contact
-                  const contact = allContacts.get(userId);
-                  if (!contact.groups.includes(group.name)) {
-                    contact.groups.push(group.name);
-                  }
+                // Add group to existing contact
+                const contact = allContacts.get(phoneNumber);
+                if (!contact.groups.includes(group.name)) {
+                  contact.groups.push(group.name);
                 }
               }
             } catch (err) {
-              console.log(`   Error processing participant: ${err.message}`);
+              console.log(`   ⚠️ Error processing participant: ${err.message}`);
+              // Continue processing other participants
             }
           }
         } catch (err) {
           console.error(`Error processing group ${group.name}:`, err.message);
+          // Continue processing other groups
         }
       }
       
@@ -336,7 +286,6 @@ class WhatsAppService {
         name: group.name,
         participants: group.participants?.length || 0,
         groupId: group.id?._serialized || group.id,
-        inviteLink: group.inviteLink || null,
         profilePicture: group.profilePicture,
         description: group.description || ''
       }));
@@ -362,10 +311,43 @@ class WhatsAppService {
       const client = this.getClient(sessionId);
       if (!client) throw new Error('Client not initialized');
       
-      // WPPConnect uses sendText for all text messages
-      // Link preview is handled automatically by WhatsApp
-      console.log(`📨 Sending text message to ${chatId}`);
-      return await client.sendText(chatId, message);
+      console.log(`📨 Sending text message to ${chatId}:`, { message, options });
+      
+      // Try different WPPConnect methods for sending text
+      try {
+        // Method 1: Try sendTextMessage (WPP.chat.sendTextMessage)
+        if (client.sendTextMessage && typeof client.sendTextMessage === 'function') {
+          const result = await client.sendTextMessage(chatId, message, options);
+          console.log(`✅ Message sent via sendTextMessage`);
+          return result;
+        }
+      } catch (err) {
+        console.log(`sendTextMessage failed: ${err.message}`);
+      }
+      
+      try {
+        // Method 2: Try sendText
+        if (client.sendText && typeof client.sendText === 'function') {
+          const result = await client.sendText(chatId, message);
+          console.log(`✅ Message sent via sendText`);
+          return result;
+        }
+      } catch (err) {
+        console.log(`sendText failed: ${err.message}`);
+      }
+      
+      try {
+        // Method 3: Try sendMessage
+        if (client.sendMessage && typeof client.sendMessage === 'function') {
+          const result = await client.sendMessage(chatId, message);
+          console.log(`✅ Message sent via sendMessage`);
+          return result;
+        }
+      } catch (err) {
+        console.log(`sendMessage failed: ${err.message}`);
+      }
+      
+      throw new Error('No suitable text sending method found in WPPConnect client');
     } catch (error) {
       console.error(`Error sending message in session ${sessionId}:`, error);
       throw error;
