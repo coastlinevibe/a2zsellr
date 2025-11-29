@@ -120,25 +120,52 @@ export function DashboardTour({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
           />
 
           {/* Spotlight around target */}
           {position.width > 0 && (
-            <motion.div
-              key="tour-spotlight"
-              className="fixed z-40 border-2 border-emerald-500 rounded-lg pointer-events-none"
-              style={{
-                top: position.top - 8,
-                left: position.left - 8,
-                width: position.width + 16,
-                height: position.height + 16,
-                boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)'
-              }}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            />
+            <>
+              {/* Pulsing glow effect */}
+              <motion.div
+                key="tour-glow"
+                className="fixed z-39 rounded-lg pointer-events-none"
+                style={{
+                  top: position.top - 8,
+                  left: position.left - 8,
+                  width: position.width + 16,
+                  height: position.height + 16
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ 
+                  opacity: [0.3, 0.6, 0.3],
+                  boxShadow: [
+                    '0 0 20px rgba(16, 185, 129, 0.3)',
+                    '0 0 40px rgba(16, 185, 129, 0.6)',
+                    '0 0 20px rgba(16, 185, 129, 0.3)'
+                  ]
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              />
+              
+              {/* Main spotlight border */}
+              <motion.div
+                key="tour-spotlight"
+                className="fixed z-40 border-2 border-emerald-500 rounded-lg pointer-events-none"
+                style={{
+                  top: position.top - 8,
+                  left: position.left - 8,
+                  width: position.width + 16,
+                  height: position.height + 16,
+                  boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)'
+                }}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+              />
+            </>
           )}
 
           {/* Tooltip */}
@@ -149,10 +176,10 @@ export function DashboardTour({
               top: Math.max(20, position.top + position.height + 20),
               left: Math.max(20, Math.min(position.left, window.innerWidth - 380))
             }}
-            initial={{ opacity: 0, scale: 0.8, y: -10 }}
+            initial={{ opacity: 0, scale: 0.7, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: -10 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, scale: 0.7, y: 20 }}
+            transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
           >
             {/* Close button */}
             <button
