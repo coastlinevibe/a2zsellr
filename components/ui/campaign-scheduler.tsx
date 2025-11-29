@@ -114,18 +114,7 @@ interface ScheduleSettings {
     frequency: 'once' | 'daily' | 'weekly' | 'monthly'
     timezone: string
     autoSend: boolean
-  }
-  facebook: {
-    time: string
-    frequency: 'once' | 'daily' | 'weekly' | 'monthly'
-    boostBudget: number
     targetAudience: string[]
-  }
-  instagram: {
-    storyTime: string
-    feedTime: string
-    frequency: 'once' | 'daily' | 'weekly'
-    hashtags: string[]
   }
 }
 
@@ -136,19 +125,8 @@ const CampaignScheduler = ({ onSchedule }: { onSchedule: (settings: ScheduleSett
       time: '09:00',
       frequency: 'once',
       timezone: 'Africa/Johannesburg',
-      autoSend: false
-    },
-    facebook: {
-      time: '18:00',
-      frequency: 'once',
-      boostBudget: 50,
+      autoSend: false,
       targetAudience: ['local', 'interests']
-    },
-    instagram: {
-      storyTime: '12:00',
-      feedTime: '19:00',
-      frequency: 'once',
-      hashtags: ['#SouthAfrica', '#Quality', '#MustHave']
     }
   })
 
@@ -171,18 +149,6 @@ const CampaignScheduler = ({ onSchedule }: { onSchedule: (settings: ScheduleSett
       { time: '12:30', engagement: 78, label: 'Lunch Break' },
       { time: '18:00', engagement: 92, label: 'Evening Peak' },
       { time: '21:00', engagement: 67, label: 'Night Wind-down' }
-    ],
-    facebook: [
-      { time: '12:00', engagement: 75, label: 'Lunch Scroll' },
-      { time: '15:00', engagement: 82, label: 'Afternoon Break' },
-      { time: '18:00', engagement: 95, label: 'Prime Time' },
-      { time: '20:00', engagement: 88, label: 'Evening Social' }
-    ],
-    instagram: [
-      { time: '11:00', engagement: 73, label: 'Mid-Morning' },
-      { time: '14:00', engagement: 85, label: 'Afternoon Scroll' },
-      { time: '17:00', engagement: 91, label: 'After Work' },
-      { time: '19:00', engagement: 96, label: 'Golden Hour' }
     ]
   }
 
@@ -293,103 +259,6 @@ const CampaignScheduler = ({ onSchedule }: { onSchedule: (settings: ScheduleSett
                 </div>
               </div>
 
-              {/* Facebook Timing */}
-              <div className="bg-blue-50 rounded-[9px] p-5 border border-blue-200">
-                <h3 className="font-semibold text-blue-800 mb-4 flex items-center gap-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  Facebook
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Post Time</label>
-                    <TimePickerAMPM
-                      value={schedule.facebook.time}
-                      onChange={(value) => handleScheduleUpdate('facebook', 'time', value)}
-                      className="w-full p-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Boost Budget</label>
-                    <select
-                      value={schedule.facebook.boostBudget}
-                      onChange={(e) => handleScheduleUpdate('facebook', 'boostBudget', parseInt(e.target.value))}
-                      className="w-full p-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    >
-                      <option value={0}>No Boost</option>
-                      <option value={25}>R25/day</option>
-                      <option value={50}>R50/day</option>
-                      <option value={100}>R100/day</option>
-                      <option value={200}>R200/day</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Peak Times */}
-                <div className="mt-4">
-                  <p className="text-xs font-medium text-gray-600 mb-2">📊 Peak Engagement Times</p>
-                  <div className="space-y-1">
-                    {peakTimes.facebook.map((peak) => (
-                      <button
-                        key={peak.time}
-                        onClick={() => handleScheduleUpdate('facebook', 'time', peak.time)}
-                        className="w-full text-left p-2 rounded-[9px] hover:bg-blue-100 transition-colors"
-                      >
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">{peak.time}</span>
-                          <span className="text-xs text-blue-600">{peak.engagement}%</span>
-                        </div>
-                        <p className="text-xs text-gray-500">{peak.label}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Instagram Timing */}
-              <div className="bg-pink-50 rounded-[9px] p-5 border border-pink-200">
-                <h3 className="font-semibold text-pink-800 mb-4 flex items-center gap-2">
-                  <div className="w-3 h-3 bg-pink-500 rounded-full"></div>
-                  Instagram
-                </h3>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Story Time</label>
-                    <TimePickerAMPM
-                      value={schedule.instagram.storyTime}
-                      onChange={(value) => handleScheduleUpdate('instagram', 'storyTime', value)}
-                      className="w-full p-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Feed Time</label>
-                    <TimePickerAMPM
-                      value={schedule.instagram.feedTime}
-                      onChange={(value) => handleScheduleUpdate('instagram', 'feedTime', value)}
-                      className="w-full p-2 border border-gray-300 rounded-[9px] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    />
-                  </div>
-                </div>
-
-                {/* Peak Times */}
-                <div className="mt-4">
-                  <p className="text-xs font-medium text-gray-600 mb-2">📊 Peak Engagement Times</p>
-                  <div className="space-y-1">
-                    {peakTimes.instagram.map((peak) => (
-                      <button
-                        key={peak.time}
-                        onClick={() => handleScheduleUpdate('instagram', 'feedTime', peak.time)}
-                        className="w-full text-left p-2 rounded-[9px] hover:bg-pink-100 transition-colors"
-                      >
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">{peak.time}</span>
-                          <span className="text-xs text-pink-600">{peak.engagement}%</span>
-                        </div>
-                        <p className="text-xs text-gray-500">{peak.label}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         )}
@@ -401,15 +270,15 @@ const CampaignScheduler = ({ onSchedule }: { onSchedule: (settings: ScheduleSett
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {targetingOptions.map((option) => {
                 const Icon = option.icon
-                const isSelected = schedule.facebook.targetAudience.includes(option.id)
+                const isSelected = schedule.whatsapp.targetAudience.includes(option.id)
                 return (
                   <button
                     key={option.id}
                     onClick={() => {
                       const newAudience = isSelected
-                        ? schedule.facebook.targetAudience.filter(id => id !== option.id)
-                        : [...schedule.facebook.targetAudience, option.id]
-                      handleScheduleUpdate('facebook', 'targetAudience', newAudience)
+                        ? schedule.whatsapp.targetAudience.filter(id => id !== option.id)
+                        : [...schedule.whatsapp.targetAudience, option.id]
+                      handleScheduleUpdate('whatsapp', 'targetAudience', newAudience)
                     }}
                     className={`p-4 rounded-[9px] border-2 transition-all text-left ${
                       isSelected

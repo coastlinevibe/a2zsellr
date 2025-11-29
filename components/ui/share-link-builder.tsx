@@ -1,14 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { 
-  MessageCircle, 
-  Facebook, 
-  Instagram, 
-  Twitter, 
-  Linkedin,
-  Palette
-} from 'lucide-react'
+import { Palette } from 'lucide-react'
 import WYSIWYGCampaignBuilder from './wysiwyg-campaign-builder'
 
 interface Product {
@@ -24,25 +17,9 @@ const ShareLinkBuilder = ({ products = [], businessProfile, editListing, onRefre
   const [activeTab, setActiveTab] = useState('create')
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['whatsapp'])
 
-  const platforms = [
-    { id: 'whatsapp', name: 'WhatsApp', icon: MessageCircle, color: 'text-green-600', bg: 'bg-green-50' },
-    { id: 'facebook', name: 'Facebook', icon: Facebook, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { id: 'instagram', name: 'Instagram', icon: Instagram, color: 'text-pink-600', bg: 'bg-pink-50' },
-    { id: 'twitter', name: 'Twitter', icon: Twitter, color: 'text-sky-600', bg: 'bg-sky-50' },
-    { id: 'linkedin', name: 'LinkedIn', icon: Linkedin, color: 'text-blue-700', bg: 'bg-blue-50' }
-  ]
-
   const tabs = [
     { id: 'create', name: 'Create', icon: Palette }
   ]
-
-  const handlePlatformToggle = (platformId: string) => {
-    setSelectedPlatforms(prev => 
-      prev.includes(platformId) 
-        ? prev.filter(id => id !== platformId)
-        : [...prev, platformId]
-    )
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50">

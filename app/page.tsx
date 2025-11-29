@@ -1494,7 +1494,7 @@ export default function HomePage() {
                       </div>
                       <h3 className="text-xl font-black text-black mb-3">MARKETING AUTOMATION</h3>
                       <p className="text-black mb-4 leading-relaxed font-bold">
-                        CREATE STUNNING MARKETING CAMPAIGNS AND SHARE THEM ACROSS WHATSAPP, FACEBOOK, INSTAGRAM, AND MORE WITH ONE CLICK.
+                        CREATE STUNNING MARKETING CAMPAIGNS AND SHARE THEM ON WHATSAPP WITH ONE CLICK.
                       </p>
                       <ul className="space-y-2 text-sm text-black">
                         <li className="flex items-center gap-2 bg-yellow-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
@@ -1763,7 +1763,7 @@ export default function HomePage() {
               </motion.div>
               <h3 className="text-xl font-black text-black mb-3">MARKETING AUTOMATION</h3>
               <p className="text-black mb-4 leading-relaxed font-bold">
-                CREATE STUNNING MARKETING CAMPAIGNS AND SHARE THEM ACROSS WHATSAPP, FACEBOOK, INSTAGRAM, AND MORE WITH ONE CLICK.
+                CREATE STUNNING MARKETING CAMPAIGNS AND SHARE THEM ON WHATSAPP WITH ONE CLICK.
               </p>
               <ul className="space-y-2 text-sm text-black">
                 <li className="flex items-center gap-2 bg-yellow-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">
@@ -2039,7 +2039,7 @@ export default function HomePage() {
                 MARKET & SELL
               </h3>
               <p className="text-black leading-relaxed mb-6 font-bold">
-                USE OUR BUILT-IN MARKETING TOOLS TO CREATE CAMPAIGNS AND SHARE YOUR BUSINESS ACROSS WHATSAPP, FACEBOOK, INSTAGRAM, AND MORE.
+                USE OUR BUILT-IN MARKETING TOOLS TO CREATE CAMPAIGNS AND SHARE YOUR BUSINESS ON WHATSAPP.
               </p>
               <div className="space-y-3">
                 <div className="flex items-center gap-3 bg-yellow-300 p-2 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)]">

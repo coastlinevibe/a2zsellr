@@ -203,7 +203,7 @@ export default function AnimatedSignupPage() {
             '🎨 Gallery Slider Showcase',
             '🛒 Advanced Shop Integration',
             '📱 WhatsApp Ad Scheduling',
-            '📘 Facebook Campaign Tools',
+            '💬 WhatsApp Broadcast Templates',
             '📊 Enhanced Analytics',
             '🎯 Premium Marketing Listing'
           ],
@@ -220,7 +220,7 @@ export default function AnimatedSignupPage() {
             '💎 Everything in Premium Plan',
             '🏪 Multi-Location Management',
             '📈 Advanced Analytics Dashboard',
-            '📷 Instagram Ad Automation',
+            '🤖 Automated WhatsApp Playbooks',
             '🎨 Custom Business Branding',
             '🏆 Priority Customer Support',
             '🚀 Business Marketing Listing',
@@ -387,9 +387,34 @@ export default function AnimatedSignupPage() {
         // Don't fail registration for referral errors
       }
       
+      // Send welcome email (don't fail registration if email fails)
+      try {
+        console.log('Sending welcome email to:', email, 'with display name:', displayName, 'and plan:', selectedPlan)
+        const emailResponse = await fetch('/api/send-welcome-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: email,
+            displayName: displayName,
+            selectedPlan: selectedPlan
+          }),
+        })
+
+        if (emailResponse.ok) {
+          console.log('Welcome email sent successfully')
+        } else {
+          console.warn('Welcome email API returned non-OK status:', emailResponse.status)
+        }
+      } catch (emailError) {
+        console.warn('Failed to send welcome email, but registration continues:', emailError.message)
+        // Don't fail registration for email errors - just log it
+      }
+
       // Clear stored referral code after successful registration
       sessionStorage.removeItem('signup_referral_code')
-      
+
       // Set flags to prevent auto-redirect and show success page
       setJustRegistered(true)
       setSuccess(true)

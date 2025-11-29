@@ -97,7 +97,8 @@ module.exports = (io) => {
   router.get('/group-contacts/:sessionId', async (req, res) => {
     try {
       const { sessionId } = req.params;
-      
+      const { refresh } = req.query; // Check for refresh query parameter
+
       // Ensure client is initialized
       let client = whatsappService.getClient(sessionId);
       if (!client) {
@@ -106,8 +107,9 @@ module.exports = (io) => {
         // Wait for client to be ready
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
-      
-      const contacts = await whatsappService.getGroupContacts(sessionId);
+
+      const forceRefresh = refresh === 'true';
+      const contacts = await whatsappService.getGroupContacts(sessionId, forceRefresh);
       res.json({ contacts, total: contacts.length });
     } catch (error) {
       console.error('Error getting group contacts:', error);
@@ -131,13 +133,14 @@ module.exports = (io) => {
   router.post('/send-message/:sessionId', async (req, res) => {
     try {
       const { sessionId } = req.params;
-      const { chatId, groupId, message, options } = req.body;
+      const { chatId, groupId, message, image, buttons, options } = req.body;
       
       // Support both chatId and groupId for backwards compatibility
       const targetId = chatId || groupId;
       
-      if (!targetId || !message) {
-        return res.status(400).json({ error: 'chatId (or groupId) and message are required' });
+      // Allow image-only messages (no text required if image is provided)
+      if (!targetId || (!message && !image)) {
+        return res.status(400).json({ error: 'chatId (or groupId) is required, and either message or image must be provided' });
       }
 
       // Ensure client is initialized
@@ -151,9 +154,34 @@ module.exports = (io) => {
       const isUser = targetId.includes('@c.us');
       const type = isGroup ? 'group' : isUser ? 'user' : 'chat';
       
-      console.log(`📨 Sending message to ${type} ${targetId}: ${message}`);
-      const result = await whatsappService.sendMessage(sessionId, targetId, message, options || {});
-      res.json({ success: true, result, type });
+      // Send text message if provided
+      let textResult = null;
+      if (message && message.trim()) {
+        console.log(`📨 Sending text message to ${type} ${targetId}: ${message}`);
+        textResult = await whatsappService.sendMessage(sessionId, targetId, message, options || {});
+      }
+      
+      // Send image if provided (separately from text)
+      let imageResult = null;
+      if (image) {
+        console.log(`📨 Sending image to ${type} ${targetId}`);
+        try {
+          imageResult = await whatsappService.sendImageMessage(sessionId, targetId, image, '', options || {});
+        } catch (imgErr) {
+          console.warn(`⚠️ Image sending failed:`, imgErr.message);
+          imageResult = { error: imgErr.message };
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        textResult,
+        imageResult,
+        type, 
+        hasText: !!message && message.trim(),
+        hasImage: !!image,
+        note: 'Text and image sent separately'
+      });
     } catch (error) {
       console.error('Error sending message:', error);
       res.status(500).json({ error: error.message });

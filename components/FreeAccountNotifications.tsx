@@ -50,8 +50,8 @@ export default function FreeAccountNotifications({
     },
     {
       icon: Users,
-      title: 'Multi-platform Sharing',
-      description: 'Share on WhatsApp, Facebook, Instagram & more'
+      title: 'WhatsApp Broadcasts',
+      description: 'Share unlimited campaigns via WhatsApp'
     }
   ]
 

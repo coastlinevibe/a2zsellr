@@ -486,7 +486,7 @@ export default function CampaignPage({ params }: CampaignPageProps) {
         <meta name="description" content={ogDescription} />
         <link rel="canonical" href={pageUrl} />
         
-        {/* Open Graph / Facebook */}
+        {/* Open Graph Tags */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content={pageUrl} />
         <meta property="og:title" content={ogTitle} />

@@ -6,8 +6,6 @@ const socketIo = require('socket.io');
 
 // Import routes
 const whatsappRoutes = require('./routes/whatsapp');
-const facebookRoutes = require('./routes/facebook');
-const instagramRoutes = require('./routes/instagram');
 
 const app = express();
 const server = http.createServer(app);
@@ -28,8 +26,8 @@ const io = socketIo(server, {
 
 // Middleware
 app.use(cors(corsOptions));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Health check
 app.get('/health', (req, res) => {
@@ -45,8 +43,6 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/whatsapp', whatsappRoutes(io));
-app.use('/api/facebook', facebookRoutes(io));
-app.use('/api/instagram', instagramRoutes(io));
 
 // Pass io to WhatsApp service
 const whatsappService = require('./services/whatsappService');
@@ -71,6 +67,4 @@ const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`🚀 Social Integrations Server running on port ${PORT}`);
   console.log(`📱 WhatsApp integration available at /api/whatsapp`);
-  console.log(`📘 Facebook integration available at /api/facebook`);
-  console.log(`📷 Instagram integration available at /api/instagram`);
 });

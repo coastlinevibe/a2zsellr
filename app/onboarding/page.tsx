@@ -26,8 +26,6 @@ interface OnboardingData {
   hours: Record<string, { open: boolean; start: string; end: string }>
   profileImage: string | null
   website: string
-  facebook: string
-  instagram: string
   twitter: string
   youtube: string
 }
@@ -39,6 +37,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState<OnboardingStep>(0)
   const [loading, setLoading] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [isReturning, setIsReturning] = useState(false)
   const [galleryImages, setGalleryImages] = useState<string[]>([])
   const [data, setData] = useState<OnboardingData>({
     displayName: '',
@@ -53,8 +52,6 @@ export default function OnboardingPage() {
     }), {}),
     profileImage: null,
     website: '',
-    facebook: '',
-    instagram: '',
     twitter: '',
     youtube: ''
   })
@@ -76,9 +73,13 @@ export default function OnboardingPage() {
         .single()
       
       if (profile) {
-        // If onboarding is already completed, redirect to dashboard
+        // If onboarding is already completed, show returning welcome screen then redirect
         if (profile.onboarding_completed) {
-          router.push('/dashboard')
+          setIsReturning(true)
+          // Redirect after 2 seconds
+          setTimeout(() => {
+            router.push('/dashboard')
+          }, 2000)
           return
         }
 
@@ -92,8 +93,6 @@ export default function OnboardingPage() {
           address: profile.address || '',
           profileImage: profile.avatar_url || null,
           website: profile.website_url || '',
-          facebook: profile.facebook || '',
-          instagram: profile.instagram || '',
           twitter: profile.twitter || '',
           youtube: profile.youtube || ''
         }))
@@ -263,8 +262,6 @@ export default function OnboardingPage() {
           address: data.address,
           business_hours: JSON.stringify(formattedHours),
           website_url: data.website,
-          facebook: data.facebook,
-          instagram: data.instagram,
           twitter: data.twitter,
           youtube: data.youtube,
           avatar_url: profileImageUrl,
@@ -303,7 +300,7 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-[#f0f0f0] p-4 sm:p-6 lg:p-8">
       <div className="max-w-2xl mx-auto">
-        {step === 0 && <WelcomeScreen username={user?.email?.split('@')[0] || 'there'} onStart={handleNext} onSkip={handleSkip} />}
+        {step === 0 && <WelcomeScreen username={user?.email?.split('@')[0] || 'there'} onStart={handleNext} onSkip={handleSkip} isReturning={isReturning} />}
         {step === 1 && <BusinessBasicsStep data={data} setData={setData} onNext={handleNext} onBack={handleBack} />}
         {step === 2 && <LocationContactStep data={data} setData={setData} onNext={handleNext} onBack={handleBack} />}
         {step === 3 && <OperatingHoursStep data={data} setData={setData} onNext={handleNext} onBack={handleBack} />}

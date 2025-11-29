@@ -77,7 +77,7 @@ const AnalyticsDashboard = () => {
     {
       id: '2',
       name: 'New Product Launch',
-      platform: 'facebook',
+      platform: 'whatsapp',
       status: 'completed',
       metrics: {
         reach: 5632,
@@ -106,8 +106,6 @@ const AnalyticsDashboard = () => {
 
   const platformColors = {
     whatsapp: 'text-green-600 bg-green-50 border-green-200',
-    facebook: 'text-blue-600 bg-blue-50 border-blue-200',
-    instagram: 'text-pink-600 bg-pink-50 border-pink-200',
     all: 'text-gray-600 bg-gray-50 border-gray-200'
   }
 
@@ -307,14 +305,14 @@ const AnalyticsDashboard = () => {
               },
               {
                 title: 'New Arrival: Premium Collection',
-                platform: 'Facebook',
+                platform: 'WhatsApp',
                 engagement: 87,
                 conversions: 43,
                 revenue: 5230
               },
               {
                 title: 'Behind the Scenes: Our Process',
-                platform: 'Instagram',
+                platform: 'WhatsApp',
                 engagement: 82,
                 conversions: 28,
                 revenue: 3120
@@ -388,11 +386,11 @@ const AnalyticsDashboard = () => {
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {[
                 { action: 'New conversion', platform: 'WhatsApp', time: '2 min ago', amount: 'R450' },
-                { action: 'Message opened', platform: 'Facebook', time: '3 min ago', amount: null },
-                { action: 'Link clicked', platform: 'Instagram', time: '5 min ago', amount: null },
+                  { action: 'Message opened', platform: 'WhatsApp', time: '3 min ago', amount: null },
+                  { action: 'Link clicked', platform: 'WhatsApp', time: '5 min ago', amount: null },
                 { action: 'New conversion', platform: 'WhatsApp', time: '7 min ago', amount: 'R280' },
-                { action: 'Story viewed', platform: 'Instagram', time: '9 min ago', amount: null },
-                { action: 'Post shared', platform: 'Facebook', time: '12 min ago', amount: null }
+                  { action: 'Story viewed', platform: 'WhatsApp Status', time: '9 min ago', amount: null },
+                  { action: 'Broadcast shared', platform: 'WhatsApp', time: '12 min ago', amount: null }
               ].map((activity, index) => (
                 <div key={index} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-[9px]">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
@@ -448,12 +446,12 @@ const AnalyticsDashboard = () => {
                 <span>WhatsApp campaigns perform 34% better at 9 AM - consider rescheduling</span>
               </li>
               <li className="flex items-start gap-2">
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2"></div>
-                <span>Adding emojis to Facebook messages increases engagement by 28%</span>
+              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2"></div>
+              <span>Adding emojis to WhatsApp messages increases engagement by 28%</span>
               </li>
               <li className="flex items-start gap-2">
-                <div className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-2"></div>
-                <span>Instagram Stories with product tags convert 45% more</span>
+              <div className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-2"></div>
+              <span>WhatsApp Status posts with product tags convert 45% more</span>
               </li>
             </ul>
           </div>

@@ -6,7 +6,7 @@ export async function POST(
 ) {
   try {
     const { sessionId } = params
-    const { chatId, message, options } = await request.json()
+    const { chatId, message, image, buttons, options } = await request.json()
 
     if (!sessionId || !chatId || !message) {
       return NextResponse.json(
@@ -16,6 +16,12 @@ export async function POST(
     }
 
     console.log(`📨 [SEND-MESSAGE] Sending to ${chatId} for session ${sessionId}`)
+    if (image) {
+      console.log(`📨 [SEND-MESSAGE] With image attachment`)
+    }
+    if (buttons && buttons.length > 0) {
+      console.log(`📨 [SEND-MESSAGE] With ${buttons.length} button(s)`)
+    }
 
     // Call the Express server
     const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001'
@@ -26,6 +32,8 @@ export async function POST(
       body: JSON.stringify({
         chatId,
         message,
+        image: image || null,
+        buttons: buttons || null,
         options: options || {}
       })
     })

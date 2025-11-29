@@ -34,6 +34,7 @@ export default function WhatsAppSetup({ onSetupComplete }: WhatsAppSetupProps) {
   const [groups, setGroups] = useState<Group[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loadingData, setLoadingData] = useState(false)
+  const [contactsFetched, setContactsFetched] = useState(false)
 
   const handleConnect = async () => {
     if (!sessionId) {
@@ -91,7 +92,7 @@ export default function WhatsAppSetup({ onSetupComplete }: WhatsAppSetupProps) {
   }
 
   const loadGroupsAndContacts = async () => {
-    if (!sessionId) return
+    if (!sessionId || loadingData || contactsFetched) return
 
     setLoadingData(true)
     try {
@@ -102,36 +103,21 @@ export default function WhatsAppSetup({ onSetupComplete }: WhatsAppSetupProps) {
       setGroups(groupsData.groups || [])
       console.log('Groups loaded:', groupsData.groups?.length || 0)
 
-      // Wait longer for contacts to be processed on the server
-      console.log('Processing contacts (this takes a moment)...')
-      await new Promise(resolve => setTimeout(resolve, 10000))
-
-      // Load contacts with retry logic
+      // Load contacts (with caching, no need for retries)
       console.log('Fetching contacts...')
-      let contactsData = null
-      let retries = 0
-      const maxRetries = 3
+      const contactsResponse = await fetch(`/api/whatsapp/group-contacts/${sessionId}`)
+      const contactsData = await contactsResponse.json()
 
-      while (retries < maxRetries) {
-        const contactsResponse = await fetch(`/api/whatsapp/group-contacts/${sessionId}`)
-        contactsData = await contactsResponse.json()
-        
-        if (contactsData.contacts && contactsData.contacts.length > 0) {
-          console.log('Contacts loaded:', contactsData.contacts.length)
-          break
-        }
+      setContacts(contactsData.contacts || [])
+      setContactsFetched(true)
+      console.log('Contacts loaded:', contactsData.contacts?.length || 0)
 
-        retries++
-        if (retries < maxRetries) {
-          console.log(`No contacts found yet, retrying in 3 seconds... (attempt ${retries}/${maxRetries})`)
-          await new Promise(resolve => setTimeout(resolve, 3000))
-        }
-      }
-
-      setContacts(contactsData?.contacts || [])
+      // Complete setup
+      onSetupComplete(groupsData.groups || [], contactsData.contacts || [])
     } catch (error) {
       console.error('Error loading data:', error)
       setContacts([])
+      setGroups([])
     } finally {
       setLoadingData(false)
     }

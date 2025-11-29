@@ -1,6 +1,6 @@
 # Social Integrations Server
 
-Backend server for WhatsApp, Facebook, and Instagram integrations using WPPConnect.
+Backend server for WhatsApp integrations using WPPConnect.
 
 ## Features
 
@@ -9,8 +9,6 @@ Backend server for WhatsApp, Facebook, and Instagram integrations using WPPConne
 - ✅ QR code authentication
 - ✅ Contact and chat management
 - ✅ Message sending and receiving
-- 🔄 Facebook integration (coming soon)
-- 🔄 Instagram integration (coming soon)
 
 ## Installation
 
@@ -41,16 +39,6 @@ WPP_DEVTOOLS=false
 WPP_USE_CHROME=true
 WHATSAPP_SESSION_TIMEOUT=3600000
 WHATSAPP_AUTO_CLOSE=false
-
-# Facebook (Coming Soon)
-FACEBOOK_APP_ID=your_app_id
-FACEBOOK_APP_SECRET=your_app_secret
-FACEBOOK_API_KEY=your_api_key
-
-# Instagram (Coming Soon)
-INSTAGRAM_APP_ID=your_app_id
-INSTAGRAM_APP_SECRET=your_app_secret
-INSTAGRAM_API_KEY=your_api_key
 
 # Storage & Logging
 SESSION_STORAGE_PATH=./sessions
@@ -121,16 +109,6 @@ POST /api/whatsapp/disconnect/:sessionId
 Response: { success: boolean, message: "string" }
 ```
 
-### Facebook (Coming Soon)
-- `POST /api/facebook/init`
-- `GET /api/facebook/status/:sessionId`
-- `POST /api/facebook/send`
-
-### Instagram (Coming Soon)
-- `POST /api/instagram/init`
-- `GET /api/instagram/status/:sessionId`
-- `POST /api/instagram/send`
-
 ## Socket.io Events
 
 ### WhatsApp Events
@@ -157,29 +135,15 @@ Response: { success: boolean, message: "string" }
   { sessionId: "string", call: Object }
   ```
 
-### Facebook Events (Coming Soon)
-- `facebook:ready`
-- `facebook:message`
-- `facebook:error`
-
-### Instagram Events (Coming Soon)
-- `instagram:ready`
-- `instagram:message`
-- `instagram:error`
-
 ## Project Structure
 
 ```
 server/
 ├── index.js                    # Main server file
 ├── services/
-│   ├── whatsappService.js     # WhatsApp service (WPPConnect)
-│   ├── facebookService.js     # Facebook service (placeholder)
-│   └── instagramService.js    # Instagram service (placeholder)
+│   └── whatsappService.js     # WhatsApp service (WPPConnect)
 ├── routes/
-│   ├── whatsapp.js            # WhatsApp API routes
-│   ├── facebook.js            # Facebook API routes (placeholder)
-│   └── instagram.js           # Instagram API routes (placeholder)
+│   └── whatsapp.js            # WhatsApp API routes
 ├── package.json
 ├── .env.example
 └── README.md

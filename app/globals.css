@@ -203,24 +203,6 @@ body {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.holographic-icon-profile.facebook {
-  color: #1877f2;
-}
-
-.holographic-icon-profile.facebook:hover {
-  color: #0d5bd9;
-  transform: translateY(-2px) rotateX(15deg);
-}
-
-.holographic-icon-profile.instagram {
-  color: #e4405f;
-}
-
-.holographic-icon-profile.instagram:hover {
-  color: #c13584;
-  transform: translateY(-2px) rotateX(15deg);
-}
-
 .holographic-icon-profile.twitter {
   color: #1da1f2;
 }

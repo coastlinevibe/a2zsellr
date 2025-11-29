@@ -136,33 +136,32 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, onDelete, us
       const updatedListings = listings.filter(c => c.id !== selectedListing.id)
       setListings(updatedListings)
       
-      // If no listings remain, reset all analytics data
-      if (updatedListings.length === 0) {
-        await Promise.all([
-          // Reset profile views
-          supabase
-            .from('profiles')
-            .update({ 
-              profile_views: 0,
-              last_view_reset: new Date().toISOString()
-            })
-            .eq('id', user?.id),
-          
-          // Clear all analytics data
-          supabase
-            .from('profile_analytics')
-            .delete()
-            .eq('profile_id', user?.id)
-        ])
+      // Always reset analytics when a listing is deleted
+      // This prevents old view counts from persisting to new listings
+      await Promise.all([
+        // Reset profile views
+        supabase
+          .from('profiles')
+          .update({ 
+            profile_views: 0,
+            last_view_reset: new Date().toISOString()
+          })
+          .eq('id', user?.id),
         
-        // Update local analytics state
-        setAnalyticsData({
-          totalViews: 0,
-          totalClicks: 0
-        })
-        
-        console.log('✅ All analytics data cleared - no listings remaining')
-      }
+        // Clear all analytics data
+        supabase
+          .from('profile_analytics')
+          .delete()
+          .eq('profile_id', user?.id)
+      ])
+      
+      // Update local analytics state
+      setAnalyticsData({
+        totalViews: 0,
+        totalClicks: 0
+      })
+      
+      console.log('✅ Analytics data cleared after listing deletion')
       
       // Notify parent component to refresh metrics
       if (onRefresh) {

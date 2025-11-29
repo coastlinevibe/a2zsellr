@@ -35,25 +35,8 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('subscription_tier, onboarding_completed')
-            .eq('id', data.user.id)
-            .single()
-
-          // If onboarding is not completed, redirect to onboarding
-          if (profile && !profile.onboarding_completed) {
-            router.push('/onboarding')
-          } else if (profile && profile.subscription_tier && profile.subscription_tier !== 'free') {
-            router.push('/profile')
-          } else {
-            router.push('/dashboard')
-          }
-        } catch (profileError) {
-          console.warn('Profile lookup failed after login:', profileError)
-          router.push('/dashboard')
-        }
+        // Always redirect to onboarding (which shows the animated welcome screen first)
+        router.push('/onboarding')
       }
     } catch (err) {
       setError('An unexpected error occurred')
@@ -73,17 +56,28 @@ export default function LoginPage() {
     setResetMessage('')
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+      const response = await fetch('/api/send-password-reset-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+        }),
       })
 
-      if (error) {
-        setError(error.message)
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setResetMessage('Password reset email sent! Check your inbox and spam folder.')
+        console.log('Password reset email sent successfully')
       } else {
-        setResetMessage('Password reset email sent! Check your inbox.')
+        setError(data.error || 'Failed to send reset email')
+        console.error('Password reset failed:', data)
       }
     } catch (err) {
-      setError('Failed to send reset email')
+      console.error('Error sending password reset email:', err)
+      setError('Failed to send reset email. Please try again.')
     } finally {
       setResetLoading(false)
     }

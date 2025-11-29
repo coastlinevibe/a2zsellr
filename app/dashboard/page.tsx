@@ -35,8 +35,6 @@ import {
   Shield,
   Package,
   Plug,
-  Facebook,
-  Instagram,
   Loader2
 } from 'lucide-react'
 
@@ -59,8 +57,7 @@ import TrialTimer from '@/components/TrialTimer'
 import { resetUserData } from '@/lib/trialManager'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import WhatsAppIntegration from '@/components/integrations/WhatsAppIntegration'
-import FacebookIntegration from '@/components/integrations/FacebookIntegration'
-import InstagramIntegration from '@/components/integrations/InstagramIntegration'
+import { AnimatedCounter } from '@/components/ui/animated-counter'
 
 type SubscriptionTier = 'free' | 'premium' | 'business'
 type DashboardTab = 'profile' | 'products' | 'branding' | 'listings' | 'integrations'
@@ -124,9 +121,6 @@ export default function DashboardPage() {
   // Saved templates state
   const [savedTemplates, setSavedTemplates] = useState<any[]>([])
   const [templatesLoading, setTemplatesLoading] = useState(false)
-  
-  // Social integrations state
-  const [socialIntegrationView, setSocialIntegrationView] = useState<'whatsapp' | 'facebook' | 'instagram'>('whatsapp')
   
   // Upgrade modal states
   const [showPlanModal, setShowPlanModal] = useState(false)
@@ -634,48 +628,20 @@ export default function DashboardPage() {
     </div>
   )
 
-  const renderIntegrationsTab = () => {
-    const integrations = [
-      { id: 'whatsapp', label: 'WhatsApp', color: 'green' },
-      { id: 'facebook', label: 'Facebook', color: 'blue' },
-      { id: 'instagram', label: 'Instagram', color: 'pink' }
-    ]
-
-    return (
+  const renderIntegrationsTab = () => (
       <div className="space-y-8">
         <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-2xl font-bold text-gray-900">Social Integrations</h2>
-            <p className="text-gray-600 mt-1">Connect social and messaging apps to reach more customers</p>
+          <p className="text-gray-600 mt-1">Connect WhatsApp to power your marketing and support.</p>
           </div>
           
-          {/* Sub-tabs */}
-          <div className="border-b border-gray-200 p-4 flex gap-2 flex-wrap">
-            {integrations.map((integration) => (
-              <button
-                key={integration.id}
-                onClick={() => setSocialIntegrationView(integration.id as any)}
-                className={`px-6 py-2 rounded-lg border-2 font-bold transition-all ${
-                  socialIntegrationView === integration.id
-                    ? `bg-${integration.color}-500 text-white border-${integration.color}-600 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)]`
-                    : 'bg-white text-gray-900 border-gray-300 hover:border-gray-400'
-                }`}
-              >
-                {integration.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Content */}
           <div className="p-6">
-            {socialIntegrationView === 'whatsapp' && <WhatsAppIntegration />}
-            {socialIntegrationView === 'facebook' && <FacebookIntegration />}
-            {socialIntegrationView === 'instagram' && <InstagramIntegration />}
+          <WhatsAppIntegration />
           </div>
         </div>
       </div>
     )
-  }
 
   const renderMarketingTab = () => {
     const userTier = profile?.subscription_tier || 'free'
@@ -1240,59 +1206,82 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         {/* Stats - Desktop */}
         <div id="tour-stats" className="hidden md:grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-blue-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4">
+          <motion.div 
+            className="bg-blue-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4"
+            initial={{ opacity: 0, rotateY: -90, x: -50 }}
+            animate={{ opacity: 1, rotateY: 0, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.1, type: 'spring', stiffness: 100 }}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-black text-black">Profile Views</p>
                 <p className="text-2xl font-black text-black">
-                  {metricsLoading ? (
-                    <span className="animate-pulse">...</span>
-                  ) : (
-                    dashboardMetrics.profileViews.toLocaleString()
-                  )}
+                  <AnimatedCounter value={dashboardMetrics.profileViews} duration={2} delay={0.2} isLoading={metricsLoading} />
                 </p>
               </div>
-              <div className="bg-blue-600 rounded-full p-2 border-2 border-black">
+              <motion.div 
+                className="bg-blue-600 rounded-full p-2 border-2 border-black"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, delay: 0.3 }}
+              >
                 <Eye className="h-5 w-5 text-white" />
-              </div>
+              </motion.div>
             </div>
-          </div>
-          <div className="bg-emerald-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4">
+          </motion.div>
+
+          <motion.div 
+            className="bg-emerald-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4"
+            initial={{ opacity: 0, rotateY: -90, x: -50 }}
+            animate={{ opacity: 1, rotateY: 0, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2, type: 'spring', stiffness: 100 }}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-black text-black">Active Products</p>
                 <p className="text-2xl font-black text-black">
-                  {metricsLoading ? (
-                    <span className="animate-pulse">...</span>
-                  ) : (
-                    dashboardMetrics.activeProducts
-                  )}
+                  <AnimatedCounter value={dashboardMetrics.activeProducts} duration={2} delay={0.3} isLoading={metricsLoading} />
                 </p>
               </div>
-              <div className="bg-emerald-600 rounded-full p-2 border-2 border-black">
+              <motion.div 
+                className="bg-emerald-600 rounded-full p-2 border-2 border-black"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, delay: 0.4, repeat: Infinity }}
+              >
                 <Building2 className="h-5 w-5 text-white" />
-              </div>
+              </motion.div>
             </div>
-          </div>
-          <div className="bg-purple-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4">
+          </motion.div>
+
+          <motion.div 
+            className="bg-purple-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4"
+            initial={{ opacity: 0, rotateY: -90, x: -50 }}
+            animate={{ opacity: 1, rotateY: 0, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.3, type: 'spring', stiffness: 100 }}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-black text-black">Active Listings</p>
                 <p className="text-2xl font-black text-black">
-                  {metricsLoading ? (
-                    <span className="animate-pulse">...</span>
-                  ) : (
-                    dashboardMetrics.activeListings
-                  )}
+                  <AnimatedCounter value={dashboardMetrics.activeListings} duration={2} delay={0.4} isLoading={metricsLoading} />
                 </p>
               </div>
-              <div className="bg-purple-600 rounded-full p-2 border-2 border-black">
+              <motion.div 
+                className="bg-purple-600 rounded-full p-2 border-2 border-black"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 2, delay: 0.5, repeat: Infinity }}
+              >
                 <TrendingUp className="h-5 w-5 text-white" />
-              </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
+
           {profile?.subscription_tier !== 'free' && (
-            <div className="bg-yellow-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4">
+            <motion.div 
+              className="bg-yellow-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4"
+              initial={{ opacity: 0, rotateY: -90, x: -50 }}
+              animate={{ opacity: 1, rotateY: 0, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.4, type: 'spring', stiffness: 100 }}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-black text-black">Store Rating</p>
@@ -1304,11 +1293,15 @@ export default function DashboardPage() {
                     )}
                   </p>
                 </div>
-                <div className="bg-yellow-600 rounded-full p-2 border-2 border-black">
+                <motion.div 
+                  className="bg-yellow-600 rounded-full p-2 border-2 border-black"
+                  animate={{ rotate: [0, 15, -15, 0] }}
+                  transition={{ duration: 2, delay: 0.6, repeat: Infinity }}
+                >
                   <Star className="h-5 w-5 text-white" />
-                </div>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
           )}
         </div>
 
@@ -1388,66 +1381,128 @@ export default function DashboardPage() {
 
         {/* Quick Action Buttons - Desktop */}
         <div id="tour-quick-actions" className="hidden md:grid grid-cols-4 gap-3 mb-8">
-          <Link
-            href="/dashboard?modal=product-creation"
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
+          <motion.div
+            initial={{ opacity: 0, y: 20, rotate: -5 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            transition={{ duration: 0.5, delay: 0.5, type: 'spring', stiffness: 100 }}
+            whileHover={{ scale: 1.05, rotate: 2 }}
           >
-            <Plus className="w-4 h-4" />
-            Add Product
-          </Link>
-          <button
-            onClick={() => setActiveTab('listings')}
-            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
+            <Link
+              href="/dashboard?modal=product-creation"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Add Product
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20, rotate: -5 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            transition={{ duration: 0.5, delay: 0.6, type: 'spring', stiffness: 100 }}
+            whileHover={{ scale: 1.05, rotate: 2 }}
           >
-            <MessageSquare className="w-4 h-4" />
-            Create Listing
-          </button>
-          <button
-            onClick={() => setActiveTab('branding')}
-            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
+            <button
+              onClick={() => setActiveTab('listings')}
+              className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
+            >
+              <MessageSquare className="w-4 h-4" />
+              Create Listing
+            </button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20, rotate: -5 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            transition={{ duration: 0.5, delay: 0.7, type: 'spring', stiffness: 100 }}
+            whileHover={{ scale: 1.05, rotate: 2 }}
           >
-            <ImageIcon className="w-4 h-4" />
-            Upload Branding
-          </button>
-          <Link
-            href={`/profile/${encodeURIComponent(profile?.display_name?.toLowerCase().trim() || 'profile')}`}
-            className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
+            <button
+              onClick={() => setActiveTab('branding')}
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
+            >
+              <ImageIcon className="w-4 h-4" />
+              Upload Branding
+            </button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20, rotate: -5 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            transition={{ duration: 0.5, delay: 0.8, type: 'spring', stiffness: 100 }}
+            whileHover={{ scale: 1.05, rotate: 2 }}
           >
-            <Eye className="w-4 h-4" />
-            View Profile
-          </Link>
+            <Link
+              href={`/profile/${encodeURIComponent(profile?.display_name?.toLowerCase().trim() || 'profile')}`}
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
+            >
+              <Eye className="w-4 h-4" />
+              View Profile
+            </Link>
+          </motion.div>
         </div>
 
         {/* Quick Action Buttons - Mobile (Compact) */}
         <div className="md:hidden grid grid-cols-2 gap-2 mb-6">
-          <Link
-            href="/dashboard?modal=product-creation"
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
+          <motion.div
+            initial={{ opacity: 0, y: 15, rotate: -5 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            transition={{ duration: 0.4, delay: 0.5 }}
+            whileHover={{ scale: 1.05 }}
           >
-            <Plus className="w-3 h-3" />
-            Add Product
-          </Link>
-          <button
-            onClick={() => setActiveTab('listings')}
-            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
+            <Link
+              href="/dashboard?modal=product-creation"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
+            >
+              <Plus className="w-3 h-3" />
+              Add Product
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 15, rotate: -5 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            transition={{ duration: 0.4, delay: 0.6 }}
+            whileHover={{ scale: 1.05 }}
           >
-            <MessageSquare className="w-3 h-3" />
-            Create Listing
-          </button>
-          <button
-            onClick={() => setActiveTab('branding')}
-            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
+            <button
+              onClick={() => setActiveTab('listings')}
+              className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
+            >
+              <MessageSquare className="w-3 h-3" />
+              Create Listing
+            </button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 15, rotate: -5 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            transition={{ duration: 0.4, delay: 0.7 }}
+            whileHover={{ scale: 1.05 }}
           >
-            <ImageIcon className="w-3 h-3" />
-            Upload Branding
-          </button>
-          <Link
-            href={`/profile/${encodeURIComponent(profile?.display_name?.toLowerCase().trim() || 'profile')}`}
-            className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
+            <button
+              onClick={() => setActiveTab('branding')}
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
+            >
+              <ImageIcon className="w-3 h-3" />
+              Upload Branding
+            </button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 15, rotate: -5 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            transition={{ duration: 0.4, delay: 0.8 }}
+            whileHover={{ scale: 1.05 }}
           >
-            <Eye className="w-3 h-3" />
-            View Profile
-          </Link>
+            <Link
+              href={`/profile/${encodeURIComponent(profile?.display_name?.toLowerCase().trim() || 'profile')}`}
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
+            >
+              <Eye className="w-3 h-3" />
+              View Profile
+            </Link>
+          </motion.div>
         </div>
 
         {/* Mobile Onboarding Card */}

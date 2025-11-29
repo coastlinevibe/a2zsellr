@@ -34,6 +34,7 @@ export default function StepWho({ state, onUpdate, groups: passedGroups = [], co
   const [contacts, setContacts] = useState<Contact[]>(passedContacts)
   const [loadingGroups, setLoadingGroups] = useState(false)
   const [loadingContacts, setLoadingContacts] = useState(false)
+  const [dataLoaded, setDataLoaded] = useState(passedGroups.length > 0 || passedContacts.length > 0)
   const [profile, setProfile] = useState<UserProfile | null>(null)
 
   const sessionId = user?.id
@@ -100,19 +101,26 @@ export default function StepWho({ state, onUpdate, groups: passedGroups = [], co
   // (This is handled by the setup screen, so we don't need to fetch here)
 
   const loadGroupsAndContacts = async () => {
-    if (!sessionId) return
+    if (!sessionId || dataLoaded) return
 
     setLoadingGroups(true)
     setLoadingContacts(true)
 
     try {
-      const groupsResponse = await fetch(`/api/whatsapp/groups/${sessionId}`)
-      const groupsData = await groupsResponse.json()
-      setGroups(groupsData.groups || [])
+      // Only load if we don't already have data
+      if (groups.length === 0) {
+        const groupsResponse = await fetch(`/api/whatsapp/groups/${sessionId}`)
+        const groupsData = await groupsResponse.json()
+        setGroups(groupsData.groups || [])
+      }
 
-      const contactsResponse = await fetch(`/api/whatsapp/group-contacts/${sessionId}`)
-      const contactsData = await contactsResponse.json()
-      setContacts(contactsData.contacts || [])
+      if (contacts.length === 0) {
+        const contactsResponse = await fetch(`/api/whatsapp/group-contacts/${sessionId}`)
+        const contactsData = await contactsResponse.json()
+        setContacts(contactsData.contacts || [])
+      }
+
+      setDataLoaded(true)
     } catch (error) {
       console.error('Error loading data:', error)
     } finally {

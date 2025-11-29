@@ -8,15 +8,31 @@ import { StepWhat, StepWho, StepHow, PreviewStep } from '@/components/whatsapp/s
 
 type WizardStep = 'what' | 'who' | 'how' | 'preview'
 
+interface MessageButton {
+  id: string
+  text: string
+  url?: string
+}
+
+interface Recipient {
+  id: string
+  name: string
+  phone?: string
+}
+
 interface WizardState {
   contentType: 'product' | 'listing' | 'custom' | null
   selectedProducts: string[]
   selectedListings: string[]
   customMessage: string
+  customImage: string | null
+  customMessageTab: 'text' | 'image' | 'forward'
+  customButtons: MessageButton[]
   recipientType: 'groups' | 'contacts' | 'custom' | null
   selectedGroups: string[]
   selectedContacts: string[]
   customNumbers: string[]
+  customRecipients: Recipient[]
   sendMode: 'now' | 'schedule' | null
   deliveryMode: 'safe' | 'fast' | null
   scheduleDateTime: string | null
@@ -38,10 +54,14 @@ export default function WhatsAppPage() {
     selectedProducts: [],
     selectedListings: [],
     customMessage: '',
+    customImage: null,
+    customMessageTab: 'text',
+    customButtons: [],
     recipientType: null,
     selectedGroups: [],
     selectedContacts: [],
     customNumbers: [],
+    customRecipients: [],
     sendMode: null,
     deliveryMode: null,
     scheduleDateTime: null,
@@ -57,6 +77,9 @@ export default function WhatsAppPage() {
   const [connecting, setConnecting] = useState(false)
   const [sending, setSending] = useState(false)
   const [messageHistory, setMessageHistory] = useState<any[]>([])
+  const [openaiApiKey, setOpenaiApiKey] = useState('')
+  const [groqApiKey, setGroqApiKey] = useState('')
+  const [savingApiKey, setSavingApiKey] = useState(false)
 
   // Message tracking interface
   interface MessageRecord {
@@ -93,6 +116,67 @@ export default function WhatsAppPage() {
       }
     }
   }, [])
+
+  // Load API keys from sessionStorage
+  useEffect(() => {
+    const savedOpenAiKey = sessionStorage.getItem('openai_api_key')
+    if (savedOpenAiKey) {
+      setOpenaiApiKey(savedOpenAiKey)
+    }
+    
+    const savedGroqKey = sessionStorage.getItem('groq_api_key')
+    if (savedGroqKey) {
+      setGroqApiKey(savedGroqKey)
+    }
+  }, [])
+
+  // Save OpenAI API key to sessionStorage
+  const saveOpenAiApiKey = () => {
+    if (!openaiApiKey.trim()) {
+      alert('Please enter an API key')
+      return
+    }
+
+    if (!openaiApiKey.startsWith('sk-')) {
+      alert('Invalid API key format. OpenAI API keys start with "sk-"')
+      return
+    }
+
+    setSavingApiKey(true)
+    try {
+      sessionStorage.setItem('openai_api_key', openaiApiKey)
+      alert('✅ OpenAI API key saved for this session!')
+    } catch (error) {
+      console.error('Error saving API key:', error)
+      alert('Failed to save API key. Please try again.')
+    } finally {
+      setSavingApiKey(false)
+    }
+  }
+
+  // Save Groq API key to sessionStorage
+  const saveGroqApiKey = () => {
+    if (!groqApiKey.trim()) {
+      alert('Please enter an API key')
+      return
+    }
+
+    if (!groqApiKey.startsWith('gsk_')) {
+      alert('Invalid API key format. Groq API keys start with "gsk_"')
+      return
+    }
+
+    setSavingApiKey(true)
+    try {
+      sessionStorage.setItem('groq_api_key', groqApiKey)
+      alert('✅ Groq API key saved for this session!')
+    } catch (error) {
+      console.error('Error saving API key:', error)
+      alert('Failed to save API key. Please try again.')
+    } finally {
+      setSavingApiKey(false)
+    }
+  }
 
   // Fetch user profile to check tier
   useEffect(() => {
@@ -181,13 +265,20 @@ export default function WhatsAppPage() {
 
       // Determine recipients
       let recipients: string[] = []
-      
+
       if (wizardState.recipientType === 'groups') {
         recipients = wizardState.selectedGroups
       } else if (wizardState.recipientType === 'contacts') {
         recipients = wizardState.selectedContacts
       } else if (wizardState.recipientType === 'custom') {
-        recipients = wizardState.customNumbers
+        // Check if using personalized recipients
+        if (wizardState.customRecipients && wizardState.customRecipients.length > 0) {
+          // Use phone numbers from personalized recipients
+          recipients = wizardState.customRecipients.map((recipient: Recipient) => recipient.phone || '').filter(phone => phone.trim() !== '')
+        } else {
+          // Use custom numbers
+          recipients = wizardState.customNumbers
+        }
       }
 
       if (recipients.length === 0) {
@@ -200,7 +291,21 @@ export default function WhatsAppPage() {
       let messagesToSend: string[] = []
       
       if (wizardState.contentType === 'custom') {
-        messagesToSend = [wizardState.customMessage]
+        // For custom messages, handle personalization
+        if (wizardState.customRecipients && wizardState.customRecipients.length > 0) {
+          // Create personalized messages for each recipient
+          messagesToSend = wizardState.customRecipients.map((recipient: Recipient) => {
+            let personalizedMessage = wizardState.customMessage || ''
+
+            // Substitute variables
+            personalizedMessage = personalizedMessage.replace(/\{name\}/g, recipient.name || '[Name]')
+
+            return personalizedMessage
+          })
+        } else {
+          // No personalization, use the text as-is
+          messagesToSend = [wizardState.customMessage || '']
+        }
       } else if (wizardState.contentType === 'product') {
         // Create a message for each selected product
         messagesToSend = wizardState.selectedProducts.map((_, index) => 
@@ -213,10 +318,20 @@ export default function WhatsAppPage() {
         )
       }
 
-      if (messagesToSend.length === 0) {
-        alert('No messages to send')
-        setSending(false)
-        return
+      // For custom messages, allow empty text if image is provided
+      if (wizardState.contentType === 'custom') {
+        if (!wizardState.customMessage && !wizardState.customImage) {
+          alert('Please enter a message or upload an image')
+          setSending(false)
+          return
+        }
+      } else {
+        // For products/listings, require messages
+        if (messagesToSend.length === 0) {
+          alert('No messages to send')
+          setSending(false)
+          return
+        }
       }
 
       // Add initial message to history
@@ -291,29 +406,137 @@ export default function WhatsAppPage() {
       const messageIntervalDelay = getIntervalDelay(wizardState.messageInterval)
       const recipientIntervalDelay = getRecipientIntervalDelay(wizardState.recipientInterval)
 
-      // Determine if single message or multiple messages
-      const isSingleMessage = messagesToSend.length === 1
+      // NEW LOGIC: Round-robin distribution
+      // If 1 ad for 10 groups: all groups get same ad
+      // If 2 ads for 10 groups: rotate ads (Group1=Ad1, Group2=Ad2, Group3=Ad1, Group4=Ad2...)
+      // If 10 ads for 1 group: group gets all 10 ads sequentially
+      
+      const numMessages = messagesToSend.length
+      const numRecipients = recipients.length
+      
+      console.log(`📨 Sending ${numMessages} message(s) to ${numRecipients} recipient(s) with round-robin distribution`)
+      
+      // Use selected recipientInterval or default to 'slow' if not set
+      const effectiveRecipientInterval = wizardState.recipientInterval || 'slow'
+      const effectiveRecipientIntervalDelay = getRecipientIntervalDelay(effectiveRecipientInterval)
+      
+      // Special handling for personalized custom messages
+      const isPersonalizedCustom = wizardState.contentType === 'custom' &&
+                                   wizardState.customRecipients &&
+                                   wizardState.customRecipients.length > 0
 
-      if (isSingleMessage) {
-        // Single message to multiple recipients: send to each recipient with interval
-        const messageContent = messagesToSend[0]
-        console.log(`📨 Sending single message to ${recipients.length} recipients`)
-        
-        // Use selected recipientInterval or default to 'slow' if not set
-        const effectiveRecipientInterval = wizardState.recipientInterval || 'slow'
-        const effectiveRecipientIntervalDelay = getRecipientIntervalDelay(effectiveRecipientInterval)
-        console.log(`⏱️ Using recipient interval: ${effectiveRecipientInterval} (${Math.round(effectiveRecipientIntervalDelay / 1000)}s)`)
+      if (isPersonalizedCustom) {
+        // Personalized messages: 1-to-1 mapping between recipients and messages
+        console.log(`📨 Sending personalized messages: ${numMessages} personalized message(s) to ${numRecipients} recipient(s)`)
 
-        for (let recipientIndex = 0; recipientIndex < recipients.length; recipientIndex++) {
-          const recipient = recipients[recipientIndex]
+        for (let i = 0; i < Math.min(numRecipients, numMessages); i++) {
+          const recipient = recipients[i]
+          const messageContent = messagesToSend[i]
+
           try {
-            console.log(`📤 Sending message to recipient ${recipientIndex + 1}/${recipients.length}...`)
+            console.log(`📤 Sending personalized message ${i + 1}/${numMessages} to recipient ${i + 1}/${numRecipients}...`)
             const response = await fetch(`/api/whatsapp/send-message/${userId}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 chatId: recipient,
                 message: messageContent,
+                image: wizardState.customImage || null,
+                buttons: wizardState.customButtons && wizardState.customButtons.length > 0 ? wizardState.customButtons : null,
+                options: {
+                  delay: 1000,
+                }
+              })
+            })
+
+            if (response.ok) {
+              console.log(`✅ Personalized message ${i + 1} sent to ${wizardState.customRecipients[i]?.name || 'recipient'}`)
+              successCount++
+            } else {
+              const error = await response.text()
+              console.error(`❌ Failed to send personalized message ${i + 1}:`, error)
+              failureCount++
+              lastError = error
+            }
+
+            // Add delay between messages (but not after the last message)
+            if (i < Math.min(numRecipients, numMessages) - 1) {
+              const delaySeconds = Math.round(effectiveRecipientIntervalDelay / 1000)
+              console.log(`⏳ Waiting ${delaySeconds}s before next personalized message...`)
+              await new Promise(resolve => setTimeout(resolve, effectiveRecipientIntervalDelay))
+            }
+          } catch (error) {
+            console.error(`Error sending personalized message ${i + 1}:`, error)
+            failureCount++
+            lastError = error instanceof Error ? error.message : 'Unknown error'
+          }
+        }
+      } else if (numRecipients === 1) {
+        // Single recipient gets all messages sequentially
+        const recipient = recipients[0]
+        console.log(`📨 Sending ${numMessages} messages to 1 recipient`)
+
+        for (let msgIndex = 0; msgIndex < numMessages; msgIndex++) {
+          const messageContent = messagesToSend[msgIndex]
+          try {
+            console.log(`📤 Sending message ${msgIndex + 1}/${numMessages}...`)
+            const response = await fetch(`/api/whatsapp/send-message/${userId}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chatId: recipient,
+                message: messageContent,
+                image: wizardState.customImage || null,
+                buttons: wizardState.customButtons && wizardState.customButtons.length > 0 ? wizardState.customButtons : null,
+                options: {
+                  delay: 1000,
+                }
+              })
+            })
+
+            if (response.ok) {
+              console.log(`✅ Message ${msgIndex + 1} sent`)
+              successCount++
+            } else {
+              const error = await response.text()
+              console.error(`❌ Failed to send message ${msgIndex + 1}:`, error)
+              failureCount++
+              lastError = error
+            }
+
+            // Add delay between messages (but not after the last message)
+            if (msgIndex < numMessages - 1) {
+              const delaySeconds = Math.round(messageIntervalDelay / 1000)
+              console.log(`⏳ Waiting ${delaySeconds}s before next message...`)
+              await new Promise(resolve => setTimeout(resolve, messageIntervalDelay))
+            }
+          } catch (error) {
+            console.error(`Error sending message ${msgIndex + 1}:`, error)
+            failureCount++
+            lastError = error instanceof Error ? error.message : 'Unknown error'
+          }
+        }
+      } else {
+        // Multiple recipients: round-robin distribution (for non-personalized messages)
+        // Each recipient gets one message, rotating through available messages
+        console.log(`📨 Round-robin: distributing ${numMessages} message(s) across ${numRecipients} recipients`)
+
+        for (let recipientIndex = 0; recipientIndex < numRecipients; recipientIndex++) {
+          const recipient = recipients[recipientIndex]
+          // Use modulo to rotate through messages
+          const messageIndex = recipientIndex % numMessages
+          const messageContent = messagesToSend[messageIndex]
+          
+          try {
+            console.log(`📤 Sending message ${messageIndex + 1} to recipient ${recipientIndex + 1}/${numRecipients}...`)
+            const response = await fetch(`/api/whatsapp/send-message/${userId}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chatId: recipient,
+                message: messageContent,
+                image: wizardState.customImage || null,
+                buttons: wizardState.customButtons && wizardState.customButtons.length > 0 ? wizardState.customButtons : null,
                 options: {
                   delay: 1000,
                 }
@@ -331,7 +554,7 @@ export default function WhatsAppPage() {
             }
 
             // Add delay between recipients (but not after the last recipient)
-            if (recipientIndex < recipients.length - 1) {
+            if (recipientIndex < numRecipients - 1) {
               const delaySeconds = Math.round(effectiveRecipientIntervalDelay / 1000)
               console.log(`⏳ Waiting ${delaySeconds}s before next recipient...`)
               await new Promise(resolve => setTimeout(resolve, effectiveRecipientIntervalDelay))
@@ -340,59 +563,6 @@ export default function WhatsAppPage() {
             console.error(`Error sending to recipient ${recipientIndex + 1}:`, error)
             failureCount++
             lastError = error instanceof Error ? error.message : 'Unknown error'
-          }
-        }
-      } else {
-        // Multiple messages to recipients: send each message to all recipients with intervals
-        for (let msgIndex = 0; msgIndex < messagesToSend.length; msgIndex++) {
-          const messageContent = messagesToSend[msgIndex]
-          console.log(`📨 Sending message ${msgIndex + 1}/${messagesToSend.length} to ${recipients.length} recipients`)
-
-          // Send to each recipient
-          for (let recipientIndex = 0; recipientIndex < recipients.length; recipientIndex++) {
-            const recipient = recipients[recipientIndex]
-            try {
-              console.log(`📤 Sending message ${msgIndex + 1} to recipient ${recipientIndex + 1}/${recipients.length}...`)
-              const response = await fetch(`/api/whatsapp/send-message/${userId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  chatId: recipient,
-                  message: messageContent,
-                  options: {
-                    delay: 1000,
-                  }
-                })
-              })
-
-              if (response.ok) {
-                console.log(`✅ Message ${msgIndex + 1} sent to recipient ${recipientIndex + 1}`)
-                successCount++
-              } else {
-                const error = await response.text()
-                console.error(`❌ Failed to send message ${msgIndex + 1} to recipient ${recipientIndex + 1}:`, error)
-                failureCount++
-                lastError = error
-              }
-
-              // Add delay between recipients (but not after the last recipient)
-              if (recipientIndex < recipients.length - 1) {
-                const delaySeconds = Math.round(recipientIntervalDelay / 1000)
-                console.log(`⏳ Waiting ${delaySeconds}s before next recipient...`)
-                await new Promise(resolve => setTimeout(resolve, recipientIntervalDelay))
-              }
-            } catch (error) {
-              console.error(`Error sending message ${msgIndex + 1} to recipient ${recipientIndex + 1}:`, error)
-              failureCount++
-              lastError = error instanceof Error ? error.message : 'Unknown error'
-            }
-          }
-
-          // Add interval between messages (but not after the last message)
-          if (msgIndex < messagesToSend.length - 1) {
-            const delaySeconds = Math.round(messageIntervalDelay / 1000)
-            console.log(`⏳ Waiting ${delaySeconds}s before next message...`)
-            await new Promise(resolve => setTimeout(resolve, messageIntervalDelay))
           }
         }
       }
@@ -651,10 +821,14 @@ export default function WhatsAppPage() {
       selectedProducts: [],
       selectedListings: [],
       customMessage: '',
+      customImage: null,
+      customMessageTab: 'text',
+      customButtons: [],
       recipientType: null,
       selectedGroups: [],
       selectedContacts: [],
       customNumbers: [],
+      customRecipients: [],
       sendMode: null,
       deliveryMode: null,
       scheduleDateTime: null,
@@ -1069,6 +1243,64 @@ export default function WhatsAppPage() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
+
+              {/* AI API Keys - Always visible */}
+              <div className="space-y-3">
+                <h3 className="font-bold text-gray-900">🤖 AI Integration</h3>
+                <p className="text-sm text-gray-600">Add at least one API key to enable AI-powered ad generation</p>
+                
+                {/* OpenAI API Key */}
+                <div className="p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    OpenAI API Key
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={openaiApiKey}
+                      onChange={(e) => setOpenaiApiKey(e.target.value)}
+                      placeholder="sk-..."
+                      className="flex-1 px-4 py-2 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                    />
+                    <button
+                      onClick={saveOpenAiApiKey}
+                      disabled={savingApiKey || !openaiApiKey}
+                      className="px-6 py-2 bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-all"
+                    >
+                      {savingApiKey ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-2">
+                    Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline">OpenAI Platform</a>. Key is stored for this session only.
+                  </p>
+                </div>
+
+                {/* Groq API Key */}
+                <div className="p-4 bg-orange-50 border-2 border-orange-200 rounded-lg">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Groq API Key
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={groqApiKey}
+                      onChange={(e) => setGroqApiKey(e.target.value)}
+                      placeholder="gsk_..."
+                      className="flex-1 px-4 py-2 border-2 border-orange-300 rounded-lg focus:border-orange-500 focus:outline-none"
+                    />
+                    <button
+                      onClick={saveGroqApiKey}
+                      disabled={savingApiKey || !groqApiKey}
+                      className="px-6 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-all"
+                    >
+                      {savingApiKey ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-2">
+                    Get your API key from <a href="https://console.groq.com/" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline">Groq Console</a>. Key is stored for this session only.
+                  </p>
+                </div>
+              </div>
 
               {isConnected ? (
                 <>

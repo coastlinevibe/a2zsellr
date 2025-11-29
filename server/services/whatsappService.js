@@ -5,11 +5,21 @@ class WhatsAppService {
     this.clients = new Map();
     this.qrCodes = new Map();
     this.connectionStates = new Map(); // Track connection state
+    this.groupContactsCache = new Map(); // Cache group contacts to prevent redundant fetching
+    this.cacheExpiry = new Map(); // Cache expiry times
+    this.cacheCleanupInterval = null; // Interval for cache cleanup
     this.io = null;
   }
 
   setIO(io) {
     this.io = io;
+
+    // Set up periodic cache cleanup (every 5 minutes)
+    if (!this.cacheCleanupInterval) {
+      this.cacheCleanupInterval = setInterval(() => {
+        this.cleanupExpiredCache();
+      }, 5 * 60 * 1000);
+    }
   }
 
   async initializeClient(sessionId) {
@@ -154,70 +164,108 @@ class WhatsAppService {
     }
   }
 
-  async getGroupContacts(sessionId) {
+  async getGroupContacts(sessionId, forceRefresh = false) {
     try {
       const client = this.getClient(sessionId);
       if (!client) throw new Error('Client not initialized');
-      
-      console.log(`📱 Fetching all group contacts for ${sessionId}...`);
-      
-      // Get all chats (which includes groups)
+
+      // Check cache first (cache for 5 minutes) unless force refresh is requested
+      const cacheKey = `contacts_${sessionId}`;
+      const now = Date.now();
+      const cacheExpiry = this.cacheExpiry.get(cacheKey);
+      if (!forceRefresh && cacheExpiry && now < cacheExpiry) {
+        const cachedContacts = this.groupContactsCache.get(cacheKey);
+        if (cachedContacts) {
+          console.log(`📱 Returning cached group contacts for ${sessionId} (${cachedContacts.length} contacts)`);
+          return cachedContacts;
+        }
+      }
+
+      console.log(`📱 Fetching fresh group contacts for ${sessionId}...`);
+
+      // Get all chats (which includes groups) with timeout
       let chats = [];
       try {
         console.log(`Fetching all chats...`);
-        chats = await client.listChats();
+
+        // Add timeout to prevent hanging
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Chat fetching timeout after 30 seconds')), 30000)
+        );
+
+        const listChatsPromise = client.listChats();
+        chats = await Promise.race([listChatsPromise, timeoutPromise]);
         console.log(`✅ Got ${chats.length} chats`);
       } catch (err) {
         console.log(`listChats failed: ${err.message}, trying getAllChats...`);
         try {
-          chats = await client.getAllChats();
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Chat fetching timeout after 30 seconds')), 30000)
+          );
+
+          const getAllChatsPromise = client.getAllChats();
+          chats = await Promise.race([getAllChatsPromise, timeoutPromise]);
           console.log(`✅ Got ${chats.length} chats from getAllChats`);
         } catch (err2) {
           console.log(`getAllChats also failed: ${err2.message}`);
           return [];
         }
       }
-      
-      // Filter for groups only
+
+      // Filter for groups only and limit processing to prevent excessive time
       let groups = chats.filter(chat => chat.isGroup);
       console.log(`📊 Found ${groups.length} groups`);
-      
+
+      // Limit to first 50 groups to prevent excessive processing time
+      if (groups.length > 50) {
+        console.log(`⚠️ Limiting processing to first 50 groups out of ${groups.length} to prevent timeout`);
+        groups = groups.slice(0, 50);
+      }
+
       const allContacts = new Map(); // Use Map to deduplicate by phone number
-      
-      // Extract contacts from each group
+      let processedGroups = 0;
+      const totalGroups = groups.length;
+
+      // Extract contacts from each group with progress tracking
       for (const group of groups) {
         try {
-          console.log(`👥 Processing group: ${group.name}`);
-          
-          // Get participants from the group
+          processedGroups++;
+          console.log(`👥 Processing group ${processedGroups}/${totalGroups}: ${group.name}`);
+
+          // Get participants from the group with timeout
           let participants = [];
           try {
-            participants = await client.getGroupMembers(group.id._serialized);
+            const timeoutPromise = new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Group members fetching timeout')), 15000)
+            );
+
+            const getMembersPromise = client.getGroupMembers(group.id._serialized);
+            participants = await Promise.race([getMembersPromise, timeoutPromise]);
             console.log(`   ✅ Got ${participants.length} participants from ${group.name}`);
           } catch (err) {
             console.log(`   ⚠️ Could not get participants from ${group.name}: ${err.message}`);
             participants = group.participants || [];
           }
-          
+
           // Process each participant
+          let validParticipants = 0;
           for (const participant of participants) {
             try {
               // Skip if it's the user themselves
               if (participant.isMe) {
                 continue;
               }
-              
+
               // Get the participant ID
               const participantId = participant.id?._serialized || participant.id;
               if (!participantId) {
-                console.log(`   ⚠️ Participant has no ID`);
                 continue;
               }
-              
+
               // Extract phone number from ID (format: 27123456789@c.us or similar)
               const phoneMatch = participantId.match(/^(\d+)@/);
               const phoneNumber = phoneMatch ? phoneMatch[1] : participantId;
-              
+
               // Use phone number as unique ID
               if (!allContacts.has(phoneNumber)) {
                 allContacts.set(phoneNumber, {
@@ -233,20 +281,32 @@ class WhatsAppService {
                   contact.groups.push(group.name);
                 }
               }
+              validParticipants++;
             } catch (err) {
-              console.log(`   ⚠️ Error processing participant: ${err.message}`);
               // Continue processing other participants
             }
           }
+
+          console.log(`   📊 Added ${validParticipants} valid participants from ${group.name}`);
+
         } catch (err) {
           console.error(`Error processing group ${group.name}:`, err.message);
           // Continue processing other groups
         }
+
+        // Yield control every 10 groups to prevent blocking
+        if (processedGroups % 10 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
       }
-      
+
       const contactsList = Array.from(allContacts.values());
-      console.log(`✅ Extracted ${contactsList.length} unique contacts from ${groups.length} groups`);
-      
+      console.log(`✅ Extracted ${contactsList.length} unique contacts from ${totalGroups} groups (processed ${processedGroups})`);
+
+      // Cache the results for 10 minutes (increased from 5)
+      this.groupContactsCache.set(cacheKey, contactsList);
+      this.cacheExpiry.set(cacheKey, now + (10 * 60 * 1000)); // 10 minutes
+
       return contactsList;
     } catch (error) {
       console.error(`Error getting group contacts for session ${sessionId}:`, error);
@@ -315,7 +375,7 @@ class WhatsAppService {
       
       // Try different WPPConnect methods for sending text
       try {
-        // Method 1: Try sendTextMessage (WPP.chat.sendTextMessage)
+        // Method 1: Try sendTextMessage (WPP.chat.sendTextMessage) - supports buttons
         if (client.sendTextMessage && typeof client.sendTextMessage === 'function') {
           const result = await client.sendTextMessage(chatId, message, options);
           console.log(`✅ Message sent via sendTextMessage`);
@@ -402,6 +462,58 @@ class WhatsAppService {
     }
   }
 
+  async sendImageMessage(sessionId, chatId, base64Image, caption = '', options = {}) {
+    try {
+      const client = this.getClient(sessionId);
+      if (!client) throw new Error('Client not initialized');
+      
+      console.log(`📤 Attempting to send image with caption to ${chatId}`);
+      
+      // WPPConnect doesn't reliably support image sending via base64
+      // For now, just log that image sending is not supported
+      console.log(`⚠️ Image sending via WPPConnect is not fully supported`);
+      console.log(`📝 Caption will be sent as text message instead`);
+      
+      // Send caption as text message
+      if (caption) {
+        await this.sendMessage(sessionId, chatId, caption, options);
+        console.log(`✅ Caption sent as text message`);
+      }
+      
+      return { success: true, method: 'caption-only', message: 'Image sending not supported, caption sent as text' };
+    } catch (error) {
+      console.error(`Error sending image message in session ${sessionId}:`, error);
+      throw error;
+    }
+  }
+
+  async sendMessageButtons(sessionId, chatId, message, buttons = [], options = {}) {
+    try {
+      const client = this.getClient(sessionId);
+      if (!client) throw new Error('Client not initialized');
+      
+      console.log(`📤 Sending message with ${buttons.length} button(s) to ${chatId}`);
+      
+      // Send message with button info as text (most reliable method)
+      let messageWithButtons = message + '\n\n';
+      buttons.forEach((btn, index) => {
+        messageWithButtons += `${index + 1}. ${btn.text}`;
+        if (btn.url) {
+          messageWithButtons += ` - ${btn.url}`;
+        }
+        messageWithButtons += '\n';
+      });
+      
+      console.log(`📤 Sending message with button info as text`);
+      await this.sendMessage(sessionId, chatId, messageWithButtons, options);
+      console.log(`✅ Message with button info sent as text`);
+      return { success: true, method: 'text-buttons' };
+    } catch (error) {
+      console.error(`Error sending message with buttons in session ${sessionId}:`, error);
+      throw error;
+    }
+  }
+
   async disconnect(sessionId) {
     try {
       const client = this.getClient(sessionId);
@@ -409,6 +521,13 @@ class WhatsAppService {
         await client.close();
         this.clients.delete(sessionId);
         this.qrCodes.delete(sessionId);
+        this.connectionStates.delete(sessionId);
+
+        // Clear cached data
+        const cacheKey = `contacts_${sessionId}`;
+        this.groupContactsCache.delete(cacheKey);
+        this.cacheExpiry.delete(cacheKey);
+
         console.log(`WhatsApp client disconnected for session: ${sessionId}`);
       }
     } catch (error) {
@@ -422,12 +541,12 @@ class WhatsAppService {
       const client = this.getClient(sessionId);
       const qrCode = this.getQRCode(sessionId);
       let isConnected = this.connectionStates.get(sessionId) || false;
-      
+
       if (!client) {
         console.log(`⚠️ No client found for session ${sessionId}`);
         return { connected: false, qrCode: qrCode || null };
       }
-      
+
       // Always try to verify connection status with the client
       try {
         // Check if client has isConnected method
@@ -460,11 +579,40 @@ class WhatsAppService {
         this.connectionStates.set(sessionId, false);
         isConnected = false;
       }
-      
+
       return { connected: isConnected, qrCode: qrCode || null };
     } catch (error) {
       console.error(`Error getting status for session ${sessionId}:`, error);
       throw error;
+    }
+  }
+
+  // Clear cache for a specific session
+  clearGroupContactsCache(sessionId) {
+    const cacheKey = `contacts_${sessionId}`;
+    this.groupContactsCache.delete(cacheKey);
+    this.cacheExpiry.delete(cacheKey);
+    console.log(`🗑️ Cleared group contacts cache for session: ${sessionId}`);
+  }
+
+  // Clean up expired cache entries
+  cleanupExpiredCache() {
+    const now = Date.now();
+    const keysToDelete = [];
+
+    for (const [key, expiry] of this.cacheExpiry.entries()) {
+      if (now > expiry) {
+        keysToDelete.push(key);
+      }
+    }
+
+    keysToDelete.forEach(key => {
+      this.groupContactsCache.delete(key);
+      this.cacheExpiry.delete(key);
+    });
+
+    if (keysToDelete.length > 0) {
+      console.log(`🧹 Cleaned up ${keysToDelete.length} expired cache entries`);
     }
   }
 }

@@ -70,10 +70,10 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`Sending welcome email to ${email} for ${displayName} with ${selectedPlan} plan`)
-    
+
     // For Supabase, you would typically use an Edge Function or integrate with an email service
     // Here's how you could integrate with different email services:
-    
+
     // Option 1: Using Resend (recommended)
     if (process.env.RESEND_API_KEY) {
       try {
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: process.env.FROM_EMAIL || 'welcome@a2zsellr.com',
+            from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
             to: [email],
             subject: '🚀 Welcome to A2Z Sellr - Your Journey Starts Now!',
             html: welcomeEmailHtml,
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     
     // Option 3: Log to database for manual sending or batch processing
     try {
-      await supabase
+      const { error } = await supabase
         .from('email_queue')
         .insert({
           to_email: email,
@@ -160,23 +160,31 @@ export async function POST(request: NextRequest) {
           metadata: { selectedPlan },
           created_at: new Date().toISOString()
         })
-      
-      console.log('Welcome email queued in database for:', email)
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Welcome email queued successfully'
-      })
+
+      if (!error) {
+        console.log('Welcome email queued in database for:', email)
+        return NextResponse.json({
+          success: true,
+          message: 'Welcome email queued successfully'
+        })
+      } else {
+        console.warn('Database error queuing email:', error.message)
+        // Fall through to logging option
+      }
     } catch (dbError) {
-      console.warn('Could not queue email in database:', dbError)
+      console.warn('Could not queue email in database (table may not exist):', dbError)
+      // Fall through to logging option
     }
     
-    // Fallback: Just log the email (for development)
-    console.log('Welcome email would be sent to:', email)
-    console.log('Email content preview:', welcomeEmailHtml.substring(0, 200) + '...')
-    
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Welcome email processed (check logs for content)'
+    // Fallback: Just log the email (for development/testing)
+    console.log('Welcome email logged for:', email, '- Email service not available, check Resend API key configuration')
+
+    return NextResponse.json({
+      success: true,
+      message: 'Welcome email logged (email service not available - check Resend configuration)',
+      email: email,
+      displayName: displayName,
+      selectedPlan: selectedPlan
     })
 
   } catch (error) {

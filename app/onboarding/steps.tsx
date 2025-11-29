@@ -12,7 +12,44 @@ interface StepProps {
   onBack: () => void
 }
 
-export function WelcomeScreen({ username, onStart, onSkip }: any) {
+export function WelcomeScreen({ username, onStart, onSkip, isReturning = false }: any) {
+  if (isReturning) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="min-h-screen flex items-center justify-center p-4"
+      >
+        <div className="bg-white p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] w-full max-w-md text-center">
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-4"
+          >
+            <div className="text-5xl">👋</div>
+            <div className="min-h-16 flex items-center justify-center">
+              <h1 className="text-2xl sm:text-3xl font-black text-black break-words line-clamp-3">
+                Welcome, {username}!
+              </h1>
+            </div>
+            <p className="text-black font-bold text-sm sm:text-base leading-relaxed">
+              You are being redirected to your dashboard...
+            </p>
+            
+            <motion.div
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="text-2xl"
+            >
+              ⏳
+            </motion.div>
+          </motion.div>
+        </div>
+      </motion.div>
+    )
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -523,28 +560,6 @@ export function SocialLinksStep({ data, setData, onBack, onFinish }: any) {
             onChange={(e) => setData({ ...data, website: e.target.value })}
             className="w-full px-4 py-3 border-2 border-black rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="https://yourwebsite.com"
-          />
-        </div>
-
-        <div>
-          <label className="block text-black font-black mb-2">Facebook</label>
-          <input
-            type="url"
-            value={data.facebook}
-            onChange={(e) => setData({ ...data, facebook: e.target.value })}
-            className="w-full px-4 py-3 border-2 border-black rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="https://facebook.com/yourpage"
-          />
-        </div>
-
-        <div>
-          <label className="block text-black font-black mb-2">Instagram</label>
-          <input
-            type="url"
-            value={data.instagram}
-            onChange={(e) => setData({ ...data, instagram: e.target.value })}
-            className="w-full px-4 py-3 border-2 border-black rounded-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="https://instagram.com/yourprofile"
           />
         </div>
 

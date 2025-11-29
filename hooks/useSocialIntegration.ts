@@ -12,7 +12,7 @@ interface IntegrationStatus {
   message?: string
 }
 
-export function useSocialIntegration(platform: 'whatsapp' | 'facebook' | 'instagram') {
+export function useSocialIntegration(platform: 'whatsapp' = 'whatsapp') {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [qrCode, setQRCode] = useState<string | null>(null)
   const [isConnected, setIsConnected] = useState(false)
@@ -120,22 +120,6 @@ export function useSocialIntegration(platform: 'whatsapp' | 'facebook' | 'instag
 
       newSocket.on('whatsapp:message', (data: any) => {
         console.log('New message:', data.message)
-      })
-    }
-
-    // Facebook events
-    if (platform === 'facebook') {
-      newSocket.on('facebook:ready', (data: { sessionId: string }) => {
-        console.log('Facebook ready:', data.sessionId)
-        setIsConnected(true)
-      })
-    }
-
-    // Instagram events
-    if (platform === 'instagram') {
-      newSocket.on('instagram:ready', (data: { sessionId: string }) => {
-        console.log('Instagram ready:', data.sessionId)
-        setIsConnected(true)
       })
     }
 

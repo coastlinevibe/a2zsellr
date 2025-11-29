@@ -33,7 +33,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
       'Gallery slider showcase',
       'Unlimited products',
       'WhatsApp marketing tools',
-      'Facebook campaign tools',
+      'Advanced outreach automations',
       'Premium directory placement'
     ],
     popular: true
@@ -48,7 +48,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
       '12 gallery images (limited)',
       'Multi-location management',
       'Advanced analytics dashboard',
-      'Instagram ad automation',
+      'Priority WhatsApp broadcast windows',
       'Custom branding options',
       'Priority support',
       'Business marketing listing'

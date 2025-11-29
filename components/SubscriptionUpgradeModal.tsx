@@ -15,7 +15,6 @@ import {
   Star,
   Users,
   BarChart3,
-  Instagram,
   Palette,
   Headphones,
   Code,
@@ -96,7 +95,7 @@ export function SubscriptionUpgradeModal({
         '🗺️ Google Maps integration',
         '💳 PayFast payment processing',
         '📱 WhatsApp marketing tools',
-        '📘 Facebook campaign tools',
+        '🚀 Advanced WhatsApp broadcasts',
         '⭐ Premium directory placement'
       ]
     },
@@ -112,7 +111,7 @@ export function SubscriptionUpgradeModal({
         '💎 Everything in Premium',
         '🏪 Multi-location management',
         '📊 Advanced analytics dashboard',
-        '📸 Instagram ad automation',
+        '📞 Dedicated WhatsApp support hours',
         '🎨 Custom branding options',
         '🏆 Priority customer support',
         '🔌 API access & integrations',

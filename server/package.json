@@ -1,14 +1,14 @@
 {
   "name": "social-integrations-server",
   "version": "1.0.0",
-  "description": "Backend server for social media integrations (WhatsApp, Facebook, Instagram)",
+  "description": "Backend server for WhatsApp integrations",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
     "build": "echo 'No build needed'"
   },
-  "keywords": ["whatsapp", "facebook", "instagram", "integrations"],
+  "keywords": ["whatsapp", "integrations"],
   "author": "",
   "license": "MIT",
   "dependencies": {
