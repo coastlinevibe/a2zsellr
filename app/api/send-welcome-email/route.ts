@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabaseClient'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
@@ -14,181 +13,271 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Read the welcome email template
-    let welcomeEmailHtml = ''
-    try {
-      const templatePath = join(process.cwd(), 'email-templates', 'welcome-email.html')
-      welcomeEmailHtml = readFileSync(templatePath, 'utf8')
-      
-      // Replace template variables
-      welcomeEmailHtml = welcomeEmailHtml
-        .replace(/\{\{\.SiteURL\}\}/g, process.env.NEXT_PUBLIC_SITE_URL || 'https://www.a2zsellr.life')
-        .replace(/\{\{displayName\}\}/g, displayName)
-        .replace(/\{\{selectedPlan\}\}/g, selectedPlan)
-        .replace(/\{\{email\}\}/g, email)
-    } catch (templateError) {
-      console.warn('Could not read welcome email template:', templateError)
-      // Fallback to simple HTML
-      welcomeEmailHtml = `
-        <html>
-          <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #5cbdfd 0%, #667eea 100%); padding: 30px; text-align: center; border-radius: 10px; margin-bottom: 20px;">
-              <h1 style="color: white; font-size: 32px; margin: 0;">🚀 Welcome to A2Z Sellr! 🚀</h1>
-              <p style="color: white; font-size: 16px; margin: 10px 0 0 0;">Your Journey to Online Success Starts Now!</p>
-            </div>
-            
-            <div style="background: #fff3cd; border: 2px solid #856404; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
-              <h2 style="color: #856404; margin: 0 0 10px 0;">🎉 Welcome ${displayName}!</h2>
-              <p style="color: #856404; margin: 0;">We're thrilled to have you on board with your ${selectedPlan} plan and can't wait to help you grow your online business.</p>
-            </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.a2zsellr.life'}/dashboard" 
-                 style="background: #5cbdfd; color: black; padding: 15px 30px; font-size: 18px; font-weight: bold; text-decoration: none; border-radius: 10px; display: inline-block;">
-                Start Building Your Store
-              </a>
-            </div>
-            
-            <div style="background: #f8d7da; border: 2px solid #721c24; border-radius: 10px; padding: 20px; text-align: center; margin: 20px 0;">
-              <h3 style="color: #721c24; margin: 0 0 10px 0;">🎁 Your Free Trial</h3>
-              <p style="color: #721c24; margin: 5px 0;">You have <strong>24 hours</strong> to explore all features for free!</p>
-              <p style="color: #721c24; margin: 5px 0;"><strong>No credit card required</strong> to get started!</p>
-            </div>
-            
-            <div style="text-align: center; margin: 25px 0;">
-              <p style="color: #333;">Need help getting started?</p>
-              <p style="color: #666;">Contact our support team at <a href="mailto:support@a2zsellr.com" style="color: #5cbdfd;">support@a2zsellr.com</a></p>
-            </div>
-            
-            <div style="background: #f8f9fa; padding: 20px; text-align: center; margin-top: 30px; border-radius: 10px;">
-              <p style="color: #6c757d; margin: 5px 0;"><strong>A2Z Sellr</strong> - Your Complete E-commerce Solution</p>
-              <p style="color: #6c757d; margin: 5px 0; font-size: 12px;">Making online selling simple, powerful, and profitable.</p>
-            </div>
-          </body>
-        </html>
-      `
+    console.log(`Sending welcome email to ${email} for ${selectedPlan} plan`)
+
+    if (!process.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY is not configured')
+      return NextResponse.json(
+        { error: 'Email service not configured' },
+        { status: 500 }
+      )
     }
 
-    console.log(`Sending welcome email to ${email} for ${displayName} with ${selectedPlan} plan`)
+    // Create welcome email HTML
+    const welcomeEmailHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              background-color: #f5f5f5;
+              margin: 0;
+              padding: 0;
+            }
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              background-color: #ffffff;
+              border: 3px solid #000;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.1);
+            }
+            .header {
+              background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+              color: white;
+              padding: 30px 20px;
+              text-align: center;
+              border-bottom: 3px solid #000;
+            }
+            .header h1 {
+              margin: 0;
+              font-size: 28px;
+              font-weight: 900;
+              text-transform: uppercase;
+            }
+            .header p {
+              margin: 10px 0 0 0;
+              font-size: 14px;
+              font-weight: bold;
+            }
+            .content {
+              padding: 30px 20px;
+            }
+            .greeting {
+              font-size: 18px;
+              font-weight: bold;
+              color: #000;
+              margin-bottom: 20px;
+            }
+            .plan-badge {
+              display: inline-block;
+              background-color: #fbbf24;
+              color: #000;
+              padding: 8px 16px;
+              border-radius: 6px;
+              border: 2px solid #000;
+              font-weight: bold;
+              font-size: 14px;
+              margin-bottom: 20px;
+            }
+            .section {
+              margin-bottom: 25px;
+            }
+            .section-title {
+              font-size: 16px;
+              font-weight: bold;
+              color: #000;
+              margin-bottom: 12px;
+              text-transform: uppercase;
+            }
+            .feature-list {
+              list-style: none;
+              padding: 0;
+              margin: 0;
+            }
+            .feature-list li {
+              padding: 8px 0;
+              padding-left: 25px;
+              position: relative;
+              color: #333;
+              font-size: 14px;
+            }
+            .feature-list li:before {
+              content: "✓";
+              position: absolute;
+              left: 0;
+              color: #10b981;
+              font-weight: bold;
+              font-size: 16px;
+            }
+            .cta-button {
+              display: inline-block;
+              background-color: #3b82f6;
+              color: white;
+              padding: 12px 30px;
+              text-decoration: none;
+              border-radius: 6px;
+              border: 2px solid #000;
+              font-weight: bold;
+              font-size: 14px;
+              text-transform: uppercase;
+              margin-top: 15px;
+              box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
+            }
+            .cta-button:hover {
+              background-color: #2563eb;
+            }
+            .info-box {
+              background-color: #f0f9ff;
+              border: 2px solid #3b82f6;
+              border-radius: 6px;
+              padding: 15px;
+              margin: 15px 0;
+              font-size: 13px;
+              color: #333;
+            }
+            .footer {
+              background-color: #f5f5f5;
+              border-top: 2px solid #e5e5e5;
+              padding: 20px;
+              text-align: center;
+              font-size: 12px;
+              color: #666;
+            }
+            .footer a {
+              color: #3b82f6;
+              text-decoration: none;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🎉 Welcome to A2Z Sellr!</h1>
+              <p>Your account has been created successfully</p>
+            </div>
+            
+            <div class="content">
+              <div class="greeting">
+                Hi ${displayName}! 👋
+              </div>
+              
+              <p>Thank you for joining A2Z Sellr! We're excited to have you on board.</p>
+              
+              <div class="plan-badge">
+                ${selectedPlan.toUpperCase()} PLAN
+              </div>
+              
+              <div class="section">
+                <div class="section-title">🚀 Getting Started</div>
+                <p>Your account is now active and ready to use. Here's what you can do next:</p>
+                <ul class="feature-list">
+                  <li>Complete your business profile</li>
+                  <li>Add your products to your online shop</li>
+                  <li>Create marketing listings to promote your business</li>
+                  <li>Connect your WhatsApp for customer communication</li>
+                  <li>Start receiving customer inquiries</li>
+                </ul>
+              </div>
+              
+              <div class="info-box">
+                <strong>💡 Pro Tip:</strong> Visit your dashboard to set up your business profile and start selling. The more complete your profile, the more customers you'll attract!
+              </div>
+              
+              <div class="section">
+                <div class="section-title">📚 Your ${selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)} Plan Includes</div>
+                <ul class="feature-list">
+                  ${selectedPlan === 'free' ? `
+                    <li>Professional Business Listing</li>
+                    <li>Complete Online Shop (5 Products)</li>
+                    <li>Powerful Marketing Tools</li>
+                    <li>Complete Contact Information</li>
+                    <li>Business Gallery (3 Images)</li>
+                    <li>Customer Reviews & Ratings</li>
+                  ` : selectedPlan === 'premium' ? `
+                    <li>Everything in Free Plan</li>
+                    <li>Premium Directory Placement</li>
+                    <li>Gallery Slider Showcase</li>
+                    <li>Advanced Shop Integration</li>
+                    <li>WhatsApp Ad Scheduling</li>
+                    <li>WhatsApp Broadcast Templates</li>
+                    <li>Enhanced Analytics</li>
+                  ` : `
+                    <li>Everything in Premium Plan</li>
+                    <li>Multi-Location Management</li>
+                    <li>Advanced Analytics Dashboard</li>
+                    <li>Automated WhatsApp Playbooks</li>
+                    <li>Custom Business Branding</li>
+                    <li>Priority Customer Support</li>
+                    <li>Performance Insights</li>
+                  `}
+                </ul>
+              </div>
+              
+              <div class="section">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://www.a2zsellr.life'}/dashboard" class="cta-button">
+                  Go to Your Dashboard
+                </a>
+              </div>
+              
+              <div class="info-box">
+                <strong>❓ Need Help?</strong> Check out our documentation or contact our support team at support@a2zsellr.com
+              </div>
+            </div>
+            
+            <div class="footer">
+              <p>© 2025 A2Z Sellr. All rights reserved.</p>
+              <p>
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://www.a2zsellr.life'}">Visit Website</a> | 
+                <a href="mailto:support@a2zsellr.com">Contact Support</a>
+              </p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `
 
-    // For Supabase, you would typically use an Edge Function or integrate with an email service
-    // Here's how you could integrate with different email services:
+    // Send email via Resend
+    const resendResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: process.env.FROM_EMAIL || 'welcome@a2zsellr.life',
+        to: [email],
+        subject: `🎉 Welcome to A2Z Sellr, ${displayName}!`,
+        html: welcomeEmailHtml,
+      }),
+    })
 
-    // Option 1: Using Resend (recommended)
-    if (process.env.RESEND_API_KEY) {
-      try {
-        const resendResponse = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
-            to: [email],
-            subject: '🚀 Welcome to A2Z Sellr - Your Journey Starts Now!',
-            html: welcomeEmailHtml,
-          }),
-        })
-
-        if (!resendResponse.ok) {
-          throw new Error(`Resend API error: ${resendResponse.status}`)
-        }
-
-        const resendData = await resendResponse.json()
-        console.log('Welcome email sent via Resend:', resendData.id)
-        
-        return NextResponse.json({ 
-          success: true, 
-          message: 'Welcome email sent successfully via Resend',
-          emailId: resendData.id
-        })
-      } catch (resendError) {
-        console.error('Resend email error:', resendError)
-        // Fall through to other methods or return error
-      }
+    if (!resendResponse.ok) {
+      const errorData = await resendResponse.json()
+      console.error('Resend API error:', errorData)
+      return NextResponse.json(
+        { error: 'Failed to send welcome email' },
+        { status: 500 }
+      )
     }
-    
-    // Option 2: Using SendGrid
-    if (process.env.SENDGRID_API_KEY) {
-      try {
-        const sendGridResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            personalizations: [{
-              to: [{ email: email, name: displayName }],
-              subject: '🚀 Welcome to A2Z Sellr - Your Journey Starts Now!'
-            }],
-            from: { 
-              email: process.env.FROM_EMAIL || 'welcome@a2zsellr.com',
-              name: 'A2Z Sellr Team'
-            },
-            content: [{
-              type: 'text/html',
-              value: welcomeEmailHtml
-            }]
-          }),
-        })
 
-        if (sendGridResponse.ok) {
-          console.log('Welcome email sent via SendGrid')
-          return NextResponse.json({ 
-            success: true, 
-            message: 'Welcome email sent successfully via SendGrid'
-          })
-        }
-      } catch (sendGridError) {
-        console.error('SendGrid email error:', sendGridError)
-      }
-    }
-    
-    // Option 3: Log to database for manual sending or batch processing
-    try {
-      const { error } = await supabase
-        .from('email_queue')
-        .insert({
-          to_email: email,
-          to_name: displayName,
-          subject: '🚀 Welcome to A2Z Sellr - Your Journey Starts Now!',
-          html_content: welcomeEmailHtml,
-          email_type: 'welcome',
-          status: 'pending',
-          metadata: { selectedPlan },
-          created_at: new Date().toISOString()
-        })
-
-      if (!error) {
-        console.log('Welcome email queued in database for:', email)
-        return NextResponse.json({
-          success: true,
-          message: 'Welcome email queued successfully'
-        })
-      } else {
-        console.warn('Database error queuing email:', error.message)
-        // Fall through to logging option
-      }
-    } catch (dbError) {
-      console.warn('Could not queue email in database (table may not exist):', dbError)
-      // Fall through to logging option
-    }
-    
-    // Fallback: Just log the email (for development/testing)
-    console.log('Welcome email logged for:', email, '- Email service not available, check Resend API key configuration')
+    const resendData = await resendResponse.json()
+    console.log('Welcome email sent successfully:', resendData.id)
 
     return NextResponse.json({
       success: true,
-      message: 'Welcome email logged (email service not available - check Resend configuration)',
-      email: email,
-      displayName: displayName,
-      selectedPlan: selectedPlan
+      message: 'Welcome email sent successfully',
+      emailId: resendData.id
     })
 
   } catch (error) {
-    console.error('Error sending welcome email:', error)
+    console.error('Error in send welcome email API:', error)
     return NextResponse.json(
       { error: 'Failed to send welcome email' },
       { status: 500 }

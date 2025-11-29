@@ -180,10 +180,11 @@ export default function DashboardPage() {
       action: 'Next'
     },
     {
-      target: 'tour-tabs',
-      title: '🗂️ Navigation Tabs',
-      description: 'Click on these tabs to navigate between different sections of your dashboard.',
-      action: 'Next'
+      target: 'tour-profile-tab',
+      title: '👤 Profile Tab',
+      description: 'Update your business information, contact details, and settings here.',
+      action: 'Next',
+      preAction: () => setActiveTab('profile')
     },
     {
       target: 'tour-products-tab',
@@ -203,15 +204,8 @@ export default function DashboardPage() {
       target: 'tour-listings-tab',
       title: '📣 Listings Tab',
       description: 'Create marketing campaigns and share links to WhatsApp, social media, and more.',
-      action: 'Next',
-      preAction: () => setActiveTab('listings')
-    },
-    {
-      target: 'tour-profile-tab',
-      title: '👤 Profile Tab',
-      description: 'Update your business information, contact details, and settings here.',
       action: 'Finish Tour',
-      preAction: () => setActiveTab('profile')
+      preAction: () => setActiveTab('listings')
     }
   ]
 
@@ -1205,7 +1199,7 @@ export default function DashboardPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         {/* Stats - Desktop */}
-        <div id="tour-stats" className="hidden md:grid grid-cols-4 gap-4 mb-6">
+        <div id="tour-stats" className={`hidden md:grid ${profile?.subscription_tier === 'free' ? 'grid-cols-3' : 'grid-cols-4'} gap-4 mb-6`}>
           <motion.div 
             className="bg-blue-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4"
             initial={{ opacity: 0, rotateY: -90, x: -50 }}
@@ -1545,7 +1539,7 @@ export default function DashboardPage() {
         )}
 
         {/* Tabs - Desktop View */}
-        <div id="tour-tabs" className="hidden md:flex flex-wrap gap-4 mb-8">
+        <div id="tour-tabs" className="hidden md:inline-flex flex-wrap gap-4 mb-8">
           {dashboardTabs.map((tab) => {
             // Hide premium-only tabs for free tier users
             if (tab.premiumOnly && profile?.subscription_tier === 'free') {

@@ -92,30 +92,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Don't fail the signup, just log the warning
         }
 
-        // Send welcome email
-        try {
-          const welcomeEmailResponse = await fetch('/api/send-welcome-email', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email: email,
-              displayName: displayName,
-              selectedPlan: selectedPlan
-            })
-          })
-
-          if (!welcomeEmailResponse.ok) {
-            console.warn('Failed to send welcome email:', await welcomeEmailResponse.text())
-          } else {
-            console.log('Welcome email sent successfully to:', email)
-          }
-        } catch (emailError) {
-          console.warn('Error sending welcome email:', emailError)
-          // Don't fail the signup for email errors
-        }
-
       } catch (profileErr) {
         console.warn('Profile creation error:', profileErr)
       }
