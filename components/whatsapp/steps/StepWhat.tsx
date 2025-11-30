@@ -746,7 +746,7 @@ export default function StepWhat({ state, onUpdate }: StepWhatProps) {
                         />
                         <button
                           onClick={() => {
-                            const newRecipients = state.customRecipients.filter((_, i) => i !== index)
+                            const newRecipients = state.customRecipients.filter((_: any, i: number) => i !== index)
                             onUpdate({ customRecipients: newRecipients })
                           }}
                           className="text-red-500 hover:text-red-700 text-xs"
