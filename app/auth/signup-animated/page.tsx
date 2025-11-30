@@ -408,7 +408,7 @@ export default function AnimatedSignupPage() {
           console.warn('Welcome email API returned non-OK status:', emailResponse.status)
         }
       } catch (emailError) {
-        console.warn('Failed to send welcome email, but registration continues:', emailError.message)
+        console.warn('Failed to send welcome email, but registration continues:', emailError instanceof Error ? emailError.message : String(emailError))
         // Don't fail registration for email errors - just log it
       }
 
