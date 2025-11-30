@@ -30,6 +30,7 @@ const MOCK_LISTINGS = [
 ]
 
 const TIER_LIMITS = {
+  free: { products: 5, listings: 3 },
   premium: { products: 8, listings: 8 },
   business: { products: Infinity, listings: Infinity }
 }
