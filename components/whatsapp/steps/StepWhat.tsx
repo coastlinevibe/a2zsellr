@@ -712,7 +712,7 @@ export default function StepWhat({ state, onUpdate }: StepWhatProps) {
                     <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-mono">{`{name}`}</span>
                   </div>
                   <p className="text-xs text-blue-700">
-                    💡 <strong>Example:</strong> "Hi {name}, check out our new product!" → "Hi Nadine, check out our new product!"
+                    💡 <strong>Example:</strong> {`"Hi {name}, check out our new product!" → "Hi Nadine, check out our new product!"`}
                   </p>
                 </div>
 
