@@ -183,4 +183,111 @@ export default function StepOne({ state, setState, tier }: StepOneProps) {
 
           {/* Product list */}
           <button
-  
+            onClick={() => setShowProductList(!showProductList)}
+            className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-emerald-600 hover:text-emerald-600 transition-colors font-medium"
+          >
+            {showProductList ? 'Hide Products' : 'Show Products'}
+          </button>
+
+          {showProductList && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {MOCK_PRODUCTS.map((product) => (
+                <button
+                  key={product.id}
+                  onClick={() => handleItemToggle(product.id)}
+                  className={`p-4 rounded-lg border-2 transition-all text-center ${
+                    state.selectedItems.includes(product.id)
+                      ? 'border-emerald-600 bg-emerald-50'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                >
+                  <div className="text-3xl mb-2">{product.image}</div>
+                  <p className="text-sm font-medium text-gray-900">{product.name}</p>
+                  <p className="text-xs text-gray-600">{product.price}</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {state.contentType === 'listing' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-gray-900">Select Listings</h3>
+            <span className="text-sm text-gray-600">
+              {state.selectedItems.length} / {limits.listings === Infinity ? '∞' : limits.listings}
+            </span>
+          </div>
+
+          {state.selectedItems.length > 0 && (
+            <div className="mb-6 p-4 bg-emerald-50 rounded-lg border-2 border-emerald-200">
+              <p className="text-sm font-semibold text-emerald-900 mb-3">Selected Listings:</p>
+              <div className="flex flex-wrap gap-2">
+                {state.selectedItems.map((itemId: string) => {
+                  const listing = MOCK_LISTINGS.find((l) => l.id === itemId)
+                  return (
+                    <div
+                      key={itemId}
+                      className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-emerald-300"
+                    >
+                      <span>{listing?.image}</span>
+                      <span className="text-sm font-medium text-gray-900">{listing?.name}</span>
+                      <button
+                        onClick={() => handleRemoveItem(itemId)}
+                        className="ml-1 text-gray-400 hover:text-red-600 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={() => setShowListingList(!showListingList)}
+            className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-emerald-600 hover:text-emerald-600 transition-colors font-medium"
+          >
+            {showListingList ? 'Hide Listings' : 'Show Listings'}
+          </button>
+
+          {showListingList && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {MOCK_LISTINGS.map((listing) => (
+                <button
+                  key={listing.id}
+                  onClick={() => handleItemToggle(listing.id)}
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
+                    state.selectedItems.includes(listing.id)
+                      ? 'border-emerald-600 bg-emerald-50'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                >
+                  <div className="text-2xl mb-2">{listing.image}</div>
+                  <p className="font-medium text-gray-900">{listing.name}</p>
+                  <p className="text-sm text-gray-600">{listing.description}</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {state.contentType === 'custom' && (
+        <div className="space-y-4">
+          <h3 className="font-bold text-gray-900">Write Your Message</h3>
+          <textarea
+            value={state.customMessage}
+            onChange={(e) => setState({ ...state, customMessage: e.target.value })}
+            placeholder="Type your custom message here..."
+            className="w-full p-4 border-2 border-gray-200 rounded-lg focus:border-emerald-600 focus:outline-none resize-none"
+            rows={6}
+          />
+          <p className="text-sm text-gray-600">{state.customMessage.length} characters</p>
+        </div>
+      )}
+    </div>
+  )
+}
