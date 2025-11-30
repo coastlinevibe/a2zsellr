@@ -130,7 +130,6 @@ export default function StepWhat({ state, onUpdate }: StepWhatProps) {
         },
         body: JSON.stringify({
           apiKey,
-          provider,
           ...aiAdForm
         })
       })
