@@ -12,6 +12,7 @@ import EmojiPicker from '@/components/ui/emoji-picker'
 import RichTextEditor from '@/components/ui/rich-text-editor'
 import { 
   ShoppingCart, 
+  ShoppingBag,
   Plus, 
   Search,
   Package,
@@ -28,7 +29,8 @@ import {
   List,
   Star,
   Heart,
-  MessageCircle
+  MessageCircle,
+  Check
 } from 'lucide-react'
 
 interface ProductImage {
@@ -44,6 +46,7 @@ interface Product {
   description: string | null
   product_details: string | null
   price_cents: number | null
+  discounted_price?: string | null
   category: string | null
   image_url: string | null
   images?: ProductImage[]
@@ -89,6 +92,7 @@ export default function BusinessShop({
     description: '',
     product_details: '',
     price_cents: '',
+    discounted_price: '',
     category: '',
     image_url: ''
   })
@@ -194,6 +198,7 @@ export default function BusinessShop({
       description: '',
       product_details: '',
       price_cents: '',
+      discounted_price: '',
       category: 'products',
       image_url: ''
     })
@@ -215,6 +220,7 @@ export default function BusinessShop({
       description: product.description || '',
       product_details: product.product_details || '',
       price_cents: product.price_cents ? (product.price_cents / 100).toString() : '',
+      discounted_price: product.discounted_price || '',
       category: product.category || 'products',
       image_url: product.image_url || ''
     })
@@ -450,6 +456,7 @@ export default function BusinessShop({
         description: productForm.description || null,
         product_details: productForm.product_details || null,
         price_cents: productForm.price_cents ? Math.round(parseFloat(productForm.price_cents) * 100) : null,
+        discounted_price: productForm.discounted_price || null,
         category: productForm.category,
         image_url: productForm.image_url || (allImages.length > 0 ? allImages[0].url : null),
         images: allImages,
@@ -635,259 +642,321 @@ export default function BusinessShop({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map(product => (
-            <div key={product.id} className={`relative bg-white rounded-[9px] border overflow-hidden transition-all ${
-              manageMode 
-                ? 'border-blue-300 hover:border-blue-500 hover:shadow-lg' 
-                : 'border-gray-200 hover:shadow-md'
-            }`}>
-              {/* Show first image from images array or fallback to image_url */}
-              {(() => {
-                // Handle both JSON string and array formats for images
-                let imagesArray = []
-                if (product.images) {
-                  if (Array.isArray(product.images)) {
-                    imagesArray = product.images
-                  } else if (typeof product.images === 'string') {
-                    try {
-                      imagesArray = JSON.parse(product.images)
-                    } catch (e) {
-                      imagesArray = []
-                    }
-                  }
+        <div className="flex gap-4 pb-2 pt-5 overflow-x-auto" style={{ width: 'max-content', minWidth: '100%' }}>
+          {filteredProducts.map((product, index) => {
+            // Handle both JSON string and array formats for images
+            let imagesArray = []
+            if (product.images) {
+              if (typeof product.images === 'string') {
+                try {
+                  imagesArray = JSON.parse(product.images)
+                } catch (e) {
+                  imagesArray = []
                 }
-                
-                const hasImages = imagesArray && imagesArray.length > 0
-                const imageUrl = hasImages ? imagesArray[0]?.url : product.image_url
-                
-                return (imageUrl || product.image_url) ? (
-                  <>
+              } else if (Array.isArray(product.images)) {
+                imagesArray = product.images
+              }
+            }
+            
+            const hasImages = imagesArray && imagesArray.length > 0
+            const imageUrl = hasImages 
+              ? imagesArray[0]?.url || product.image_url
+              : product.image_url
+            
+            return (
+              <div 
+                key={product.id}
+                className="w-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transition-all duration-300 flex-shrink-0 relative group flex flex-col"
+                style={{ height: '500px' }}
+              >
+                {/* Badge - Only show if discounted price exists */}
+                {product.discounted_price && (
+                  <div className="absolute top-3 right-3 bg-gradient-to-r from-red-700 via-red-600 to-red-800 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider z-10 shadow-lg">
+                    HOT SALE
+                  </div>
+                )}
+
+                {/* Image Container - Auto-resizes to fit viewport */}
+                <div className="relative w-full h-56 overflow-hidden bg-gray-100">
+                  {imageUrl ? (
                     <img
-                      src={imageUrl || product.image_url!}
+                      src={imageUrl}
                       alt={product.name}
-                      className="w-full h-48 object-cover"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    {/* Image count indicator */}
-                    {hasImages && imagesArray.length > 1 && (
-                      <div className="absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                        <ImageIcon className="h-3 w-3" />
-                        {imagesArray.length}
-                      </div>
-                    )}
-                  </>
-                ) : null
-              })()}
-              <div className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-gray-900 flex-1">{product.name}</h3>
-                  {isOwner && manageMode && (
-                    <div className="flex gap-1 ml-2">
-                      <button
-                        onClick={() => handleViewProduct(product)}
-                        className="p-1.5 text-white bg-emerald-600 hover:bg-emerald-700 rounded-[9px]"
-                        title="View product"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleEditProduct(product)}
-                        className="p-1.5 text-white bg-blue-600 hover:bg-blue-700 rounded-[9px]"
-                        title="Edit product"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProduct(product.id)}
-                        className="p-1.5 text-white bg-red-600 hover:bg-red-700 rounded-[9px]"
-                        title="Delete product"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ShoppingBag className="w-12 h-12 text-gray-300" />
                     </div>
                   )}
-                  {isOwner && !manageMode && (
-                    <button
-                      onClick={() => handleShareProduct(product)}
-                      className="p-1 text-gray-400 hover:text-emerald-600"
-                      title="Share product"
-                    >
-                      <Share2 className="h-4 w-4" />
-                    </button>
-                  )}
                 </div>
-                
-                {product.description && (
-                  <div 
-                    className="text-gray-600 text-sm mb-3 prose prose-sm max-w-none prose-headings:text-gray-800 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-800"
-                    dangerouslySetInnerHTML={{ __html: product.description }}
-                  />
-                )}
-                
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    {product.price_cents ? (
-                      <span className="text-lg font-bold text-emerald-600">
-                        R{(product.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
+
+                {/* Content */}
+                <div className="p-4 flex-1 flex flex-col overflow-hidden">
+                  {/* Category */}
+                  <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
+                    {product.category || 'Product'}
+                  </div>
+
+                  {/* Title */}
+                  <h2 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+                    {product.name}
+                  </h2>
+
+                  {/* Description */}
+                  {product.description && (
+                    <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">
+                      {product.description.replace(/<[^>]*>/g, '')}
+                    </p>
+                  )}
+
+                  {/* Features */}
+                  {product.product_details && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {product.product_details.split(',').slice(0, 3).map((feature, idx) => (
+                        <span key={idx} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full font-medium">
+                          {feature.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Bottom Section */}
+                  <div className="flex justify-between items-end gap-3 pt-3 border-t border-gray-100 mt-auto">
+                    {/* Price */}
+                    <div className="flex flex-col">
+                      {product.price_cents ? (
+                        <>
+                          {product.discounted_price ? (
+                            <>
+                              <span className="text-xs text-gray-400 line-through">
+                                R{(product.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                              <span className="text-2xl font-bold text-red-600">
+                                R{parseFloat(product.discounted_price).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-2xl font-bold text-gray-900">
+                              R{(product.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-sm text-gray-500 font-medium">Contact for price</span>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    {isOwner && manageMode ? (
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleViewProduct(product)}
+                          className="p-2 text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors"
+                          title="View"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleEditProduct(product)}
+                          className="p-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="p-2 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     ) : (
-                      <span className="text-gray-500">Contact for price</span>
+                      <button 
+                        onClick={() => handleShareProduct(product)}
+                        className="p-2 text-gray-400 hover:text-emerald-600 transition-colors"
+                        title="Share"
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </button>
                     )}
                   </div>
-                </div>
-                
-                {/* Add to Cart Button */}
-                {!isOwner && product.price_cents && (
-                  <Button
-                    onClick={() => handleAddToCart(product)}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2"
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                    Add to Cart
-                  </Button>
-                )}
-                
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {product.category && (
-                    <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-[9px]">
-                      {categories.find(c => c.value === product.category)?.label || product.category}
-                    </span>
-                  )}
+
+                  {/* Meta Info */}
+                  <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                      ))}
+                      <span className="text-xs text-gray-500 ml-1">128 Reviews</span>
+                    </div>
+                    <div className="text-xs font-semibold text-green-600">In Stock</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
       {/* Add/Edit Product Modal */}
       {showAddProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full my-8 max-h-[95vh] flex flex-col border border-gray-200">
+        <div className="z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 overflow-y-auto" style={{ position: 'fixed', top: '0', left: '0', right: '0', bottom: '0', margin: '0', padding: '1rem' }}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-7xl w-full my-8 max-h-[95vh] flex flex-col border border-gray-200">
             {/* Enhanced Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-blue-50">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-t-2xl">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-100 rounded-lg">
-                  <Package className="h-5 w-5 text-emerald-600" />
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Package className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">
+                  <h3 className="text-2xl font-bold text-white">
                     {editingProduct ? 'Edit Product' : 'Add New Product'}
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-emerald-100">
                     {editingProduct ? 'Update your product details' : 'Create a new product for your shop'}
                   </p>
                 </div>
               </div>
               <button 
                 onClick={closeProductModal} 
-                className="hover:bg-white/80 rounded-lg p-2 transition-colors"
+                className="hover:bg-white/20 rounded-lg p-2 transition-colors text-white"
               >
-                <X className="h-5 w-5 text-gray-500" />
+                <X className="h-5 w-5" />
               </button>
             </div>
             
-            {/* Enhanced Content */}
-            <div className="p-6 space-y-6 overflow-y-auto flex-1 bg-gray-50/30">
-              {/* Product Name */}
-              <div className="bg-white rounded-lg p-4 border border-gray-200">
-                <label className="block text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
-                  Product Name *
-                </label>
-                <input
-                  type="text"
-                  value={productForm.name}
-                  onChange={(e) => setProductForm({...productForm, name: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                  placeholder="Enter a compelling product name"
-                />
-              </div>
-              
-              {/* Rich Text Description */}
-              <div className="bg-white rounded-lg p-4 border border-gray-200">
-                <label className="block text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                  Product Description
-                </label>
-                <RichTextEditor
-                  value={productForm.description}
-                  onChange={(value) => setProductForm({...productForm, description: value})}
-                  placeholder="Describe your product with rich formatting - add bullet points, bold text, links, and more..."
-                  maxLength={1000}
-                  className="border-gray-300 focus-within:ring-2 focus-within:ring-emerald-500"
-                />
-              </div>
-              
-              {/* Product Details - Bullet Points */}
-              <div className="bg-white rounded-lg p-4 border border-gray-200">
-                <label className="block text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
-                  Product Details
-                  <span className="text-xs text-gray-500 font-normal">(Optional - one detail per line for bullet points)</span>
-                </label>
-                <textarea
-                  value={productForm.product_details}
-                  onChange={(e) => setProductForm({...productForm, product_details: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-vertical"
-                  placeholder="High quality materials&#10;Carefully crafted&#10;Satisfaction guaranteed&#10;&#10;Enter each detail on a new line"
-                  rows={4}
-                />
-              </div>
-              
-              {/* Price & Category Row */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Price */}
-                <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  <label className="block text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    Price (R)
+            {/* Enhanced Content - 2 Column Layout */}
+            <div className="flex flex-1 overflow-hidden bg-white">
+              {/* Left Column - Form */}
+              <div className="flex-1 p-6 space-y-5 overflow-y-auto bg-white border-r border-gray-200">
+              {/* Section 1: Basic Info */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Basic Information</h4>
+                
+                {/* Product Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
+                    Product Name *
                   </label>
                   <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={productForm.price_cents}
-                    onChange={(e) => setProductForm({...productForm, price_cents: e.target.value})}
+                    type="text"
+                    value={productForm.name}
+                    onChange={(e) => setProductForm({...productForm, name: e.target.value})}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                    placeholder="0.00"
+                    placeholder="e.g., Premium Leather Jacket"
                   />
                 </div>
                 
-                {/* Category */}
-                <div className="bg-white rounded-lg p-4 border border-gray-200">
-                  <label className="block text-sm font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                    Category
+                {/* Rich Text Description */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
+                    Description
                   </label>
-                  <select
-                    value={productForm.category}
-                    onChange={(e) => setProductForm({...productForm, category: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                  >
-                    {categories.slice(1).map(cat => (
-                      <option key={cat.value} value={cat.value}>{cat.label}</option>
-                    ))}
-                  </select>
+                  <RichTextEditor
+                    value={productForm.description}
+                    onChange={(value) => setProductForm({...productForm, description: value})}
+                    placeholder="Describe your product with rich formatting..."
+                    maxLength={1000}
+                    className="border-gray-300 focus-within:ring-2 focus-within:ring-emerald-500"
+                  />
                 </div>
               </div>
 
-              {/* Product Images Upload */}
-              <div className="bg-white rounded-lg p-4 border border-gray-200">
-                <div className="flex items-center justify-between mb-3">
-                  <label className="block text-sm font-semibold text-gray-800 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                    Product Images ({(Array.isArray(productImages) ? productImages.length : 0) + imageFiles.length}/{userTier === 'free' ? 1 : userTier === 'premium' ? 8 : 12})
+              {/* Divider */}
+              <div className="border-t border-gray-200"></div>
+
+              {/* Section 2: Details & Pricing */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Details & Pricing</h4>
+                
+                {/* Product Details */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
+                    Product Details <span className="text-xs text-gray-500 font-normal">(Optional)</span>
                   </label>
+                  <textarea
+                    value={productForm.product_details}
+                    onChange={(e) => setProductForm({...productForm, product_details: e.target.value})}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-vertical"
+                    placeholder="High quality materials&#10;Carefully crafted&#10;Satisfaction guaranteed"
+                    rows={3}
+                  />
+                </div>
+                
+                {/* Pricing Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Original Price */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-800 mb-2">
+                      Original Price (R) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={productForm.price_cents}
+                      onChange={(e) => setProductForm({...productForm, price_cents: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  
+                  {/* Discounted Price */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-800 mb-2">
+                      Discounted Price (R) <span className="text-xs text-gray-500 font-normal">(Optional)</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={productForm.discounted_price}
+                      onChange={(e) => setProductForm({...productForm, discounted_price: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                      placeholder="Leave empty for no discount"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Shows HOT SALE badge when set</p>
+                  </div>
+                  
+                  {/* Category */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-800 mb-2">
+                      Category *
+                    </label>
+                    <select
+                      value={productForm.category}
+                      onChange={(e) => setProductForm({...productForm, category: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                    >
+                      {categories.slice(1).map(cat => (
+                        <option key={cat.value} value={cat.value}>{cat.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-gray-200"></div>
+
+              {/* Section 3: Product Images */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                    Product Images
+                  </h4>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                      📐 800×800px recommended
+                    <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-medium">
+                      {(Array.isArray(productImages) ? productImages.length : 0) + imageFiles.length}/{userTier === 'free' ? 1 : userTier === 'premium' ? 8 : 12}
                     </span>
                     <Badge variant={userTier === 'free' ? 'destructive' : 'default'} className="text-xs">
                       {userTier} tier
                     </Badge>
                   </div>
                 </div>
+                <p className="text-xs text-gray-600">📐 Recommended: 800×800px square images</p>
                 
                 {/* Combined Images Grid - Compact */}
                 {(Array.isArray(productImages) && productImages.length > 0 || imageFiles.length > 0) && (
@@ -952,30 +1021,181 @@ export default function BusinessShop({
 
               </div>
             </div>
+
+              {/* Right Column - Live Preview (Desktop Only) */}
+              <div className="hidden lg:flex flex-col w-80 bg-gray-50 p-6 overflow-y-auto flex-shrink-0 border-l border-gray-200">
+                <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">Live Preview</h4>
+                
+                {/* Preview Product Card - EXACT SAME as profile page */}
+                <div 
+                  className="w-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transition-all duration-300 flex-shrink-0 relative group flex flex-col"
+                  style={{ height: '500px' }}
+                >
+                  {/* Badge - Only show if discounted price exists */}
+                  {productForm.discounted_price && (
+                    <div className="absolute top-3 right-3 bg-gradient-to-r from-red-700 via-red-600 to-red-800 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider z-10 shadow-lg">
+                      HOT SALE
+                    </div>
+                  )}
+
+                  {/* Image Container - Auto-resizes to fit viewport */}
+                  <div className="relative w-full h-56 overflow-hidden bg-gray-100">
+                    {(() => {
+                      const imagesArray: ProductImage[] = productImages && productImages.length > 0 ? productImages : []
+                      
+                      if (imageFiles && imageFiles.length > 0) {
+                        return (
+                          <img
+                            src={URL.createObjectURL(imageFiles[0])}
+                            alt="Preview"
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        )
+                      }
+                      
+                      if (imagesArray.length > 0) {
+                        return (
+                          <img
+                            src={imagesArray[0]?.url}
+                            alt="Preview"
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        )
+                      }
+                      
+                      return (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ShoppingBag className="w-12 h-12 text-gray-300" />
+                        </div>
+                      )
+                    })()}
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-4 flex-1 flex flex-col overflow-hidden">
+                    {/* Category */}
+                    <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
+                      {productForm.category || 'Product'}
+                    </div>
+
+                    {/* Title */}
+                    <h2 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+                      {productForm.name || 'Product Name'}
+                    </h2>
+
+                    {/* Description */}
+                    {productForm.description ? (
+                      <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">
+                        {productForm.description.replace(/<[^>]*>/g, '')}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-gray-400 leading-relaxed mb-3 line-clamp-2">
+                        Product description will appear here
+                      </p>
+                    )}
+
+                    {/* Product Details - 2 Columns */}
+                    {productForm.product_details ? (
+                      <div className="mb-4 pb-3 border-b border-gray-100">
+                        <div className="grid grid-cols-2 gap-2">
+                          {productForm.product_details.split(',').map((detail, idx) => (
+                            <div key={idx} className="flex items-start gap-2">
+                              <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                              <span className="text-xs text-gray-700 leading-tight">
+                                {detail.trim()}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mb-4 pb-3 border-b border-gray-100">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="flex items-start gap-2">
+                            <Check className="w-4 h-4 text-gray-300 flex-shrink-0 mt-0.5" />
+                            <span className="text-xs text-gray-400 leading-tight">Detail 1</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <Check className="w-4 h-4 text-gray-300 flex-shrink-0 mt-0.5" />
+                            <span className="text-xs text-gray-400 leading-tight">Detail 2</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Bottom Section */}
+                    <div className="flex justify-between items-end gap-3 pt-3 border-t border-gray-100">
+                      {/* Price */}
+                      <div className="flex flex-col">
+                        {productForm.price_cents ? (
+                          <>
+                            {productForm.discounted_price ? (
+                              <>
+                                <span className="text-xs text-gray-400 line-through">
+                                  R{(parseFloat(productForm.price_cents) || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                                <span className="text-2xl font-bold text-red-600">
+                                  R{(parseFloat(productForm.discounted_price) || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-2xl font-bold text-gray-900">
+                                R{(parseFloat(productForm.price_cents) || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-sm text-gray-500 font-medium">Contact for price</span>
+                        )}
+                      </div>
+
+                      {/* Add to Cart Button */}
+                      <button 
+                        className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md"
+                      >
+                        <span>Add</span>
+                        <ShoppingBag className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Meta Info */}
+                    <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                        ))}
+                        <span className="text-xs text-gray-500 ml-1">128 Reviews</span>
+                      </div>
+                      <div className="text-xs font-semibold text-green-600">In Stock</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             
             {/* Enhanced Footer */}
-            <div className="flex gap-4 p-6 border-t border-gray-200 flex-shrink-0 bg-gradient-to-r from-gray-50 to-white">
+            <div className="flex gap-3 p-6 border-t border-gray-200 flex-shrink-0 bg-gray-50">
               <Button
                 onClick={closeProductModal}
                 variant="outline"
-                className="flex-1 rounded-lg border-2 hover:bg-gray-50 transition-colors py-3"
+                className="flex-1 rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors py-3 font-medium"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSaveProduct}
-                className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 rounded-lg shadow-lg hover:shadow-xl transition-all py-3"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all py-3 font-medium"
                 disabled={!productForm.name.trim() || uploadingImages}
               >
                 {uploadingImages ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Uploading Images...
+                    Uploading...
                   </>
                 ) : (
                   <>
                     <Package className="h-4 w-4 mr-2" />
-                    {editingProduct ? 'Update Product' : 'Add to Shop'}
+                    {editingProduct ? 'Update Product' : 'Add Product'}
                   </>
                 )}
               </Button>

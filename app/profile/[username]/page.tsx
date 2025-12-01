@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Head from 'next/head'
 import { supabase } from '@/lib/supabaseClient'
-import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Sword, Zap, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Check, Truck, Shield, MessageCircle, FileText, Search, MessageSquare } from 'lucide-react'
+import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Sword, Zap, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Check, Truck, Shield, MessageCircle, FileText, Search, MessageSquare, Eye } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon'
@@ -60,6 +60,7 @@ interface Product {
   image_url: string | null
   images?: ProductImage[]
   price_cents: number | null
+  discounted_price?: string | null
   is_active: boolean
 }
 
@@ -1092,9 +1093,9 @@ Best regards`
           </div>
 
           {/* Desktop Layout */}
-          <div className="hidden md:flex items-center gap-3 justify-between">
+          <div className="hidden md:flex items-center gap-4 justify-between">
             {/* Left: Avatar + Name + Badges */}
-            <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="flex items-center gap-3 min-w-0 flex-1 max-w-xs">
               {profile.avatar_url && (
                 <img 
                   src={profile.avatar_url} 
@@ -1155,6 +1156,29 @@ Best regards`
                     </>
                   )}
                 </div>
+              </div>
+            </div>
+            
+            {/* Center: Search Bar */}
+            <div className="flex-1 max-w-lg mx-4">
+              <div className="relative group">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 group-focus-within:text-emerald-600 transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Search by name, description, or details..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-sm bg-white hover:border-gray-400"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    title="Clear search"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </div>
             
@@ -1622,20 +1646,6 @@ Best regards`
             <span className="text-sm text-gray-500">{products.length} items</span>
           </div>
           
-          {/* Search Bar */}
-          <div className="mb-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search products by name, description, or details..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-              />
-            </div>
-          </div>
-          
           <AnimatePresence mode="wait">
             {(() => {
               const filteredProducts = products.filter(product => {
@@ -1663,101 +1673,156 @@ Best regards`
                 transition={{ duration: 0.3 }}
               >
                 <motion.div 
-                  className="flex gap-4 pb-2" 
+                  className="flex gap-4 pb-2 pt-5" 
                   style={{ width: 'max-content' }}
                   layout
                 >
-                  {filteredProducts.map((product, index) => (
-                    <motion.div 
-                      key={product.id} 
-                      className="bg-white border border-gray-200 rounded-[9px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex-shrink-0 w-48"
-                      onClick={() => setSelectedProduct(product)}
-                      initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.8, y: -20 }}
-                      transition={{ 
-                        duration: 0.4, 
-                        ease: [0.34, 1.56, 0.64, 1],
-                        delay: index * 0.05
-                      }}
-                      whileHover={{ y: -8, boxShadow: '0 12px 24px rgba(0, 0, 0, 0.15)' }}
-                    >
-                    {(() => {
-                      // Handle both JSON string and array formats for images
-                      let imagesArray = []
-                      if (product.images) {
-                        if (typeof product.images === 'string') {
-                          try {
-                            imagesArray = JSON.parse(product.images)
-                          } catch (e) {
-                            imagesArray = []
-                          }
-                        } else if (Array.isArray(product.images)) {
-                          imagesArray = product.images
+                  {filteredProducts.map((product, index) => {
+                    // Handle both JSON string and array formats for images
+                    let imagesArray = []
+                    if (product.images) {
+                      if (typeof product.images === 'string') {
+                        try {
+                          imagesArray = JSON.parse(product.images)
+                        } catch (e) {
+                          imagesArray = []
                         }
+                      } else if (Array.isArray(product.images)) {
+                        imagesArray = product.images
                       }
-                      
-                      const hasImages = imagesArray && imagesArray.length > 0
-                      const imageUrl = hasImages 
-                        ? imagesArray[0]?.url || product.image_url
-                        : product.image_url
-                      
-                      return (hasImages || product.image_url) ? (
-                        <div className="relative">
-                          <img
-                            src={imageUrl}
-                            alt={product.name}
-                            className="w-full h-[146px] object-fill"
-                          />
-                          {/* Image count indicator */}
-                          {(() => {
-                            // Handle both JSON string and array formats for count
-                            let imagesArray = []
-                            if (product.images) {
-                              if (typeof product.images === 'string') {
-                                try {
-                                  imagesArray = JSON.parse(product.images)
-                                } catch (e) {
-                                  imagesArray = []
-                                }
-                              } else if (Array.isArray(product.images)) {
-                                imagesArray = product.images
-                              }
-                            }
-                            
-                            return imagesArray && imagesArray.length > 1 && (
-                              <div className="absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                                <Package className="h-3 w-3" />
-                                {imagesArray.length}
+                    }
+                    
+                    const hasImages = imagesArray && imagesArray.length > 0
+                    const imageUrl = hasImages 
+                      ? imagesArray[0]?.url || product.image_url
+                      : product.image_url
+                    
+                    return (
+                      <motion.div 
+                        key={product.id}
+                        className="w-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transition-all duration-300 flex-shrink-0 relative group flex flex-col"
+                        style={{ height: '500px' }}
+                        onClick={() => setSelectedProduct(product)}
+                        initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                        transition={{ 
+                          duration: 0.4, 
+                          ease: [0.34, 1.56, 0.64, 1],
+                          delay: index * 0.05
+                        }}
+                        whileHover={{ y: -5, boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)' }}
+                      >
+                        {/* Badge - Only show if discounted price exists */}
+                        {product.discounted_price && (
+                          <div className="absolute top-3 right-3 bg-gradient-to-r from-red-700 via-red-600 to-red-800 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider z-10 shadow-lg">
+                            HOT SALE
+                          </div>
+                        )}
+
+                        {/* Image Container - Auto-resizes to fit viewport */}
+                        <div className="relative w-full h-56 overflow-hidden bg-gray-100">
+                          {imageUrl ? (
+                            <img
+                              src={imageUrl}
+                              alt={product.name}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ShoppingBag className="w-12 h-12 text-gray-300" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-4 flex-1 flex flex-col overflow-hidden">
+                          {/* Category */}
+                          <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
+                            {product.category || 'Product'}
+                          </div>
+
+                          {/* Title */}
+                          <h2 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+                            {product.name}
+                          </h2>
+
+                          {/* Description */}
+                          {product.description && (
+                            <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">
+                              {product.description}
+                            </p>
+                          )}
+
+                          {/* Product Details - 2 Columns */}
+                          {product.product_details && (
+                            <div className="mb-4 pb-3 border-b border-gray-100">
+                              <div className="grid grid-cols-2 gap-2">
+                                {product.product_details.split(',').map((detail, idx) => (
+                                  <div key={idx} className="flex items-start gap-2">
+                                    <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                                    <span className="text-xs text-gray-700 leading-tight">
+                                      {detail.trim()}
+                                    </span>
+                                  </div>
+                                ))}
                               </div>
-                            )
-                          })()}
+                            </div>
+                          )}
+
+                          {/* Bottom Section */}
+                          <div className="flex justify-between items-end gap-3 pt-3 border-t border-gray-100">
+                            {/* Price */}
+                            <div className="flex flex-col">
+                              {product.price_cents ? (
+                                <>
+                                  {product.discounted_price ? (
+                                    <>
+                                      <span className="text-xs text-gray-400 line-through">
+                                        R{(product.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      </span>
+                                      <span className="text-2xl font-bold text-red-600">
+                                        R{parseFloat(product.discounted_price).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <span className="text-2xl font-bold text-gray-900">
+                                      R{(product.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-sm text-gray-500 font-medium">Contact for price</span>
+                              )}
+                            </div>
+
+                            {/* View Button */}
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedProduct(product)
+                              }}
+                              className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md"
+                            >
+                              <span>View</span>
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          {/* Meta Info */}
+                          <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                              ))}
+                              <span className="text-xs text-gray-500 ml-1">128 Reviews</span>
+                            </div>
+                            <div className="text-xs font-semibold text-green-600">In Stock</div>
+                          </div>
                         </div>
-                      ) : (
-                        <div className="w-full h-32 bg-gray-100 flex items-center justify-center">
-                          <ShoppingBag className="w-8 h-8 text-gray-400" />
-                        </div>
-                      )
-                    })()}
-                    <div className="p-3">
-                      <h3 className="font-medium text-gray-900 mb-1 text-sm truncate">{product.name}</h3>
-                      {product.price_cents ? (
-                        <span className="text-sm font-semibold text-emerald-600">
-                          R{(product.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-500">Contact for price</span>
-                      )}
-                      {product.category && (
-                        <div className="mt-1">
-                          <span className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
-                            {product.category}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
+                      </motion.div>
+                    )
+                  })}
                 </motion.div>
               </motion.div>
               ) : (

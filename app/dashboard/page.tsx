@@ -213,16 +213,16 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!showWelcome) return
 
-    // Text phase: 2 seconds
+    // Text phase: 3 seconds (increased from 2 for readability)
     const textTimer = setTimeout(() => {
       setWelcomePhase('transition')
-    }, 2000)
+    }, 3000)
 
-    // Transition phase: 1.5 seconds
+    // Transition phase: 1 second (decreased from 1.5)
     const transitionTimer = setTimeout(() => {
       setWelcomePhase('done')
       setShowWelcome(false)
-    }, 3500)
+    }, 4000)
 
     return () => {
       clearTimeout(textTimer)
@@ -955,13 +955,13 @@ export default function DashboardPage() {
           <motion.div
             key="welcome-overlay"
             className="fixed inset-0 z-[9999] flex items-center justify-center"
-            initial={{ backgroundColor: 'rgba(255, 255, 255, 1)' }}
+            initial={{ backgroundColor: 'rgba(248, 250, 252, 1)' }}
             animate={{
               backgroundColor: welcomePhase === 'transition' 
-                ? 'rgba(255, 255, 255, 1)' 
-                : 'rgba(255, 255, 255, 1)'
+                ? 'rgba(248, 250, 252, 1)' 
+                : 'rgba(248, 250, 252, 1)'
             }}
-            exit={{ backgroundColor: 'rgba(255, 255, 255, 0)' }}
+            exit={{ backgroundColor: 'rgba(248, 250, 252, 0)' }}
             transition={{ duration: 0.8 }}
           >
             {/* Background animation grid */}
@@ -971,14 +971,14 @@ export default function DashboardPage() {
               animate={{ opacity: welcomePhase === 'transition' ? 1 : 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-blue-500/10 to-purple-500/10" />
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/5 via-blue-400/5 to-slate-400/5" />
               <motion.div
                 className="absolute inset-0"
                 initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 0.3 }}
+                animate={{ scale: 1, opacity: 0.2 }}
                 transition={{ duration: 1.2, ease: 'easeOut' }}
               >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_50%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.05),transparent_50%)]" />
               </motion.div>
             </motion.div>
 
@@ -993,19 +993,19 @@ export default function DashboardPage() {
               transition={{ duration: 0.6 }}
             >
               <motion.h1
-                className="text-5xl md:text-6xl font-black text-black mb-4"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
+                className="text-5xl md:text-6xl font-black text-slate-800 mb-4"
+                initial={{ y: 40, opacity: 0, filter: 'blur(10px)' }}
+                animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+                transition={{ duration: 1.2, delay: 0.3, ease: 'easeOut', type: 'spring', stiffness: 50, damping: 15 }}
               >
                 Hello, {profile?.display_name?.split(' ')[0] || 'there'}! 👋
               </motion.h1>
               
               <motion.p
-                className="text-2xl md:text-3xl font-bold text-gray-700 mb-8"
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
+                className="text-2xl md:text-3xl font-semibold text-slate-600 mb-8"
+                initial={{ y: 40, opacity: 0, filter: 'blur(10px)' }}
+                animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+                transition={{ duration: 1.2, delay: 0.6, ease: 'easeOut', type: 'spring', stiffness: 50, damping: 15 }}
               >
                 {randomWelcomeMessage}
               </motion.p>
@@ -1019,7 +1019,7 @@ export default function DashboardPage() {
                 {[...Array(3)].map((_, i) => (
                   <motion.div
                     key={i}
-                    className="w-3 h-3 rounded-full bg-emerald-500"
+                    className="w-2.5 h-2.5 rounded-full bg-emerald-500"
                     animate={{ scale: [1, 1.2, 1] }}
                     transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
                   />
@@ -1031,18 +1031,18 @@ export default function DashboardPage() {
             {welcomePhase === 'transition' && (
               <>
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-t from-emerald-500 via-blue-500 to-purple-500"
+                  className="absolute inset-0 bg-gradient-to-t from-emerald-400/20 via-blue-400/10 to-slate-400/5"
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: [0, 0.3, 0] }}
-                  transition={{ duration: 1.5 }}
+                  animate={{ opacity: [0, 0.15, 0] }}
+                  transition={{ duration: 1 }}
                 />
                 <motion.div
                   className="absolute inset-0"
                   initial={{ scale: 1 }}
-                  animate={{ scale: [1, 1.1, 1.2] }}
-                  transition={{ duration: 1.5 }}
+                  animate={{ scale: [1, 1.05, 1.1] }}
+                  transition={{ duration: 1 }}
                 >
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.3),transparent_70%)]" />
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_70%)]" />
                 </motion.div>
               </>
             )}
@@ -1197,14 +1197,19 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+      <motion.div 
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: showWelcome ? 0 : 1 }}
+        transition={{ duration: 0.6, delay: showWelcome ? 0 : 0.2 }}
+      >
         {/* Stats - Desktop */}
         <div id="tour-stats" className={`hidden md:grid ${profile?.subscription_tier === 'free' ? 'grid-cols-3' : 'grid-cols-4'} gap-4 mb-6`}>
           <motion.div 
             className="bg-blue-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4"
-            initial={{ opacity: 0, rotateY: -90, x: -50 }}
-            animate={{ opacity: 1, rotateY: 0, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.1, type: 'spring', stiffness: 100 }}
+            initial={{ opacity: 0, filter: 'blur(10px)', y: 20 }}
+            animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+            transition={{ duration: 1, delay: 0.2, ease: 'easeOut', type: 'spring', stiffness: 60, damping: 15 }}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -1225,9 +1230,9 @@ export default function DashboardPage() {
 
           <motion.div 
             className="bg-emerald-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4"
-            initial={{ opacity: 0, rotateY: -90, x: -50 }}
-            animate={{ opacity: 1, rotateY: 0, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, type: 'spring', stiffness: 100 }}
+            initial={{ opacity: 0, filter: 'blur(10px)', y: 20 }}
+            animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+            transition={{ duration: 1, delay: 0.4, ease: 'easeOut', type: 'spring', stiffness: 60, damping: 15 }}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -1248,9 +1253,9 @@ export default function DashboardPage() {
 
           <motion.div 
             className="bg-purple-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4"
-            initial={{ opacity: 0, rotateY: -90, x: -50 }}
-            animate={{ opacity: 1, rotateY: 0, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.3, type: 'spring', stiffness: 100 }}
+            initial={{ opacity: 0, filter: 'blur(10px)', y: 20 }}
+            animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+            transition={{ duration: 1, delay: 0.6, ease: 'easeOut', type: 'spring', stiffness: 60, damping: 15 }}
           >
             <div className="flex items-center justify-between">
               <div>
@@ -1272,9 +1277,9 @@ export default function DashboardPage() {
           {profile?.subscription_tier !== 'free' && (
             <motion.div 
               className="bg-yellow-100 rounded-[9px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] p-4"
-              initial={{ opacity: 0, rotateY: -90, x: -50 }}
-              animate={{ opacity: 1, rotateY: 0, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.4, type: 'spring', stiffness: 100 }}
+              initial={{ opacity: 0, filter: 'blur(10px)', y: 20 }}
+              animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+              transition={{ duration: 1, delay: 0.8, ease: 'easeOut', type: 'spring', stiffness: 60, damping: 15 }}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -1711,7 +1716,7 @@ export default function DashboardPage() {
 
         {/* Tour End Marker */}
         <div id="tour-end" className="mt-8" />
-      </div>
+      </motion.div>
     </div>
   )
 }
