@@ -704,22 +704,31 @@ export default function BusinessShop({
                   </h2>
 
                   {/* Description */}
-                  {product.description && (
-                    <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">
+                  {product.description ? (
+                    <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-3 break-words">
                       {product.description.replace(/<[^>]*>/g, '')}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-400 leading-relaxed mb-3 line-clamp-3 break-words">
+                      Product description will appear here
                     </p>
                   )}
 
-                  {/* Features */}
-                  {product.product_details && (
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {product.product_details.split(',').slice(0, 3).map((feature, idx) => (
-                        <span key={idx} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full font-medium">
-                          {feature.trim()}
-                        </span>
-                      ))}
+                  {/* Product Details - 2 Columns (Max 2 Details) */}
+                  {product.product_details ? (
+                    <div className="mb-4 pb-3 border-b border-gray-100">
+                      <div className="grid grid-cols-2 gap-2">
+                        {product.product_details.split('\n').filter(d => d.trim()).slice(0, 2).map((detail, idx) => (
+                          <div key={idx} className="flex items-start gap-2">
+                            <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                            <span className="text-xs text-gray-700 leading-tight">
+                              {detail.trim()}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  )}
+                  ) : null}
 
                   {/* Bottom Section */}
                   <div className="flex justify-between items-end gap-3 pt-3 border-t border-gray-100 mt-auto">
@@ -1029,7 +1038,7 @@ export default function BusinessShop({
                 {/* Preview Product Card - EXACT SAME as profile page */}
                 <div 
                   className="w-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transition-all duration-300 flex-shrink-0 relative group flex flex-col"
-                  style={{ height: '500px' }}
+                  style={{ height: '550px' }}
                 >
                   {/* Badge - Only show if discounted price exists */}
                   {productForm.discounted_price && (
@@ -1085,20 +1094,20 @@ export default function BusinessShop({
 
                     {/* Description */}
                     {productForm.description ? (
-                      <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">
+                      <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-3 break-words">
                         {productForm.description.replace(/<[^>]*>/g, '')}
                       </p>
                     ) : (
-                      <p className="text-sm text-gray-400 leading-relaxed mb-3 line-clamp-2">
+                      <p className="text-sm text-gray-400 leading-relaxed mb-3 line-clamp-3 break-words">
                         Product description will appear here
                       </p>
                     )}
 
-                    {/* Product Details - 2 Columns */}
+                    {/* Product Details - 2 Columns (Max 2 Details) */}
                     {productForm.product_details ? (
                       <div className="mb-4 pb-3 border-b border-gray-100">
                         <div className="grid grid-cols-2 gap-2">
-                          {productForm.product_details.split(',').map((detail, idx) => (
+                          {productForm.product_details.split('\n').filter(d => d.trim()).slice(0, 2).map((detail, idx) => (
                             <div key={idx} className="flex items-start gap-2">
                               <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                               <span className="text-xs text-gray-700 leading-tight">

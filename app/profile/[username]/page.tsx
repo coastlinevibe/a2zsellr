@@ -1748,17 +1748,21 @@ Best regards`
                           </h2>
 
                           {/* Description */}
-                          {product.description && (
-                            <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">
+                          {product.description ? (
+                            <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-3 break-words">
                               {product.description}
+                            </p>
+                          ) : (
+                            <p className="text-sm text-gray-400 leading-relaxed mb-3 line-clamp-3 break-words">
+                              Product description will appear here
                             </p>
                           )}
 
-                          {/* Product Details - 2 Columns */}
-                          {product.product_details && (
+                          {/* Product Details - 2 Columns (Max 2 Details) */}
+                          {product.product_details ? (
                             <div className="mb-4 pb-3 border-b border-gray-100">
                               <div className="grid grid-cols-2 gap-2">
-                                {product.product_details.split(',').map((detail, idx) => (
+                                {product.product_details.split('\n').filter(d => d.trim()).slice(0, 2).map((detail, idx) => (
                                   <div key={idx} className="flex items-start gap-2">
                                     <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                                     <span className="text-xs text-gray-700 leading-tight">
@@ -1768,7 +1772,7 @@ Best regards`
                                 ))}
                               </div>
                             </div>
-                          )}
+                          ) : null}
 
                           {/* Bottom Section */}
                           <div className="flex justify-between items-end gap-3 pt-3 border-t border-gray-100">
