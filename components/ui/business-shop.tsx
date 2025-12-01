@@ -8,6 +8,7 @@ import { TierLimitDisplay } from '@/components/ui/premium-badge'
 import { useCart } from '@/contexts/CartContext'
 import { supabase } from '@/lib/supabaseClient'
 import { usePopup } from '@/components/providers/PopupProvider'
+import { ConfirmationPopup } from '@/components/ui/ConfirmationPopup'
 import EmojiPicker from '@/components/ui/emoji-picker'
 import RichTextEditor from '@/components/ui/rich-text-editor'
 import { 
@@ -101,6 +102,8 @@ export default function BusinessShop({
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null)
 
   // Simple categories for basic businesses
   const categories = [
@@ -245,14 +248,19 @@ export default function BusinessShop({
     setShowAddProduct(true)
   }
 
-  const handleDeleteProduct = async (productId: string) => {
-    if (!confirm('Delete this product?')) return
+  const handleDeleteClick = (product: Product) => {
+    setProductToDelete(product)
+    setShowDeleteConfirm(true)
+  }
+
+  const performDeleteProduct = async () => {
+    if (!productToDelete) return
 
     try {
       const { error } = await supabase
         .from('profile_products')
         .delete()
-        .eq('id', productId)
+        .eq('id', productToDelete.id)
 
       if (error) throw error
       fetchProducts()
@@ -261,6 +269,10 @@ export default function BusinessShop({
       if (onRefresh) {
         onRefresh()
       }
+      
+      showSuccess('Product deleted successfully', 'Product Removed')
+      setShowDeleteConfirm(false)
+      setProductToDelete(null)
     } catch (error) {
       console.error('Error deleting product:', error)
       showError('Failed to delete product. Please try again.', 'Delete Failed')
@@ -774,7 +786,7 @@ export default function BusinessShop({
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteProduct(product.id)}
+                          onClick={() => handleDeleteClick(product)}
                           className="p-2 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
                           title="Delete"
                         >
@@ -1338,6 +1350,22 @@ export default function BusinessShop({
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Popup */}
+      <ConfirmationPopup
+        isOpen={showDeleteConfirm}
+        isDangerous={true}
+        title="Delete Product"
+        message={`"${productToDelete?.name}" will be permanently deleted`}
+        description="This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={performDeleteProduct}
+        onCancel={() => {
+          setShowDeleteConfirm(false)
+          setProductToDelete(null)
+        }}
+      />
     </div>
   )
 }

@@ -84,9 +84,9 @@ interface UserProfile {
 
 const dashboardTabs: { key: DashboardTab; label: string; subtitle: string; icon: typeof Users; premiumOnly?: boolean }[] = [
   { key: 'profile', label: 'Profile', subtitle: 'Business info & settings', icon: Users },
-  { key: 'products', label: 'Products', subtitle: 'Manage your product catalog', icon: ShoppingBag },
-  { key: 'branding', label: 'Profile Image', subtitle: 'Your business profile photo', icon: ImageIcon },
-  { key: 'listings', label: 'Listings', subtitle: 'Create & share marketing campaigns', icon: MessageSquare },
+  { key: 'products', label: 'Products', subtitle: 'Manage your inventory', icon: ShoppingBag },
+  { key: 'branding', label: 'Profile Image', subtitle: 'Your professional image', icon: ImageIcon },
+  { key: 'listings', label: 'Listings', subtitle: 'Create & amplify your reach', icon: MessageSquare },
   { key: 'integrations', label: 'Social Integrations', subtitle: 'Connect social & messaging apps', icon: Plug, premiumOnly: true }
 ]
 
@@ -176,7 +176,7 @@ export default function DashboardPage() {
     {
       target: 'tour-quick-actions',
       title: '⚡ Quick Actions',
-      description: 'These buttons let you quickly add products, create listings, upload branding, and view your profile.',
+      description: 'These buttons let you quickly add products, create listings, upload profile image, and view your profile.',
       action: 'Next'
     },
     {
@@ -189,21 +189,21 @@ export default function DashboardPage() {
     {
       target: 'tour-products-tab',
       title: '📦 Products Tab',
-      description: 'Click here to manage your product catalog. Add, edit, or remove products.',
+      description: 'Build your empire here. Showcase your offerings with precision. Add, edit, and optimize every product to convert browsers into buyers.',
       action: 'Next',
       preAction: () => setActiveTab('products')
     },
     {
       target: 'tour-branding-tab',
       title: '🖼️ Profile Image Tab',
-      description: 'Upload your business profile photo here. This is the main image customers see on your profile.',
+      description: 'First impressions matter. Your profile image is your digital handshake. Make it count—this is what separates winners from the rest.',
       action: 'Next',
       preAction: () => setActiveTab('branding')
     },
     {
       target: 'tour-listings-tab',
       title: '📣 Listings Tab',
-      description: 'Create marketing campaigns and share links to WhatsApp, social media, and more.',
+      description: 'Dominate your market. Create powerful campaigns and share anywhere online. Reach your audience where they are—WhatsApp, social media, everywhere.',
       action: 'Finish Tour',
       preAction: () => setActiveTab('listings')
     }
@@ -249,6 +249,19 @@ export default function DashboardPage() {
       currentStep.preAction()
     }
   }, [tourStep, showTour, tourSteps])
+
+  // Disable scrolling when tour is active
+  useEffect(() => {
+    if (showTour) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [showTour])
 
   // Set tourComplete when tour reaches the end
   useEffect(() => {
@@ -599,26 +612,7 @@ export default function DashboardPage() {
 
   const renderProfileTab = () => (
     <div className="space-y-8">
-      <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 overflow-hidden w-full max-w-sm profile-management-glow">
-        <div className="p-3 border-b border-gray-200">
-          <h2 className="text-base font-semibold text-gray-900">Profile Management</h2>
-        </div>
-        <div className="p-3">
-          <Link
-            href="/profile"
-            className="flex items-center justify-between p-2 bg-gray-50 rounded-[9px] hover:bg-gray-100 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <Edit className="w-4 h-4 text-gray-600" />
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">Update Business Profile</h3>
-                <p className="text-xs text-gray-600">Keep your information fresh and verified.</p>
-              </div>
-            </div>
-            <div className="text-gray-400 text-sm">→</div>
-          </Link>
-        </div>
-      </div>
+
     </div>
   )
 
@@ -1421,7 +1415,22 @@ export default function DashboardPage() {
               className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
             >
               <ImageIcon className="w-4 h-4" />
-              Upload Branding
+              Upload Profile Image
+            </button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20, rotate: -5 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            transition={{ duration: 0.5, delay: 0.75, type: 'spring', stiffness: 100 }}
+            whileHover={{ scale: 1.05, rotate: 2 }}
+          >
+            <button
+              onClick={() => setActiveTab('profile')}
+              className="w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
+            >
+              <Edit className="w-4 h-4" />
+              Edit Profile
             </button>
           </motion.div>
 
@@ -1484,7 +1493,22 @@ export default function DashboardPage() {
               className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
             >
               <ImageIcon className="w-3 h-3" />
-              Upload Branding
+              Upload Profile Image
+            </button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 15, rotate: -5 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            transition={{ duration: 0.4, delay: 0.75 }}
+            whileHover={{ scale: 1.05 }}
+          >
+            <button
+              onClick={() => setActiveTab('profile')}
+              className="w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
+            >
+              <Edit className="w-3 h-3" />
+              Edit Profile
             </button>
           </motion.div>
 

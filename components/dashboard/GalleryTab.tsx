@@ -181,7 +181,7 @@ export function GalleryTab({
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">No gallery items yet</h3>
           <p className="text-gray-600 mb-6 max-w-md mx-auto">
-            Spotlight your services or portfolio. Upload high-impact visuals to convert visitors faster.
+            Your gallery is empty. Start building your visual presence. Upload stunning images that showcase your best work and captivate your audience.
           </p>
           {userTier === 'free' && (
             <p className="text-sm text-amber-600 mb-4 font-medium">
@@ -341,7 +341,7 @@ export function GalleryTab({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Gallery Showcase</h2>
-          <p className="text-sm text-gray-600">Your visual portfolio powering your storefront and marketing campaigns.</p>
+          <p className="text-sm text-gray-600">Curate your visual story. High-quality images are your competitive edge.</p>
         </div>
         
         {images.length > 0 && viewMode === 'showcase' && (
