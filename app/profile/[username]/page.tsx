@@ -994,13 +994,28 @@ Best regards`
                     </div>
                   )}
                   
-                  {/* Category */}
+                  {/* Category + Open Status */}
                   {profile.business_category && (
                     <>
                       {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
                         <span className="text-gray-400">•</span>
                       )}
                       <span className="truncate text-gray-600 text-sm">{profile.business_category}</span>
+                      {profile.business_hours && (
+                        <>
+                          <span className="text-gray-400">•</span>
+                          <div className="flex items-center gap-1">
+                            <div className={`w-1.5 h-1.5 rounded-full ${
+                              isBusinessOpen(profile.business_hours).isOpen ? 'bg-green-500' : 'bg-red-500'
+                            }`}></div>
+                            <span className={`font-medium text-xs ${
+                              isBusinessOpen(profile.business_hours).isOpen ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {isBusinessOpen(profile.business_hours).status}
+                            </span>
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
                 </div>
@@ -1075,20 +1090,6 @@ Best regards`
                   <Star className="w-4 h-4" />
                 </button>
               )}
-              
-              {/* Open Status */}
-              {profile.business_hours && (
-                <div className="flex items-center gap-1 ml-auto text-gray-600">
-                  <div className={`w-1.5 h-1.5 rounded-full ${
-                    isBusinessOpen(profile.business_hours).isOpen ? 'bg-green-500' : 'bg-red-500'
-                  }`}></div>
-                  <span className={`font-medium ${
-                    isBusinessOpen(profile.business_hours).isOpen ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {isBusinessOpen(profile.business_hours).status}
-                  </span>
-                </div>
-              )}
             </div>
           </div>
 
@@ -1138,21 +1139,21 @@ Best regards`
                     <>
                       <span className="text-gray-400">•</span>
                       <span>{profile.business_category}</span>
-                    </>
-                  )}
-                  {profile.business_hours && (
-                    <>
-                      <span className="text-gray-400">•</span>
-                      <div className="flex items-center gap-1">
-                        <div className={`w-1.5 h-1.5 rounded-full ${
-                          isBusinessOpen(profile.business_hours).isOpen ? 'bg-green-500' : 'bg-red-500'
-                        }`}></div>
-                        <span className={`font-medium ${
-                          isBusinessOpen(profile.business_hours).isOpen ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {isBusinessOpen(profile.business_hours).status}
-                        </span>
-                      </div>
+                      {profile.business_hours && (
+                        <>
+                          <span className="text-gray-400">•</span>
+                          <div className="flex items-center gap-1">
+                            <div className={`w-1.5 h-1.5 rounded-full ${
+                              isBusinessOpen(profile.business_hours).isOpen ? 'bg-green-500' : 'bg-red-500'
+                            }`}></div>
+                            <span className={`font-medium ${
+                              isBusinessOpen(profile.business_hours).isOpen ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {isBusinessOpen(profile.business_hours).status}
+                            </span>
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
                 </div>

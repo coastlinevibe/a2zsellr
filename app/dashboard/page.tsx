@@ -1425,13 +1425,13 @@ export default function DashboardPage() {
             transition={{ duration: 0.5, delay: 0.75, type: 'spring', stiffness: 100 }}
             whileHover={{ scale: 1.05, rotate: 2 }}
           >
-            <button
-              onClick={() => setActiveTab('profile')}
+            <Link
+              href="/profile"
               className="w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
             >
               <Edit className="w-4 h-4" />
               Edit Profile
-            </button>
+            </Link>
           </motion.div>
 
           <motion.div
@@ -1503,13 +1503,13 @@ export default function DashboardPage() {
             transition={{ duration: 0.4, delay: 0.75 }}
             whileHover={{ scale: 1.05 }}
           >
-            <button
-              onClick={() => setActiveTab('profile')}
+            <Link
+              href="/profile"
               className="w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
             >
               <Edit className="w-3 h-3" />
               Edit Profile
-            </button>
+            </Link>
           </motion.div>
 
           <motion.div

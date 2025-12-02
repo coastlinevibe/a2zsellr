@@ -93,6 +93,7 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
   const [showTierTooltip, setShowTierTooltip] = useState(false)
   const [showClosedModal, setShowClosedModal] = useState(false)
   const [closedModalMessage, setClosedModalMessage] = useState('')
+  const [deviceView, setDeviceView] = useState<'mobile' | 'laptop'>('laptop')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -373,12 +374,16 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
     )
   }
 
-  return (
-    <div className="min-h-screen bg-white" style={{ margin: '0 -32px', padding: '0', width: 'calc(100% + 64px)', maxWidth: 'none' }}>
+  const profileContent = (
+    <div className="min-h-screen bg-white w-full" style={{ margin: '0', padding: '0', maxWidth: 'none' }}>
       {/* Hero Gallery Slider */}
       <motion.div 
         className="relative bg-gray-100 overflow-hidden w-full" 
-        style={{ height: '320px' }}
+        style={{ 
+          height: 'auto',
+          aspectRatio: '1600/500',
+          minHeight: '275px'
+        }}
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
@@ -438,12 +443,12 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
       </motion.div>
 
       {/* Business Info Card - Header */}
-      <div className="relative bg-white border-b border-gray-100 w-full">
-        <div className="px-4 py-3 w-full">
-          {/* Mobile Layout */}
-          <div className="block md:hidden">
-            {/* Top Row: PFP + Name + Business Tier + Reviews */}
-            <div className="flex items-center gap-2 mb-2">
+      <div className="relative bg-white border-b border-gray-100">
+        <div className="px-4 max-w-7xl mx-auto py-3">
+          {/* Mobile Layout - Force mobile on small screens */}
+          <div className="block md:hidden" style={{ display: 'block' }}>
+            {/* Top Row: PFP + Name & Tier + Reviews */}
+            <div className="flex items-start gap-2 mb-2">
               {profile.avatar_url && (
                 <img 
                   src={profile.avatar_url} 
@@ -451,50 +456,75 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
                   className="w-10 h-10 rounded-lg object-cover border border-gray-200 flex-shrink-0"
                 />
               )}
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <h1 className="text-base font-bold text-gray-900 truncate">
-                  {profile.display_name || 'Business Name'}
-                </h1>
-                
-                {/* Business Tier Badge - Mobile (icon only with tooltip) */}
-                <div className="flex-shrink-0 relative">
-                  <div 
-                    className={`w-6 h-6 rounded-full flex items-center justify-center shadow-lg border cursor-pointer transition-transform hover:scale-110 ${
-                      profile.subscription_tier === 'free' 
-                        ? 'bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 border-gray-300' 
-                        : profile.subscription_tier === 'premium'
-                        ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 border-amber-300'
-                        : 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 border-blue-400'
-                    }`}
-                    onClick={() => setShowTierTooltip(!showTierTooltip)}
-                    onMouseEnter={() => setShowTierTooltip(true)}
-                    onMouseLeave={() => setShowTierTooltip(false)}
-                  >
-                    {profile.subscription_tier === 'free' && <Zap className="h-3 w-3 text-white drop-shadow-sm" />}
-                    {profile.subscription_tier === 'premium' && <Sword className="h-3 w-3 text-white drop-shadow-sm" />}
-                    {profile.subscription_tier === 'business' && <Crown className="h-3 w-3 text-white drop-shadow-sm" />}
-                  </div>
+              <div className="flex flex-col min-w-0 flex-1">
+                {/* Name + Tier Badge */}
+                <div className="flex items-center gap-2">
+                  <h1 className="text-base font-bold text-gray-900 truncate leading-tight">
+                    {profile.display_name}
+                  </h1>
                   
-                  {/* Tooltip */}
-                  {showTierTooltip && (
-                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
-                      {profile.subscription_tier === 'free' ? 'Free user' : 
-                       profile.subscription_tier === 'premium' ? 'Premium user' : 'Business user'}
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+                  {/* Business Tier Badge - Mobile (icon only with tooltip) */}
+                  <div className="flex-shrink-0 relative">
+                    <div 
+                      className={`w-6 h-6 rounded-full flex items-center justify-center shadow-lg border cursor-pointer transition-transform hover:scale-110 ${
+                        profile.subscription_tier === 'free' 
+                          ? 'bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 border-gray-300' 
+                          : profile.subscription_tier === 'premium'
+                          ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 border-amber-300'
+                          : 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 border-blue-400'
+                      }`}
+                      onClick={() => setShowTierTooltip(!showTierTooltip)}
+                      onMouseEnter={() => setShowTierTooltip(true)}
+                      onMouseLeave={() => setShowTierTooltip(false)}
+                    >
+                      {profile.subscription_tier === 'free' && <Zap className="h-3 w-3 text-white drop-shadow-sm" />}
+                      {profile.subscription_tier === 'premium' && <Sword className="h-3 w-3 text-white drop-shadow-sm" />}
+                      {profile.subscription_tier === 'business' && <Crown className="h-3 w-3 text-white drop-shadow-sm" />}
                     </div>
-                  )}
+                    
+                    {/* Tooltip */}
+                    {showTierTooltip && (
+                      <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
+                        {profile.subscription_tier === 'free' ? 'Free user' : 
+                         profile.subscription_tier === 'premium' ? 'Premium user' : 'Business user'}
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+                      </div>
+                    )}
+                  </div>
                 </div>
+                
+                {/* Reviews - Mobile (under name) */}
+                {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
+                  <div className="flex items-center gap-1 mt-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-2.5 h-2.5 ${i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                    ))}
+                    <span className="font-medium text-gray-600 text-sm ml-1">4.5</span>
+                  </div>
+                )}
+                
+                {/* Category + Open Status - Mobile (under reviews) */}
+                {profile.business_category && (
+                  <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                    <span className="truncate text-gray-600 text-sm">{profile.business_category}</span>
+                    {profile.business_hours && (
+                      <>
+                        <span className="text-gray-400">•</span>
+                        <div className="flex items-center gap-1">
+                          <div className={`w-1.5 h-1.5 rounded-full ${
+                            isBusinessOpen(profile.business_hours).isOpen ? 'bg-green-500' : 'bg-red-500'
+                          }`}></div>
+                          <span className={`font-medium text-xs ${
+                            isBusinessOpen(profile.business_hours).isOpen ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {isBusinessOpen(profile.business_hours).status}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
-              
-              {/* Reviews - Mobile */}
-              {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`w-2.5 h-2.5 ${i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                  ))}
-                  <span className="font-medium text-gray-600 text-sm ml-1">4.5</span>
-                </div>
-              )}
             </div>
             
             {/* Second Row: Verified Badge (if exists) */}
@@ -507,12 +537,18 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
               </div>
             )}
             
-            {/* Third Row: Action Buttons + Open Status + Category */}
+            {/* Third Row: Cart + Chat + Share + Review + Open Status */}
             <div className="flex items-center gap-2 text-sm">
               {profile.phone_number && (
                 <button 
                   className="p-2.5 bg-emerald-50 text-emerald-700 rounded-lg transition-colors hover:bg-emerald-100"
-                  title="Chat"
+                  onClick={() => {
+                    const phoneNumber = profile.phone_number?.replace(/\D/g, '')
+                    const message = `Hi ${profile.display_name}, I found your profile on A2Z Business Directory and would like to get in touch!`
+                    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+                    window.open(whatsappUrl, '_blank')
+                  }}
+                  title="WhatsApp"
                 >
                   <MessageCircle className="w-4 h-4" />
                 </button>
@@ -520,6 +556,24 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
               
               <button 
                 className="p-2.5 bg-gray-50 text-gray-700 rounded-lg transition-colors hover:bg-gray-100"
+                onClick={() => {
+                  const shareUrl = `https://www.a2zsellr.life/profile/${encodeURIComponent(profile.display_name?.toLowerCase().trim() || 'profile')}`
+                  const shareText = `Check out ${profile.display_name}'s business profile on A2Z Business Directory!`
+                  
+                  if (navigator.share) {
+                    navigator.share({
+                      title: `${profile.display_name} - A2Z Business Directory`,
+                      text: shareText,
+                      url: shareUrl,
+                    }).catch(console.error)
+                  } else {
+                    navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
+                      alert('Profile link copied to clipboard!')
+                    }).catch(() => {
+                      prompt('Copy this link to share:', shareUrl)
+                    })
+                  }
+                }}
                 title="Share"
               >
                 <Share2 className="w-4 h-4" />
@@ -533,144 +587,10 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
                   <Star className="w-4 h-4" />
                 </button>
               )}
-              
-              {/* Open Status */}
-              {profile.business_hours && (
-                <div className="flex items-center gap-1 ml-auto text-gray-600">
-                  <div className={`w-1.5 h-1.5 rounded-full ${
-                    isBusinessOpen(profile.business_hours).isOpen ? 'bg-green-500' : 'bg-red-500'
-                  }`}></div>
-                  <span className={`font-medium ${
-                    isBusinessOpen(profile.business_hours).isOpen ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {isBusinessOpen(profile.business_hours).status}
-                  </span>
-                </div>
-              )}
-              
-              {/* Category */}
-              {profile.business_category && (
-                <>
-                  <span className="text-gray-400">•</span>
-                  <span className="truncate text-gray-600">{profile.business_category}</span>
-                </>
-              )}
             </div>
           </div>
 
-          {/* Desktop Layout */}
-          <div className="hidden md:flex items-center gap-3 justify-between">
-            {/* Left: Avatar + Name + Badges */}
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              {profile.avatar_url && (
-                <img 
-                  src={profile.avatar_url} 
-                  alt={profile.display_name || 'Business'} 
-                  className="w-12 h-12 rounded-lg object-cover border border-gray-200 flex-shrink-0"
-                />
-              )}
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-lg font-bold text-gray-900">
-                    {profile.display_name || 'Business Name'}
-                  </h1>
-                  <div className="flex gap-1 flex-shrink-0">
-                    <Badge className={`${tierBadge.className} text-xs`}>
-                      {profile.subscription_tier === 'free' && <Zap className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
-                      {profile.subscription_tier === 'premium' && <Sword className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
-                      {profile.subscription_tier === 'business' && <Crown className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
-                      {tierBadge.text}
-                    </Badge>
-                    {profile.verified_seller && (
-                      <Badge className="bg-blue-100 text-blue-700 text-xs">
-                        <Star className="h-2.5 w-2.5 mr-0.5" fill="currentColor" />
-                        Verified
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Info Line */}
-                <div className="flex items-center gap-2 flex-wrap text-gray-600 text-sm mt-1">
-                  {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
-                    <div className="flex items-center gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`w-2.5 h-2.5 ${i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                      ))}
-                      <span className="font-medium">4.5</span>
-                    </div>
-                  )}
-                  {profile.business_category && (
-                    <>
-                      <span className="text-gray-400">•</span>
-                      <span>{profile.business_category}</span>
-                    </>
-                  )}
-                  {profile.business_hours && (
-                    <>
-                      <span className="text-gray-400">•</span>
-                      <div className="flex items-center gap-1">
-                        <div className={`w-1.5 h-1.5 rounded-full ${
-                          isBusinessOpen(profile.business_hours).isOpen ? 'bg-green-500' : 'bg-red-500'
-                        }`}></div>
-                        <span className={`font-medium ${
-                          isBusinessOpen(profile.business_hours).isOpen ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {isBusinessOpen(profile.business_hours).status}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            {/* Right: Action Buttons Row */}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              {profile.phone_number && (
-                <button 
-                  className="p-2 rounded-lg transition-colors hover:bg-emerald-50"
-                  title="WhatsApp"
-                >
-                  <MessageCircle className="w-4 h-4 text-emerald-600" />
-                </button>
-              )}
-              
-              {profile.address && (
-                <button 
-                  className="p-2 rounded-lg transition-colors hover:bg-emerald-50"
-                  title="Directions"
-                >
-                  <MapPin className="w-4 h-4 text-emerald-600" />
-                </button>
-              )}
-              
-              <button 
-                className="p-2 rounded-lg transition-colors hover:bg-emerald-50"
-                title="Share"
-              >
-                <Share2 className="w-4 h-4 text-emerald-600" />
-              </button>
-              
-              {profile.website_url && (
-                <button 
-                  className="p-2 rounded-lg transition-colors hover:bg-emerald-50"
-                  title="Website"
-                >
-                  <Globe className="w-4 h-4 text-emerald-600" />
-                </button>
-              )}
 
-              {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
-                <button 
-                  className="p-2 rounded-lg transition-colors hover:bg-emerald-50"
-                  title="Leave A Review"
-                >
-                  <Star className="w-4 h-4 text-emerald-600" />
-                </button>
-              )}
-            </div>
-          </div>
         </div>
       </div>
 
@@ -892,53 +812,16 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
       `}</style>
 
       {/* Products Section */}
-      <motion.div className="bg-white w-full">
-        <div className="px-0 md:px-4 py-4 w-full">
-          <div className="flex items-center justify-between mb-3 px-4 md:px-0">
+      <motion.div className="bg-white">
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold text-gray-900">Products & Services</h2>
             <span className="text-sm text-gray-500">{products.length} items</span>
           </div>
           
-          {/* Category Filter Buttons */}
-          <div className="flex gap-3 mb-4 overflow-x-auto pb-2 pt-2 scrollbar-hide px-4 md:px-0">
-            <motion.div className="cat-btn-wrapper">
-              <motion.button
-                onClick={() => setSelectedCategory('all')}
-                className={`cat-btn ${selectedCategory === 'all' ? 'active' : ''}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-              >
-                <div>All Products</div>
-              </motion.button>
-            </motion.div>
-            <motion.div className="cat-btn-wrapper">
-              <motion.button
-                onClick={() => setSelectedCategory('products')}
-                className={`cat-btn ${selectedCategory === 'products' ? 'active' : ''}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-              >
-                <div>Products</div>
-              </motion.button>
-            </motion.div>
-            <motion.div className="cat-btn-wrapper">
-              <motion.button
-                onClick={() => setSelectedCategory('services')}
-                className={`cat-btn ${selectedCategory === 'services' ? 'active' : ''}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-              >
-                <div>Services</div>
-              </motion.button>
-            </motion.div>
-          </div>
-
-          {/* Products Grid */}
           <AnimatePresence mode="wait">
-            {filteredProducts.length > 0 ? (
+            {(() => {
+              return products.length > 0 ? (
               <motion.div 
                 className="overflow-x-auto"
                 initial={{ opacity: 0 }}
@@ -947,116 +830,144 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
                 transition={{ duration: 0.3 }}
               >
                 <motion.div 
-                  className="flex gap-4 pb-2 px-4 md:px-0" 
+                  className="flex gap-4 pb-2 pt-5" 
                   style={{ width: 'max-content' }}
                   layout
                 >
-                  {filteredProducts.map((product, index) => (
-                    <motion.div 
-                      key={product.id} 
-                      className="bg-white border border-gray-200 rounded-[9px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex-shrink-0 w-48"
-                      onClick={() => setSelectedProduct(product)}
-                      initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.8, y: -20 }}
-                      transition={{ 
-                        duration: 0.4, 
-                        ease: [0.34, 1.56, 0.64, 1],
-                        delay: index * 0.05
-                      }}
-                      whileHover={{ y: -8, boxShadow: '0 12px 24px rgba(0, 0, 0, 0.15)' }}
-                    >
-                      {(() => {
-                        // Handle both JSON string and array formats for images
-                        let imagesArray = []
-                        if (product.images) {
-                          if (typeof product.images === 'string') {
-                            try {
-                              imagesArray = JSON.parse(product.images)
-                            } catch (e) {
-                              imagesArray = []
-                            }
-                          } else if (Array.isArray(product.images)) {
-                            imagesArray = product.images
-                          }
+                  {products.map((product, index) => {
+                    // Handle both JSON string and array formats for images
+                    let imagesArray = []
+                    if (product.images) {
+                      if (typeof product.images === 'string') {
+                        try {
+                          imagesArray = JSON.parse(product.images)
+                        } catch (e) {
+                          imagesArray = []
                         }
-                        
-                        const hasImages = imagesArray && imagesArray.length > 0
-                        const imageUrl = hasImages 
-                          ? imagesArray[0]?.url || product.image_url
-                          : product.image_url
-                        
-                        return (hasImages || product.image_url) ? (
-                          <div className="relative">
+                      } else if (Array.isArray(product.images)) {
+                        imagesArray = product.images
+                      }
+                    }
+                    
+                    const hasImages = imagesArray && imagesArray.length > 0
+                    const imageUrl = hasImages 
+                      ? imagesArray[0]?.url || product.image_url
+                      : product.image_url
+                    
+                    return (
+                      <motion.div 
+                        key={product.id}
+                        className="w-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transition-all duration-300 flex-shrink-0 relative group flex flex-col"
+                        style={{ height: '500px' }}
+                        onClick={() => setSelectedProduct(product)}
+                        initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                        transition={{ 
+                          duration: 0.4, 
+                          ease: [0.34, 1.56, 0.64, 1],
+                          delay: index * 0.05
+                        }}
+                        whileHover={{ y: -5, boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)' }}
+                      >
+                        {/* Image Container - Auto-resizes to fit viewport */}
+                        <div className="relative w-full h-56 overflow-hidden bg-gray-100">
+                          {imageUrl ? (
                             <img
                               src={imageUrl}
                               alt={product.name}
-                              className="w-full h-[146px] object-fill"
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
-                            {/* Image count indicator */}
-                            {(() => {
-                              // Handle both JSON string and array formats for count
-                              let imagesArray = []
-                              if (product.images) {
-                                if (typeof product.images === 'string') {
-                                  try {
-                                    imagesArray = JSON.parse(product.images)
-                                  } catch (e) {
-                                    imagesArray = []
-                                  }
-                                } else if (Array.isArray(product.images)) {
-                                  imagesArray = product.images
-                                }
-                              }
-                              
-                              return imagesArray && imagesArray.length > 1 && (
-                                <div className="absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                                  <Package className="h-3 w-3" />
-                                  {imagesArray.length}
-                                </div>
-                              )
-                            })()}
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ShoppingBag className="w-12 h-12 text-gray-300" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-4 flex-1 flex flex-col overflow-hidden">
+                          {/* Category */}
+                          <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
+                            {product.category || 'Product'}
                           </div>
-                        ) : (
-                          <div className="w-full h-32 bg-gray-100 flex items-center justify-center">
-                            <ShoppingBag className="w-8 h-8 text-gray-400" />
+
+                          {/* Title */}
+                          <h2 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+                            {product.name}
+                          </h2>
+
+                          {/* Description */}
+                          {product.description ? (
+                            <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-3 break-words">
+                              {product.description}
+                            </p>
+                          ) : (
+                            <p className="text-sm text-gray-400 leading-relaxed mb-3 line-clamp-3 break-words">
+                              Product description will appear here
+                            </p>
+                          )}
+
+                          {/* Bottom Section */}
+                          <div className="flex justify-between items-end gap-3 pt-3 border-t border-gray-100">
+                            {/* Price */}
+                            <div className="flex flex-col">
+                              {product.price_cents ? (
+                                <span className="text-2xl font-bold text-gray-900">
+                                  R{(product.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                              ) : (
+                                <span className="text-sm text-gray-500 font-medium">Contact for price</span>
+                              )}
+                            </div>
+
+                            {/* View Button */}
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedProduct(product)
+                              }}
+                              className="bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md"
+                            >
+                              <span>View</span>
+                              <Eye className="w-4 h-4" />
+                            </button>
                           </div>
-                        )
-                      })()}
-                      <div className="p-3">
-                        <h3 className="font-medium text-gray-900 mb-1 text-sm truncate">{product.name}</h3>
-                        {product.price_cents ? (
-                          <span className="text-sm font-semibold text-emerald-600">
-                            R{(product.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-gray-500">Contact for price</span>
-                        )}
-                        {product.category && (
-                          <div className="mt-1">
-                            <span className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">
-                              {product.category}
-                            </span>
+
+                          {/* Meta Info */}
+                          <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                              ))}
+                              <span className="text-xs text-gray-500 ml-1">128 Reviews</span>
+                            </div>
+                            <div className="text-xs font-semibold text-green-600">In Stock</div>
                           </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
+                        </div>
+                      </motion.div>
+                    )
+                  })}
                 </motion.div>
               </motion.div>
-            ) : (
-              <motion.div 
-                className="bg-gray-50 rounded-[9px] p-8 text-center mx-4 md:mx-0"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
-              >
-                <ShoppingBag className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <h3 className="text-sm font-medium text-gray-900 mb-1">No products available</h3>
-                <p className="text-xs text-gray-500">This business hasn't added any products yet.</p>
-              </motion.div>
-            )}
+              ) : (
+                <motion.div 
+                  className="bg-gray-50 rounded-[9px] p-8 text-center"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+                >
+                  <ShoppingBag className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <h3 className="text-sm font-medium text-gray-900 mb-1">
+                    No products available
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    This business hasn't added any products yet.
+                  </p>
+                </motion.div>
+              )
+            })()}
           </AnimatePresence>
         </div>
       </motion.div>
@@ -1377,6 +1288,198 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
           </div>
         </div>
       )}
+    </div>
+  )
+
+  return (
+    <div className="w-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen p-4 md:p-8">
+      {/* Device Tabs */}
+      <div className="max-w-7xl mx-auto mb-8">
+        <div className="flex gap-4 justify-center flex-wrap">
+          <button
+            onClick={() => setDeviceView('laptop')}
+            className={`px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 text-sm md:text-base ${
+              deviceView === 'laptop'
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/50'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+            }`}
+          >
+            <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20 3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h14l4 4V5c0-1.1-.9-2-2-2zm-2 12H4V5h14v10z"/>
+            </svg>
+            <span className="hidden sm:inline">Laptop</span>
+          </button>
+          <button
+            onClick={() => setDeviceView('mobile')}
+            className={`px-4 md:px-6 py-2 md:py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 text-sm md:text-base ${
+              deviceView === 'mobile'
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/50'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+            }`}
+          >
+            <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M17 2H7c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 18c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm5-3H7V4h10v13z"/>
+            </svg>
+            <span className="hidden sm:inline">Mobile</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Device Frames */}
+      <div className="w-full flex justify-center px-2">
+        <AnimatePresence mode="wait">
+          {deviceView === 'laptop' ? (
+            <motion.div
+              key="laptop"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="w-full flex justify-center"
+            >
+              {/* Laptop Frame - Professional Design */}
+              <style>{`
+                .laptop-frame {
+                  position: relative;
+                  margin: auto;
+                  max-width: 100%;
+                  width: 100%;
+                }
+                
+                .laptop-frame__screen {
+                  position: relative;
+                  z-index: 1;
+                  padding: 3%;
+                  border-radius: 2rem;
+                  background: #ecf1f7;
+                  background-image: linear-gradient(to bottom, #333, #111);
+                  box-shadow: 0 0.1rem 0 #cfcfcf;
+                  border: 2px solid #ccc;
+                  overflow: hidden;
+                }
+                
+                .laptop-frame__screen-content {
+                  display: block;
+                  width: 100%;
+                  height: auto;
+                  background: #fff;
+                  border-radius: 1.5rem;
+                  overflow-y: auto;
+                  max-height: 80vh;
+                }
+                
+                .laptop-frame__bottom {
+                  position: relative;
+                  z-index: 1;
+                  margin-right: -7%;
+                  margin-left: -7%;
+                  height: 0.7rem;
+                  background: #e9eff5;
+                  background-image: linear-gradient(to right, #d2dde9 0%, #f9fcff 15%, #e5ebf2 40%, #e5ebf2 60%, #f9fcff 85%, #d2dde9 100%);
+                }
+                
+                .laptop-frame__bottom::before {
+                  display: block;
+                  margin: 0 auto;
+                  width: 20%;
+                  height: 0.7rem;
+                  border-radius: 0 0 0.2rem 0.2rem;
+                  background: #f6f9fc;
+                  background-image: linear-gradient(to right, #c3cfdb 0%, #f6f9fc 10%, #f6f9fc 90%, #c3cfdb 100%);
+                  content: " ";
+                }
+                
+                .laptop-frame__under {
+                  position: absolute;
+                  top: 100%;
+                  left: 25%;
+                  display: block;
+                  width: 50%;
+                  height: 1.5rem;
+                  background: #e2e8f0;
+                  background-image: linear-gradient(to bottom, #e2e8f0, #bec7d1);
+                }
+                
+                .laptop-frame__under::before,
+                .laptop-frame__under::after {
+                  position: absolute;
+                  top: 0%;
+                  bottom: 0;
+                  display: block;
+                  width: 50%;
+                  border-bottom-left-radius: 100%;
+                  background: inherit;
+                  content: " ";
+                }
+                
+                .laptop-frame__under::before {
+                  right: 100%;
+                }
+                
+                .laptop-frame__under::after {
+                  right: auto;
+                  left: 100%;
+                  border-bottom-right-radius: 100%;
+                  border-bottom-left-radius: 0;
+                }
+                
+                .laptop-frame__shadow {
+                  position: absolute;
+                  right: -10%;
+                  bottom: -2.5rem;
+                  left: -10%;
+                  z-index: 0;
+                  height: 2rem;
+                  background: radial-gradient(ellipse closest-side, #000, transparent);
+                  opacity: 0.5;
+                }
+              `}</style>
+              
+              <div className="laptop-frame w-full max-w-2xl md:max-w-4xl lg:max-w-5xl">
+                <div className="laptop-frame__screen">
+                  <div className="laptop-frame__screen-content">
+                    {profileContent}
+                  </div>
+                </div>
+                <div className="laptop-frame__bottom"></div>
+                <div className="laptop-frame__under"></div>
+                <div className="laptop-frame__shadow"></div>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="mobile"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="w-full flex justify-center"
+            >
+              {/* Mobile Frame - Responsive */}
+              <div className="relative w-full" style={{ maxWidth: '375px', aspectRatio: '375/812' }}>
+                {/* Notch */}
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-20 w-2/3 h-1/12 bg-black rounded-b-3xl"></div>
+
+                {/* Phone Body */}
+                <div className="relative w-full h-full bg-black rounded-3xl shadow-2xl overflow-hidden border-4 md:border-8 border-black">
+                  {/* Screen - Constrained to phone width */}
+                  <div className="w-full h-full bg-white overflow-y-auto overflow-x-hidden text-sm md:text-base">
+                    <div className="w-full scale-75 md:scale-100 origin-top">
+                      {profileContent}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Home Indicator */}
+                <div className="absolute bottom-1 md:bottom-2 left-1/2 transform -translate-x-1/2 z-20 w-1/3 h-0.5 md:h-1 bg-black rounded-full"></div>
+
+                {/* Shadow */}
+                <div className="absolute -bottom-6 md:-bottom-8 left-1/2 transform -translate-x-1/2 w-full h-3 md:h-4 bg-black/30 rounded-full blur-xl"></div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   )
 }
