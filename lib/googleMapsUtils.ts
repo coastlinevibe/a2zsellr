@@ -31,8 +31,8 @@ export const getGoogleMapsApiKey = (): string => {
  */
 export const isGoogleMapsAvailable = (): boolean => {
   return typeof window !== 'undefined' && 
-         typeof window.google !== 'undefined' && 
-         typeof window.google.maps !== 'undefined'
+         typeof (window as any).google !== 'undefined' && 
+         typeof (window as any).google.maps !== 'undefined'
 }
 
 /**
@@ -76,7 +76,7 @@ export const geocodeAddress = async (address: string): Promise<Coordinates | nul
     return null
   }
 
-  const geocoder = new google.maps.Geocoder()
+  const geocoder = new (window as any).google.maps.Geocoder()
   
   try {
     const result = await geocoder.geocode({ address })
@@ -105,7 +105,7 @@ export const reverseGeocode = async (coordinates: Coordinates): Promise<string |
     return null
   }
 
-  const geocoder = new google.maps.Geocoder()
+  const geocoder = new (window as any).google.maps.Geocoder()
   
   try {
     const result = await geocoder.geocode({ location: coordinates })
