@@ -28,7 +28,8 @@ import {
   Youtube,
   X,
   FileText,
-  Mail
+  Mail,
+  Search
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -94,6 +95,7 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
   const [showClosedModal, setShowClosedModal] = useState(false)
   const [closedModalMessage, setClosedModalMessage] = useState('')
   const [deviceView, setDeviceView] = useState<'mobile' | 'laptop'>('laptop')
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -378,12 +380,8 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
     <div className="min-h-screen bg-white w-full" style={{ margin: '0', padding: '0', maxWidth: 'none' }}>
       {/* Hero Gallery Slider */}
       <motion.div 
-        className="relative bg-gray-100 overflow-hidden w-full" 
-        style={{ 
-          height: 'auto',
-          aspectRatio: '1600/500',
-          minHeight: '275px'
-        }}
+        className="relative bg-gray-100 overflow-hidden" 
+        style={{ height: '320px', maxWidth: '1500px', margin: '0 auto' }}
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
@@ -445,152 +443,148 @@ const PublicProfilePreview = ({ profile }: PublicProfilePreviewProps) => {
       {/* Business Info Card - Header */}
       <div className="relative bg-white border-b border-gray-100">
         <div className="px-4 max-w-7xl mx-auto py-3">
-          {/* Mobile Layout - Force mobile on small screens */}
-          <div className="block md:hidden" style={{ display: 'block' }}>
-            {/* Top Row: PFP + Name & Tier + Reviews */}
-            <div className="flex items-start gap-2 mb-2">
+          {/* Desktop Layout - EXACT COPY FROM PROFILE PAGE */}
+          <div className="flex items-center gap-4 justify-between">
+            {/* Left: Avatar + Name + Badges */}
+            <div className="flex items-center gap-3 min-w-0 flex-1 max-w-xs">
               {profile.avatar_url && (
                 <img 
                   src={profile.avatar_url} 
                   alt={profile.display_name || 'Business'} 
-                  className="w-10 h-10 rounded-lg object-cover border border-gray-200 flex-shrink-0"
+                  className="w-12 h-12 rounded-lg object-cover border border-gray-200 flex-shrink-0"
                 />
               )}
-              <div className="flex flex-col min-w-0 flex-1">
-                {/* Name + Tier Badge */}
-                <div className="flex items-center gap-2">
-                  <h1 className="text-base font-bold text-gray-900 truncate leading-tight">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-lg font-bold text-gray-900">
                     {profile.display_name}
                   </h1>
-                  
-                  {/* Business Tier Badge - Mobile (icon only with tooltip) */}
-                  <div className="flex-shrink-0 relative">
-                    <div 
-                      className={`w-6 h-6 rounded-full flex items-center justify-center shadow-lg border cursor-pointer transition-transform hover:scale-110 ${
-                        profile.subscription_tier === 'free' 
-                          ? 'bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 border-gray-300' 
-                          : profile.subscription_tier === 'premium'
-                          ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 border-amber-300'
-                          : 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 border-blue-400'
-                      }`}
-                      onClick={() => setShowTierTooltip(!showTierTooltip)}
-                      onMouseEnter={() => setShowTierTooltip(true)}
-                      onMouseLeave={() => setShowTierTooltip(false)}
-                    >
-                      {profile.subscription_tier === 'free' && <Zap className="h-3 w-3 text-white drop-shadow-sm" />}
-                      {profile.subscription_tier === 'premium' && <Sword className="h-3 w-3 text-white drop-shadow-sm" />}
-                      {profile.subscription_tier === 'business' && <Crown className="h-3 w-3 text-white drop-shadow-sm" />}
-                    </div>
-                    
-                    {/* Tooltip */}
-                    {showTierTooltip && (
-                      <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
-                        {profile.subscription_tier === 'free' ? 'Free user' : 
-                         profile.subscription_tier === 'premium' ? 'Premium user' : 'Business user'}
-                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
-                      </div>
+                  <div className="flex gap-1 flex-shrink-0">
+                    <Badge className={`${
+                      profile.subscription_tier === 'free' 
+                        ? 'bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 text-white border border-gray-300 shadow-lg font-bold rounded-[9px]' 
+                        : profile.subscription_tier === 'premium'
+                        ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 text-white border border-amber-300 shadow-lg font-bold rounded-[9px]'
+                        : 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white border border-blue-400 shadow-lg font-bold rounded-[9px]'
+                    } text-xs`}>
+                      {profile.subscription_tier === 'free' && <Zap className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
+                      {profile.subscription_tier === 'premium' && <Sword className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
+                      {profile.subscription_tier === 'business' && <Crown className="h-2.5 w-2.5 mr-0.5 text-white drop-shadow-sm" />}
+                      {profile.subscription_tier === 'free' ? 'Free' : profile.subscription_tier === 'premium' ? 'Premium' : 'Business'}
+                    </Badge>
+                    {profile.verified_seller && (
+                      <Badge className="bg-blue-100 text-blue-700 text-xs">
+                        <Star className="h-2.5 w-2.5 mr-0.5" fill="currentColor" />
+                        Verified
+                      </Badge>
                     )}
                   </div>
                 </div>
                 
-                {/* Reviews - Mobile (under name) */}
-                {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
-                  <div className="flex items-center gap-1 mt-0.5">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`w-2.5 h-2.5 ${i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                    ))}
-                    <span className="font-medium text-gray-600 text-sm ml-1">4.5</span>
-                  </div>
-                )}
-                
-                {/* Category + Open Status - Mobile (under reviews) */}
-                {profile.business_category && (
-                  <div className="flex items-center gap-1 mt-0.5 flex-wrap">
-                    <span className="truncate text-gray-600 text-sm">{profile.business_category}</span>
-                    {profile.business_hours && (
-                      <>
-                        <span className="text-gray-400">•</span>
-                        <div className="flex items-center gap-1">
-                          <div className={`w-1.5 h-1.5 rounded-full ${
-                            isBusinessOpen(profile.business_hours).isOpen ? 'bg-green-500' : 'bg-red-500'
-                          }`}></div>
-                          <span className={`font-medium text-xs ${
-                            isBusinessOpen(profile.business_hours).isOpen ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {isBusinessOpen(profile.business_hours).status}
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </div>
+                {/* Info Line */}
+                <div className="flex items-center gap-2 flex-wrap text-gray-600 text-sm mt-1">
+                  {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-2.5 h-2.5 ${i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                      ))}
+                      <span className="font-medium">4.5</span>
+                    </div>
+                  )}
+                  {profile.business_category && (
+                    <>
+                      <span className="text-gray-400">•</span>
+                      <span>{profile.business_category}</span>
+                      {profile.business_hours && (
+                        <>
+                          <span className="text-gray-400">•</span>
+                          <div className="flex items-center gap-1">
+                            <div className={`w-1.5 h-1.5 rounded-full ${
+                              isBusinessOpen(profile.business_hours).isOpen ? 'bg-green-500' : 'bg-red-500'
+                            }`}></div>
+                            <span className={`font-medium ${
+                              isBusinessOpen(profile.business_hours).isOpen ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {isBusinessOpen(profile.business_hours).status}
+                            </span>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Center: Search Bar */}
+            <div className="flex-1 max-w-lg mx-4">
+              <div className="relative group">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 group-focus-within:text-emerald-600 transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Search by name, description, or details..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-sm bg-white hover:border-gray-400"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    title="Clear search"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 )}
               </div>
             </div>
             
-            {/* Second Row: Verified Badge (if exists) */}
-            {profile.verified_seller && (
-              <div className="flex items-center gap-2 mb-2">
-                <Badge className="bg-blue-100 text-blue-700 text-xs">
-                  <Star className="h-2.5 w-2.5 mr-0.5" fill="currentColor" />
-                  Verified
-                </Badge>
-              </div>
-            )}
-            
-            {/* Third Row: Cart + Chat + Share + Review + Open Status */}
-            <div className="flex items-center gap-2 text-sm">
+            {/* Right: Action Buttons Row */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               {profile.phone_number && (
                 <button 
-                  className="p-2.5 bg-emerald-50 text-emerald-700 rounded-lg transition-colors hover:bg-emerald-100"
-                  onClick={() => {
-                    const phoneNumber = profile.phone_number?.replace(/\D/g, '')
-                    const message = `Hi ${profile.display_name}, I found your profile on A2Z Business Directory and would like to get in touch!`
-                    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
-                    window.open(whatsappUrl, '_blank')
-                  }}
+                  className="p-2 rounded-lg transition-colors hover:bg-emerald-50"
                   title="WhatsApp"
                 >
-                  <MessageCircle className="w-4 h-4" />
+                  <MessageCircle className="w-4 h-4 text-emerald-600" />
+                </button>
+              )}
+              
+              {profile.address && (
+                <button 
+                  className="p-2 rounded-lg transition-colors hover:bg-emerald-50"
+                  title="Directions"
+                >
+                  <MapPin className="w-4 h-4 text-emerald-600" />
                 </button>
               )}
               
               <button 
-                className="p-2.5 bg-gray-50 text-gray-700 rounded-lg transition-colors hover:bg-gray-100"
-                onClick={() => {
-                  const shareUrl = `https://www.a2zsellr.life/profile/${encodeURIComponent(profile.display_name?.toLowerCase().trim() || 'profile')}`
-                  const shareText = `Check out ${profile.display_name}'s business profile on A2Z Business Directory!`
-                  
-                  if (navigator.share) {
-                    navigator.share({
-                      title: `${profile.display_name} - A2Z Business Directory`,
-                      text: shareText,
-                      url: shareUrl,
-                    }).catch(console.error)
-                  } else {
-                    navigator.clipboard.writeText(`${shareText}\n${shareUrl}`).then(() => {
-                      alert('Profile link copied to clipboard!')
-                    }).catch(() => {
-                      prompt('Copy this link to share:', shareUrl)
-                    })
-                  }
-                }}
+                className="p-2 rounded-lg transition-colors hover:bg-emerald-50"
                 title="Share"
               >
-                <Share2 className="w-4 h-4" />
+                <Share2 className="w-4 h-4 text-emerald-600" />
               </button>
+              
+              {profile.website_url && (
+                <button 
+                  className="p-2 rounded-lg transition-colors hover:bg-emerald-50"
+                  title="Website"
+                >
+                  <Globe className="w-4 h-4 text-emerald-600" />
+                </button>
+              )}
 
               {(profile.subscription_tier === 'premium' || profile.subscription_tier === 'business') && (
                 <button 
-                  className="p-2.5 bg-gray-50 text-gray-700 rounded-lg transition-colors hover:bg-gray-100"
+                  className="p-2 rounded-lg transition-colors hover:bg-emerald-50"
                   title="Leave A Review"
                 >
-                  <Star className="w-4 h-4" />
+                  <Star className="w-4 h-4 text-emerald-600" />
                 </button>
               )}
             </div>
           </div>
-
-
         </div>
       </div>
 
