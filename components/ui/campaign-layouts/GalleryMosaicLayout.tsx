@@ -90,7 +90,7 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
         </div>
 
         {/* Mosaic Gallery Grid */}
-        <div className="bg-gray-50 rounded-[9px] p-3 mb-4">
+        <div className="bg-green-50 rounded-[9px] p-3 mb-4">
           {items.length > 0 ? (
             <div className="grid gap-2" style={{
               gridTemplateColumns: items.length === 1 ? '1fr' : 
@@ -118,8 +118,8 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                      <Image className="w-8 h-8 text-gray-400" />
+                    <div className="w-full h-full bg-green-200 flex items-center justify-center">
+                      <Image className="w-8 h-8 text-green-600" />
                     </div>
                   )}
                   
@@ -148,16 +148,16 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
               
               {/* Show more indicator if there are many items */}
               {items.length > 4 && (
-                <div className="relative bg-gray-800/90 rounded-lg overflow-hidden flex items-center justify-center text-white font-bold text-lg" style={{ aspectRatio: '4/3' }}>
+                <div className="relative bg-emerald-700/90 rounded-lg overflow-hidden flex items-center justify-center text-white font-bold text-lg" style={{ aspectRatio: '4/3' }}>
                   +{items.length - 3} more
                 </div>
               )}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-64 bg-white rounded-lg border-2 border-dashed border-gray-300">
+            <div className="flex items-center justify-center h-64 bg-white rounded-lg border-2 border-dashed border-green-300">
               <div className="text-center">
-                <Image className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">No media selected</p>
+                <Image className="w-12 h-12 text-green-600 mx-auto mb-2" />
+                <p className="text-sm text-green-700">No media selected</p>
               </div>
             </div>
           )}
@@ -175,7 +175,7 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
           </a>
         </div>
         
-        <div className="text-xs text-blue-600 text-center mt-2 truncate">
+        <div className="text-xs text-emerald-600 text-center mt-2 truncate">
           {ctaUrl}
         </div>
       </div>

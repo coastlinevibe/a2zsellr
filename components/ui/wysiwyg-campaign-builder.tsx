@@ -29,6 +29,7 @@ import {
   EyeOff,
   Crown,
   Star,
+  Sword,
   MapPin,
   Phone,
   Globe,
@@ -332,25 +333,34 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
   // Auto-generated URL based on current values
   // If single product is selected, link to that product
   // If multiple products are selected, link to profile
-  // Otherwise, link to the listing
+  // Generate CTA URL based on media and product selection
   const ctaUrl = (() => {
     const baseUrl = 'https://a2zsellr.life'
     const displayName = businessProfile?.display_name || 'business'
+    const profileSlug = encodeURIComponent(displayName.toLowerCase().trim())
     
+    // Check if there are videos
+    const hasVideo = uploadedMedia.some(media => media.type?.startsWith('video/'))
+    
+    // Rule 1: Image only (no products, no videos) → profile view page
+    if (uploadedMedia.length > 0 && !hasVideo && selectedProducts.length === 0) {
+      return `${baseUrl}/profile/${profileSlug}`
+    }
+    
+    // Rule 2: Single product → link to that product
     if (selectedProducts.length === 1) {
-      // Single product - link to product on profile
       const product = selectedProducts[0]
       const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-      const profileSlug = encodeURIComponent(displayName.toLowerCase().trim())
       return `${baseUrl}/profile/${profileSlug}?product=${encodeURIComponent(productSlug)}`
-    } else if (selectedProducts.length > 1) {
-      // Multiple products - link to profile
-      const profileSlug = encodeURIComponent(displayName.toLowerCase().trim())
-      return `${baseUrl}/profile/${profileSlug}`
-    } else {
-      // No products - link to listing
-      return generateCampaignUrl(displayName, campaignTitle)
     }
+    
+    // Rule 3: Multiple products → profile view page
+    if (selectedProducts.length > 1) {
+      return `${baseUrl}/profile/${profileSlug}`
+    }
+    
+    // Rule 4: Video or nothing → profile view page
+    return `${baseUrl}/profile/${profileSlug}`
   })()
 
   // Handle file upload with proper storage
@@ -995,9 +1005,12 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
                 </p>
               </div>
             </div>
-            <button className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-3 px-4 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3 whitespace-nowrap">
-              <Crown className="w-5 h-5" />
-              <span>UPGRADE TO PREMIUM</span>
+            <button 
+              onClick={onUpgrade}
+              className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-3 px-6 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3"
+            >
+              <Sword className="w-5 h-5" />
+              <span>Upgrade Now</span>
               <Star className="w-4 h-4" />
             </button>
           </div>

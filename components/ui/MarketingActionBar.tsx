@@ -89,8 +89,8 @@ export function MarketingActionBar({
   const allActions: ActionButton[] = [
     {
       id: 'video',
-      label: 'Watch Video',
-      sublabel: 'See it in action',
+      label: 'View Now',
+      sublabel: '',
       icon: <Play className="h-5 w-5" />,
       onClick: handleVideoPopup,
       gradientClasses: 'bg-gradient-to-br from-red-400 via-red-500 to-red-600',
@@ -98,8 +98,8 @@ export function MarketingActionBar({
     },
     {
       id: 'profile',
-      label: 'Business Profile',
-      sublabel: 'Complete details',
+      label: 'Seller Profile',
+      sublabel: '',
       icon: <User className="h-5 w-5" />,
       onClick: onViewProfile,
       gradientClasses: 'bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600',
@@ -107,8 +107,8 @@ export function MarketingActionBar({
     },
     {
       id: 'chat',
-      label: 'Message Seller',
-      sublabel: 'Get instant help',
+      label: 'Open WhatsApp',
+      sublabel: '',
       icon: <MessageCircle className="h-5 w-5" />,
       onClick: onChatWithSeller,
       gradientClasses: 'bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600',
@@ -116,8 +116,8 @@ export function MarketingActionBar({
     },
     {
       id: 'menu',
-      label: 'Browse Menu',
-      sublabel: 'All offerings',
+      label: 'View More',
+      sublabel: '',
       icon: <Menu className="h-5 w-5" />,
       onClick: handleViewMenuPopup,
       gradientClasses: 'bg-gradient-to-br from-purple-400 via-purple-500 to-purple-600',
@@ -125,8 +125,8 @@ export function MarketingActionBar({
     },
     {
       id: 'products',
-      label: 'Latest Items',
-      sublabel: '3 new arrivals',
+      label: 'Latest products',
+      sublabel: '',
       icon: <Package className="h-5 w-5" />,
       onClick: handleNewProductsPopup,
       gradientClasses: 'bg-gradient-to-br from-amber-400 via-orange-400 to-orange-500',

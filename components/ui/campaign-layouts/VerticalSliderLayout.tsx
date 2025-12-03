@@ -67,14 +67,14 @@ export const VerticalSliderLayout: React.FC<VerticalSliderLayoutProps> = ({
   return (
     <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 w-full max-w-md md:max-w-2xl lg:max-w-4xl mx-auto overflow-hidden">
       {/* Header */}
-      <div className="bg-indigo-50 border-b border-indigo-200 p-4 md:p-6 lg:p-8">
+      <div className="bg-green-50 border-b border-green-200 p-4 md:p-6 lg:p-8">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl">
+          <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl">
             {businessName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div className="font-semibold text-gray-900 text-base md:text-lg lg:text-xl">{businessName}</div>
-            <div className="text-xs md:text-sm text-gray-500">Broadcast • vertical slider</div>
+            <div className="font-semibold text-emerald-900 text-base md:text-lg lg:text-xl">{businessName}</div>
+            <div className="text-xs md:text-sm text-emerald-700">Broadcast • vertical slider</div>
           </div>
         </div>
         
@@ -85,19 +85,19 @@ export const VerticalSliderLayout: React.FC<VerticalSliderLayoutProps> = ({
             deliveryAvailable={deliveryAvailable}
             className="mb-2"
           />
-          <h3 className="font-bold text-gray-900 mb-2 text-lg md:text-xl lg:text-2xl">{title}</h3>
+          <h3 className="font-bold text-emerald-900 mb-2 text-lg md:text-xl lg:text-2xl">{title}</h3>
           <div 
-            className="text-gray-700 text-sm md:text-base lg:text-lg leading-relaxed"
+            className="text-emerald-700 text-sm md:text-base lg:text-lg leading-relaxed"
             dangerouslySetInnerHTML={{ __html: message }}
           />
         </div>
 
         {/* Vertical Slider */}
-        <div className="bg-gray-50 rounded-[9px] p-3 mb-4">
-          <div className="text-xs text-gray-500 mb-2 flex items-center justify-between">
+        <div className="bg-green-50 rounded-[9px] p-3 mb-4">
+          <div className="text-xs text-green-700 mb-2 flex items-center justify-between">
             <span>Vertical Story Layout</span>
             {isAutoPlaying && (
-              <span className="text-indigo-600 flex items-center gap-1">
+              <span className="text-emerald-600 flex items-center gap-1">
                 <MoreVertical className="w-3 h-3 animate-bounce" />
                 Stories
               </span>
@@ -118,7 +118,7 @@ export const VerticalSliderLayout: React.FC<VerticalSliderLayoutProps> = ({
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-b from-gray-200 to-gray-300 flex items-center justify-center">
-                      <Image className="w-12 h-12 text-gray-400" />
+                      <Image className="w-12 h-12 text-green-600" />
                     </div>
                   )}
 
@@ -197,8 +197,8 @@ export const VerticalSliderLayout: React.FC<VerticalSliderLayoutProps> = ({
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                          <Image className="w-2 h-2 text-gray-400" />
+                        <div className="w-full h-full bg-green-200 flex items-center justify-center">
+                          <Image className="w-2 h-2 text-green-600" />
                         </div>
                       )}
                     </button>
@@ -214,18 +214,18 @@ export const VerticalSliderLayout: React.FC<VerticalSliderLayoutProps> = ({
                     onClick={() => goToSlide(index)}
                     className={`w-2 h-2 rounded-full transition-all duration-200 ${
                       currentSlide === index 
-                        ? 'bg-indigo-600 h-6' 
-                        : 'bg-gray-300 hover:bg-gray-400'
+                        ? 'bg-emerald-600 h-6' 
+                        : 'bg-emerald-300 hover:bg-emerald-400'
                     }`}
                   />
                 ))}
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-60 bg-white rounded-[12px] border-2 border-dashed border-gray-300">
+            <div className="flex items-center justify-center h-60 bg-white rounded-[12px] border-2 border-dashed border-green-300">
               <div className="text-center">
-                <MoreVertical className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">Add media for stories</p>
+                <MoreVertical className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                <p className="text-sm text-green-700">Add media for stories</p>
               </div>
             </div>
           )}
@@ -237,13 +237,13 @@ export const VerticalSliderLayout: React.FC<VerticalSliderLayoutProps> = ({
             href={ctaUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 md:px-8 md:py-3 lg:px-10 lg:py-4 rounded-[9px] font-medium text-sm md:text-base lg:text-lg transition-colors"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 md:px-8 md:py-3 lg:px-10 lg:py-4 rounded-[9px] font-medium text-sm md:text-base lg:text-lg transition-colors"
           >
             {ctaLabel}
           </a>
         </div>
         
-        <div className="text-xs text-blue-600 text-center mt-2 truncate">
+        <div className="text-xs text-emerald-600 text-center mt-2 truncate">
           {ctaUrl}
         </div>
       </div>

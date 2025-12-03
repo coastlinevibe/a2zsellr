@@ -44,14 +44,14 @@ export const VideoSpotlightLayout: React.FC<VideoSpotlightLayoutProps> = ({
   return (
     <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 w-full max-w-md md:max-w-2xl lg:max-w-5xl mx-auto overflow-hidden">
       {/* Header */}
-      <div className="bg-red-50 border-b border-red-200 p-4 md:p-6 lg:p-8">
+      <div className="bg-green-50 border-b border-green-200 p-4 md:p-6 lg:p-8">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl">
+          <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl">
             {businessName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div className="font-semibold text-gray-900 text-base md:text-lg lg:text-xl">{businessName}</div>
-            <div className="text-xs md:text-sm text-gray-500">Broadcast • video spotlight</div>
+            <div className="font-semibold text-emerald-900 text-base md:text-lg lg:text-xl">{businessName}</div>
+            <div className="text-xs md:text-sm text-emerald-700">Broadcast • video spotlight</div>
           </div>
         </div>
         
@@ -62,16 +62,16 @@ export const VideoSpotlightLayout: React.FC<VideoSpotlightLayoutProps> = ({
             deliveryAvailable={deliveryAvailable}
             className="mb-2"
           />
-          <h3 className="font-bold text-gray-900 mb-2 text-lg md:text-xl lg:text-2xl">{title}</h3>
+          <h3 className="font-bold text-emerald-900 mb-2 text-lg md:text-xl lg:text-2xl">{title}</h3>
           <div 
-            className="text-gray-700 text-sm md:text-base lg:text-lg leading-relaxed"
+            className="text-emerald-700 text-sm md:text-base lg:text-lg leading-relaxed"
             dangerouslySetInnerHTML={{ __html: message }}
           />
         </div>
 
         {/* Video Spotlight */}
-        <div className="bg-gray-50 rounded-[9px] p-3 mb-4">
-          <div className="text-xs text-gray-500 mb-2">Video Spotlight</div>
+        <div className="bg-emerald-50 rounded-[9px] p-3 mb-4">
+          <div className="text-xs text-emerald-700 mb-2">Video Spotlight</div>
           
           {videoItems.length > 0 ? (
             <div className="space-y-3">
@@ -119,7 +119,7 @@ export const VideoSpotlightLayout: React.FC<VideoSpotlightLayoutProps> = ({
 
                   {/* Duration Badge */}
                   <div className="absolute top-2 left-2">
-                    <span className="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">
+                    <span className="bg-emerald-600 text-white px-2 py-1 rounded text-xs font-bold">
                       ● LIVE
                     </span>
                   </div>
@@ -135,11 +135,11 @@ export const VideoSpotlightLayout: React.FC<VideoSpotlightLayoutProps> = ({
                       onClick={() => setCurrentVideo(index)}
                       className={`flex-shrink-0 relative rounded-[4px] overflow-hidden transition-all duration-200 ${
                         currentVideo === index 
-                          ? 'ring-2 ring-red-400 scale-105' 
+                          ? 'ring-2 ring-emerald-400 scale-105' 
                           : 'opacity-70 hover:opacity-90'
                       }`}
                     >
-                      <div className="w-16 h-12 bg-gray-800 flex items-center justify-center">
+                      <div className="w-16 h-12 bg-emerald-800 flex items-center justify-center">
                         <Play className="w-4 h-4 text-white" />
                       </div>
                       <div className="absolute inset-0 bg-black bg-opacity-20" />
@@ -169,7 +169,7 @@ export const VideoSpotlightLayout: React.FC<VideoSpotlightLayoutProps> = ({
               )}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-32 bg-black rounded-[6px]">
+            <div className="flex items-center justify-center h-32 bg-emerald-900 rounded-[6px]">
               <div className="text-center text-white">
                 <Play className="w-8 h-8 mx-auto mb-2 opacity-60" />
                 <p className="text-sm opacity-80">Upload videos for spotlight</p>
@@ -184,13 +184,13 @@ export const VideoSpotlightLayout: React.FC<VideoSpotlightLayoutProps> = ({
             href={ctaUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-[9px] font-medium text-sm transition-colors"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 md:px-8 md:py-3 lg:px-10 lg:py-4 rounded-[9px] font-medium text-sm md:text-base lg:text-lg transition-colors"
           >
             {ctaLabel}
           </a>
         </div>
         
-        <div className="text-xs text-blue-600 text-center mt-2 truncate">
+        <div className="text-xs text-emerald-600 text-center mt-2 truncate">
           {ctaUrl}
         </div>
       </div>
