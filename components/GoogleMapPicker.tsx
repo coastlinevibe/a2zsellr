@@ -66,7 +66,7 @@ export default function GoogleMapPicker({
         }
 
         // Create map
-        const map = new window.google.maps.Map(mapRef.current, {
+        const map = new (window as any).google.maps.Map(mapRef.current, {
           center: initialCoordinates,
           zoom: 15,
           mapTypeControl: true,
@@ -78,12 +78,12 @@ export default function GoogleMapPicker({
         mapInstanceRef.current = map
 
         // Create marker
-        const marker = new window.google.maps.Marker({
+        const marker = new (window as any).google.maps.Marker({
           position: initialCoordinates,
           map: map,
           draggable: true,
           title: 'Your Business Location',
-          animation: window.google.maps.Animation.DROP,
+          animation: (window as any).google.maps.Animation.DROP,
         })
 
         markerRef.current = marker
@@ -116,7 +116,7 @@ export default function GoogleMapPicker({
 
         // Setup autocomplete
         if (searchInputRef.current) {
-          const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current, {
+          const autocomplete = new (window as any).google.maps.places.Autocomplete(searchInputRef.current, {
             componentRestrictions: { country: 'za' }, // Restrict to South Africa
             fields: ['formatted_address', 'geometry', 'name']
           })
@@ -158,7 +158,7 @@ export default function GoogleMapPicker({
     if (!isGoogleMapsAvailable()) return
 
     try {
-      const geocoder = new window.google.maps.Geocoder()
+      const geocoder = new (window as any).google.maps.Geocoder()
       const result = await geocoder.geocode({ location: coords })
       
       if (result.results && result.results.length > 0) {
