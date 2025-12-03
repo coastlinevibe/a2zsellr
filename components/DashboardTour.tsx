@@ -86,8 +86,23 @@ export function DashboardTour({
           width: rect.width,
           height: rect.height
         })
+      } else {
+        // Retry after another delay if element not found
+        const retryTimer = setTimeout(() => {
+          const retryElement = document.getElementById(step.target)
+          if (retryElement) {
+            const rect = retryElement.getBoundingClientRect()
+            setPosition({
+              top: rect.top + window.scrollY,
+              left: rect.left + window.scrollX,
+              width: rect.width,
+              height: rect.height
+            })
+          }
+        }, 200)
+        return () => clearTimeout(retryTimer)
       }
-    }, 100) // 100ms delay to allow DOM to update after tab navigation
+    }, 150) // 150ms delay to allow DOM to update after tab navigation
 
     return () => clearTimeout(timer)
   }, [currentStep, step.target])

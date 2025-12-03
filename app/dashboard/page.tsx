@@ -50,7 +50,6 @@ import BusinessShop from '@/components/ui/business-shop'
 import FreeAccountNotifications from '@/components/FreeAccountNotifications'
 import { ProfileSettingsTab } from '@/components/ProfileSettingsTab'
 import { GalleryTab } from '@/components/dashboard/GalleryTab'
-import { ProfileCardTab } from '@/components/dashboard/ProfileCardTab'
 import { MarketingCampaignsTab } from '@/components/dashboard/MarketingCampaignsTab'
 import PublicProfilePreview from '@/components/ui/public-profile-preview'
 import { DashboardTour } from '@/components/DashboardTour'
@@ -62,7 +61,7 @@ import WhatsAppIntegration from '@/components/integrations/WhatsAppIntegration'
 import { AnimatedCounter } from '@/components/ui/animated-counter'
 
 type SubscriptionTier = 'free' | 'premium' | 'business'
-type DashboardTab = 'profile' | 'products' | 'branding' | 'card' | 'listings' | 'integrations'
+type DashboardTab = 'profile' | 'products' | 'branding' | 'listings' | 'integrations'
 
 interface UserProfile {
   id: string
@@ -87,9 +86,8 @@ interface UserProfile {
 
 const dashboardTabs: { key: DashboardTab; label: string; subtitle: string; icon: typeof Users; premiumOnly?: boolean }[] = [
   { key: 'profile', label: 'Profile', subtitle: 'View your profile', icon: Users },
-  { key: 'products', label: 'Products', subtitle: 'Manage your inventory', icon: ShoppingBag },
-  { key: 'branding', label: 'Profile Image', subtitle: 'Your professional image', icon: ImageIcon },
-  { key: 'card', label: 'Profile Card', subtitle: 'Your business card', icon: ImageIcon },
+  { key: 'products', label: 'Shop Products', subtitle: 'Manage your inventory', icon: ShoppingBag },
+  { key: 'branding', label: 'Profile Banner', subtitle: 'Your professional image', icon: ImageIcon },
   { key: 'listings', label: 'Listings', subtitle: 'Create & amplify your reach', icon: MessageSquare },
   { key: 'integrations', label: 'Social Integrations', subtitle: 'Connect social & messaging apps', icon: Plug, premiumOnly: true }
 ]
@@ -178,6 +176,12 @@ export default function DashboardPage() {
       action: 'Next'
     },
     {
+      target: 'tour-edit-profile-btn',
+      title: '✏️ Edit Profile',
+      description: 'Click here to update your business information and settings.',
+      action: 'Next'
+    },
+    {
       target: 'tour-profile-tab',
       title: '👤 Profile Tab',
       description: 'View and update your profile info and settings.',
@@ -186,15 +190,15 @@ export default function DashboardPage() {
     },
     {
       target: 'tour-products-tab',
-      title: '📦 Products Tab',
+      title: '📦 Shop Products Tab',
       description: 'Add and manage your products.',
       action: 'Next',
       preAction: () => setActiveTab('products')
     },
     {
       target: 'tour-branding-tab',
-      title: '🖼️ Profile Image Tab',
-      description: 'Upload your profile image.',
+      title: '🖼️ Profile Banner Tab',
+      description: 'Upload your profile banner images.',
       action: 'Next',
       preAction: () => setActiveTab('branding')
     },
@@ -202,14 +206,8 @@ export default function DashboardPage() {
       target: 'tour-listings-tab',
       title: '📣 Listings Tab',
       description: 'Create campaigns and share on WhatsApp and social media.',
-      action: 'Next',
+      action: 'Finish Tour',
       preAction: () => setActiveTab('listings')
-    },
-    {
-      target: 'tour-edit-profile-btn',
-      title: '✏️ Edit Profile',
-      description: 'Click here to update your business information and settings.',
-      action: 'Finish Tour'
     }
   ]
 
@@ -909,11 +907,6 @@ export default function DashboardPage() {
           }}
           onUpgrade={() => setShowPlanModal(true)}
         />
-      case 'card':
-        return <ProfileCardTab 
-          profile={profile}
-          onRefresh={fetchDashboardMetrics}
-        />
       case 'listings':
         return renderMarketingTab()
       case 'integrations':
@@ -1409,6 +1402,22 @@ export default function DashboardPage() {
         {/* Tabs - Desktop View */}
         <div id="tour-tabs" className="hidden md:flex flex-wrap gap-4 mb-8 items-start">
           <div className="flex flex-wrap gap-4">
+            {/* Edit Profile Card - First */}
+            <button
+              id="tour-edit-profile-btn"
+              onClick={() => router.push('/profile')}
+              className="flex flex-col items-start gap-1 px-6 py-3 rounded-[9px] border-2 border-black font-bold transition-all hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] bg-white text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:bg-gray-100"
+            >
+              <div className="flex items-center gap-2">
+                <Edit className="w-5 h-5" />
+                Edit profile
+              </div>
+              <span className="text-xs font-normal text-gray-600">
+                Update your information
+              </span>
+            </button>
+
+            {/* Dashboard Tabs */}
             {dashboardTabs.map((tab) => {
               // Hide premium-only tabs for free tier users
               if (tab.premiumOnly && profile?.subscription_tier === 'free') {
@@ -1446,19 +1455,6 @@ export default function DashboardPage() {
               )
             })}
           </div>
-          <Link
-            id="tour-edit-profile-btn"
-            href="/profile"
-            className="flex flex-col items-start gap-1 px-6 py-3 rounded-[9px] border-2 border-black font-bold transition-all hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] bg-white text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:bg-gray-100"
-          >
-            <div className="flex items-center gap-2">
-              <Edit className="w-5 h-5" />
-              Edit profile
-            </div>
-            <span className="text-xs font-normal text-gray-600">
-              Update your information
-            </span>
-          </Link>
         </div>
 
         {/* Tabs - Mobile Carousel View */}

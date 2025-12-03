@@ -8,6 +8,7 @@ import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Sword, Zap, Share2, Che
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { WhatsAppIcon } from '@/components/ui/WhatsAppIcon'
+import { WhatsAppSVG } from '@/components/ui/WhatsAppSVG'
 import { useCart } from '@/contexts/CartContext'
 import CartButton from '@/components/CartButton'
 import Link from 'next/link'
@@ -1038,7 +1039,7 @@ Best regards`
               
               {profile.phone_number && (
                 <button 
-                  className="p-2.5 bg-emerald-50 text-emerald-700 rounded-lg transition-colors hover:bg-emerald-100"
+                  className="holographic-icon whatsapp-header"
                   onClick={() => {
                     const phoneNumber = profile.phone_number?.replace(/\D/g, '')
                     const message = `Hi ${profile.display_name}, I found your profile on A2Z Business Directory and would like to get in touch!`
@@ -1047,7 +1048,10 @@ Best regards`
                   }}
                   title="WhatsApp"
                 >
-                  <WhatsAppIcon className="w-4 h-4" />
+                  <div className="holographic-ring"></div>
+                  <div className="holographic-particles"></div>
+                  <WhatsAppSVG className="w-4 h-4" />
+                  <div className="holographic-pulse"></div>
                 </button>
               )}
               
@@ -1182,7 +1186,7 @@ Best regards`
             <div className="flex items-center gap-1.5 flex-shrink-0">
               {profile.phone_number && (
                 <button 
-                  className="p-2 rounded-lg transition-colors hover:bg-emerald-50"
+                  className="holographic-icon whatsapp-header-desktop"
                   onClick={() => {
                     const phoneNumber = profile.phone_number?.replace(/\D/g, '')
                     const message = `Hi ${profile.display_name}, I found your profile on A2Z Business Directory and would like to get in touch!`
@@ -1191,7 +1195,10 @@ Best regards`
                   }}
                   title="WhatsApp"
                 >
-                  <MessageCircle className="w-4 h-4 text-emerald-600" />
+                  <div className="holographic-ring"></div>
+                  <div className="holographic-particles"></div>
+                  <WhatsAppSVG className="w-4 h-4" />
+                  <div className="holographic-pulse"></div>
                 </button>
               )}
               
@@ -1692,7 +1699,7 @@ Best regards`
                       <motion.div 
                         key={product.id}
                         className="w-64 bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer transition-all duration-300 flex-shrink-0 relative group flex flex-col"
-                        style={{ height: '500px' }}
+                        style={{ height: '550px' }}
                         onClick={() => setSelectedProduct(product)}
                         initial={{ opacity: 0, scale: 0.8, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -1909,10 +1916,13 @@ Best regards`
                       const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
                       window.open(whatsappUrl, '_blank')
                     }}
-                    className="p-1 text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
+                    className="holographic-icon whatsapp-profile-info"
                     title="Chat on WhatsApp"
                   >
-                    <WhatsAppIcon className="h-4 w-4" />
+                    <div className="holographic-ring"></div>
+                    <div className="holographic-particles"></div>
+                    <WhatsAppSVG className="h-4 w-4" />
+                    <div className="holographic-pulse"></div>
                   </button>
                 </div>
               </div>
@@ -2688,6 +2698,57 @@ Best regards`
 
         .holographic-icon.youtube:hover .holographic-ring {
           border-color: #cc0000;
+          border-top-color: transparent;
+          border-bottom-color: transparent;
+        }
+
+        .holographic-icon.whatsapp-header {
+          color: #25d366;
+          width: 40px;
+          height: 40px;
+        }
+
+        .holographic-icon.whatsapp-header:hover {
+          color: #1fa857;
+          transform: translateY(-8px) rotateX(20deg);
+        }
+
+        .holographic-icon.whatsapp-header:hover .holographic-ring {
+          border-color: #1fa857;
+          border-top-color: transparent;
+          border-bottom-color: transparent;
+        }
+
+        .holographic-icon.whatsapp-header-desktop {
+          color: #25d366;
+          width: 40px;
+          height: 40px;
+        }
+
+        .holographic-icon.whatsapp-header-desktop:hover {
+          color: #1fa857;
+          transform: translateY(-8px) rotateX(20deg);
+        }
+
+        .holographic-icon.whatsapp-header-desktop:hover .holographic-ring {
+          border-color: #1fa857;
+          border-top-color: transparent;
+          border-bottom-color: transparent;
+        }
+
+        .holographic-icon.whatsapp-profile-info {
+          color: #25d366;
+          width: 32px;
+          height: 32px;
+        }
+
+        .holographic-icon.whatsapp-profile-info:hover {
+          color: #1fa857;
+          transform: translateY(-6px) rotateX(20deg);
+        }
+
+        .holographic-icon.whatsapp-profile-info:hover .holographic-ring {
+          border-color: #1fa857;
           border-top-color: transparent;
           border-bottom-color: transparent;
         }

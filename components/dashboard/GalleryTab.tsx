@@ -209,7 +209,7 @@ export function GalleryTab({
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <div className="flex items-center gap-2 mb-2">
               <ImageIcon className="w-5 h-5 text-emerald-600" />
-              <span className="text-sm font-medium text-gray-600">Gallery Images</span>
+              <span className="text-sm font-medium text-gray-600">Banner Images</span>
             </div>
             <TierLimitDisplay 
               current={images.length}
@@ -340,7 +340,7 @@ export function GalleryTab({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Gallery Showcase</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Banner Showcase</h2>
           <p className="text-sm text-gray-600">Curate your visual story. High-quality images are your competitive edge.</p>
         </div>
         

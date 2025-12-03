@@ -2308,13 +2308,7 @@ export default function HomePage() {
                 </a>
               </motion.div>
               <motion.button 
-                onClick={() => {
-                  // Scroll to pricing section
-                  const pricingSection = document.getElementById('pricing')
-                  if (pricingSection) {
-                    pricingSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                  }
-                }}
+                onClick={() => setShowAdminModal(true)}
                 className="bg-gray-600 hover:bg-gray-700 text-white font-black px-4 py-2 rounded-lg border-2 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.9)] transition-all"
                 whileHover={{ 
                   scale: 1.05,

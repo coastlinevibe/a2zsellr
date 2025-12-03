@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabaseClient'
 import { Button } from '@/components/ui/button'
-import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Sword, Zap, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Heart, Check, Truck, Shield, FileText, User, CheckCircle2, AlertTriangle, Building2, Tag, Upload, ArrowLeft, HelpCircle, Image as ImageIcon, ChevronDown, ChevronUp } from 'lucide-react'
+import { Star, MapPin, Phone, Globe, Clock, Mail, Crown, Sword, Zap, Share2, ChevronLeft, ChevronRight, Package, ShoppingBag, X, Heart, Check, Truck, Shield, FileText, User, CheckCircle2, AlertTriangle, Building2, Tag, Upload, ArrowLeft, HelpCircle, Image as ImageIcon, ChevronDown, ChevronUp, CreditCard, AlertCircle, CheckCircle, MessageCircle } from 'lucide-react'
 import EmojiPicker from '@/components/ui/emoji-picker'
 import { Badge } from '@/components/ui/badge'
 import ProfileCompletenessIndicator from '@/components/ProfileCompletenessIndicator'
@@ -587,11 +587,51 @@ export default function ProfilePage() {
   const renderTabContent = () => {
     return (
       <div className="space-y-6">
-        {/* Profile Completeness Indicator */}
-        <ProfileCompletenessIndicator 
-          profile={profile} 
-          userEmail={user?.email}
-        />
+        {/* Profile Completeness Indicator + Payment Setup */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left: Progress Indicator */}
+          <div className="max-w-md">
+            <ProfileCompletenessIndicator 
+              profile={profile} 
+              userEmail={user?.email}
+            />
+          </div>
+          
+          {/* Right: Payment Setup Button */}
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-[9px] shadow-sm border-2 border-green-300 overflow-hidden h-fit">
+            <div className="p-2 border-b border-green-300">
+              <div className="flex items-center gap-1.5">
+                <div className="bg-green-500 p-1 rounded">
+                  <CreditCard className="w-3 h-3 text-white" />
+                </div>
+                <h3 className="text-xs font-bold text-gray-900">Setup Payment</h3>
+              </div>
+            </div>
+
+            <div className="p-2">
+              <p className="text-xs text-gray-700 mb-2">
+                Contact us via WhatsApp to setup PayFast or EFT payment methods.
+              </p>
+
+              <button
+                onClick={() => {
+                  const message = encodeURIComponent(
+                    `Hi! I'd like to setup payment for my A2Z Sellr account. My profile name is: ${profile?.display_name || 'My Profile'}`
+                  )
+                  window.open(`https://wa.me/27714329190?text=${message}`, '_blank')
+                }}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-1.5 px-2 rounded border-2 border-green-700 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.2)] transition-all flex items-center justify-center gap-1.5 text-xs"
+              >
+                <MessageCircle className="w-3 h-3" />
+                <span>WhatsApp</span>
+              </button>
+
+              <p className="text-center text-xs text-gray-600 mt-1.5">
+                +27 71 432 9190
+              </p>
+            </div>
+          </div>
+        </div>
         
         {/* Tab Content */}
         {activeTab === 'basic' && (

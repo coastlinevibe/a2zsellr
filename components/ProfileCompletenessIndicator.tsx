@@ -173,18 +173,18 @@ export default function ProfileCompletenessIndicator({ profile, userEmail }: Pro
   const MessageIcon = message.icon
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+    <div className="bg-white border border-gray-200 rounded-lg p-3 mb-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <MessageIcon className={`w-6 h-6 ${message.color}`} />
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">{message.title}</h3>
-            <p className="text-sm text-gray-600">{message.description}</p>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2 flex-1">
+          <MessageIcon className={`w-4 h-4 ${message.color} flex-shrink-0`} />
+          <div className="min-w-0">
+            <h3 className="text-xs font-semibold text-gray-900 truncate">{message.title}</h3>
+            <p className="text-xs text-gray-600 truncate">{message.description}</p>
           </div>
         </div>
-        <div className="text-right">
-          <div className={`text-2xl font-bold ${getCompletionColor()}`}>
+        <div className="text-right ml-2 flex-shrink-0">
+          <div className={`text-lg font-bold ${getCompletionColor()}`}>
             {completionPercentage}%
           </div>
           <div className="text-xs text-gray-500">Complete</div>
@@ -192,41 +192,41 @@ export default function ProfileCompletenessIndicator({ profile, userEmail }: Pro
       </div>
 
       {/* Progress Bar */}
-      <div className="mb-6">
-        <div className="w-full bg-gray-200 rounded-full h-3">
+      <div className="mb-2">
+        <div className="w-full bg-gray-200 rounded-full h-1.5">
           <div 
-            className={`h-3 rounded-full transition-all duration-500 ${getProgressBarColor()}`}
+            className={`h-1.5 rounded-full transition-all duration-500 ${getProgressBarColor()}`}
             style={{ width: `${completionPercentage}%` }}
           ></div>
         </div>
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <div className="flex justify-between text-xs text-gray-500 mt-0.5">
           <span>Getting started</span>
           <span>Professional profile</span>
         </div>
       </div>
 
-      {/* Completion Items */}
-      {(requiredIncomplete.length > 0 || optionalIncomplete.length > 0) && (
-        <div className="space-y-4">
+      {/* Completion Items - Hidden to save space */}
+      {false && (requiredIncomplete.length > 0 || optionalIncomplete.length > 0) && (
+        <div className="space-y-2">
           {/* Required Items */}
           {requiredIncomplete.length > 0 && (
             <div>
-              <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-500" />
+              <h4 className="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <AlertCircle className="w-3 h-3 text-red-500" />
                 Required ({requiredIncomplete.length} remaining)
               </h4>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {requiredIncomplete.map((item) => {
                   const Icon = item.icon
                   return (
-                    <div key={item.id} className="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                      <Icon className="w-4 h-4 text-red-600 mt-0.5" />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-red-900">{item.label}</span>
-                          <Badge className="bg-red-100 text-red-700 text-xs border-0">Required</Badge>
+                    <div key={item.id} className="flex items-start gap-2 p-2 bg-red-50 border border-red-200 rounded">
+                      <Icon className="w-3 h-3 text-red-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className="text-xs font-medium text-red-900">{item.label}</span>
+                          <Badge className="bg-red-100 text-red-700 text-xs border-0 py-0 px-1">Required</Badge>
                         </div>
-                        <p className="text-xs text-red-700 mt-1">{item.description}</p>
+                        <p className="text-xs text-red-700 mt-0.5">{item.description}</p>
                       </div>
                     </div>
                   )
@@ -238,22 +238,22 @@ export default function ProfileCompletenessIndicator({ profile, userEmail }: Pro
           {/* Optional Items */}
           {optionalIncomplete.length > 0 && (
             <div>
-              <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <Target className="w-4 h-4 text-amber-500" />
+              <h4 className="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <Target className="w-3 h-3 text-amber-500" />
                 Recommended ({optionalIncomplete.length} remaining)
               </h4>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {optionalIncomplete.map((item) => {
                   const Icon = item.icon
                   return (
-                    <div key={item.id} className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                      <Icon className="w-4 h-4 text-amber-600 mt-0.5" />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-amber-900">{item.label}</span>
-                          <Badge className="bg-amber-100 text-amber-700 text-xs border-0">Optional</Badge>
+                    <div key={item.id} className="flex items-start gap-2 p-2 bg-amber-50 border border-amber-200 rounded">
+                      <Icon className="w-3 h-3 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className="text-xs font-medium text-amber-900">{item.label}</span>
+                          <Badge className="bg-amber-100 text-amber-700 text-xs border-0 py-0 px-1">Optional</Badge>
                         </div>
-                        <p className="text-xs text-amber-700 mt-1">{item.description}</p>
+                        <p className="text-xs text-amber-700 mt-0.5">{item.description}</p>
                       </div>
                     </div>
                   )
@@ -265,13 +265,13 @@ export default function ProfileCompletenessIndicator({ profile, userEmail }: Pro
       )}
 
 
-      {/* Free Tier Reminder */}
-      {profile?.subscription_tier === 'free' && completionPercentage >= 80 && (
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-center gap-2 text-blue-900 text-sm">
-            <Target className="w-4 h-4" />
-            <span className="font-medium">Next Step:</span>
-            <span>Add your first products and gallery images to showcase your business!</span>
+      {/* Free Tier Reminder - Hidden */}
+      {false && profile?.subscription_tier === 'free' && completionPercentage >= 80 && (
+        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
+          <div className="flex items-center gap-1 text-blue-900 text-xs">
+            <Target className="w-3 h-3 flex-shrink-0" />
+            <span className="font-medium">Next:</span>
+            <span>Add products and gallery images to showcase your business!</span>
           </div>
         </div>
       )}
