@@ -57,7 +57,7 @@ export default function GoogleMapDisplay({
         }
 
         // Create map
-        const map = new window.google.maps.Map(mapRef.current, {
+        const map = new (window as any).google.maps.Map(mapRef.current, {
           center: coordinates,
           zoom: 15,
           mapTypeControl: false,
@@ -68,16 +68,16 @@ export default function GoogleMapDisplay({
         })
 
         // Create marker
-        new window.google.maps.Marker({
+        new (window as any).google.maps.Marker({
           position: coordinates,
           map: map,
           title: businessName,
-          animation: window.google.maps.Animation.DROP,
+          animation: (window as any).google.maps.Animation.DROP,
         })
 
         // Add info window if address is provided
         if (address) {
-          const infoWindow = new window.google.maps.InfoWindow({
+          const infoWindow = new (window as any).google.maps.InfoWindow({
             content: `
               <div style="padding: 8px; max-width: 200px;">
                 <h3 style="font-weight: 600; margin-bottom: 4px;">${businessName}</h3>
@@ -86,7 +86,7 @@ export default function GoogleMapDisplay({
             `
           })
 
-          const marker = new window.google.maps.Marker({
+          const marker = new (window as any).google.maps.Marker({
             position: coordinates,
             map: map,
             title: businessName,
