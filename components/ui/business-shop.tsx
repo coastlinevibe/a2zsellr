@@ -717,9 +717,10 @@ export default function BusinessShop({
 
                   {/* Description */}
                   {product.description ? (
-                    <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-3 break-words">
-                      {product.description.replace(/<[^>]*>/g, '')}
-                    </p>
+                    <div 
+                      className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-3 break-words prose prose-sm max-w-none prose-headings:text-gray-800 prose-p:text-gray-600 prose-strong:text-gray-700 prose-em:text-gray-600"
+                      dangerouslySetInnerHTML={{ __html: product.description }}
+                    />
                   ) : (
                     <p className="text-sm text-gray-400 leading-relaxed mb-3 line-clamp-3 break-words">
                       Product description will appear here
@@ -1106,9 +1107,10 @@ export default function BusinessShop({
 
                     {/* Description */}
                     {productForm.description ? (
-                      <p className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-3 break-words">
-                        {productForm.description.replace(/<[^>]*>/g, '')}
-                      </p>
+                      <div 
+                        className="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-3 break-words prose prose-sm max-w-none prose-headings:text-gray-800 prose-p:text-gray-600 prose-strong:text-gray-700 prose-em:text-gray-600"
+                        dangerouslySetInnerHTML={{ __html: productForm.description }}
+                      />
                     ) : (
                       <p className="text-sm text-gray-400 leading-relaxed mb-3 line-clamp-3 break-words">
                         Product description will appear here

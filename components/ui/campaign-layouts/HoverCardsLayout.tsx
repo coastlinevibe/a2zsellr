@@ -73,7 +73,7 @@ export const HoverCardsLayout: React.FC<HoverCardsLayoutProps> = ({
           </div>
           <div>
             <div className="font-semibold text-gray-900 text-base md:text-lg lg:text-xl">{businessName}</div>
-            <div className="text-xs md:text-sm text-gray-500">Broadcast • hover gallery</div>
+            <div className="text-xs md:text-sm text-gray-500">Broadcast • Showcase</div>
           </div>
         </div>
         

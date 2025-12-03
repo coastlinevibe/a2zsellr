@@ -918,9 +918,9 @@ export default function ProfilePage() {
             </div>
 
               {/* Right Column - Profile Picture */}
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <Upload className="w-5 h-5" />
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                  <Upload className="w-4 h-4" />
                   Profile Picture
                 </h4>
                 <AnimatedProfilePicture

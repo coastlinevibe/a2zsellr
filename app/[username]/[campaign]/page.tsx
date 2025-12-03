@@ -137,6 +137,12 @@ export default function CampaignPage({ params }: CampaignPageProps) {
         throw new Error(payload.error || 'Listing not found')
       }
 
+      console.log('📸 Profile data received:', {
+        display_name: payload.profile.display_name,
+        avatar_url: payload.profile.avatar_url,
+        has_avatar: !!payload.profile.avatar_url
+      })
+
       setListing(payload.listing)
       setProfile(payload.profile)
       setProducts(Array.isArray(payload.products) ? payload.products : [])
@@ -519,37 +525,133 @@ export default function CampaignPage({ params }: CampaignPageProps) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
       
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
-
-
+    <div className="min-h-screen bg-white" style={{ animation: 'fadeIn 0.6s ease-out' }}>
+      {/* Header with profile info */}
+      <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm" style={{ animation: 'slideInDown 0.6s ease-out' }}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3" style={{ animation: 'slideInLeft 0.6s ease-out' }}>
+              <div className="relative w-10 h-10 rounded-full border-2 border-emerald-500 shadow-md overflow-hidden bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                {profile?.avatar_url ? (
+                  <img 
+                    src={profile.avatar_url} 
+                    alt={profile.display_name}
+                    className="w-full h-full object-cover"
+                    loading="eager"
+                    onError={(e) => {
+                      console.error('Avatar failed to load:', {
+                        url: profile.avatar_url,
+                        error: e
+                      })
+                      e.currentTarget.style.display = 'none'
+                      // Show fallback letter
+                      const parent = e.currentTarget.parentElement
+                      if (parent) {
+                        const fallback = document.createElement('span')
+                        fallback.className = 'text-sm font-bold text-emerald-700'
+                        fallback.textContent = profile?.display_name?.[0]?.toUpperCase() || 'B'
+                        parent.appendChild(fallback)
+                      }
+                    }}
+                    onLoad={() => {
+                      console.log('✅ Avatar loaded successfully:', profile.avatar_url)
+                    }}
+                  />
+                ) : (
+                  <span className="text-sm font-bold text-emerald-700">
+                    {profile?.display_name?.[0]?.toUpperCase() || 'B'}
+                  </span>
+                )}
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-gray-900">{profile?.display_name}</h1>
+                <p className="text-xs text-emerald-600 font-medium">Broadcast • Showcase</p>
+              </div>
+            </div>
+            <button
+              onClick={handleShare}
+              className="p-2 rounded-lg hover:bg-gray-100 text-gray-700 transition-all duration-300 transform hover:scale-110"
+              title="Share"
+              style={{ animation: 'slideInRight 0.6s ease-out' }}
+            >
+              <Share2 className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Campaign Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12" style={{ animation: 'scaleIn 0.6s ease-out 0.1s both' }}>
         {renderLayout()}
 
         {/* Footer Actions */}
-        <div className="mt-10 space-y-6">
+        <div className="mt-12 space-y-6" style={{ animation: 'slideInUp 0.8s ease-out 0.2s both' }}>
           {profile && listing && (
-            <MarketingActionBar
-              onVideoPopup={() => setVideoPopupOpen(true)}
-              onViewProfile={() => router.push(`/profile/${params.username}`)}
-              onChatWithSeller={handleContactShop}
-              onViewMenuPopup={() => setMenuPopupOpen(true)}
-              onNewProductsPopup={() => setProductsPopupOpen(true)}
-              onUpgrade={() => console.log('Upgrade clicked')}
-              businessName={profile.display_name}
-              listingTitle={listing.title}
-              userTier={(profile.subscription_tier as 'free' | 'premium' | 'business') || 'free'}
-            />
+            <div className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-xl p-6 border border-emerald-200 shadow-lg">
+              <MarketingActionBar
+                onVideoPopup={() => setVideoPopupOpen(true)}
+                onViewProfile={() => router.push(`/profile/${params.username}`)}
+                onChatWithSeller={handleContactShop}
+                onViewMenuPopup={() => setMenuPopupOpen(true)}
+                onNewProductsPopup={() => setProductsPopupOpen(true)}
+                onUpgrade={() => console.log('Upgrade clicked')}
+                businessName={profile.display_name}
+                listingTitle={listing.title}
+                userTier={(profile.subscription_tier as 'free' | 'premium' | 'business') || 'free'}
+              />
+            </div>
           )}
 
-          <div className="text-center">
-            <p className="text-sm text-gray-500">
-              Powered by <span className="font-semibold text-blue-600">A2Z Business Directory</span>
+          <div className="text-center py-6">
+            <p className="text-sm text-gray-600">
+              Powered by <span className="font-semibold text-emerald-600">A2Z Business Directory</span>
             </p>
           </div>
         </div>
       </main>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideInDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideInLeft {
+          from { opacity: 0; transform: translateX(-20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInRight {
+          from { opacity: 0; transform: translateX(20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        :global(img) {
+          transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                      filter 0.4s ease-out,
+                      box-shadow 0.4s ease-out !important;
+        }
+        :global(img:hover) {
+          transform: scale(1.02) !important;
+          filter: brightness(1.05) !important;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+        }
+        :global(button, a) {
+          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        }
+        :global(button:hover, a:hover) {
+          transform: translateY(-2px) !important;
+        }
+      `}</style>
 
       {/* Popup Components */}
       <VideoPopup
