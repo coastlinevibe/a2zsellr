@@ -300,6 +300,18 @@ export function LocationContactStep({ data, setData, onNext, onBack }: StepProps
 }
 
 export function OperatingHoursStep({ data, setData, onNext, onBack }: StepProps) {
+  const daysOfWeek = [
+    { key: 'Monday', label: 'Mon' },
+    { key: 'Tuesday', label: 'Tue' },
+    { key: 'Wednesday', label: 'Wed' },
+    { key: 'Thursday', label: 'Thu' },
+    { key: 'Friday', label: 'Fri' },
+    { key: 'Saturday', label: 'Sat' },
+    { key: 'Sunday', label: 'Sun' }
+  ]
+
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' })
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -309,59 +321,74 @@ export function OperatingHoursStep({ data, setData, onNext, onBack }: StepProps)
       <h2 className="text-2xl sm:text-3xl font-black text-black mb-2">When are you open?</h2>
       <p className="text-black font-bold mb-6 text-sm sm:text-base">Let customers know the best time to contact or visit you.</p>
 
-      <div className="space-y-2 mb-8 max-h-96 overflow-y-auto pr-2">
-        {DAYS.map(day => (
-          <div key={day} className="bg-gray-50 border-2 border-black rounded-lg p-3 sm:p-4 hover:bg-gray-100 transition-colors">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-              <label className="flex items-center gap-2 min-w-fit">
-                <input
-                  type="checkbox"
-                  checked={data.hours[day].open}
-                  onChange={(e) => setData({
-                    ...data,
-                    hours: {
-                      ...data.hours,
-                      [day]: { ...data.hours[day], open: e.target.checked }
-                    }
-                  })}
-                  className="w-5 h-5 border-2 border-black rounded cursor-pointer"
-                />
-                <span className="font-black text-black text-sm sm:text-base whitespace-nowrap">{day}</span>
-              </label>
-              
-              {data.hours[day].open && (
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3 flex-1">
+      <div className="space-y-3 mb-8">
+        {daysOfWeek.map(day => {
+          const dayData = data.hours[day.key]
+          const isToday = day.key === today
+
+          return (
+            <div
+              key={day.key}
+              className={`border-2 rounded-lg p-3 sm:p-4 transition-colors ${
+                isToday
+                  ? 'border-black bg-blue-50'
+                  : 'border-black bg-gray-50 hover:bg-gray-100'
+              }`}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                <label className="flex items-center gap-2 min-w-fit">
                   <input
-                    type="time"
-                    value={data.hours[day].start}
+                    type="checkbox"
+                    checked={dayData.open}
                     onChange={(e) => setData({
                       ...data,
                       hours: {
                         ...data.hours,
-                        [day]: { ...data.hours[day], start: e.target.value }
+                        [day.key]: { ...dayData, open: e.target.checked }
                       }
                     })}
-                    className="px-3 py-2 border-2 border-black rounded font-bold text-sm sm:text-base flex-1 sm:flex-none"
+                    className="w-5 h-5 border-2 border-black rounded cursor-pointer"
                   />
-                  <span className="font-black text-black hidden sm:inline">–</span>
-                  <span className="font-black text-black sm:hidden">to</span>
-                  <input
-                    type="time"
-                    value={data.hours[day].end}
-                    onChange={(e) => setData({
-                      ...data,
-                      hours: {
-                        ...data.hours,
-                        [day]: { ...data.hours[day], end: e.target.value }
-                      }
-                    })}
-                    className="px-3 py-2 border-2 border-black rounded font-bold text-sm sm:text-base flex-1 sm:flex-none"
-                  />
-                </div>
-              )}
+                  <span className="font-black text-black text-sm sm:text-base whitespace-nowrap">
+                    {day.key}
+                    {isToday && <span className="ml-2 text-xs bg-blue-200 px-2 py-1 rounded font-bold">Today</span>}
+                  </span>
+                </label>
+
+                {dayData.open && (
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 flex-1">
+                    <input
+                      type="time"
+                      value={dayData.start}
+                      onChange={(e) => setData({
+                        ...data,
+                        hours: {
+                          ...data.hours,
+                          [day.key]: { ...dayData, start: e.target.value }
+                        }
+                      })}
+                      className="px-3 py-2 border-2 border-black rounded font-bold text-sm sm:text-base flex-1 sm:flex-none"
+                    />
+                    <span className="font-black text-black hidden sm:inline">–</span>
+                    <span className="font-black text-black sm:hidden">to</span>
+                    <input
+                      type="time"
+                      value={dayData.end}
+                      onChange={(e) => setData({
+                        ...data,
+                        hours: {
+                          ...data.hours,
+                          [day.key]: { ...dayData, end: e.target.value }
+                        }
+                      })}
+                      className="px-3 py-2 border-2 border-black rounded font-bold text-sm sm:text-base flex-1 sm:flex-none"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -606,44 +633,123 @@ export function SocialLinksStep({ data, setData, onBack, onFinish }: any) {
   )
 }
 
-export function SuccessScreen({ onDashboard, onAddProduct, onViewProfile }: any) {
+export function SuccessScreen({ onDashboard }: any) {
+  const [phase, setPhase] = useState<'text' | 'transition' | 'done'>('text')
+
+  useEffect(() => {
+    // Show text for 2 seconds
+    const textTimer = setTimeout(() => {
+      setPhase('transition')
+    }, 2000)
+
+    // Transition for 1 second, then redirect
+    const transitionTimer = setTimeout(() => {
+      setPhase('done')
+      setTimeout(() => {
+        onDashboard()
+      }, 800)
+    }, 3000)
+
+    return () => {
+      clearTimeout(textTimer)
+      clearTimeout(transitionTimer)
+    }
+  }, [onDashboard])
+
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="min-h-screen flex items-center justify-center"
+      className="fixed inset-0 z-[9999] flex items-center justify-center"
+      initial={{ backgroundColor: 'rgba(248, 250, 252, 1)' }}
+      animate={{
+        backgroundColor: phase === 'transition' 
+          ? 'rgba(248, 250, 252, 1)' 
+          : 'rgba(248, 250, 252, 1)'
+      }}
+      exit={{ backgroundColor: 'rgba(248, 250, 252, 0)' }}
+      transition={{ duration: 0.8 }}
     >
-      <div className="bg-white p-8 rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.9)] max-w-md w-full text-center">
+      {/* Background animation grid */}
+      <motion.div
+        className="absolute inset-0 overflow-hidden"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: phase === 'transition' ? 1 : 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/5 via-blue-400/5 to-slate-400/5" />
         <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
+          className="absolute inset-0"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 0.2 }}
+          transition={{ duration: 1.2, ease: 'easeOut' }}
         >
-          <h1 className="text-4xl font-black text-black mb-2">🎉 Your Profile is Ready!</h1>
-          <p className="text-black font-bold mb-8">You're all set! Explore your dashboard and start posting your listings.</p>
-          
-          <div className="space-y-3">
-            <button
-              onClick={onAddProduct}
-              className="w-full bg-green-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all"
-            >
-              ➕ Add Your First Product
-            </button>
-            <button
-              onClick={onViewProfile}
-              className="w-full bg-purple-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all"
-            >
-              👀 View My Profile
-            </button>
-            <button
-              onClick={onDashboard}
-              className="w-full bg-blue-500 text-white px-6 py-3 rounded-lg border-2 border-black font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] transition-all"
-            >
-              Go to Dashboard
-            </button>
-          </div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.05),transparent_50%)]" />
         </motion.div>
-      </div>
+      </motion.div>
+
+      {/* Success text content */}
+      <motion.div
+        className="relative z-10 text-center px-4"
+        initial={{ opacity: 1, scale: 1 }}
+        animate={{
+          opacity: phase === 'text' ? 1 : 0,
+          scale: phase === 'text' ? 1 : 0.95
+        }}
+        transition={{ duration: 0.6 }}
+      >
+        <motion.h1
+          className="text-5xl md:text-6xl font-black text-slate-800 mb-4"
+          initial={{ y: 40, opacity: 0, filter: 'blur(10px)' }}
+          animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+          transition={{ duration: 1.2, delay: 0.3, ease: 'easeOut', type: 'spring', stiffness: 50, damping: 15 }}
+        >
+          🎉 Your Profile is Ready!
+        </motion.h1>
+        
+        <motion.p
+          className="text-2xl md:text-3xl font-semibold text-slate-600 mb-8"
+          initial={{ y: 40, opacity: 0, filter: 'blur(10px)' }}
+          animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+          transition={{ duration: 1.2, delay: 0.6, ease: 'easeOut', type: 'spring', stiffness: 50, damping: 15 }}
+        >
+          You are being redirected to your dashboard...
+        </motion.p>
+
+        <motion.div
+          className="flex justify-center gap-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+        >
+          {[...Array(3)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="w-2.5 h-2.5 rounded-full bg-emerald-500"
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+            />
+          ))}
+        </motion.div>
+      </motion.div>
+
+      {/* Transition animation */}
+      {phase === 'transition' && (
+        <>
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-t from-emerald-400/20 via-blue-400/10 to-slate-400/5"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.15, 0] }}
+            transition={{ duration: 1 }}
+          />
+          <motion.div
+            className="absolute inset-0"
+            initial={{ scale: 1 }}
+            animate={{ scale: [1, 1.05, 1.1] }}
+            transition={{ duration: 1 }}
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_70%)]" />
+          </motion.div>
+        </>
+      )}
     </motion.div>
   )
 }

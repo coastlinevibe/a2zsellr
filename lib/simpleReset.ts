@@ -6,8 +6,8 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGci
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 /**
- * SIMPLE BULLETPROOF RESET - NO BULLSHIT
- * Just delete everything for free users
+ * SIMPLE BULLETPROOF RESET
+ * Deletes all content for free tier users (24-hour reset cycle)
  */
 export async function simpleResetAllFreeUsers() {
   console.log('🚨 STARTING SIMPLE RESET - DELETING ALL FREE USER DATA')

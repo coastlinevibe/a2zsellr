@@ -15,6 +15,7 @@ interface ProfileCardProps {
     avatar_url?: string
     phone_number?: string
     website_url?: string
+    business_card_image?: string | null
     gallery_images?: Array<{
       id: string
       title: string
@@ -151,7 +152,15 @@ export function BusinessCard({ business, categoryName, locationName, index = 0 }
 
       {/* Gallery Showcase - Touching header */}
       <div className="overflow-hidden">
-        {business.gallery_images && business.gallery_images.length > 0 ? (
+        {business.business_card_image ? (
+          <div className="min-h-[170px] max-h-[170px] h-[170px] w-full border-b-4 border-black overflow-hidden">
+            <img 
+              src={business.business_card_image} 
+              alt="Business Card"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ) : business.gallery_images && business.gallery_images.length > 0 ? (
           <ImageGallery 
             images={business.gallery_images}
             className="rounded-b-[9px] !min-h-[170px] !max-h-[170px] !h-[170px] !w-full overflow-hidden"

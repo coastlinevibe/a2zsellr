@@ -1,5 +1,0 @@
-John Smith,+1234567890
-Jane Doe,+1987654321
-Bob Johnson,+1555123456
-Alice Williams,+1444987654
-Charlie Brown,+1666777888

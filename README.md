@@ -5,7 +5,7 @@ South Africa's Premium Business Directory - A modern, mobile-first platform for 
 ## 🚀 Features
 
 ### 🏢 Business Profiles & Tiers
-- **Free Tier**: Complete profile with 3 gallery images, 5 products, 3 shared listings, 5-minute reset (testing)
+- **Free Tier**: Complete profile with 3 gallery images, 5 products, 3 shared listings, 24-hour reset
 - **Premium Tier**: Unlimited gallery, full e-commerce, WhatsApp & Facebook marketing, Google Maps
 - **Business Tier**: 12 gallery images, multi-location management, Instagram automation, advanced analytics, custom branding
 
@@ -240,7 +240,7 @@ a2z/
   
 - **Restrictions**:
   - No sharing on Wednesday, Saturday, Sunday
-  - 5-minute automatic reset (products & listings cleared) - TESTING MODE
+  - 24-hour automatic reset (products & listings cleared)
   - No e-commerce checkout
   - No Google Maps integration
   - No marketing tools
@@ -311,7 +311,7 @@ npm run lint     # Run ESLint
 - **Category Management**: Create and edit business categories
 - **Location Management**: Manage cities and provinces
 - **Bulk Upload**: Upload CSV files with business profiles
-- **Reset System**: Trigger manual resets for free tier users (5-minute intervals)
+- **Reset System**: Trigger manual resets for free tier users (24-hour intervals)
 - **Payment Dashboard**: Track all transactions
 
 ### API Endpoints
@@ -354,11 +354,11 @@ npm run lint     # Run ESLint
 - **Error Handling**: Detailed error reports for failed uploads
 - **Progress Tracking**: Real-time upload progress
 
-### Free Tier Reset System (TESTING MODE)
-- **Automatic Reset**: Every 5 minutes for free tier users (for testing)
+### Free Tier Reset System
+- **Automatic Reset**: Every 24 hours for free tier users
 - **Reset Scope**: Clears products, listings, gallery, and analytics
-- **Auto-Extension**: Trial automatically extended by 5 minutes after reset
-- **Real-time Timer**: Updates every second showing minutes and seconds
+- **Auto-Extension**: Trial automatically extended by 24 hours after reset
+- **Real-time Timer**: Updates every second showing hours, minutes and seconds
 - **Notifications**: Users notified before reset
 - **Reset History**: Track all resets for audit purposes
 - **Manual Override**: Admin can trigger manual resets
@@ -377,7 +377,7 @@ npm run lint     # Run ESLint
 - **Order Service**: Complete order creation and management via API endpoint
 - **Payment Integration**: PayFast and EFT payment options with proper RLS handling
 - **Bulk Upload**: CSV import with auto-location creation
-- **Reset Automation**: Scheduled 5-minute resets for free tier (testing mode)
+- **Reset Automation**: Scheduled 24-hour resets for free tier
 - **Analytics Tracking**: View tracking and engagement metrics
 - **Admin Dashboard**: Comprehensive system management
 

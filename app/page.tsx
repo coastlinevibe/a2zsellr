@@ -164,6 +164,22 @@ export default function HomePage() {
   const locationDropdownRef = useRef<HTMLDivElement>(null)
   const categoryDropdownRef = useRef<HTMLDivElement>(null)
 
+  // Handle scroll to pricing section from signup
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const scrollTo = params.get('scroll')
+    
+    if (scrollTo === 'pricing') {
+      // Wait for page to fully render
+      setTimeout(() => {
+        const pricingSection = document.getElementById('pricing')
+        if (pricingSection) {
+          pricingSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 500)
+    }
+  }, [])
+
   const fallbackTickerMessages = useMemo(
     () => [
       '🎉 Model Mania added "Dodge Black Beauty V8" to their shop • ',
@@ -2292,25 +2308,11 @@ export default function HomePage() {
                 </a>
               </motion.div>
               <motion.button 
-                onClick={async () => {
-                  try {
-                    // Auto-login with admin credentials
-                    const { data, error } = await supabase.auth.signInWithPassword({
-                      email: 'admin@out.com',
-                      password: '123456'
-                    })
-                    
-                    if (error) {
-                      console.error('Admin login error:', error)
-                      alert('Failed to login as admin')
-                      return
-                    }
-                    
-                    // Redirect to admin dashboard
-                    window.location.href = '/admin'
-                  } catch (error) {
-                    console.error('Admin login error:', error)
-                    alert('Failed to login as admin')
+                onClick={() => {
+                  // Scroll to pricing section
+                  const pricingSection = document.getElementById('pricing')
+                  if (pricingSection) {
+                    pricingSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
                   }
                 }}
                 className="bg-gray-600 hover:bg-gray-700 text-white font-black px-4 py-2 rounded-lg border-2 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.9)] transition-all"

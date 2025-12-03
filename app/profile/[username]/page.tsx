@@ -1034,12 +1034,7 @@ Best regards`
             
             {/* Third Row: Cart + Chat + Share + Review + Open Status */}
             <div className="flex items-center gap-2 text-sm">
-              {/* Cart Button - Mobile */}
-              {profile.subscription_tier !== 'free' && (
-                <div className="flex-shrink-0">
-                  <CartButton />
-                </div>
-              )}
+
               
               {profile.phone_number && (
                 <button 
@@ -1259,12 +1254,7 @@ Best regards`
                 </button>
               )}
               
-              {/* Cart Button */}
-              {profile.subscription_tier !== 'free' && (
-                <div className="ml-1">
-                  <CartButton />
-                </div>
-              )}
+
             </div>
           </div>
         </div>
@@ -2324,81 +2314,35 @@ Best regards`
                     </div>
 
                     <div className="space-y-3">
-                      {/* E-commerce enabled for Premium/Business tiers */}
-                      {isEcommerceEnabled() && selectedProduct?.price_cents ? (
-                        <div className="space-y-3">
-                          {/* Row: Add to Cart + Contact Seller */}
-                          <div className="flex gap-3">
-                            <button 
-                              onClick={() => selectedProduct && checkBusinessHoursBeforeAction(() => handleAddToCart(selectedProduct))}
-                              className="flex-1 bg-emerald-600 text-white py-3 px-6 rounded-[9px] hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 font-semibold text-sm md:text-base"
-                            >
-                              <ShoppingBag className="w-5 h-5" />
-                              Add to Cart
-                            </button>
-
-                            {/* Secondary Contact Button for Premium/Business */}
-                            <div className="relative flex-shrink-0">
-                              <button 
-                                onClick={() => checkBusinessHoursBeforeAction(handleContactSeller)}
-                                className="w-full bg-gray-600 text-white py-3 px-6 rounded-[9px] hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 font-semibold text-sm md:text-base"
-                              >
-                                <MessageCircle className="w-5 h-5" />
-                                Chat
-                              </button>
-                              
-                              {showContactOptions && (
-                                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-[9px] shadow-lg z-10 overflow-hidden">
-                                  <button
-                                    onClick={() => selectedProduct && checkBusinessHoursBeforeAction(() => handleWhatsAppContact(selectedProduct))}
-                                    className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 border-b border-gray-100"
-                                  >
-                                    <MessageCircle className="w-5 h-5 text-green-600" />
-                                    <span className="text-gray-700">WhatsApp</span>
-                                  </button>
-                                  <button
-                                    onClick={() => selectedProduct && checkBusinessHoursBeforeAction(() => handleEmailContact(selectedProduct))}
-                                    className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
-                                  >
-                                    <Mail className="w-5 h-5 text-blue-600" />
-                                    <span className="text-gray-700">Email</span>
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        /* Contact Seller only for Free tier or products without price */
-                        <div className="relative">
-                          <button 
-                            onClick={() => checkBusinessHoursBeforeAction(handleContactSeller)}
-                            className="w-full bg-emerald-600 text-white py-3 px-6 rounded-[9px] hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
-                          >
-                            <MessageCircle className="w-5 h-5" />
-                            Chat
-                          </button>
+                      {/* Contact Seller for all tiers */}
+                      <div className="relative">
+                        <button 
+                          onClick={() => checkBusinessHoursBeforeAction(handleContactSeller)}
+                          className="w-full bg-emerald-600 text-white py-3 px-6 rounded-[9px] hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
+                        >
+                          <MessageCircle className="w-5 h-5" />
+                          Chat
+                        </button>
                           
-                          {showContactOptions && (
-                            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-[9px] shadow-lg z-10 overflow-hidden">
-                              <button
-                                onClick={() => selectedProduct && checkBusinessHoursBeforeAction(() => handleWhatsAppContact(selectedProduct))}
-                                className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 border-b border-gray-100"
-                              >
-                                <MessageCircle className="w-5 h-5 text-green-600" />
-                                <span className="text-gray-700">WhatsApp</span>
-                              </button>
-                              <button
-                                onClick={() => selectedProduct && checkBusinessHoursBeforeAction(() => handleEmailContact(selectedProduct))}
-                                className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
-                              >
-                                <Mail className="w-5 h-5 text-blue-600" />
-                                <span className="text-gray-700">Email</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                        {showContactOptions && (
+                          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-[9px] shadow-lg z-10 overflow-hidden">
+                            <button
+                              onClick={() => selectedProduct && checkBusinessHoursBeforeAction(() => handleWhatsAppContact(selectedProduct))}
+                              className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 border-b border-gray-100"
+                            >
+                              <MessageCircle className="w-5 h-5 text-green-600" />
+                              <span className="text-gray-700">WhatsApp</span>
+                            </button>
+                            <button
+                              onClick={() => selectedProduct && checkBusinessHoursBeforeAction(() => handleEmailContact(selectedProduct))}
+                              className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3"
+                            >
+                              <Mail className="w-5 h-5 text-blue-600" />
+                              <span className="text-gray-700">Email</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
                       
                       <button 
                         onClick={() => selectedProduct && handleShareProduct(selectedProduct)}

@@ -35,8 +35,19 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        // Always redirect to onboarding (which shows the animated welcome screen first)
-        router.push('/onboarding')
+        // Check if user has completed onboarding
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .eq('id', data.user.id)
+          .single()
+
+        // If onboarding not completed, go to onboarding, otherwise go to dashboard
+        if (profile && !profile.onboarding_completed) {
+          router.push('/onboarding')
+        } else {
+          router.push('/dashboard')
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred')

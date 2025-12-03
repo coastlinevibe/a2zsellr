@@ -41,7 +41,7 @@ export default function ResetTimer({
   // Don't show for premium/business users
   if (subscriptionTier !== 'free' || !resetInfo) return null
 
-  // Always show for free users since reset is every 5 minutes
+  // Always show for free users since reset is every 24 hours
 
   const getTimeDisplay = () => {
     if (resetInfo.shouldReset) {

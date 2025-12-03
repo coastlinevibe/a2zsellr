@@ -52,7 +52,7 @@ export default function TrialTimer({
         <span>
           {trialStatus.isExpired 
             ? 'Trial Expired' 
-            : formatTimeRemaining(trialStatus.timeRemaining)
+            : `Free • ${formatTimeRemaining(trialStatus.timeRemaining)}`
           }
         </span>
       </div>

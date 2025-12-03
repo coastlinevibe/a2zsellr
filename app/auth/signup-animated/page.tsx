@@ -47,16 +47,7 @@ export default function AnimatedSignupPage() {
   // Get referral code from URL or stored session
   const referralCode = referralParam || sessionStorage.getItem('signup_referral_code')
 
-  useEffect(() => {
-    if (user && !success && !justRegistered && !loading) {
-      // Only redirect if user exists, we're not in success state, and user didn't just register
-      // This prevents automatic redirect after registration
-      const userHandle = '@' + (user.email?.split('@')[0] || 'user')
-      
-      // Redirect to profile page
-      router.push('/profile')
-    }
-  }, [user, router, selectedPlan, success, justRegistered, loading])
+  // Removed auto-login - users must manually sign in after registration
 
   // Check payment settings on component mount
   useEffect(() => {
@@ -754,8 +745,11 @@ export default function AnimatedSignupPage() {
             </div>
 
             <div className="text-center">
-              <Link 
-                href="/#pricing"
+              <button
+                onClick={() => {
+                  // Navigate to home and scroll to pricing section
+                  router.push('/?scroll=pricing');
+                }}
                 style={{
                   background: '#5cbdfd',
                   fontFamily: 'inherit',
@@ -789,7 +783,7 @@ export default function AnimatedSignupPage() {
                 }}
               >
                 CHANGE PLAN?
-              </Link>
+              </button>
             </div>
           </motion.div>
 

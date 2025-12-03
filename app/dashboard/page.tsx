@@ -48,7 +48,9 @@ import { UserProfileDropdown } from '@/components/UserProfileDropdown'
 import { ListingCardGrid } from '@/components/ListingCardGrid'
 import BusinessShop from '@/components/ui/business-shop'
 import FreeAccountNotifications from '@/components/FreeAccountNotifications'
+import { ProfileSettingsTab } from '@/components/ProfileSettingsTab'
 import { GalleryTab } from '@/components/dashboard/GalleryTab'
+import { ProfileCardTab } from '@/components/dashboard/ProfileCardTab'
 import { MarketingCampaignsTab } from '@/components/dashboard/MarketingCampaignsTab'
 import PublicProfilePreview from '@/components/ui/public-profile-preview'
 import { DashboardTour } from '@/components/DashboardTour'
@@ -60,7 +62,7 @@ import WhatsAppIntegration from '@/components/integrations/WhatsAppIntegration'
 import { AnimatedCounter } from '@/components/ui/animated-counter'
 
 type SubscriptionTier = 'free' | 'premium' | 'business'
-type DashboardTab = 'profile' | 'products' | 'branding' | 'listings' | 'integrations'
+type DashboardTab = 'profile' | 'products' | 'branding' | 'card' | 'listings' | 'integrations'
 
 interface UserProfile {
   id: string
@@ -77,15 +79,17 @@ interface UserProfile {
   website_url: string | null
   address: string | null
   business_hours: any
+  business_card_image: string | null
   is_admin: boolean
   onboarding_completed?: boolean
   created_at?: string
 }
 
 const dashboardTabs: { key: DashboardTab; label: string; subtitle: string; icon: typeof Users; premiumOnly?: boolean }[] = [
-  { key: 'profile', label: 'Profile', subtitle: 'Business info & settings', icon: Users },
+  { key: 'profile', label: 'Profile', subtitle: 'View your profile', icon: Users },
   { key: 'products', label: 'Products', subtitle: 'Manage your inventory', icon: ShoppingBag },
   { key: 'branding', label: 'Profile Image', subtitle: 'Your professional image', icon: ImageIcon },
+  { key: 'card', label: 'Profile Card', subtitle: 'Your business card', icon: ImageIcon },
   { key: 'listings', label: 'Listings', subtitle: 'Create & amplify your reach', icon: MessageSquare },
   { key: 'integrations', label: 'Social Integrations', subtitle: 'Connect social & messaging apps', icon: Plug, premiumOnly: true }
 ]
@@ -150,7 +154,7 @@ export default function DashboardPage() {
   // Welcome messages
   const welcomeMessages = [
     "Welcome to your dashboard",
-    "Let's grow your business",
+    "Let's grow your profile",
     "Time to shine online",
     "Your success starts here",
     "Ready to boost sales?",
@@ -169,43 +173,43 @@ export default function DashboardPage() {
   const tourSteps = [
     {
       target: 'tour-stats',
-      title: '📊 Your Dashboard Stats',
-      description: 'Here you can see your profile views, active products, listings, and store rating at a glance.',
-      action: 'Next'
-    },
-    {
-      target: 'tour-quick-actions',
-      title: '⚡ Quick Actions',
-      description: 'These buttons let you quickly add products, create listings, upload profile image, and view your profile.',
+      title: '📊 Dashboard Stats',
+      description: 'View your profile views, products, listings, and rating.',
       action: 'Next'
     },
     {
       target: 'tour-profile-tab',
       title: '👤 Profile Tab',
-      description: 'Update your business information, contact details, and settings here.',
+      description: 'View and update your profile info and settings.',
       action: 'Next',
       preAction: () => setActiveTab('profile')
     },
     {
       target: 'tour-products-tab',
       title: '📦 Products Tab',
-      description: 'Build your empire here. Showcase your offerings with precision. Add, edit, and optimize every product to convert browsers into buyers.',
+      description: 'Add and manage your products.',
       action: 'Next',
       preAction: () => setActiveTab('products')
     },
     {
       target: 'tour-branding-tab',
       title: '🖼️ Profile Image Tab',
-      description: 'First impressions matter. Your profile image is your digital handshake. Make it count—this is what separates winners from the rest.',
+      description: 'Upload your profile image.',
       action: 'Next',
       preAction: () => setActiveTab('branding')
     },
     {
       target: 'tour-listings-tab',
       title: '📣 Listings Tab',
-      description: 'Dominate your market. Create powerful campaigns and share anywhere online. Reach your audience where they are—WhatsApp, social media, everywhere.',
-      action: 'Finish Tour',
+      description: 'Create campaigns and share on WhatsApp and social media.',
+      action: 'Next',
       preAction: () => setActiveTab('listings')
+    },
+    {
+      target: 'tour-edit-profile-btn',
+      title: '✏️ Edit Profile',
+      description: 'Click here to update your business information and settings.',
+      action: 'Finish Tour'
     }
   ]
 
@@ -275,8 +279,6 @@ export default function DashboardPage() {
     const checkImpersonation = () => {
       if (typeof document === 'undefined') return
       
-      console.log('🍪 All cookies:', document.cookie)
-      
       const impersonatedUserId = document.cookie
         .split('; ')
         .find(row => row.startsWith('admin_impersonating='))
@@ -286,11 +288,6 @@ export default function DashboardPage() {
         .split('; ')
         .find(row => row.startsWith('impersonated_user_name='))
         ?.split('=')[1]
-      
-      console.log('🔍 Impersonation cookies found:', {
-        impersonatedUserId,
-        impersonatedUserName: impersonatedUserName ? decodeURIComponent(impersonatedUserName) : null
-      })
       
       setImpersonationData({
         isImpersonating: !!impersonatedUserId,
@@ -315,7 +312,7 @@ export default function DashboardPage() {
     }
   }, [])
 
-  // Redirect free and premium tier users away from business-only tabs
+  // Redirect free and premium tier users away from premium-only tabs
   useEffect(() => {
     if (profile?.subscription_tier !== 'business' && ['scheduler', 'analytics', 'templates'].includes(marketingActiveView)) {
       setMarketingActiveView('builder')
@@ -329,7 +326,6 @@ export default function DashboardPage() {
     }
 
     if (user) {
-      console.log('👤 User loaded, fetching profile with impersonation data:', impersonationData)
       fetchProfile()
     }
   }, [user, loading, router, impersonationData])
@@ -351,7 +347,7 @@ export default function DashboardPage() {
         setGalleryItems(data || [])
         console.log('📸 Gallery items loaded:', data?.length || 0)
       } catch (error) {
-        console.error('Error fetching gallery:', error)
+
       } finally {
         setGalleryLoading(false)
       }
@@ -379,7 +375,6 @@ export default function DashboardPage() {
         if (error) throw error
         setMarketingProducts(data || [])
       } catch (error) {
-        console.error('Error fetching marketing products:', error)
         setMarketingProducts([])
       }
     }
@@ -406,7 +401,7 @@ export default function DashboardPage() {
           if (error) throw error
           setMarketingProducts(data || [])
         } catch (error) {
-          console.error('Error fetching products on tab switch:', error)
+          // Error fetching products
         }
       }
       fetchProducts()
@@ -456,7 +451,7 @@ export default function DashboardPage() {
             .eq('id', referral.id)
         }
         
-        console.log(`Completed ${pendingReferrals.length} referrals for user ${userId}`)
+
       }
     } catch (error) {
       console.error('Error completing pending referrals:', error)
@@ -473,12 +468,7 @@ export default function DashboardPage() {
 
       const targetUserId = impersonationData.impersonatedUserId || user.id
 
-      console.log('🔍 Fetching profile for:', { 
-        currentUserId: user.id, 
-        impersonatedUserId: impersonationData.impersonatedUserId, 
-        targetUserId,
-        isImpersonating: impersonationData.isImpersonating 
-      })
+
 
       const { data, error } = await supabase
         .from('profiles')
@@ -487,7 +477,7 @@ export default function DashboardPage() {
         .single()
 
       if (error) {
-        console.error('Error fetching profile:', error)
+        // Error fetching profile
       } else {
         setProfile(data as UserProfile)
         
@@ -497,7 +487,7 @@ export default function DashboardPage() {
         }
       }
     } catch (error) {
-      console.error('Error:', error)
+      // Error fetching profile
     } finally {
       setProfileLoading(false)
     }
@@ -543,7 +533,7 @@ export default function DashboardPage() {
       // Calculate average rating (default to 0 if no reviews)
       const avgRating = reviewsData && reviewsData.length > 0 
         ? reviewsData.reduce((sum: number, review: any) => sum + review.rating, 0) / reviewsData.length
-        : 0 // No rating for new businesses
+        : 0 // No rating for new profiles
       
       setDashboardMetrics({
         profileViews: totalViews,
@@ -553,7 +543,7 @@ export default function DashboardPage() {
       })
       
     } catch (error) {
-      console.error('Error fetching dashboard metrics:', error)
+      // Error fetching metrics
     } finally {
       setMetricsLoading(false)
     }
@@ -573,9 +563,8 @@ export default function DashboardPage() {
 
       if (error) throw error
       setSavedTemplates(data || [])
-      console.log('📋 Saved templates loaded:', data?.length || 0)
     } catch (error) {
-      console.error('Error fetching saved templates:', error)
+      // Error fetching templates
     } finally {
       setTemplatesLoading(false)
     }
@@ -587,7 +576,7 @@ export default function DashboardPage() {
     const badges = {
       free: { text: 'Free', className: 'bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600 text-white border border-gray-300 shadow-lg font-bold' },
       premium: { text: 'Premium', className: 'bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 text-white border border-amber-300 shadow-lg font-bold' },
-      business: { text: 'Business', className: 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white border border-blue-400 shadow-lg font-bold' }
+      business: { text: 'Premium', className: 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white border border-blue-400 shadow-lg font-bold' }
     }
 
     return badges[profile.subscription_tier] || badges.free
@@ -610,11 +599,13 @@ export default function DashboardPage() {
     setShowPaymentModal(false)
   }
 
-  const renderProfileTab = () => (
-    <div className="space-y-8">
-
-    </div>
-  )
+  const renderProfileTab = () => {
+    if (!profile) return null
+    
+    return (
+      <ProfileSettingsTab profile={profile} />
+    )
+  }
 
   const renderIntegrationsTab = () => (
       <div className="space-y-8">
@@ -633,14 +624,14 @@ export default function DashboardPage() {
 
   const renderMarketingTab = () => {
     const userTier = profile?.subscription_tier || 'free'
-    const isBusinessFeature = (viewId: string) => ['scheduler', 'analytics', 'templates'].includes(viewId)
+    const isPremiumFeature = (viewId: string) => ['scheduler', 'analytics', 'templates'].includes(viewId)
     
     const marketingViews = [
       { id: 'builder', label: 'Listing Builder', icon: Plus },
       { id: 'campaigns', label: 'My Listings', icon: MessageSquare },
-      { id: 'templates', label: 'My Templates', icon: Clipboard, business: true },
-      { id: 'scheduler', label: 'Scheduler', icon: Calendar, business: true },
-      { id: 'analytics', label: 'Analytics', icon: TrendingUp, business: true }
+      { id: 'templates', label: 'My Templates', icon: Clipboard, premium: true },
+      { id: 'scheduler', label: 'Scheduler', icon: Calendar, premium: true },
+      { id: 'analytics', label: 'Analytics', icon: TrendingUp, premium: true }
     ]
 
     return (
@@ -655,7 +646,7 @@ export default function DashboardPage() {
             <div className="flex gap-1 p-2">
               {marketingViews.map((view) => {
                 const IconComponent = view.icon
-                const isDisabled = userTier !== 'business' && isBusinessFeature(view.id)
+                const isDisabled = userTier !== 'business' && isPremiumFeature(view.id)
                 const isActive = marketingActiveView === view.id && !isDisabled
                 
                 return (
@@ -664,8 +655,8 @@ export default function DashboardPage() {
                       onClick={() => {
                         if (isDisabled) {
                           const upgradeMessage = userTier === 'free' 
-                            ? '🔒 This feature is only available on Business tier.\n\nUpgrade to Business to unlock advanced marketing tools!'
-                            : '🔒 This feature is only available on Business tier.\n\nUpgrade from Premium to Business to unlock advanced marketing tools!'
+                            ? '🔒 This feature is only available on Premium tier.\n\nUpgrade to Premium to unlock advanced marketing tools!'
+                            : '🔒 This feature is only available on Premium tier.\n\nUpgrade to Premium to unlock advanced marketing tools!'
                           alert(upgradeMessage)
                           return
                         }
@@ -688,7 +679,7 @@ export default function DashboardPage() {
                         onClick={() => setShowPlanModal(true)}
                         className="absolute -top-1 -right-1 bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white text-xs px-2 py-1 rounded-lg border border-black font-black flex items-center gap-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all duration-200" style={{ zIndex: 10 }}>
                         <Crown className="w-3 h-3" />
-                        {userTier === 'free' ? 'UPGRADE' : 'BUSINESS'}
+                        {userTier === 'free' ? 'UPGRADE' : 'PREMIUM'}
                         <Star className="w-2 h-2" />
                       </button>
                     )}
@@ -722,7 +713,6 @@ export default function DashboardPage() {
                   // Switch to builder and load listing for editing
                   setEditListing(listing)
                   setMarketingActiveView('builder')
-                  console.log('Editing listing:', listing)
                 }}
                 onDelete={() => {
                   // Clear edit state when a listing is deleted
@@ -743,8 +733,8 @@ export default function DashboardPage() {
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">My Templates</h3>
                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
                     {userTier === 'free' 
-                      ? 'Access professional templates to create stunning marketing pages. Only available on Business tier and above.'
-                      : 'Advanced template management is only available on Business tier and above. Upgrade to unlock professional templates and customization options.'
+                      ? 'Access professional templates to create stunning marketing pages. Only available on Premium tier and above.'
+                      : 'Advanced template management is only available on Premium tier and above. Upgrade to unlock professional templates and customization options.'
                     }
                   </p>
                   <button
@@ -752,7 +742,7 @@ export default function DashboardPage() {
                     className="bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white font-black py-2 px-3 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 mx-auto text-sm"
                   >
                     <Crown className="w-4 h-4" />
-                    <span>{userTier === 'free' ? 'UPGRADE TO BUSINESS' : 'UPGRADE TO BUSINESS'}</span>
+                    <span>{userTier === 'free' ? 'UPGRADE TO PREMIUM' : 'UPGRADE TO PREMIUM'}</span>
                     <Star className="w-3 h-3" />
                   </button>
                 </div>
@@ -817,10 +807,9 @@ export default function DashboardPage() {
               <TemplateEditor 
                 templateId="health-insurance"
                 onSave={(data) => {
-                  console.log('Template saved:', data)
+                  // Template saved
                 }}
                 onShare={(url) => {
-                  console.log('Template shared:', url)
                   alert(`🎉 Template is now live! Share this URL: ${url}`)
                 }}
               />
@@ -835,8 +824,8 @@ export default function DashboardPage() {
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Schedule</h3>
                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
                     {userTier === 'free' 
-                      ? 'Schedule your marketing campaigns for optimal engagement times. Only available on Business tier.'
-                      : 'Advanced campaign scheduling is only available on Business tier. Upgrade to unlock automated scheduling and optimal timing features.'
+                      ? 'Schedule your marketing campaigns for optimal engagement times. Only available on Premium tier.'
+                      : 'Advanced campaign scheduling is only available on Premium tier. Upgrade to unlock automated scheduling and optimal timing features.'
                     }
                   </p>
                   <button
@@ -844,13 +833,12 @@ export default function DashboardPage() {
                     className="bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white font-black py-2 px-3 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 mx-auto text-sm"
                   >
                     <Crown className="w-4 h-4" />
-                    <span>{userTier === 'free' ? 'UPGRADE TO BUSINESS' : 'UPGRADE TO BUSINESS'}</span>
+                    <span>{userTier === 'free' ? 'UPGRADE TO PREMIUM' : 'UPGRADE TO PREMIUM'}</span>
                     <Star className="w-3 h-3" />
                   </button>
                 </div>
               ) : (
                 <CampaignScheduler onSchedule={(settings) => {
-                  console.log('Campaign scheduled:', settings)
                   alert('🎉 Campaign scheduled successfully! Your messages will be sent at optimal times.')
                 }} />
               )
@@ -865,8 +853,8 @@ export default function DashboardPage() {
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Analytics</h3>
                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
                     {userTier === 'free' 
-                      ? 'Track your campaign performance with detailed analytics and insights. Only available on Business tier.'
-                      : 'Advanced analytics and detailed insights are only available on Business tier. Upgrade to unlock comprehensive performance tracking and ROI analysis.'
+                      ? 'Track your campaign performance with detailed analytics and insights. Only available on Premium tier.'
+                      : 'Advanced analytics and detailed insights are only available on Premium tier. Upgrade to unlock comprehensive performance tracking and ROI analysis.'
                     }
                   </p>
                   <button
@@ -874,7 +862,7 @@ export default function DashboardPage() {
                     className="bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white font-black py-2 px-3 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 mx-auto text-sm"
                   >
                     <Crown className="w-4 h-4" />
-                    <span>{userTier === 'free' ? 'UPGRADE TO BUSINESS' : 'UPGRADE TO BUSINESS'}</span>
+                    <span>{userTier === 'free' ? 'UPGRADE TO PREMIUM' : 'UPGRADE TO PREMIUM'}</span>
                     <Star className="w-3 h-3" />
                   </button>
                 </div>
@@ -920,6 +908,11 @@ export default function DashboardPage() {
             }
           }}
           onUpgrade={() => setShowPlanModal(true)}
+        />
+      case 'card':
+        return <ProfileCardTab 
+          profile={profile}
+          onRefresh={fetchDashboardMetrics}
         />
       case 'listings':
         return renderMarketingTab()
@@ -1372,161 +1365,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Quick Action Buttons - Desktop */}
-        <div id="tour-quick-actions" className="hidden md:grid grid-cols-4 gap-3 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20, rotate: -5 }}
-            animate={{ opacity: 1, y: 0, rotate: 0 }}
-            transition={{ duration: 0.5, delay: 0.5, type: 'spring', stiffness: 100 }}
-            whileHover={{ scale: 1.05, rotate: 2 }}
-          >
-            <Link
-              href="/dashboard?modal=product-creation"
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
-            >
-              <Plus className="w-4 h-4" />
-              Add Product
-            </Link>
-          </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20, rotate: -5 }}
-            animate={{ opacity: 1, y: 0, rotate: 0 }}
-            transition={{ duration: 0.5, delay: 0.6, type: 'spring', stiffness: 100 }}
-            whileHover={{ scale: 1.05, rotate: 2 }}
-          >
-            <button
-              onClick={() => setActiveTab('listings')}
-              className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
-            >
-              <MessageSquare className="w-4 h-4" />
-              Create Listing
-            </button>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20, rotate: -5 }}
-            animate={{ opacity: 1, y: 0, rotate: 0 }}
-            transition={{ duration: 0.5, delay: 0.7, type: 'spring', stiffness: 100 }}
-            whileHover={{ scale: 1.05, rotate: 2 }}
-          >
-            <button
-              onClick={() => setActiveTab('branding')}
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
-            >
-              <ImageIcon className="w-4 h-4" />
-              Upload Profile Image
-            </button>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20, rotate: -5 }}
-            animate={{ opacity: 1, y: 0, rotate: 0 }}
-            transition={{ duration: 0.5, delay: 0.75, type: 'spring', stiffness: 100 }}
-            whileHover={{ scale: 1.05, rotate: 2 }}
-          >
-            <Link
-              href="/profile"
-              className="w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
-            >
-              <Edit className="w-4 h-4" />
-              Edit Profile
-            </Link>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20, rotate: -5 }}
-            animate={{ opacity: 1, y: 0, rotate: 0 }}
-            transition={{ duration: 0.5, delay: 0.8, type: 'spring', stiffness: 100 }}
-            whileHover={{ scale: 1.05, rotate: 2 }}
-          >
-            <Link
-              href={`/profile/${encodeURIComponent(profile?.display_name?.toLowerCase().trim() || 'profile')}`}
-              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-4 py-3 rounded-[9px] border-2 border-black font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-2 text-sm"
-            >
-              <Eye className="w-4 h-4" />
-              View Profile
-            </Link>
-          </motion.div>
-        </div>
-
-        {/* Quick Action Buttons - Mobile (Compact) */}
-        <div className="md:hidden grid grid-cols-2 gap-2 mb-6">
-          <motion.div
-            initial={{ opacity: 0, y: 15, rotate: -5 }}
-            animate={{ opacity: 1, y: 0, rotate: 0 }}
-            transition={{ duration: 0.4, delay: 0.5 }}
-            whileHover={{ scale: 1.05 }}
-          >
-            <Link
-              href="/dashboard?modal=product-creation"
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
-            >
-              <Plus className="w-3 h-3" />
-              Add Product
-            </Link>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 15, rotate: -5 }}
-            animate={{ opacity: 1, y: 0, rotate: 0 }}
-            transition={{ duration: 0.4, delay: 0.6 }}
-            whileHover={{ scale: 1.05 }}
-          >
-            <button
-              onClick={() => setActiveTab('listings')}
-              className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
-            >
-              <MessageSquare className="w-3 h-3" />
-              Create Listing
-            </button>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 15, rotate: -5 }}
-            animate={{ opacity: 1, y: 0, rotate: 0 }}
-            transition={{ duration: 0.4, delay: 0.7 }}
-            whileHover={{ scale: 1.05 }}
-          >
-            <button
-              onClick={() => setActiveTab('branding')}
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
-            >
-              <ImageIcon className="w-3 h-3" />
-              Upload Profile Image
-            </button>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 15, rotate: -5 }}
-            animate={{ opacity: 1, y: 0, rotate: 0 }}
-            transition={{ duration: 0.4, delay: 0.75 }}
-            whileHover={{ scale: 1.05 }}
-          >
-            <Link
-              href="/profile"
-              className="w-full bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
-            >
-              <Edit className="w-3 h-3" />
-              Edit Profile
-            </Link>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 15, rotate: -5 }}
-            animate={{ opacity: 1, y: 0, rotate: 0 }}
-            transition={{ duration: 0.4, delay: 0.8 }}
-            whileHover={{ scale: 1.05 }}
-          >
-            <Link
-              href={`/profile/${encodeURIComponent(profile?.display_name?.toLowerCase().trim() || 'profile')}`}
-              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-3 py-2 rounded-lg border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] transition-all flex items-center justify-center gap-1 text-xs"
-            >
-              <Eye className="w-3 h-3" />
-              View Profile
-            </Link>
-          </motion.div>
-        </div>
 
         {/* Mobile Onboarding Card */}
         {showMobileOnboarding && !profile?.onboarding_completed && (
@@ -1568,43 +1407,58 @@ export default function DashboardPage() {
         )}
 
         {/* Tabs - Desktop View */}
-        <div id="tour-tabs" className="hidden md:inline-flex flex-wrap gap-4 mb-8">
-          {dashboardTabs.map((tab) => {
-            // Hide premium-only tabs for free tier users
-            if (tab.premiumOnly && profile?.subscription_tier === 'free') {
-              return null
-            }
+        <div id="tour-tabs" className="hidden md:flex flex-wrap gap-4 mb-8 items-start">
+          <div className="flex flex-wrap gap-4">
+            {dashboardTabs.map((tab) => {
+              // Hide premium-only tabs for free tier users
+              if (tab.premiumOnly && profile?.subscription_tier === 'free') {
+                return null
+              }
 
-            // Hide integrations tab for non-admin users
-            if (tab.key === 'integrations' && !profile?.is_admin) {
-              return null
-            }
+              // Hide integrations tab for non-admin users
+              if (tab.key === 'integrations' && !profile?.is_admin) {
+                return null
+              }
 
-            const IconComponent = tab.icon
-            const isActive = activeTab === tab.key
-            const tourId = `tour-${tab.key}-tab`
+              const IconComponent = tab.icon
+              const isActive = activeTab === tab.key
+              const tourId = `tour-${tab.key}-tab`
 
-            return (
-              <button
-                key={tab.key}
-                id={tourId}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex flex-col items-start gap-1 px-6 py-3 rounded-[9px] border-2 border-black font-bold transition-all hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] ${
-                  isActive
-                    ? 'bg-emerald-500 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]'
-                    : 'bg-white text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:bg-gray-100'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <IconComponent className="w-5 h-5" />
-                  {tab.label}
-                </div>
-                <span className={`text-xs font-normal ${isActive ? 'text-emerald-100' : 'text-gray-600'}`}>
-                  {tab.subtitle}
-                </span>
-              </button>
-            )
-          })}
+              return (
+                <button
+                  key={tab.key}
+                  id={tourId}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex flex-col items-start gap-1 px-6 py-3 rounded-[9px] border-2 border-black font-bold transition-all hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] ${
+                    isActive
+                      ? 'bg-emerald-500 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.9)]'
+                      : 'bg-white text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:bg-gray-100'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <IconComponent className="w-5 h-5" />
+                    {tab.label}
+                  </div>
+                  <span className={`text-xs font-normal ${isActive ? 'text-emerald-100' : 'text-gray-600'}`}>
+                    {tab.subtitle}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          <Link
+            id="tour-edit-profile-btn"
+            href="/profile"
+            className="flex flex-col items-start gap-1 px-6 py-3 rounded-[9px] border-2 border-black font-bold transition-all hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.9)] bg-white text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] hover:bg-gray-100"
+          >
+            <div className="flex items-center gap-2">
+              <Edit className="w-5 h-5" />
+              Edit profile
+            </div>
+            <span className="text-xs font-normal text-gray-600">
+              Update your information
+            </span>
+          </Link>
         </div>
 
         {/* Tabs - Mobile Carousel View */}
@@ -1757,7 +1611,7 @@ function MarkTourComplete({ userId }: { userId?: string }) {
           .update({ onboarding_completed: true })
           .eq('id', userId)
       } catch (error) {
-        console.error('Error marking tour as complete:', error)
+        // Error marking tour as complete
       }
     }
 

@@ -1,4 +1,4 @@
-// Utility functions for DAILY reset automation for free tier users (TESTING MODE)
+// Utility functions for 24-hour reset automation for free tier users
 
 export interface ResetInfo {
   daysRemaining: number
