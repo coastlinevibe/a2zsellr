@@ -1,14 +1,21 @@
 import { Metadata } from 'next'
 import { supabase } from '@/lib/supabaseClient'
+import {
+  getProductByProfileAndSlug,
+  getProductImageUrl,
+  getProductMetaDescription,
+} from '@/lib/productHelpers'
 
 interface Props {
   params: { username: string }
+  searchParams: { [key: string]: string | string[] | undefined }
 }
 
 export async function generateMetadata(
-  { params }: Props
+  { params, searchParams }: Props
 ): Promise<Metadata> {
   const username = decodeURIComponent(params.username)
+  const productSlug = typeof searchParams?.product === 'string' ? searchParams.product : undefined
 
   // Fetch profile
   let profile = null
@@ -23,6 +30,49 @@ export async function generateMetadata(
     profile = data
   } catch (error) {
     console.error('Error fetching profile for metadata:', error)
+  }
+
+  // If product slug is provided, fetch product metadata
+  if (productSlug && profile) {
+    try {
+      const product = await getProductByProfileAndSlug(profile.id, productSlug)
+
+      if (product) {
+        const title = `${product.name} – Available on A2Z Sellr`
+        const description = getProductMetaDescription(product)
+        const image = getProductImageUrl(product)
+        const url = `https://www.a2zsellr.life/profile/${encodeURIComponent(username)}?product=${encodeURIComponent(productSlug)}`
+
+        return {
+          title,
+          description,
+          metadataBase: new URL('https://a2zsellr.life'),
+          openGraph: {
+            title,
+            description,
+            url,
+            type: 'website',
+            images: [
+              {
+                url: image,
+                width: 1200,
+                height: 630,
+                alt: title,
+              },
+            ],
+            siteName: 'A2Z Sellr',
+          },
+          twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images: [image],
+          },
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching product for metadata:', error)
+    }
   }
 
   // Profile metadata

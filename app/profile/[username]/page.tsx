@@ -169,21 +169,43 @@ export default function ProfilePage() {
     
     if (product && profile) {
       // Product-specific meta tags
-      const priceText = product.price_cents 
-        ? `R${(product.price_cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        : 'Contact for price'
+      title = `${product.name} – Available on A2Z Sellr`
       
-      title = `${product.name} - ${profile.display_name} | A2Z Business Directory`
-      description = `${product.description || product.name} - ${priceText}. Available from ${profile.display_name} on A2Z Business Directory.`
-      image = product.image_url || 'https://www.a2zsellr.life/default-product-image.jpg'
+      // Strip HTML from description and limit to 150 chars
+      let cleanDescription = product.description || 'Discover this product on A2Z Sellr.'
+      cleanDescription = cleanDescription.replace(/<[^>]*>/g, '').trim()
+      if (cleanDescription.length > 150) {
+        cleanDescription = cleanDescription.slice(0, 150).trim() + '...'
+      }
+      description = cleanDescription
+      
+      // Get first image from product
+      let productImage = product.image_url || 'https://www.a2zsellr.life/default-product.png'
+      if (product.images) {
+        let imagesArray: any[] = []
+        if (typeof product.images === 'string') {
+          try {
+            imagesArray = JSON.parse(product.images)
+          } catch (e) {
+            imagesArray = []
+          }
+        } else if (Array.isArray(product.images)) {
+          imagesArray = product.images
+        }
+        if (imagesArray.length > 0) {
+          productImage = imagesArray[0].url
+        }
+      }
+      image = productImage
+      
       const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-      url = createProfileUrl(profile.display_name, productSlug)
+      url = `https://www.a2zsellr.life/profile/${encodeURIComponent(profile.display_name.toLowerCase().trim())}?product=${encodeURIComponent(productSlug)}`
     } else if (profile) {
       // Profile-specific meta tags
-      title = `${profile.display_name} | A2Z Business Directory`
+      title = `${profile.display_name} | A2Z Sellr`
       description = `${profile.bio || `Check out ${profile.display_name}'s business profile`} - ${profile.business_category || 'Business'} in ${profile.business_location || 'South Africa'}`
       image = profile.avatar_url || 'https://www.a2zsellr.life/default-avatar.jpg'
-      url = createProfileUrl(profile.display_name)
+      url = `https://www.a2zsellr.life/profile/${encodeURIComponent(profile.display_name.toLowerCase().trim())}`
     }
     
     // Update document title
@@ -219,7 +241,7 @@ export default function ProfilePage() {
     updateMetaTag('og:title', title)
     updateMetaTag('og:description', description)
     updateMetaTag('og:image', image)
-    updateMetaTag('og:site_name', 'A2Z Business Directory')
+    updateMetaTag('og:site_name', 'A2Z Sellr')
     
     // Twitter tags
     updateMetaTag('twitter:card', 'summary_large_image')
