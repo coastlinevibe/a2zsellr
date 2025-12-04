@@ -566,8 +566,6 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, onDelete, us
         title="Link Copied"
         message="Your listing URL has been copied to clipboard"
         description={copiedUrl}
-        confirmLabel="Done"
-        cancelLabel="Close"
         onConfirm={() => {
           setShowCopyConfirm(false)
           setCopiedUrl('')
@@ -577,6 +575,8 @@ export function MarketingCampaignsTab({ onCreateNew, onEditListing, onDelete, us
           setCopiedUrl('')
         }}
         isDangerous={false}
+        hideButtons={true}
+        autoCloseAfter={2000}
       />
     </div>
   )

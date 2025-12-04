@@ -15,6 +15,8 @@ interface ConfirmationPopupProps {
   onConfirm: () => void
   onCancel: () => void
   isDangerous?: boolean
+  autoCloseAfter?: number
+  hideButtons?: boolean
 }
 
 export function ConfirmationPopup({
@@ -26,13 +28,24 @@ export function ConfirmationPopup({
   cancelLabel = 'Cancel',
   onConfirm,
   onCancel,
-  isDangerous = false
+  isDangerous = false,
+  autoCloseAfter,
+  hideButtons = false
 }: ConfirmationPopupProps) {
   const [isVisible, setIsVisible] = useState(isOpen)
 
   useEffect(() => {
     setIsVisible(isOpen)
-  }, [isOpen])
+    
+    // Auto-close after specified time
+    if (isOpen && autoCloseAfter) {
+      const timer = setTimeout(() => {
+        setIsVisible(false)
+        onCancel()
+      }, autoCloseAfter)
+      return () => clearTimeout(timer)
+    }
+  }, [isOpen, autoCloseAfter, onCancel])
 
   if (!isVisible) return null
 
@@ -75,26 +88,28 @@ export function ConfirmationPopup({
             <p className={`text-xs mt-2 opacity-75 ${textColor}`}>{description}</p>
           )}
 
-          {/* Buttons */}
-          <div className="flex gap-2 mt-3">
-            <Button
-              onClick={handleCancel}
-              variant="outline"
-              className="flex-1 border-2 border-black rounded-[6px] text-xs font-bold h-8"
-            >
-              {cancelLabel}
-            </Button>
-            <Button
-              onClick={handleConfirm}
-              className={`flex-1 rounded-[6px] text-white font-bold text-xs h-8 ${
-                isDangerous
-                  ? 'bg-red-600 hover:bg-red-700'
-                  : 'bg-yellow-600 hover:bg-yellow-700'
-              }`}
-            >
-              {confirmLabel}
-            </Button>
-          </div>
+          {/* Buttons - Hidden if hideButtons is true */}
+          {!hideButtons && (
+            <div className="flex gap-2 mt-3">
+              <Button
+                onClick={handleCancel}
+                variant="outline"
+                className="flex-1 border-2 border-black rounded-[6px] text-xs font-bold h-8"
+              >
+                {cancelLabel}
+              </Button>
+              <Button
+                onClick={handleConfirm}
+                className={`flex-1 rounded-[6px] text-white font-bold text-xs h-8 ${
+                  isDangerous
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-yellow-600 hover:bg-yellow-700'
+                }`}
+              >
+                {confirmLabel}
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Close button */}
