@@ -12,6 +12,8 @@ export async function generateMetadata({
 }: {
   params: Promise<{ username: string }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  children: React.ReactNode
+  modal: React.ReactNode
 }): Promise<Metadata> {
   const { username } = await params
   const resolvedSearchParams = await searchParams
