@@ -6,15 +6,16 @@ import {
   getProductMetaDescription,
 } from '@/lib/productHelpers'
 
-type Props = {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: {
   params: Promise<{ username: string }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}
-
-export async function generateMetadata(props: Props): Promise<Metadata> {
-  const [params, searchParams] = await Promise.all([props.params, props.searchParams])
-  const username = decodeURIComponent(params.username)
-  const productSlug = typeof searchParams?.product === 'string' ? searchParams.product : undefined
+}): Promise<Metadata> {
+  const { username } = await params
+  const resolvedSearchParams = await searchParams
+  const productSlug = typeof resolvedSearchParams?.product === 'string' ? resolvedSearchParams.product : undefined
 
   // Fetch profile
   let profile = null
