@@ -32,17 +32,17 @@ const TIER_FEATURES = {
   free: {
     name: 'Free',
     limit: 3,
-    description: 'Basic gallery with up to 3 images'
+    description: 'Basic banner with up to 3 images'
   },
   premium: {
     name: 'Premium',
     limit: 8,
-    description: 'Gallery slider showcase with up to 8 images'
+    description: 'Banner slider showcase with up to 8 images'
   },
   business: {
     name: 'Business',
     limit: 12,
-    description: 'Professional gallery with up to 12 images'
+    description: 'Professional banner with up to 12 images'
   }
 }
 
@@ -147,7 +147,7 @@ export function ImageUploadGallery({
     setError(null)
     const fileArray = Array.from(files)
     
-    // Calculate total images including existing ones in the gallery
+    // Calculate total images including existing ones in the banner
     const totalExistingImages = existingImagesCount + images.length
     
     // Check if adding these files would exceed the limit
@@ -165,9 +165,9 @@ export function ImageUploadGallery({
         return
       }
       
-      // Validate file size (5MB limit)
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Images must be less than 5MB')
+      // Validate file size (1MB limit)
+      if (file.size > 1 * 1024 * 1024) {
+        setError('Images must be less than 1MB')
         return
       }
 
@@ -253,7 +253,7 @@ export function ImageUploadGallery({
       <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-200 rounded-lg p-4">
         <div className="flex items-center gap-2 mb-2">
           <ImageIcon className="w-5 h-5 text-emerald-600" />
-          <h3 className="font-semibold text-emerald-900">{tierInfo.name} Gallery</h3>
+          <h3 className="font-semibold text-emerald-900">{tierInfo.name} Banner</h3>
           <span className="text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">
             {totalImages}/{tierLimit} images
           </span>
@@ -302,7 +302,7 @@ export function ImageUploadGallery({
                 Drop images here or click to upload
               </p>
               <p className="text-sm text-gray-500 mt-1">
-                PNG, JPG, GIF up to 5MB each • {tierLimit - totalImages} remaining
+                PNG, JPG, GIF up to 1MB each • {tierLimit - totalImages} remaining
               </p>
               <p className="text-xs text-emerald-600 font-medium mt-2">
                 📐 Recommended: 1500×400px
@@ -354,7 +354,7 @@ export function ImageUploadGallery({
             <h4 className="font-semibold text-blue-900">Upgrade for More Images</h4>
           </div>
           <p className="text-sm text-blue-700 mb-3">
-            You've reached the limit for free accounts. Upgrade to Premium or Business for unlimited gallery images.
+            You've reached the limit for free accounts. Upgrade to Premium or Business for unlimited banner images.
           </p>
           <button onClick={onUpgrade} className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-black font-black py-3 px-4 rounded-lg border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.9)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.9)] hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3">
             <Crown className="w-5 h-5" />

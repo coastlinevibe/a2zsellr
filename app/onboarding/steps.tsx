@@ -521,7 +521,7 @@ export function GalleryUploadStep({ galleryImages, setGalleryImages, onNext, onB
           <label className="border-4 border-dashed border-black rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors block">
             <Upload className="h-12 w-12 text-black mx-auto mb-2" />
             <p className="font-black text-black text-sm sm:text-base">Click to upload image</p>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1">JPG, PNG or GIF (max 5MB)</p>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">JPG, PNG or GIF (max 1MB)</p>
             <input
               type="file"
               accept="image/*"

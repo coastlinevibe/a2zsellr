@@ -179,9 +179,9 @@ export function GalleryTab({
           <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
             <ImageIcon className="w-12 h-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No gallery items yet</h3>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No banner items yet</h3>
           <p className="text-gray-600 mb-6 max-w-md mx-auto">
-            Your gallery is empty. Start building your visual presence. Upload stunning images that showcase your best work and captivate your audience.
+            Your banner is empty. Start building your visual presence. Upload stunning images that showcase your best work and captivate your audience.
           </p>
           {userTier === 'free' && (
             <p className="text-sm text-amber-600 mb-4 font-medium">
@@ -201,10 +201,10 @@ export function GalleryTab({
 
     return (
       <div className="space-y-6">
-        {/* Gallery Showcase */}
+        {/* Banner Showcase */}
         <FramerThumbnailCarousel items={images} />
         
-        {/* Gallery Stats */}
+        {/* Banner Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <div className="flex items-center gap-2 mb-2">
@@ -238,13 +238,13 @@ export function GalleryTab({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Upload Images</h3>
-            <p className="text-sm text-gray-600">Add new images to your gallery showcase</p>
+            <p className="text-sm text-gray-600">Add new images to your banner showcase</p>
           </div>
           <Button 
             variant="outline" 
             onClick={() => setViewMode('showcase')}
           >
-            Back to Gallery
+            Back to Banner
           </Button>
         </div>
 
@@ -266,7 +266,7 @@ export function GalleryTab({
           <div className="text-center py-8">
             <div className="inline-flex items-center gap-3 text-emerald-600">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
-              <span className="text-lg font-medium">Uploading images to gallery...</span>
+              <span className="text-lg font-medium">Uploading images to banner...</span>
             </div>
             <p className="text-gray-500 mt-2">Please wait while we process your images</p>
           </div>
@@ -280,14 +280,14 @@ export function GalleryTab({
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Manage Gallery</h3>
-            <p className="text-sm text-gray-600">Edit titles and organize your images</p>
+            <h3 className="text-lg font-semibold text-gray-900">Manage Banner</h3>
+            <p className="text-sm text-gray-600">Edit titles and organize your banner images</p>
           </div>
           <Button 
             variant="outline" 
             onClick={() => setViewMode('showcase')}
           >
-            Back to Gallery
+            Back to Banner
           </Button>
         </div>
 
@@ -370,9 +370,9 @@ export function GalleryTab({
             <div className="flex items-center gap-2">
               <ImageIcon className="w-5 h-5 text-amber-600" />
               <div>
-                <h4 className="font-semibold text-amber-900">Gallery Limit Reached</h4>
+                <h4 className="font-semibold text-amber-900">Banner Limit Reached</h4>
                 <p className="text-sm text-amber-700 mt-1">
-                  You've reached the {currentLimit}-image limit for free accounts. Upgrade to Premium for unlimited gallery images.
+                  You've reached the {currentLimit}-image limit for free accounts. Upgrade to Premium for unlimited banner images.
                 </p>
               </div>
             </div>

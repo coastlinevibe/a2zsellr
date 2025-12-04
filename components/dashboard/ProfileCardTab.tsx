@@ -160,7 +160,7 @@ export function ProfileCardTab({ profile, onRefresh }: ProfileCardTabProps) {
               <label className="border-4 border-dashed border-black rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 transition-colors block">
                 <Upload className="h-12 w-12 text-black mx-auto mb-2" />
                 <p className="font-black text-black">Click to upload business card image</p>
-                <p className="text-xs text-gray-600 mt-1">JPG, PNG or GIF (max 5MB)</p>
+                <p className="text-xs text-gray-600 mt-1">JPG, PNG or GIF (max 1MB)</p>
                 <input
                   ref={fileInputRef}
                   type="file"

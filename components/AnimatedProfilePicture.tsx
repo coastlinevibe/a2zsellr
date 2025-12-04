@@ -263,7 +263,7 @@ export default function AnimatedProfilePicture({
                         {dragOver ? 'Drop here' : 'Upload Image'}
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5">
-                        JPG, PNG, GIF (max 5MB)
+                        JPG, PNG, GIF (max 1MB)
                       </p>
                     </div>
                   </motion.div>

@@ -418,8 +418,8 @@ export default function ProfilePage() {
       return
     }
 
-    if (selectedFile.size > 5 * 1024 * 1024) {
-      setMessage({ type: 'error', text: 'Image must be less than 5MB' })
+    if (selectedFile.size > 1 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Image must be less than 1MB' })
       return
     }
 

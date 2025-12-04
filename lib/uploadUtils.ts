@@ -31,10 +31,10 @@ export async function uploadFileToStorage(
       return { success: false, error: 'File type not supported. Please use JPG, PNG, WebP, GIF, MP4, or WebM.' }
     }
 
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024 // 10MB
+    // Validate file size (max 1MB)
+    const maxSize = 1 * 1024 * 1024 // 1MB
     if (file.size > maxSize) {
-      return { success: false, error: 'File size must be less than 10MB' }
+      return { success: false, error: 'File size must be less than 1MB' }
     }
 
     // Generate unique filename
