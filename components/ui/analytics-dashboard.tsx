@@ -451,7 +451,7 @@ const AnalyticsDashboard = () => {
               </li>
               <li className="flex items-start gap-2">
               <div className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-2"></div>
-              <span>WhatsApp Status posts with product tags convert 45% more</span>
+              <span>WhatsApp Status posts with product links convert 45% more</span>
               </li>
             </ul>
           </div>

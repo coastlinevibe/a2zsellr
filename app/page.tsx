@@ -10,7 +10,6 @@ import { supabase } from '@/lib/supabaseClient'
 import { AdminLoginModal } from '@/components/AdminLoginModal'
 import { PricingContainer, type PricingPlan } from '@/components/ui/pricing-container'
 import { ProductShowcase } from '@/components/ProductShowcase'
-import TagSearchFilters from '@/components/TagSearchFilters'
 import { motion } from 'framer-motion'
 
 // Function to normalize Unicode characters to ASCII for searching
@@ -157,8 +156,7 @@ export default function HomePage() {
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
   const [dotPage, setDotPage] = useState(0)
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [searchResults, setSearchResults] = useState<{ total: number; tagMatches: number }>({ total: 0, tagMatches: 0 })
+  const [searchResults, setSearchResults] = useState<{ total: number }>({ total: 0 })
   const [isMobile, setIsMobile] = useState(false)
   const [featuresSlide, setFeaturesSlide] = useState(0)
   const locationDropdownRef = useRef<HTMLDivElement>(null)
@@ -565,103 +563,6 @@ export default function HomePage() {
   const handleSearch = async () => {
     setIsSearching(true)
     try {
-      let profileIds: string[] = []
-      
-      // If there's a search query, first search for profiles that have products with matching tags
-      if (searchQuery.trim()) {
-        const searchTerm = searchQuery.trim()
-        
-        // Split search term by commas and clean up keywords
-        const keywords = searchTerm.split(',').map(keyword => keyword.trim()).filter(keyword => keyword.length > 0)
-        
-        // If no commas, treat as single search term
-        const searchTerms = keywords.length > 1 ? keywords : [searchTerm]
-        
-        const allMatchingProducts: any[] = []
-        
-        // Search for each keyword separately
-        for (const term of searchTerms) {
-          // Search for products with matching names, descriptions, or product details
-          const { data: matchingProducts } = await supabase
-            .from('products_with_tags')
-            .select('profile_id, tags, name, description, product_details')
-            .or(`name.ilike.%${term}%,description.ilike.%${term}%,product_details.ilike.%${term}%`)
-          
-          if (matchingProducts) {
-            allMatchingProducts.push(...matchingProducts)
-          }
-          
-          // Also search for products where tags contain the search term
-          const { data: tagMatchingProducts } = await supabase
-            .from('products_with_tags')
-            .select('profile_id, tags, name, description, product_details')
-            .not('tags', 'is', null)
-          
-          // Filter products that have tags matching the search term
-          const tagFilteredProducts = tagMatchingProducts?.filter(product => {
-            if (!product.tags || !Array.isArray(product.tags)) return false
-            return product.tags.some((tag: any) => 
-              tag.name?.toLowerCase().includes(term.toLowerCase())
-            )
-          }) || []
-          
-          allMatchingProducts.push(...tagFilteredProducts)
-        }
-        
-        // For comma-separated searches, require ALL keywords to match
-        if (keywords.length > 1) {
-          const productMatches: { [key: string]: { profileId: string, matchedKeywords: Set<string>, product: any } } = {}
-          
-          allMatchingProducts.forEach(product => {
-            const productKey = `${product.profile_id}-${product.name || 'unnamed'}`
-            if (!productMatches[productKey]) {
-              productMatches[productKey] = { 
-                profileId: product.profile_id, 
-                matchedKeywords: new Set(), 
-                product: product 
-              }
-            }
-            
-            // Check which keywords this product matches
-            keywords.forEach(keyword => {
-              const lowerKeyword = keyword.toLowerCase()
-              let keywordMatches = false
-              
-              // Check product name, description, details
-              if (product.name?.toLowerCase().includes(lowerKeyword) ||
-                  product.description?.toLowerCase().includes(lowerKeyword) ||
-                  product.product_details?.toLowerCase().includes(lowerKeyword)) {
-                keywordMatches = true
-              }
-              
-              // Check tags
-              if (product.tags && Array.isArray(product.tags)) {
-                product.tags.forEach((tag: any) => {
-                  if (tag.name?.toLowerCase().includes(lowerKeyword)) {
-                    keywordMatches = true
-                  }
-                })
-              }
-              
-              if (keywordMatches) {
-                productMatches[productKey].matchedKeywords.add(keyword)
-              }
-            })
-          })
-          
-          // Only include products that match ALL keywords
-          const validProducts = Object.values(productMatches)
-            .filter(p => p.matchedKeywords.size === keywords.length)
-          
-          const uniqueProfileIds = new Set(validProducts.map(p => p.profileId))
-          profileIds = Array.from(uniqueProfileIds)
-        } else {
-          // Single search term - use all matches
-          const profileIdMap: { [key: string]: boolean } = {}
-          allMatchingProducts.forEach(p => { profileIdMap[p.profile_id] = true })
-          profileIds = Object.keys(profileIdMap)
-        }
-      }
 
       let query = supabase
         .from('profiles')
@@ -677,33 +578,18 @@ export default function HomePage() {
         .in('subscription_tier', ['free', 'premium', 'business']) // All active profiles
         .not('display_name', 'is', null) // Only profiles with display names
 
-      // Apply search query filter - enhanced to include tag matches and Unicode normalization
+      // Apply search query filter with Unicode normalization
       if (searchQuery.trim()) {
         const searchTerm = searchQuery.trim()
         const normalizedSearchTerm = normalizeUnicode(searchTerm)
         
-        // Check if this is a comma-separated product search
-        const keywords = searchTerm.split(',').map(keyword => keyword.trim()).filter(keyword => keyword.length > 0)
-        const isProductSearch = keywords.length > 1
-        
-        if (profileIds.length > 0) {
-          if (isProductSearch) {
-            // For comma-separated searches, ONLY show profiles with matching products
-            query = query.in('id', profileIds)
-          } else {
-            // For single term searches, include both product matches and profile matches
-            query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%,id.in.(${profileIds.join(',')})`)
-          }
+        // Always include both original and normalized search terms for Unicode support
+        if (normalizedSearchTerm !== searchTerm.toLowerCase()) {
+          // Search for both original term and normalized term
+          query = query.or(`display_name.ilike.%${searchTerm}%,display_name.ilike.%${normalizedSearchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
         } else {
-          // No product matches found, fallback to basic profile search
-          // Always include both original and normalized search terms for Unicode support
-          if (normalizedSearchTerm !== searchTerm.toLowerCase()) {
-            // Search for both original term and normalized term
-            query = query.or(`display_name.ilike.%${searchTerm}%,display_name.ilike.%${normalizedSearchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
-          } else {
-            // Only search for original term if normalization didn't change it
-            query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
-          }
+          // Only search for original term if normalization didn't change it
+          query = query.or(`display_name.ilike.%${searchTerm}%,bio.ilike.%${searchTerm}%,business_category.ilike.%${searchTerm}%,business_location.ilike.%${searchTerm}%`)
         }
       }
 
@@ -751,37 +637,20 @@ export default function HomePage() {
         setBusinesses(data || [])
         
         // Update search results stats
-        const tagMatches = profileIds.length
-        setSearchResults({ total: data?.length || 0, tagMatches })
+        setSearchResults({ total: data?.length || 0 })
       }
       // Reset carousel to first slide when search results change
       setCurrentSlide(0)
     } catch (error) {
       console.error('Search error:', error)
       setBusinesses([])
-      setSearchResults({ total: 0, tagMatches: 0 })
+      setSearchResults({ total: 0 })
     } finally {
       setIsSearching(false)
     }
   }
 
-  const handleTagSelect = (tagName: string) => {
-    if (!selectedTags.includes(tagName)) {
-      const newTags = [...selectedTags, tagName]
-      setSelectedTags(newTags)
-      // Add tag to search query
-      const tagQuery = newTags.join(' ')
-      setSearchQuery(tagQuery)
-    }
-  }
 
-  const handleTagRemove = (tagName: string) => {
-    const newTags = selectedTags.filter(tag => tag !== tagName)
-    setSelectedTags(newTags)
-    // Update search query
-    const tagQuery = newTags.join(' ')
-    setSearchQuery(tagQuery)
-  }
   
   // Show loading state on first mount
   if (!mounted) {
@@ -1030,12 +899,6 @@ export default function HomePage() {
                 </p>
               </div>
 
-              {/* Tag Search Filters */}
-              <TagSearchFilters
-                onTagSelect={handleTagSelect}
-                selectedTags={selectedTags}
-                onTagRemove={handleTagRemove}
-              />
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 items-end">
                 {/* Search Input */}
                 <div className="lg:col-span-4">
@@ -1184,7 +1047,6 @@ export default function HomePage() {
                       setSearchQuery('')
                       setSelectedCategory('all')
                       setSelectedLocation('all')
-                      setSelectedTags([])
                     }}
                     disabled={isSearching}
                     className="flex-1 disabled:opacity-50 text-black font-black py-3 px-4 flex items-center justify-center transition-all"

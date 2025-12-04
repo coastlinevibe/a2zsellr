@@ -208,15 +208,6 @@ export function UserManagement() {
         .delete()
         .in('buyer_id', selectedUserIds)
 
-      console.log('🗑️ Deleting selected users product tag assignments...')
-      const productIds = (await supabase.from('profile_products').select('id').in('profile_id', selectedUserIds)).data?.map(p => p.id) || []
-      if (productIds.length > 0) {
-        const { error: tagAssignmentsError } = await supabase
-          .from('product_tag_assignments')
-          .delete()
-          .in('product_id', productIds)
-      }
-
       console.log('🗑️ Deleting selected users profile products...')
       const { error: productsError } = await supabase
         .from('profile_products')
@@ -599,15 +590,6 @@ export function UserManagement() {
         .from('orders')
         .delete()
         .eq('buyer_id', userId)
-
-      console.log('🗑️ Deleting user product tag assignments...')
-      const userProductIds = (await supabase.from('profile_products').select('id').eq('profile_id', userId)).data?.map(p => p.id) || []
-      if (userProductIds.length > 0) {
-        const { error: tagAssignmentsError } = await supabase
-          .from('product_tag_assignments')
-          .delete()
-          .in('product_id', userProductIds)
-      }
 
       console.log('🗑️ Deleting user products...')
       const { error: productsError, data: deletedProducts } = await supabase
