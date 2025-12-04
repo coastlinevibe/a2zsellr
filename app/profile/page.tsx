@@ -32,6 +32,8 @@ interface UserProfile {
   early_adopter: boolean
   twitter: string | null
   youtube: string | null
+  facebook: string | null
+  instagram: string | null
 }
 
 const tabs = [
@@ -89,6 +91,8 @@ export default function ProfilePage() {
   // Social media fields
   const [twitter, setTwitter] = useState('')
   const [youtube, setYoutube] = useState('')
+  const [facebook, setFacebook] = useState('')
+  const [instagram, setInstagram] = useState('')
   const [weeklySchedule, setWeeklySchedule] = useState({
     monday: { open: '09:00', close: '17:00', closed: false },
     tuesday: { open: '09:00', close: '17:00', closed: false },
@@ -168,6 +172,8 @@ export default function ProfilePage() {
       // Load social media data
       setTwitter(profileData.twitter || '')
       setYoutube(profileData.youtube || '')
+      setFacebook(profileData.facebook || '')
+      setInstagram(profileData.instagram || '')
       
       // Parse existing schedule if available
       if (profileData.business_hours) {
@@ -383,6 +389,8 @@ export default function ProfilePage() {
         business_hours: businessHours.trim() || undefined,
         twitter: twitter.trim() || null,
         youtube: youtube.trim() || null,
+        facebook: facebook.trim() || null,
+        instagram: instagram.trim() || null,
       }
 
       const { error } = await supabase
@@ -911,6 +919,56 @@ export default function ProfilePage() {
                       handleFieldFocus('youtube')
                     }}
                     placeholder="https://www.youtube.com/@yourbusiness"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-emerald-500 focus:ring-emerald-500 outline-none text-sm"
+                  />
+                </div>
+
+                {/* Facebook */}
+                <div id="facebook">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <div className="holographic-icon-profile facebook">
+                      <div className="holographic-ring-profile"></div>
+                      <div className="holographic-particles-profile"></div>
+                      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                      </svg>
+                      <div className="holographic-pulse-profile"></div>
+                    </div>
+                    Facebook Page
+                  </label>
+                  <input
+                    type="url"
+                    value={facebook}
+                    onChange={(e) => {
+                      setFacebook(e.target.value)
+                      handleFieldFocus('facebook')
+                    }}
+                    placeholder="https://www.facebook.com/yourbusiness"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-emerald-500 focus:ring-emerald-500 outline-none text-sm"
+                  />
+                </div>
+
+                {/* Instagram */}
+                <div id="instagram">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <div className="holographic-icon-profile instagram">
+                      <div className="holographic-ring-profile"></div>
+                      <div className="holographic-particles-profile"></div>
+                      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.117.63c-.794.297-1.473.702-2.082 1.31-.609.609-1.013 1.288-1.31 2.082-.297.788-.5 1.658-.56 2.936C.015 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.263 2.148.56 2.936.297.794.702 1.473 1.31 2.082.609.609 1.288 1.013 2.082 1.31.788.297 1.659.5 2.936.56C8.333 23.985 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.263 2.936-.56.794-.297 1.473-.702 2.082-1.31.609-.609 1.013-1.288 1.31-2.082.297-.788.5-1.659.56-2.936.057-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.263-2.148-.56-2.936-.297-.794-.702-1.473-1.31-2.082-.609-.609-1.288-1.013-2.082-1.31-.788-.297-1.659-.5-2.936-.56C15.667.015 15.26 0 12 0zm0 2.16c3.203 0 3.585.009 4.849.070 1.171.054 1.805.244 2.227.408.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.354 1.057.408 2.227.061 1.264.07 1.646.07 4.849s-.009 3.585-.07 4.849c-.054 1.171-.244 1.805-.408 2.227-.217.562-.477.96-.896 1.382-.42.419-.819.679-1.381.896-.422.164-1.057.354-2.227.408-1.264.061-1.646.07-4.849.07s-3.585-.009-4.849-.07c-1.171-.054-1.805-.244-2.227-.408-.562-.217-.96-.477-1.382-.896-.419-.42-.679-.819-.896-1.381-.164-.422-.354-1.057-.408-2.227-.061-1.264-.07-1.646-.07-4.849s.009-3.585.07-4.849c.054-1.171.244-1.805.408-2.227.217-.562.477-.96.896-1.382.42-.419.819-.679 1.381-.896.422-.164 1.057-.354 2.227-.408 1.264-.061 1.646-.07 4.849-.07zM5.838 12a6.162 6.162 0 1 1 12.324 0 6.162 6.162 0 0 1-12.324 0zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm4.965-10.322a1.44 1.44 0 1 1 2.881.001 1.44 1.44 0 0 1-2.881-.001z"/>
+                      </svg>
+                      <div className="holographic-pulse-profile"></div>
+                    </div>
+                    Instagram Profile
+                  </label>
+                  <input
+                    type="url"
+                    value={instagram}
+                    onChange={(e) => {
+                      setInstagram(e.target.value)
+                      handleFieldFocus('instagram')
+                    }}
+                    placeholder="https://www.instagram.com/yourbusiness"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-emerald-500 focus:ring-emerald-500 outline-none text-sm"
                   />
                 </div>

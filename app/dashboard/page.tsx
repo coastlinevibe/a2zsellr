@@ -151,16 +151,11 @@ export default function DashboardPage() {
 
   // Welcome messages
   const welcomeMessages = [
-    "Welcome to your dashboard",
-    "Let's grow your profile",
-    "Time to shine online",
-    "Your success starts here",
-    "Ready to boost sales?",
-    "Welcome aboard, entrepreneur",
-    "Let's make magic happen",
-    "Your empire awaits",
-    "Time to dominate",
-    "Welcome to the future"
+    "Your Success Starts Here",
+    "Grow Your Business Today",
+    "Ready to Sell Smarter",
+    "Let's Build Your Brand",
+    "Unlock Your Selling Power"
   ]
 
   const randomWelcomeMessage = useMemo(() => {
