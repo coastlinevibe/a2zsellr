@@ -121,8 +121,15 @@ export async function generateMetadata(
 
 export default function ProfileLayout({
   children,
+  modal,
 }: {
   children: React.ReactNode
+  modal: React.ReactNode
 }) {
-  return children
+  return (
+    <>
+      {children}
+      {modal}
+    </>
+  )
 }
