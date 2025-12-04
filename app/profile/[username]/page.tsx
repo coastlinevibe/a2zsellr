@@ -234,9 +234,9 @@ export default function ProfilePage() {
   const handleShareProduct = (product: Product) => {
     if (!profile) return
     
-    // Create URL using the product page route for proper OG meta tags
+    // Create URL with product parameter to open the product modal
     const productSlug = product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-    const shareUrl = `https://www.a2zsellr.life/product/${encodeURIComponent(profile.display_name)}/${encodeURIComponent(productSlug)}`
+    const shareUrl = createProfileUrl(profile.display_name, productSlug)
     const shareText = `Check out "${product.name}" from ${profile.display_name} on A2Z Business Directory!`
     
     if (navigator.share) {
