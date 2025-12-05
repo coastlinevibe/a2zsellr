@@ -39,6 +39,7 @@ interface CustomTemplateLayoutProps {
   ctaLabel: string
   ctaUrl: string
   businessName: string
+  businessCategory?: string | null
   ratingAverage?: number | null
   ratingCount?: number
   deliveryAvailable?: boolean
@@ -55,6 +56,7 @@ export const CustomTemplateLayout: React.FC<CustomTemplateLayoutProps> = ({
   ctaLabel,
   ctaUrl,
   businessName,
+  businessCategory,
   ratingAverage,
   ratingCount,
   deliveryAvailable,

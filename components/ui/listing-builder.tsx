@@ -932,6 +932,7 @@ const ListingBuilder = ({ products, selectedPlatforms, businessProfile, editList
       ctaLabel: ctaLabel,
       ctaUrl: ctaUrl,
       businessName: businessName,
+      businessCategory: businessProfile?.business_category ?? null,
       ratingAverage: businessProfile?.average_rating ?? null,
       ratingCount: businessProfile?.review_count ?? 0,
       deliveryAvailable

@@ -19,6 +19,7 @@ interface HoverCardsLayoutProps {
   ctaLabel: string
   ctaUrl: string
   businessName: string
+  businessCategory?: string | null
   ratingAverage?: number | null
   ratingCount?: number
   deliveryAvailable?: boolean
@@ -31,6 +32,7 @@ export const HoverCardsLayout: React.FC<HoverCardsLayoutProps> = ({
   ctaLabel,
   ctaUrl,
   businessName,
+  businessCategory,
   ratingAverage,
   ratingCount,
   deliveryAvailable

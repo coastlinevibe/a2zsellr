@@ -19,6 +19,7 @@ interface GalleryMosaicLayoutProps {
   ctaLabel: string
   ctaUrl: string
   businessName: string
+  businessCategory?: string | null
   ratingAverage?: number | null
   ratingCount?: number
   deliveryAvailable?: boolean
@@ -31,6 +32,7 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
   ctaLabel,
   ctaUrl,
   businessName,
+  businessCategory,
   ratingAverage,
   ratingCount,
   deliveryAvailable

@@ -22,6 +22,7 @@ export interface LayoutProps {
   ctaLabel: string
   ctaUrl: string
   businessName: string
+  businessCategory?: string | null
   ratingAverage?: number | null
   ratingCount?: number
   deliveryAvailable?: boolean
