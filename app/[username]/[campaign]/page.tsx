@@ -12,7 +12,7 @@ import {
   VerticalSliderLayout,
   CustomTemplateLayout,
   type MediaItem
-} from '@/components/ui/campaign-layouts'
+} from '@/components/ui/listing-layouts'
 import { MessageCircle, Share2, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MarketingActionBar } from '@/components/ui/MarketingActionBar'

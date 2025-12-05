@@ -4,10 +4,9 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import ShareLinkBuilder from '@/components/ui/share-link-builder'
-import CampaignScheduler from '@/components/ui/campaign-scheduler'
-import AnalyticsDashboard from '@/components/ui/analytics-dashboard'
-import TemplateEditor from '@/components/ui/template-editor'
+import ListingEditor from '@/components/ui/listing-editor'
+import ListingScheduler from '@/components/ui/listing-scheduler'
+import ListingAnalytics from '@/components/ui/listing-analytics'
 import {
   AlertTriangle,
   ArrowRight,
@@ -49,8 +48,8 @@ import { ListingCardGrid } from '@/components/ListingCardGrid'
 import BusinessShop from '@/components/ui/business-shop'
 import FreeAccountNotifications from '@/components/FreeAccountNotifications'
 import { ProfileSettingsTab } from '@/components/ProfileSettingsTab'
-import { GalleryTab } from '@/components/dashboard/GalleryTab'
-import { MarketingCampaignsTab } from '@/components/dashboard/MarketingCampaignsTab'
+import { BannerTab } from '@/components/dashboard/BannerTab'
+import { ListingsTab } from '@/components/dashboard/ListingsTab'
 import PublicProfilePreview from '@/components/ui/public-profile-preview'
 import { DashboardTour } from '@/components/DashboardTour'
 import ResetCountdownBanner from '@/components/ResetCountdownBanner'
@@ -112,9 +111,9 @@ export default function DashboardPage() {
   const [showCompletionToast, setShowCompletionToast] = useState(false)
   const [showMobileOnboarding, setShowMobileOnboarding] = useState(true)
   
-  // Gallery state
-  const [galleryItems, setGalleryItems] = useState<any[]>([])
-  const [galleryLoading, setGalleryLoading] = useState(false)
+  // Banner state
+  const [bannerItems, setBannerItems] = useState<any[]>([])
+  const [bannerLoading, setBannerLoading] = useState(false)
   
   const [marketingActiveView, setMarketingActiveView] = useState('builder')
   const [marketingProducts, setMarketingProducts] = useState<any[]>([])
@@ -328,7 +327,7 @@ export default function DashboardPage() {
     const fetchGalleryData = async () => {
       if (!profile?.id) return
       
-      setGalleryLoading(true)
+      setBannerLoading(true)
       try {
         const { data, error } = await supabase
           .from('profile_gallery')
@@ -337,12 +336,12 @@ export default function DashboardPage() {
           .order('created_at', { ascending: false })
 
         if (error) throw error
-        setGalleryItems(data || [])
-        console.log('📸 Gallery items loaded:', data?.length || 0)
+        setBannerItems(data || [])
+        console.log('📸 Banner items loaded:', data?.length || 0)
       } catch (error) {
 
       } finally {
-        setGalleryLoading(false)
+        setBannerLoading(false)
       }
     }
 
@@ -685,7 +684,7 @@ export default function DashboardPage() {
           {/* Content */}
           <div className="p-6">
             {marketingActiveView === 'builder' && (
-              <ShareLinkBuilder 
+              <ListingEditor 
                 products={marketingProducts} 
                 businessProfile={profile} 
                 editListing={editListing}
@@ -696,7 +695,7 @@ export default function DashboardPage() {
             )}
 
             {marketingActiveView === 'campaigns' && (
-              <MarketingCampaignsTab 
+              <ListingsTab 
                 onCreateNew={() => {
                   // Clear any existing edit data for new listing
                   setEditListing(null)
@@ -796,18 +795,6 @@ export default function DashboardPage() {
               )
             )}
 
-            {marketingActiveView === 'template_editor' && (
-              <TemplateEditor 
-                templateId="health-insurance"
-                onSave={(data) => {
-                  // Template saved
-                }}
-                onShare={(url) => {
-                  alert(`🎉 Template is now live! Share this URL: ${url}`)
-                }}
-              />
-            )}
-
             {marketingActiveView === 'scheduler' && (
               userTier !== 'business' ? (
                 <div className="text-center py-12">
@@ -831,8 +818,8 @@ export default function DashboardPage() {
                   </button>
                 </div>
               ) : (
-                <CampaignScheduler onSchedule={(settings) => {
-                  alert('🎉 Campaign scheduled successfully! Your messages will be sent at optimal times.')
+                <ListingScheduler onSchedule={(settings) => {
+                  alert('🎉 Listing scheduled successfully! Your messages will be sent at optimal times.')
                 }} />
               )
             )}
@@ -860,7 +847,7 @@ export default function DashboardPage() {
                   </button>
                 </div>
               ) : (
-                <AnalyticsDashboard />
+                <ListingAnalytics />
               )
             )}
           </div>
@@ -881,22 +868,22 @@ export default function DashboardPage() {
           onRefresh={fetchDashboardMetrics}
         />
       case 'branding':
-        return <GalleryTab 
-          galleryItems={galleryItems}
-          galleryLoading={galleryLoading}
+        return <BannerTab 
+          bannerItems={bannerItems}
+          bannerLoading={bannerLoading}
           userTier={profile?.subscription_tier || 'free'}
           onRefresh={() => {
-            // Refresh gallery data
+            // Refresh banner data
             if (profile?.id) {
-              setGalleryLoading(true)
+              setBannerLoading(true)
               supabase
                 .from('profile_gallery')
                 .select('*')
                 .eq('profile_id', profile.id)
                 .order('created_at', { ascending: false })
                 .then(({ data, error }) => {
-                  if (!error) setGalleryItems(data || [])
-                  setGalleryLoading(false)
+                  if (!error) setBannerItems(data || [])
+                  setBannerLoading(false)
                 })
             }
           }}

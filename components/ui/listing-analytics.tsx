@@ -47,7 +47,7 @@ interface CampaignMetrics {
   }[]
 }
 
-const AnalyticsDashboard = () => {
+const ListingAnalytics = () => {
   const [timeRange, setTimeRange] = useState('7d')
   const [selectedPlatform, setSelectedPlatform] = useState('all')
 
@@ -478,4 +478,4 @@ const AnalyticsDashboard = () => {
   )
 }
 
-export default AnalyticsDashboard
+export default ListingAnalytics

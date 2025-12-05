@@ -10,7 +10,7 @@ import { TierLimitDisplay } from '@/components/ui/premium-badge'
 import { supabase } from '@/lib/supabaseClient'
 import { useAuth } from '@/lib/auth'
 
-interface GalleryImage {
+interface BannerImage {
   id: string
   title: string
   url: string
@@ -24,21 +24,21 @@ interface UploadedImage {
   title: string
 }
 
-interface GalleryTabProps {
-  galleryItems?: any[]
-  galleryLoading?: boolean
+interface BannerTabProps {
+  bannerItems?: any[]
+  bannerLoading?: boolean
   userTier?: 'free' | 'premium' | 'business'
   onRefresh?: () => void
   onUpgrade?: () => void
 }
 
-export function GalleryTab({ 
-  galleryItems = [], 
-  galleryLoading = false, 
+export function BannerTab({ 
+  bannerItems = [], 
+  bannerLoading = false, 
   userTier = 'free', 
   onRefresh = () => {},
   onUpgrade = () => {}
-}: GalleryTabProps) {
+}: BannerTabProps) {
   const { user } = useAuth()
   const router = useRouter()
   const [viewMode, setViewMode] = useState<'showcase' | 'upload' | 'manage'>('showcase')
@@ -46,9 +46,9 @@ export function GalleryTab({
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
-  // Convert gallery items to our format
+  // Convert banner items to our format
   useEffect(() => {
-    const convertedImages: GalleryImage[] = galleryItems.map((item, index) => ({
+    const convertedImages: BannerImage[] = bannerItems.map((item, index) => ({
       id: item.id?.toString() || index.toString(),
       title: item.title || item.caption || `Image ${index + 1}`,
       url: item.image_url || item.media_url || '',
@@ -56,7 +56,7 @@ export function GalleryTab({
     })).filter(img => img.url) // Only include items with valid URLs
 
     setImages(convertedImages)
-  }, [galleryItems])
+  }, [bannerItems])
 
   const handleImageUpload = useCallback(async (uploadedImages: UploadedImage[]) => {
     if (!user?.id) return
@@ -161,7 +161,7 @@ export function GalleryTab({
   const currentLimit = tierLimits[userTier]
   const isAtLimit = images.length >= currentLimit && (userTier === 'free' || userTier === 'premium')
 
-  if (galleryLoading) {
+  if (bannerLoading) {
     return (
       <div className="space-y-6">
         <div className="animate-pulse">

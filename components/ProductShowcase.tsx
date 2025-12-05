@@ -12,6 +12,7 @@ interface Product {
   name: string
   description: string | null
   price_cents: number | null
+  discounted_price?: string | null
   image_url: string | null
   profile_id: string
   created_at: string
@@ -87,6 +88,7 @@ export function ProductShowcase() {
           name,
           description,
           price_cents,
+          discounted_price,
           image_url,
           profile_id,
           created_at,
@@ -245,8 +247,17 @@ export function ProductShowcase() {
             
             {/* Price Badge */}
             {currentProduct.price_cents && (
-              <div className="absolute -top-1 -right-1 bg-green-400 text-black px-2 py-0.5 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)] font-black text-xs">
-                R{(currentProduct.price_cents / 100).toFixed(0)}
+              <div className={`absolute -top-1 -right-1 px-2 py-0.5 rounded border-2 border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,0.9)] font-black text-xs ${
+                currentProduct.discounted_price ? 'bg-red-400' : 'bg-green-400'
+              } text-black`}>
+                {currentProduct.discounted_price ? (
+                  <>
+                    <div className="text-xs line-through opacity-70">R{(currentProduct.price_cents / 100).toFixed(0)}</div>
+                    <div>R{parseFloat(currentProduct.discounted_price).toFixed(0)}</div>
+                  </>
+                ) : (
+                  `R${(currentProduct.price_cents / 100).toFixed(0)}`
+                )}
               </div>
             )}
           </div>
@@ -315,29 +326,29 @@ export function ProductShowcase() {
 
             {/* Seller Info */}
             <div className="flex items-center gap-2 mb-2">
-              {profile?.avatar_url && profile.avatar_url.trim() !== '' ? (
-                <Image
-                  src={profile.avatar_url}
-                  alt={profile.display_name || 'Seller'}
-                  width={16}
-                  height={16}
-                  className="rounded-full border border-black"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                  }}
-                />
-              ) : (
-                <div className="w-4 h-4 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full border border-black flex items-center justify-center">
+              <div className="w-4 h-4 flex-shrink-0 rounded-full border border-black overflow-hidden bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center">
+                {profile?.avatar_url && profile.avatar_url.trim() !== '' ? (
+                  <Image
+                    src={profile.avatar_url}
+                    alt={profile.display_name || 'Seller'}
+                    width={16}
+                    height={16}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                    }}
+                  />
+                ) : (
                   <span className="text-white text-xs font-black">
                     {(profile?.display_name || 'U').charAt(0).toUpperCase()}
                   </span>
-                </div>
-              )}
+                )}
+              </div>
               <span className="text-black font-bold text-xs truncate">
                 {profile?.display_name || 'Unknown Seller'}
               </span>
               {profile?.verified_seller && (
-                <div className="w-3 h-3 bg-blue-500 rounded-full border border-black flex items-center justify-center">
+                <div className="w-3 h-3 bg-blue-500 rounded-full border border-black flex items-center justify-center flex-shrink-0">
                   <div className="w-1 h-1 bg-white rounded-full"></div>
                 </div>
               )}

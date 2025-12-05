@@ -118,7 +118,7 @@ interface ScheduleSettings {
   }
 }
 
-const CampaignScheduler = ({ onSchedule }: { onSchedule: (settings: ScheduleSettings) => void }) => {
+const ListingScheduler = ({ onSchedule }: { onSchedule: (settings: ScheduleSettings) => void }) => {
   const [activeTab, setActiveTab] = useState('timing')
   const [schedule, setSchedule] = useState<ScheduleSettings>({
     whatsapp: {
@@ -397,4 +397,4 @@ const CampaignScheduler = ({ onSchedule }: { onSchedule: (settings: ScheduleSett
   )
 }
 
-export default CampaignScheduler
+export default ListingScheduler

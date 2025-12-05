@@ -55,7 +55,7 @@ import {
   VerticalSliderLayout,
   CustomTemplateLayout,
   type MediaItem
-} from './campaign-layouts'
+} from './listing-layouts'
 import DateTimePicker from '@/components/ui/date-time-picker'
 import TemplateStorageManager from '@/lib/templateStorage'
 import { uploadFileToStorage, type UploadResult } from '@/lib/uploadUtils'
@@ -70,7 +70,7 @@ interface Product {
   category: string | null
 }
 
-interface WYSIWYGCampaignBuilderProps {
+interface ListingBuilderProps {
   products: Product[]
   selectedPlatforms: string[]
   businessProfile: any
@@ -81,7 +81,7 @@ interface WYSIWYGCampaignBuilderProps {
   onUpgrade?: () => void // Callback to open upgrade modal
 }
 
-const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, editListing, onRefresh, userTier = 'free', onGoToListings, onUpgrade }: WYSIWYGCampaignBuilderProps) => {
+const ListingBuilder = ({ products, selectedPlatforms, businessProfile, editListing, onRefresh, userTier = 'free', onGoToListings, onUpgrade }: ListingBuilderProps) => {
   const [campaignTitle, setCampaignTitle] = useState(editListing?.title || 'Mid-Month Growth Blast')
   const [selectedLayout, setSelectedLayout] = useState(editListing?.layout_type || 'gallery-mosaic')
   const [messageTemplate, setMessageTemplate] = useState(editListing?.message_template || 'Hey there! We just launched new services tailored for you. Tap to explore what\'s hot this week.')
@@ -1801,4 +1801,4 @@ const WYSIWYGCampaignBuilder = ({ products, selectedPlatforms, businessProfile, 
     </div>
   )
 }
-export default WYSIWYGCampaignBuilder
+export default ListingBuilder

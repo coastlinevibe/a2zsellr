@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Palette } from 'lucide-react'
-import WYSIWYGCampaignBuilder from './wysiwyg-campaign-builder'
+import ListingBuilder from './listing-builder'
 
 interface Product {
   id: string
@@ -13,7 +13,7 @@ interface Product {
   category: string | null
 }
 
-const ShareLinkBuilder = ({ products = [], businessProfile, editListing, onRefresh, onGoToListings, onUpgrade }: { products: Product[], businessProfile: any, editListing?: any, onRefresh?: () => void, onGoToListings?: () => void, onUpgrade?: () => void }) => {
+const ListingEditor = ({ products = [], businessProfile, editListing, onRefresh, onGoToListings, onUpgrade }: { products: Product[], businessProfile: any, editListing?: any, onRefresh?: () => void, onGoToListings?: () => void, onUpgrade?: () => void }) => {
   const [activeTab, setActiveTab] = useState('create')
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['whatsapp'])
 
@@ -30,13 +30,13 @@ const ShareLinkBuilder = ({ products = [], businessProfile, editListing, onRefre
         {/* Create Tab Content */}
         {activeTab === 'create' && (
           <div className="space-y-6">
-            {/* WYSIWYG Listing Builder - Full width */}
+            {/* Listing Builder - Full width */}
             <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
                 <Palette className="w-5 h-5 text-emerald-600" />
                 Listing Builder
               </h3>
-              <WYSIWYGCampaignBuilder 
+              <ListingBuilder 
                 products={products}
                 selectedPlatforms={selectedPlatforms}
                 businessProfile={businessProfile}
@@ -55,4 +55,4 @@ const ShareLinkBuilder = ({ products = [], businessProfile, editListing, onRefre
   )
 }
 
-export default ShareLinkBuilder
+export default ListingEditor

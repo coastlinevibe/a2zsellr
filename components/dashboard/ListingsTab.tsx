@@ -42,7 +42,7 @@ interface Listing {
   selected_products?: string[]
 }
 
-interface MarketingCampaignsTabProps {
+interface ListingsTabProps {
   onCreateNew: () => void
   onEditListing?: (listing: Listing) => void
   onDelete?: () => void
@@ -54,7 +54,7 @@ interface MarketingCampaignsTabProps {
   onRefresh?: () => void
 }
 
-export function MarketingCampaignsTab({ onCreateNew, onEditListing, onDelete, userTier = 'free', businessProfile, onRefresh }: MarketingCampaignsTabProps) {
+export function ListingsTab({ onCreateNew, onEditListing, onDelete, userTier = 'free', businessProfile, onRefresh }: ListingsTabProps) {
   const { user } = useAuth()
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)

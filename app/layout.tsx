@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   title: 'A2Z Sellr - South Africa\'s Leading Seller Platform',
   description: 'Discover quality businesses nationwide with A2Z Sellr. Mobile-first, award-winning design for South African sellers.',
   metadataBase: new URL('https://a2zsellr.life'),
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/favicon.png',
+  },
   openGraph: {
     title: 'A2Z Sellr - South Africa\'s Leading Seller Platform',
     description: 'Discover quality businesses nationwide with A2Z Sellr. Mobile-first, award-winning design for South African sellers.',
@@ -20,7 +24,7 @@ export const metadata: Metadata = {
     siteName: 'A2Z Sellr',
     images: [
       {
-        url: '/thumbnail.png',
+        url: 'https://a2zsellr.life/thumbnail.png',
         width: 1200,
         height: 630,
         alt: 'A2Z Business Directory',
@@ -33,7 +37,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'A2Z Sellr - South Africa\'s Leading Seller Platform',
     description: 'Discover quality businesses nationwide with A2Z Sellr. Mobile-first, award-winning design for South African sellers.',
-    images: ['/thumbnail.png'],
+    images: ['https://a2zsellr.life/thumbnail.png'],
   },
 }
 
@@ -45,7 +49,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Favicon will be automatically handled by Next.js from app/favicon.ico and app/icon.png */}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/favicon.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#10b981" />
       </head>
