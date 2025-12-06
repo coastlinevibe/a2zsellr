@@ -42,7 +42,7 @@ export function BannerTab({
   const { user } = useAuth()
   const router = useRouter()
   const [viewMode, setViewMode] = useState<'showcase' | 'upload' | 'manage'>('showcase')
-  const [images, setImages] = useState<GalleryImage[]>([])
+  const [images, setImages] = useState<BannerImage[]>([])
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
