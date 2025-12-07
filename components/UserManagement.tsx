@@ -10,7 +10,7 @@ interface User {
   display_name: string
   email: string
   subscription_tier: 'free' | 'premium' | 'business'
-  subscription_status: 'active' | 'cancelled' | 'expired' | 'trial'
+  subscription_status: 'active' | 'pending' | 'cancelled' | 'expired' | 'trial'
   is_admin: boolean
   verified_seller: boolean
   is_active: boolean
@@ -190,113 +190,242 @@ export function UserManagement() {
       
       // Delete all data for selected users in sequence (order matters due to foreign keys)
       // Delete child tables first (orders, order_items, etc.)
-      console.log('🗑️ Deleting selected users order items...')
-      const { error: orderItemsError } = await supabase
-        .from('order_items')
-        .delete()
-        .in('seller_id', selectedUserIds)
+      // Wrap each deletion in try-catch to handle missing tables/columns gracefully
+      
+      let orderItemsError = null
+      let ordersSellerError = null
+      let ordersBuyerError = null
+      let productsError = null
+      let listingsError = null
+      let galleryError = null
+      let analyticsError = null
+      let reviewsError = null
+      let campaignsError = null
+      let executionsError = null
+      let groupsError = null
+      let paymentsError = null
+      let eftError = null
+      let resetHistoryError = null
+      let referralsError = null
+      let referredError = null
+      let userTemplatesError = null
+      let analyticsEventsError = null
 
-      console.log('🗑️ Deleting selected users orders (as seller)...')
-      const { error: ordersSellerError } = await supabase
-        .from('orders')
-        .delete()
-        .in('seller_id', selectedUserIds)
+      // Try to delete order items (may fail if column doesn't exist)
+      try {
+        console.log('🗑️ Deleting selected users order items...')
+        const result = await supabase
+          .from('order_items')
+          .delete()
+          .in('seller_id', selectedUserIds)
+        orderItemsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete order items:', e)
+      }
 
-      console.log('🗑️ Deleting selected users orders (as buyer)...')
-      const { error: ordersBuyerError } = await supabase
-        .from('orders')
-        .delete()
-        .in('buyer_id', selectedUserIds)
+      // Try to delete orders as seller (may fail if column doesn't exist)
+      try {
+        console.log('🗑️ Deleting selected users orders (as seller)...')
+        const result = await supabase
+          .from('orders')
+          .delete()
+          .in('seller_id', selectedUserIds)
+        ordersSellerError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete orders as seller:', e)
+      }
 
-      console.log('🗑️ Deleting selected users profile products...')
-      const { error: productsError } = await supabase
-        .from('profile_products')
-        .delete()
-        .in('profile_id', selectedUserIds)
+      // Try to delete orders as buyer (may fail if column doesn't exist)
+      try {
+        console.log('🗑️ Deleting selected users orders (as buyer)...')
+        const result = await supabase
+          .from('orders')
+          .delete()
+          .in('buyer_id', selectedUserIds)
+        ordersBuyerError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete orders as buyer:', e)
+      }
 
-      console.log('🗑️ Deleting selected users profile listings...')
-      const { error: listingsError } = await supabase
-        .from('profile_listings')
-        .delete()
-        .in('profile_id', selectedUserIds)
+      // Delete products
+      try {
+        console.log('🗑️ Deleting selected users profile products...')
+        const result = await supabase
+          .from('profile_products')
+          .delete()
+          .in('profile_id', selectedUserIds)
+        productsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete products:', e)
+      }
 
-      console.log('🗑️ Deleting selected users profile gallery...')
-      const { error: galleryError } = await supabase
-        .from('profile_gallery')
-        .delete()
-        .in('profile_id', selectedUserIds)
+      // Delete listings
+      try {
+        console.log('🗑️ Deleting selected users profile listings...')
+        const result = await supabase
+          .from('profile_listings')
+          .delete()
+          .in('profile_id', selectedUserIds)
+        listingsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete listings:', e)
+      }
 
-      console.log('🗑️ Deleting selected users profile analytics...')
-      const { error: analyticsError } = await supabase
-        .from('profile_analytics')
-        .delete()
-        .in('profile_id', selectedUserIds)
+      // Delete gallery
+      try {
+        console.log('🗑️ Deleting selected users profile gallery...')
+        const result = await supabase
+          .from('profile_gallery')
+          .delete()
+          .in('profile_id', selectedUserIds)
+        galleryError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete gallery:', e)
+      }
 
-      console.log('🗑️ Deleting selected users profile reviews...')
-      const { error: reviewsError } = await supabase
-        .from('profile_reviews')
-        .delete()
-        .in('profile_id', selectedUserIds)
+      // Delete analytics
+      try {
+        console.log('🗑️ Deleting selected users profile analytics...')
+        const result = await supabase
+          .from('profile_analytics')
+          .delete()
+          .in('profile_id', selectedUserIds)
+        analyticsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete analytics:', e)
+      }
 
-      console.log('🗑️ Deleting selected users marketing campaigns...')
-      const { error: campaignsError } = await supabase
-        .from('marketing_campaigns')
-        .delete()
-        .in('profile_id', selectedUserIds)
+      // Delete reviews
+      try {
+        console.log('🗑️ Deleting selected users profile reviews...')
+        const result = await supabase
+          .from('profile_reviews')
+          .delete()
+          .in('profile_id', selectedUserIds)
+        reviewsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete reviews:', e)
+      }
 
-      console.log('🗑️ Deleting selected users campaign executions...')
-      const { error: executionsError } = await supabase
-        .from('campaign_executions')
-        .delete()
-        .in('profile_id', selectedUserIds)
+      // Try to delete marketing campaigns (table may not exist)
+      try {
+        console.log('🗑️ Deleting selected users marketing campaigns...')
+        const result = await supabase
+          .from('marketing_campaigns')
+          .delete()
+          .in('profile_id', selectedUserIds)
+        campaignsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete marketing campaigns (table may not exist):', e)
+      }
 
-      console.log('🗑️ Deleting selected users social media groups...')
-      const { error: groupsError } = await supabase
-        .from('social_media_groups')
-        .delete()
-        .in('profile_id', selectedUserIds)
+      // Try to delete campaign executions (table may not exist)
+      try {
+        console.log('🗑️ Deleting selected users campaign executions...')
+        const result = await supabase
+          .from('campaign_executions')
+          .delete()
+          .in('profile_id', selectedUserIds)
+        executionsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete campaign executions (table may not exist):', e)
+      }
 
-      console.log('🗑️ Deleting selected users payment transactions...')
-      const { error: paymentsError } = await supabase
-        .from('payment_transactions')
-        .delete()
-        .in('profile_id', selectedUserIds)
+      // Try to delete social media groups (table may not exist)
+      try {
+        console.log('🗑️ Deleting selected users social media groups...')
+        const result = await supabase
+          .from('social_media_groups')
+          .delete()
+          .in('profile_id', selectedUserIds)
+        groupsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete social media groups (table may not exist):', e)
+      }
 
-      console.log('🗑️ Deleting selected users EFT banking details...')
-      const { error: eftError } = await supabase
-        .from('eft_banking_details')
-        .delete()
-        .in('profile_id', selectedUserIds)
+      // Delete payment transactions
+      try {
+        console.log('🗑️ Deleting selected users payment transactions...')
+        const result = await supabase
+          .from('payment_transactions')
+          .delete()
+          .in('profile_id', selectedUserIds)
+        paymentsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete payment transactions:', e)
+      }
 
-      console.log('🗑️ Deleting selected users reset history...')
-      const { error: resetHistoryError } = await supabase
-        .from('reset_history')
-        .delete()
-        .in('profile_id', selectedUserIds)
+      // Try to delete EFT banking details (may fail if column doesn't exist)
+      try {
+        console.log('🗑️ Deleting selected users EFT banking details...')
+        const result = await supabase
+          .from('eft_banking_details')
+          .delete()
+          .in('profile_id', selectedUserIds)
+        eftError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete EFT banking details:', e)
+      }
 
-      console.log('🗑️ Deleting selected users referrals (as referrer)...')
-      const { error: referralsError } = await supabase
-        .from('referrals')
-        .delete()
-        .in('referrer_id', selectedUserIds)
+      // Delete reset history
+      try {
+        console.log('🗑️ Deleting selected users reset history...')
+        const result = await supabase
+          .from('reset_history')
+          .delete()
+          .in('profile_id', selectedUserIds)
+        resetHistoryError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete reset history:', e)
+      }
 
-      console.log('🗑️ Deleting selected users referrals (as referred)...')
-      const { error: referredError } = await supabase
-        .from('referrals')
-        .delete()
-        .in('referred_id', selectedUserIds)
+      // Try to delete referrals as referrer (may fail if column doesn't exist)
+      try {
+        console.log('🗑️ Deleting selected users referrals (as referrer)...')
+        const result = await supabase
+          .from('referrals')
+          .delete()
+          .in('referrer_id', selectedUserIds)
+        referralsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete referrals as referrer:', e)
+      }
 
-      console.log('🗑️ Deleting selected users user templates...')
-      const { error: userTemplatesError } = await supabase
-        .from('user_templates')
-        .delete()
-        .in('user_id', selectedUserIds)
+      // Try to delete referrals as referred (may fail if column doesn't exist)
+      try {
+        console.log('🗑️ Deleting selected users referrals (as referred)...')
+        const result = await supabase
+          .from('referrals')
+          .delete()
+          .in('referred_id', selectedUserIds)
+        referredError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete referrals as referred:', e)
+      }
 
-      console.log('🗑️ Deleting selected users analytics events...')
-      const { error: analyticsEventsError } = await supabase
-        .from('analytics_events')
-        .delete()
-        .in('profile_id', selectedUserIds)
+      // Try to delete user templates (table may not exist)
+      try {
+        console.log('🗑️ Deleting selected users user templates...')
+        const result = await supabase
+          .from('user_templates')
+          .delete()
+          .in('user_id', selectedUserIds)
+        userTemplatesError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete user templates (table may not exist):', e)
+      }
+
+      // Try to delete analytics events (table may not exist)
+      try {
+        console.log('🗑️ Deleting selected users analytics events...')
+        const result = await supabase
+          .from('analytics_events')
+          .delete()
+          .in('profile_id', selectedUserIds)
+        analyticsEventsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete analytics events (table may not exist):', e)
+      }
 
       // Delete selected user authentication via API
       console.log('🗑️ Deleting selected user authentication...')
@@ -573,116 +702,246 @@ export function UserManagement() {
       console.log(`📊 Items to delete: ${productsToDelete} products, ${listingsToDelete} listings, ${galleryToDelete} gallery, ${analyticsToDelete} analytics`)
 
       // Delete all user-related data in sequence (order matters due to foreign keys)
-      console.log('🗑️ Deleting user order items...')
-      const { error: orderItemsError } = await supabase
-        .from('order_items')
-        .delete()
-        .eq('seller_id', userId)
-
-      console.log('🗑️ Deleting user orders (as seller)...')
-      const { error: ordersSellerError } = await supabase
-        .from('orders')
-        .delete()
-        .eq('seller_id', userId)
-
-      console.log('🗑️ Deleting user orders (as buyer)...')
-      const { error: ordersBuyerError } = await supabase
-        .from('orders')
-        .delete()
-        .eq('buyer_id', userId)
-
-      console.log('🗑️ Deleting user products...')
-      const { error: productsError, data: deletedProducts } = await supabase
-        .from('profile_products')
-        .delete()
-        .eq('profile_id', userId)
-        .select()
+      // Wrap each deletion in try-catch to handle missing tables/columns gracefully
       
-      console.log(`🗑️ Products deletion result:`, { error: productsError, deletedCount: deletedProducts?.length || 0 })
+      let orderItemsError = null
+      let ordersSellerError = null
+      let ordersBuyerError = null
+      let productsError = null
+      let deletedProducts = null
+      let listingsError = null
+      let galleryError = null
+      let analyticsError = null
+      let reviewsError = null
+      let campaignsError = null
+      let executionsError = null
+      let groupsError = null
+      let paymentsError = null
+      let eftError = null
+      let resetHistoryError = null
+      let referralsError = null
+      let referredError = null
+      let userTemplatesError = null
+      let analyticsEventsError = null
 
-      console.log('🗑️ Deleting user listings...')
-      const { error: listingsError } = await supabase
-        .from('profile_listings')
-        .delete()
-        .eq('profile_id', userId)
+      // Try to delete order items (may fail if column doesn't exist)
+      try {
+        console.log('🗑️ Deleting user order items...')
+        const result = await supabase
+          .from('order_items')
+          .delete()
+          .eq('seller_id', userId)
+        orderItemsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete order items:', e)
+      }
 
-      console.log('🗑️ Deleting user gallery...')
-      const { error: galleryError } = await supabase
-        .from('profile_gallery')
-        .delete()
-        .eq('profile_id', userId)
+      // Try to delete orders as seller (may fail if column doesn't exist)
+      try {
+        console.log('🗑️ Deleting user orders (as seller)...')
+        const result = await supabase
+          .from('orders')
+          .delete()
+          .eq('seller_id', userId)
+        ordersSellerError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete orders as seller:', e)
+      }
 
-      console.log('🗑️ Deleting user analytics...')
-      const { error: analyticsError } = await supabase
-        .from('profile_analytics')
-        .delete()
-        .eq('profile_id', userId)
+      // Try to delete orders as buyer (may fail if column doesn't exist)
+      try {
+        console.log('🗑️ Deleting user orders (as buyer)...')
+        const result = await supabase
+          .from('orders')
+          .delete()
+          .eq('buyer_id', userId)
+        ordersBuyerError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete orders as buyer:', e)
+      }
 
-      console.log('🗑️ Deleting user reviews...')
-      const { error: reviewsError } = await supabase
-        .from('profile_reviews')
-        .delete()
-        .eq('profile_id', userId)
+      // Delete products
+      try {
+        console.log('🗑️ Deleting user products...')
+        const result = await supabase
+          .from('profile_products')
+          .delete()
+          .eq('profile_id', userId)
+          .select()
+        productsError = result.error
+        deletedProducts = result.data
+        console.log(`🗑️ Products deletion result:`, { error: productsError, deletedCount: deletedProducts?.length || 0 })
+      } catch (e) {
+        console.warn('⚠️ Could not delete products:', e)
+      }
 
-      console.log('🗑️ Deleting user marketing campaigns...')
-      const { error: campaignsError } = await supabase
-        .from('marketing_campaigns')
-        .delete()
-        .eq('profile_id', userId)
+      // Delete listings
+      try {
+        console.log('🗑️ Deleting user listings...')
+        const result = await supabase
+          .from('profile_listings')
+          .delete()
+          .eq('profile_id', userId)
+        listingsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete listings:', e)
+      }
 
-      console.log('🗑️ Deleting user campaign executions...')
-      const { error: executionsError } = await supabase
-        .from('campaign_executions')
-        .delete()
-        .eq('profile_id', userId)
+      // Delete gallery
+      try {
+        console.log('🗑️ Deleting user gallery...')
+        const result = await supabase
+          .from('profile_gallery')
+          .delete()
+          .eq('profile_id', userId)
+        galleryError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete gallery:', e)
+      }
 
-      console.log('🗑️ Deleting user social media groups...')
-      const { error: groupsError } = await supabase
-        .from('social_media_groups')
-        .delete()
-        .eq('profile_id', userId)
+      // Delete analytics
+      try {
+        console.log('🗑️ Deleting user analytics...')
+        const result = await supabase
+          .from('profile_analytics')
+          .delete()
+          .eq('profile_id', userId)
+        analyticsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete analytics:', e)
+      }
 
-      console.log('🗑️ Deleting payment transactions...')
-      const { error: paymentsError } = await supabase
-        .from('payment_transactions')
-        .delete()
-        .eq('profile_id', userId)
+      // Delete reviews
+      try {
+        console.log('🗑️ Deleting user reviews...')
+        const result = await supabase
+          .from('profile_reviews')
+          .delete()
+          .eq('profile_id', userId)
+        reviewsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete reviews:', e)
+      }
 
-      console.log('🗑️ Deleting EFT banking details...')
-      const { error: eftError } = await supabase
-        .from('eft_banking_details')
-        .delete()
-        .eq('profile_id', userId)
+      // Try to delete marketing campaigns (table may not exist)
+      try {
+        console.log('🗑️ Deleting user marketing campaigns...')
+        const result = await supabase
+          .from('marketing_campaigns')
+          .delete()
+          .eq('profile_id', userId)
+        campaignsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete marketing campaigns (table may not exist):', e)
+      }
 
-      console.log('🗑️ Deleting reset history...')
-      const { error: resetHistoryError } = await supabase
-        .from('reset_history')
-        .delete()
-        .eq('profile_id', userId)
+      // Try to delete campaign executions (table may not exist)
+      try {
+        console.log('🗑️ Deleting user campaign executions...')
+        const result = await supabase
+          .from('campaign_executions')
+          .delete()
+          .eq('profile_id', userId)
+        executionsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete campaign executions (table may not exist):', e)
+      }
 
-      console.log('🗑️ Deleting referrals (as referrer)...')
-      const { error: referralsError } = await supabase
-        .from('referrals')
-        .delete()
-        .eq('referrer_id', userId)
+      // Try to delete social media groups (table may not exist)
+      try {
+        console.log('🗑️ Deleting user social media groups...')
+        const result = await supabase
+          .from('social_media_groups')
+          .delete()
+          .eq('profile_id', userId)
+        groupsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete social media groups (table may not exist):', e)
+      }
 
-      console.log('🗑️ Deleting referrals (as referred)...')
-      const { error: referredError } = await supabase
-        .from('referrals')
-        .delete()
-        .eq('referred_id', userId)
+      // Delete payment transactions
+      try {
+        console.log('🗑️ Deleting payment transactions...')
+        const result = await supabase
+          .from('payment_transactions')
+          .delete()
+          .eq('profile_id', userId)
+        paymentsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete payment transactions:', e)
+      }
 
-      console.log('🗑️ Deleting user templates...')
-      const { error: userTemplatesError } = await supabase
-        .from('user_templates')
-        .delete()
-        .eq('user_id', userId)
+      // Try to delete EFT banking details (may fail if column doesn't exist)
+      try {
+        console.log('🗑️ Deleting EFT banking details...')
+        const result = await supabase
+          .from('eft_banking_details')
+          .delete()
+          .eq('profile_id', userId)
+        eftError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete EFT banking details:', e)
+      }
 
-      console.log('🗑️ Deleting analytics events...')
-      const { error: analyticsEventsError } = await supabase
-        .from('analytics_events')
-        .delete()
-        .eq('profile_id', userId)
+      // Delete reset history
+      try {
+        console.log('🗑️ Deleting reset history...')
+        const result = await supabase
+          .from('reset_history')
+          .delete()
+          .eq('profile_id', userId)
+        resetHistoryError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete reset history:', e)
+      }
+
+      // Try to delete referrals as referrer (may fail if column doesn't exist)
+      try {
+        console.log('🗑️ Deleting referrals (as referrer)...')
+        const result = await supabase
+          .from('referrals')
+          .delete()
+          .eq('referrer_id', userId)
+        referralsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete referrals as referrer:', e)
+      }
+
+      // Try to delete referrals as referred (may fail if column doesn't exist)
+      try {
+        console.log('🗑️ Deleting referrals (as referred)...')
+        const result = await supabase
+          .from('referrals')
+          .delete()
+          .eq('referred_id', userId)
+        referredError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete referrals as referred:', e)
+      }
+
+      // Try to delete user templates (table may not exist)
+      try {
+        console.log('🗑️ Deleting user templates...')
+        const result = await supabase
+          .from('user_templates')
+          .delete()
+          .eq('user_id', userId)
+        userTemplatesError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete user templates (table may not exist):', e)
+      }
+
+      // Try to delete analytics events (table may not exist)
+      try {
+        console.log('🗑️ Deleting analytics events...')
+        const result = await supabase
+          .from('analytics_events')
+          .delete()
+          .eq('profile_id', userId)
+        analyticsEventsError = result.error
+      } catch (e) {
+        console.warn('⚠️ Could not delete analytics events (table may not exist):', e)
+      }
 
 
 
@@ -1301,6 +1560,26 @@ export function UserManagement() {
               <div className="bg-blue-100 p-4 rounded-xl border-2 border-black">
                 <h4 className="font-black text-black mb-3 uppercase">SUBSCRIPTION MANAGEMENT</h4>
                 <div className="space-y-4">
+                  
+                  {/* Subscription Status Toggle */}
+                  <motion.button
+                    onClick={async () => {
+                      const newStatus = selectedUser.subscription_status === 'active' ? 'pending' : 'active'
+                      if (confirm(`Change ${selectedUser.display_name}'s subscription status from ${selectedUser.subscription_status} to ${newStatus}?`)) {
+                        await updateUserStatus(selectedUser.id, 'subscription_status', newStatus)
+                        setSelectedUser(prev => prev ? { ...prev, subscription_status: newStatus } : null)
+                      }
+                    }}
+                    className={`px-4 py-2 rounded-lg border-2 border-black font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.9)] ${
+                      selectedUser.subscription_status === 'active'
+                        ? 'bg-green-500 hover:bg-green-600 text-white'
+                        : 'bg-orange-500 hover:bg-orange-600 text-white'
+                    }`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {selectedUser.subscription_status === 'active' ? 'SET TO PENDING' : 'SET TO ACTIVE'}
+                  </motion.button>
                   
                   {/* General Tier Change */}
                   <motion.button

@@ -43,26 +43,6 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
 }) => {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [displayedMessage, setDisplayedMessage] = useState('')
-  const [messageComplete, setMessageComplete] = useState(false)
-
-  // Typewriter effect for description
-  useEffect(() => {
-    if (messageComplete) return
-    
-    let index = 0
-    const interval = setInterval(() => {
-      if (index < message.length) {
-        setDisplayedMessage(message.substring(0, index + 1))
-        index++
-      } else {
-        setMessageComplete(true)
-        clearInterval(interval)
-      }
-    }, 30) // Adjust speed here (lower = faster)
-
-    return () => clearInterval(interval)
-  }, [message, messageComplete])
 
   const openLightbox = (index: number) => {
     setCurrentImageIndex(index)
@@ -114,6 +94,19 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
           }
         }
 
+        @keyframes slideLeftBlur {
+          from {
+            opacity: 0;
+            filter: blur(10px);
+            transform: translateX(-30px);
+          }
+          to {
+            opacity: 1;
+            filter: blur(0);
+            transform: translateX(0);
+          }
+        }
+
         @keyframes letterByLetter {
           from {
             opacity: 0;
@@ -146,7 +139,7 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
         }
 
         .listing-description {
-          animation: slideUpBlur 0.8s ease-out 0.5s forwards;
+          animation: slideLeftBlur 0.8s ease-out 0.5s forwards;
           opacity: 0;
         }
 
@@ -207,7 +200,7 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
           <h3 className="font-bold text-gray-900 mb-2 text-lg md:text-xl lg:text-2xl listing-title">{title}</h3>
           <div 
             className="text-gray-700 text-sm md:text-base lg:text-lg leading-relaxed listing-description"
-            dangerouslySetInnerHTML={{ __html: displayedMessage }}
+            dangerouslySetInnerHTML={{ __html: message }}
           />
         </div>
 

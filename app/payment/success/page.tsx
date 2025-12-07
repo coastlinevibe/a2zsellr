@@ -34,19 +34,38 @@ export default function PaymentSuccessPage() {
 
       if (error) {
         console.error('Error fetching payment:', error)
+        // If no transaction found, try to activate anyway based on profile
+        console.log('No transaction found, checking profile status...')
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('subscription_tier, subscription_status')
+          .eq('id', user?.id)
+          .single()
+        
+        if (profile && profile.subscription_status === 'pending') {
+          console.log('Profile has pending status, activating...')
+          await supabase
+            .from('profiles')
+            .update({
+              subscription_status: 'active',
+              trial_end_date: null,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', user?.id)
+          console.log('✅ Profile activated')
+        }
       } else {
         setPaymentDetails(transaction)
         
-        // If this is a PayFast payment and it's still pending, try to activate it
+        // Always activate on success page for PayFast payments
         // This handles cases where PayFast webhook wasn't called (localhost, sandbox issues)
-        if (transaction.payment_method === 'payfast' && 
-            transaction.status === 'pending' && 
-            paymentMethod === 'payfast') {
+        if (transaction.payment_method === 'payfast' && paymentMethod === 'payfast') {
           
-          console.log('🔄 PayFast webhook failed, manually activating subscription...')
+          console.log('🔄 PayFast payment detected, ensuring subscription is active...')
+          console.log('Transaction status:', transaction.status)
           
           try {
-            // Direct profile update (bypassing the broken activate_subscription function)
+            // Direct profile update
             const { error: profileError } = await supabase
               .from('profiles')
               .update({
@@ -62,18 +81,20 @@ export default function PaymentSuccessPage() {
             } else {
               console.log('✅ Profile updated to', transaction.tier_requested)
               
-              // Update transaction status
-              await supabase
-                .from('payment_transactions')
-                .update({
-                  status: 'paid',
-                  payment_date: new Date().toISOString(),
-                  payfast_payment_id: 'SUCCESS_PAGE_' + Date.now(),
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', transaction.id)
-              
-              console.log('✅ Payment marked as paid')
+              // Update transaction status to paid if it's not already
+              if (transaction.status !== 'paid') {
+                await supabase
+                  .from('payment_transactions')
+                  .update({
+                    status: 'paid',
+                    payment_date: new Date().toISOString(),
+                    payfast_payment_id: transaction.payfast_payment_id || 'SUCCESS_PAGE_' + Date.now(),
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('id', transaction.id)
+                
+                console.log('✅ Payment marked as paid')
+              }
               
               // Refresh transaction data
               const { data: updatedTransaction } = await supabase

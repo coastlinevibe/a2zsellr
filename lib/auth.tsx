@@ -68,6 +68,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
           : null
 
+        // Set subscription_status based on plan:
+        // - Free tier: 'trial' (24-hour trial period)
+        // - Premium/business: 'pending' (waiting for payment)
+        const subscriptionStatus = selectedPlan === 'free' ? 'trial' : 'pending'
+        const isActive = selectedPlan === 'free' ? true : false
+
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert(
@@ -76,9 +82,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               display_name: displayName,
               email: email,
               subscription_tier: selectedPlan,
-              subscription_status: 'active',
+              subscription_status: subscriptionStatus,
               verified_seller: false,
-              is_active: true,
+              is_active: isActive,
               current_listings: 0,
               trial_end_date: trialEndDate,
               created_at: new Date().toISOString(),

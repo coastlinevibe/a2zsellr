@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Home } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { PaymentMethodModal } from '@/components/PaymentMethodModal'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -17,6 +18,9 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [resetLoading, setResetLoading] = useState(false)
   const [resetMessage, setResetMessage] = useState('')
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [userProfile, setUserProfile] = useState<any>(null)
+  const [selectedPlan, setSelectedPlan] = useState<'premium' | 'business'>('premium')
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,18 +39,36 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        // Check if user has completed onboarding
+        // Check user profile for onboarding status and subscription status
         const { data: profile } = await supabase
           .from('profiles')
-          .select('onboarding_completed')
+          .select('onboarding_completed, subscription_status, subscription_tier, display_name')
           .eq('id', data.user.id)
           .single()
 
-        // If onboarding not completed, go to onboarding, otherwise go to dashboard
-        if (profile && !profile.onboarding_completed) {
-          router.push('/onboarding')
-        } else {
-          router.push('/dashboard')
+        // If subscription is pending (premium/business tier without payment), show payment modal
+        if (profile && profile.subscription_status === 'pending' && profile.subscription_tier !== 'free') {
+          setUserProfile(profile)
+          setSelectedPlan(profile.subscription_tier as 'premium' | 'business')
+          setShowPaymentModal(true)
+          setLoading(false)
+          return
+        }
+        // If subscription is active, allow login
+        else if (profile && profile.subscription_status === 'active') {
+          // If onboarding not completed, go to onboarding
+          if (!profile.onboarding_completed) {
+            router.push('/onboarding')
+          } else {
+            router.push('/dashboard')
+          }
+        }
+        // For any other status, show payment modal
+        else {
+          setUserProfile(profile)
+          setShowPaymentModal(true)
+          setLoading(false)
+          return
         }
       }
     } catch (err) {
@@ -405,6 +427,24 @@ export default function LoginPage() {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Payment Modal */}
+      {showPaymentModal && userProfile && (
+        <PaymentMethodModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false)
+            setUserProfile(null)
+            router.push('/dashboard')
+          }}
+          onBack={() => {
+            setShowPaymentModal(false)
+            setUserProfile(null)
+          }}
+          selectedPlan={selectedPlan}
+          userProfile={userProfile}
+        />
+      )}
     </div>
   )
 }
