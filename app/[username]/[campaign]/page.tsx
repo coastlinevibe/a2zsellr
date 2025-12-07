@@ -531,9 +531,9 @@ export default function CampaignPage({ params }: CampaignPageProps) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
       
-    <div className="min-h-screen bg-white" style={{ animation: 'fadeIn 0.6s ease-out' }}>
+    <div className="min-h-screen bg-white" style={{ animation: 'fadeIn 0.6s ease-out forwards' }}>
       {/* Header with profile info */}
-      <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm" style={{ animation: 'slideInDown 0.6s ease-out' }}>
+      <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm" style={{ animation: 'slideInDown 0.6s ease-out forwards' }}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3" style={{ animation: 'slideInLeft 0.6s ease-out' }}>
@@ -571,7 +571,7 @@ export default function CampaignPage({ params }: CampaignPageProps) {
               </div>
               <div>
                 <h1 className="text-lg font-bold text-gray-900">{profile?.display_name}</h1>
-                <p className="text-xs text-emerald-600 font-medium">Broadcast • Showcase</p>
+                <p className="text-xs text-emerald-600 font-medium">{profile?.business_category || 'Business'}</p>
               </div>
             </div>
             <button

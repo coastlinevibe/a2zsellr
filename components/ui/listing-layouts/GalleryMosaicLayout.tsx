@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Image, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { ListingMeta } from './ListingMeta'
 
@@ -43,6 +43,26 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
 }) => {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [displayedMessage, setDisplayedMessage] = useState('')
+  const [messageComplete, setMessageComplete] = useState(false)
+
+  // Typewriter effect for description
+  useEffect(() => {
+    if (messageComplete) return
+    
+    let index = 0
+    const interval = setInterval(() => {
+      if (index < message.length) {
+        setDisplayedMessage(message.substring(0, index + 1))
+        index++
+      } else {
+        setMessageComplete(true)
+        clearInterval(interval)
+      }
+    }, 30) // Adjust speed here (lower = faster)
+
+    return () => clearInterval(interval)
+  }, [message, messageComplete])
 
   const openLightbox = (index: number) => {
     setCurrentImageIndex(index)
@@ -69,9 +89,81 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
 
   return (
     <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 w-full max-w-md md:max-w-2xl lg:max-w-5xl mx-auto overflow-visible">
+      <style>{`
+        @keyframes blurFadeIn {
+          from {
+            opacity: 0;
+            filter: blur(10px);
+          }
+          to {
+            opacity: 1;
+            filter: blur(0);
+          }
+        }
+
+        @keyframes slideUpBlur {
+          from {
+            opacity: 0;
+            filter: blur(10px);
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            filter: blur(0);
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes letterByLetter {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        .banner-image {
+          animation: blurFadeIn 0.8s ease-out forwards;
+        }
+
+        .profile-picture {
+          animation: blurFadeIn 0.8s ease-out forwards;
+        }
+
+        .business-name {
+          animation: letterByLetter 0.05s ease-out forwards;
+        }
+
+        .business-name-char {
+          display: inline-block;
+          animation: letterByLetter 0.1s ease-out forwards;
+        }
+
+        .listing-title {
+          animation: slideUpBlur 0.8s ease-out 0.3s forwards;
+          opacity: 0;
+        }
+
+        .listing-description {
+          animation: slideUpBlur 0.8s ease-out 0.5s forwards;
+          opacity: 0;
+        }
+
+        .gallery-item {
+          animation: blurFadeIn 0.6s ease-out forwards;
+        }
+
+        .gallery-item:nth-child(1) { animation-delay: 0.7s; }
+        .gallery-item:nth-child(2) { animation-delay: 0.8s; }
+        .gallery-item:nth-child(3) { animation-delay: 0.9s; }
+        .gallery-item:nth-child(4) { animation-delay: 1s; }
+        .gallery-item:nth-child(5) { animation-delay: 1.1s; }
+      `}</style>
+
       {/* Banner Image at Top */}
       {bannerImages && bannerImages.length > 0 && (
-        <div className="relative w-full h-48 md:h-64 overflow-hidden rounded-t-[9px]">
+        <div className="relative w-full h-48 md:h-64 overflow-hidden rounded-t-[9px] banner-image">
           <img 
             src={bannerImages[0].image_url} 
             alt="Business Banner" 
@@ -83,7 +175,7 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
       {/* Header with overlapping profile picture */}
       <div className="bg-green-50 border-b border-green-200 p-4 md:p-6 lg:p-8 relative">
         {/* Profile Picture - positioned 20% down from banner */}
-        <div className="absolute -top-4 md:-top-6 lg:-top-8 left-4 md:left-6 lg:left-8">
+        <div className="absolute -top-4 md:-top-6 lg:-top-8 left-4 md:left-6 lg:left-8 profile-picture">
           <div className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center text-white font-bold text-2xl md:text-3xl lg:text-4xl overflow-hidden border-4 border-white bg-emerald-600 shadow-lg">
             {avatarUrl ? (
               <img src={avatarUrl} alt={businessName} className="w-full h-full object-cover" />
@@ -94,9 +186,15 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
         </div>
         
         {/* Business Info - positioned to the right of avatar */}
-        <div className="absolute -top-6 md:-top-5 lg:-top-4 left-16 md:left-24 lg:left-32 flex flex-col justify-center h-16 md:h-20 lg:h-24">
-          <div className="font-semibold text-gray-900 text-base md:text-lg lg:text-xl">{businessName}</div>
-          <div className="text-xs md:text-sm text-gray-500">{businessCategory || 'Business'}</div>
+        <div className="absolute -top-6 md:-top-5 lg:-top-4 left-16 md:left-24 lg:left-32 flex flex-col justify-center h-16 md:h-20 lg:h-24 business-name">
+          <div className="font-semibold text-gray-900 text-base md:text-lg lg:text-xl">
+            {businessName.split('').map((char, i) => (
+              <span key={i} className="business-name-char" style={{ animationDelay: `${0.8 + i * 0.05}s` }}>
+                {char}
+              </span>
+            ))}
+          </div>
+          <div className="text-xs md:text-sm text-gray-500" style={{ animation: 'letterByLetter 0.3s ease-out 1.2s forwards', opacity: 0 }}>{businessCategory || 'Business'}</div>
         </div>
         
         <div className="mb-4 pt-8 md:pt-10 lg:pt-12">
@@ -106,10 +204,10 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
             deliveryAvailable={deliveryAvailable}
             className="mb-2"
           />
-          <h3 className="font-bold text-gray-900 mb-2 text-lg md:text-xl lg:text-2xl">{title}</h3>
+          <h3 className="font-bold text-gray-900 mb-2 text-lg md:text-xl lg:text-2xl listing-title">{title}</h3>
           <div 
-            className="text-gray-700 text-sm md:text-base lg:text-lg leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: message }}
+            className="text-gray-700 text-sm md:text-base lg:text-lg leading-relaxed listing-description"
+            dangerouslySetInnerHTML={{ __html: displayedMessage }}
           />
         </div>
 
@@ -126,7 +224,7 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
                 <div 
                   key={item.id}
                   onClick={() => item.url && openLightbox(index)}
-                  className={`relative bg-white rounded-lg overflow-hidden group cursor-pointer transition-transform hover:scale-105 ${
+                  className={`relative bg-white rounded-lg overflow-hidden group cursor-pointer transition-transform hover:scale-105 gallery-item ${
                     items.length === 3 && index === 0 ? 'row-span-2' : ''
                   }`}
                   style={{ 
