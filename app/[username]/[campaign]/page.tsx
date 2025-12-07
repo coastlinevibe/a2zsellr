@@ -80,6 +80,7 @@ interface Profile {
   bio: string | null
   phone_number: string | null
   subscription_tier?: string | null
+  business_category?: string | null
   global_video_url?: string
   global_video_type?: 'youtube' | 'upload'
   global_menu_images?: Array<{
@@ -102,6 +103,7 @@ export default function CampaignPage({ params }: CampaignPageProps) {
   const [listing, setListing] = useState<Listing | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [products, setProducts] = useState<Product[]>([])
+  const [bannerImages, setBannerImages] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [reviewSummary, setReviewSummary] = useState<{ average: number; count: number } | null>(null)
@@ -146,6 +148,7 @@ export default function CampaignPage({ params }: CampaignPageProps) {
       setListing(payload.listing)
       setProfile(payload.profile)
       setProducts(Array.isArray(payload.products) ? payload.products : [])
+      setBannerImages(Array.isArray(payload.bannerImages) ? payload.bannerImages : [])
       setReviewSummary(payload.reviewSummary ?? null)
     } catch (err: any) {
       console.error('Error fetching campaign:', err)
@@ -196,6 +199,9 @@ export default function CampaignPage({ params }: CampaignPageProps) {
       ctaLabel: listing.cta_label || 'Learn More',
       ctaUrl: listing.cta_url,
       businessName: profile.display_name,
+      businessCategory: profile.business_category,
+      avatarUrl: profile.avatar_url,
+      bannerImages: bannerImages,
       ratingAverage: reviewSummary && reviewSummary.count > 0 ? reviewSummary.average : null,
       ratingCount: reviewSummary?.count ?? 0,
       deliveryAvailable: Boolean(listing.delivery_available)

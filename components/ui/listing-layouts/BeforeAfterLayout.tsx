@@ -20,6 +20,8 @@ interface BeforeAfterLayoutProps {
   ctaUrl: string
   businessName: string
   businessCategory?: string | null
+  avatarUrl?: string | null
+  bannerImages?: Array<{ id: string; image_url: string; caption?: string }>
   ratingAverage?: number | null
   ratingCount?: number
   deliveryAvailable?: boolean
@@ -33,6 +35,8 @@ export const BeforeAfterLayout: React.FC<BeforeAfterLayoutProps> = ({
   ctaUrl,
   businessName,
   businessCategory,
+  avatarUrl,
+  bannerImages,
   ratingAverage,
   ratingCount,
   deliveryAvailable
@@ -62,14 +66,29 @@ export const BeforeAfterLayout: React.FC<BeforeAfterLayoutProps> = ({
       {/* Header */}
       <div className="bg-green-50 border-b border-green-200 p-4 md:p-6 lg:p-8">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl">
-            {businessName.charAt(0).toUpperCase()}
+          <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl overflow-hidden border-2 border-emerald-500 bg-emerald-600">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={businessName} className="w-full h-full object-cover" />
+            ) : (
+              businessName.charAt(0).toUpperCase()
+            )}
           </div>
           <div>
             <div className="font-semibold text-gray-900 text-base md:text-lg lg:text-xl">{businessName}</div>
-            <div className="text-xs md:text-sm text-emerald-700">Broadcast • before & after</div>
+            <div className="text-xs md:text-sm text-gray-500">{businessCategory || 'Business'}</div>
           </div>
         </div>
+        
+        {/* Banner Images */}
+        {bannerImages && bannerImages.length > 0 && (
+          <div className="mb-4 rounded-[9px] overflow-hidden">
+            <img 
+              src={bannerImages[0].image_url} 
+              alt="Business Banner" 
+              className="w-full h-48 md:h-64 object-cover"
+            />
+          </div>
+        )}
         
         <div className="mb-4">
           <ListingMeta

@@ -20,6 +20,7 @@ interface VideoSpotlightLayoutProps {
   ctaUrl: string
   businessName: string
   businessCategory?: string | null
+  avatarUrl?: string | null
   ratingAverage?: number | null
   ratingCount?: number
   deliveryAvailable?: boolean
@@ -33,6 +34,7 @@ export const VideoSpotlightLayout: React.FC<VideoSpotlightLayoutProps> = ({
   ctaUrl,
   businessName,
   businessCategory,
+  avatarUrl,
   ratingAverage,
   ratingCount,
   deliveryAvailable
@@ -48,12 +50,16 @@ export const VideoSpotlightLayout: React.FC<VideoSpotlightLayoutProps> = ({
       {/* Header */}
       <div className="bg-green-50 border-b border-green-200 p-4 md:p-6 lg:p-8">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl">
-            {businessName.charAt(0).toUpperCase()}
+          <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl overflow-hidden border-2 border-emerald-500 bg-emerald-600">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={businessName} className="w-full h-full object-cover" />
+            ) : (
+              businessName.charAt(0).toUpperCase()
+            )}
           </div>
           <div>
-            <div className="font-semibold text-emerald-900 text-base md:text-lg lg:text-xl">{businessName}</div>
-            <div className="text-xs md:text-sm text-emerald-700">Broadcast • video spotlight</div>
+            <div className="font-semibold text-gray-900 text-base md:text-lg lg:text-xl">{businessName}</div>
+            <div className="text-xs md:text-sm text-gray-500">{businessCategory || 'Business'}</div>
           </div>
         </div>
         

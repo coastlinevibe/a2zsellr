@@ -20,6 +20,8 @@ interface GalleryMosaicLayoutProps {
   ctaUrl: string
   businessName: string
   businessCategory?: string | null
+  avatarUrl?: string | null
+  bannerImages?: Array<{ id: string; image_url: string; caption?: string }>
   ratingAverage?: number | null
   ratingCount?: number
   deliveryAvailable?: boolean
@@ -33,6 +35,8 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
   ctaUrl,
   businessName,
   businessCategory,
+  avatarUrl,
+  bannerImages,
   ratingAverage,
   ratingCount,
   deliveryAvailable
@@ -64,20 +68,38 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 w-full max-w-md md:max-w-2xl lg:max-w-5xl mx-auto overflow-hidden">
-      {/* Header */}
-      <div className="bg-green-50 border-b border-green-200 p-4 md:p-6 lg:p-8">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl">
-            {businessName.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <div className="font-semibold text-gray-900 text-base md:text-lg lg:text-xl">{businessName}</div>
-            <div className="text-xs md:text-sm text-gray-500">Broadcast • Showcase</div>
+    <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 w-full max-w-md md:max-w-2xl lg:max-w-5xl mx-auto overflow-visible">
+      {/* Banner Image at Top */}
+      {bannerImages && bannerImages.length > 0 && (
+        <div className="relative w-full h-48 md:h-64 overflow-hidden rounded-t-[9px]">
+          <img 
+            src={bannerImages[0].image_url} 
+            alt="Business Banner" 
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+      
+      {/* Header with overlapping profile picture */}
+      <div className="bg-green-50 border-b border-green-200 p-4 md:p-6 lg:p-8 relative">
+        {/* Profile Picture - positioned 20% down from banner */}
+        <div className="absolute -top-4 md:-top-6 lg:-top-8 left-4 md:left-6 lg:left-8">
+          <div className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center text-white font-bold text-2xl md:text-3xl lg:text-4xl overflow-hidden border-4 border-white bg-emerald-600 shadow-lg">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={businessName} className="w-full h-full object-cover" />
+            ) : (
+              businessName.charAt(0).toUpperCase()
+            )}
           </div>
         </div>
         
-        <div className="mb-4">
+        {/* Business Info - positioned to the right of avatar */}
+        <div className="absolute -top-6 md:-top-5 lg:-top-4 left-16 md:left-24 lg:left-32 flex flex-col justify-center h-16 md:h-20 lg:h-24">
+          <div className="font-semibold text-gray-900 text-base md:text-lg lg:text-xl">{businessName}</div>
+          <div className="text-xs md:text-sm text-gray-500">{businessCategory || 'Business'}</div>
+        </div>
+        
+        <div className="mb-4 pt-8 md:pt-10 lg:pt-12">
           <ListingMeta
             ratingAverage={ratingAverage}
             ratingCount={ratingCount}

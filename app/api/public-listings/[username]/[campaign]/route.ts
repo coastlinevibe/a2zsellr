@@ -65,7 +65,7 @@ export async function GET(
     const { data: allProfiles, error: profilesError } = await adminClient
       .from('profiles')
       .select(`
-        id, display_name, avatar_url, bio, phone_number, subscription_tier,
+        id, display_name, avatar_url, bio, phone_number, subscription_tier, business_category,
         global_video_url, global_video_type, global_menu_images
       `)
       .limit(1000)
@@ -153,7 +153,18 @@ export async function GET(
       reviewSummary = { average: 0, count: 0 }
     }
 
-    return NextResponse.json({ listing, profile, products, reviewSummary })
+    // Fetch profile banner images
+    let bannerImages: any[] = []
+    const { data: galleryData } = await adminClient
+      .from('profile_gallery')
+      .select('id, image_url, caption')
+      .eq('profile_id', profile.id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+
+    bannerImages = galleryData || []
+
+    return NextResponse.json({ listing, profile, products, reviewSummary, bannerImages })
   } catch (error) {
     console.error('Unexpected error loading public listing:', error)
     return NextResponse.json(
