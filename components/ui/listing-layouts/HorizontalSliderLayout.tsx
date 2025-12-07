@@ -22,6 +22,7 @@ interface HorizontalSliderLayoutProps {
   ratingAverage?: number | null
   ratingCount?: number
   deliveryAvailable?: boolean
+  whatsappInviteLink?: string | null
 }
 
 export const HorizontalSliderLayout: React.FC<HorizontalSliderLayoutProps> = ({
@@ -33,12 +34,21 @@ export const HorizontalSliderLayout: React.FC<HorizontalSliderLayoutProps> = ({
   businessName,
   ratingAverage,
   ratingCount,
-  deliveryAvailable
+  deliveryAvailable,
+  whatsappInviteLink
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [showAnimations, setShowAnimations] = useState(false)
+
+  // Start animations after lightbox is closed
+  React.useEffect(() => {
+    if (!lightboxOpen) {
+      setShowAnimations(true)
+    }
+  }, [lightboxOpen])
 
   const openLightbox = (index: number) => {
     setCurrentImageIndex(index)
@@ -92,16 +102,107 @@ export const HorizontalSliderLayout: React.FC<HorizontalSliderLayoutProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 w-full max-w-md md:max-w-2xl lg:max-w-5xl mx-auto overflow-hidden">
+    <div className="bg-white rounded-[9px] shadow-sm border border-gray-200 w-full max-w-md md:max-w-2xl lg:max-w-5xl mx-auto overflow-visible">
+      <style>{`
+        @keyframes blurFadeIn {
+          from {
+            opacity: 0;
+            filter: blur(10px);
+          }
+          to {
+            opacity: 1;
+            filter: blur(0);
+          }
+        }
+
+        @keyframes slideUpBlur {
+          from {
+            opacity: 0;
+            filter: blur(10px);
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            filter: blur(0);
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slideLeftBlur {
+          from {
+            opacity: 0;
+            filter: blur(10px);
+            transform: translateX(-30px);
+          }
+          to {
+            opacity: 1;
+            filter: blur(0);
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes letterByLetter {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        .banner-image {
+          animation: blurFadeIn 0.8s ease-out forwards;
+        }
+
+        .profile-picture {
+          animation: blurFadeIn 0.8s ease-out forwards;
+        }
+
+        .business-name {
+          animation: letterByLetter 0.05s ease-out forwards;
+        }
+
+        .business-name-char {
+          display: inline-block;
+          animation: letterByLetter 0.1s ease-out forwards;
+        }
+
+        .listing-title {
+          animation: slideUpBlur 0.8s ease-out 0.3s forwards;
+          opacity: 0;
+        }
+
+        .listing-description {
+          animation: slideLeftBlur 0.8s ease-out 0.5s forwards;
+          opacity: 0;
+        }
+
+        .banner-image.hidden-animation,
+        .profile-picture.hidden-animation,
+        .business-name.hidden-animation,
+        .business-name-char.hidden-animation,
+        .listing-title.hidden-animation,
+        .listing-description.hidden-animation {
+          animation: none !important;
+          opacity: 1 !important;
+        }
+      `}</style>
+
       {/* Header */}
-      <div className="bg-green-50 border-b border-green-200 p-4 md:p-6 lg:p-8">
+      <div className="bg-green-50 border-b border-green-200 p-4 md:p-6 lg:p-8 relative">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl">
+          <div className={`w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl profile-picture ${!showAnimations ? 'hidden-animation' : ''}`}>
             {businessName.charAt(0).toUpperCase()}
           </div>
-          <div>
-            <div className="font-semibold text-emerald-900 text-base md:text-lg lg:text-xl">{businessName}</div>
-            <div className="text-xs md:text-sm text-emerald-700">Broadcast • horizontal slider</div>
+          <div className={`business-name ${!showAnimations ? 'hidden-animation' : ''}`}>
+            <div className="font-semibold text-emerald-900 text-base md:text-lg lg:text-xl">
+              {businessName.split('').map((char, i) => (
+                <span key={i} className={`business-name-char ${!showAnimations ? 'hidden-animation' : ''}`} style={{ animationDelay: `${0.8 + i * 0.05}s` }}>
+                  {char}
+                </span>
+              ))}
+            </div>
+            <div className="text-xs md:text-sm text-emerald-700" style={{ animation: 'letterByLetter 0.3s ease-out 1.2s forwards', opacity: 0 }}>Broadcast • horizontal slider</div>
           </div>
         </div>
         
@@ -112,9 +213,9 @@ export const HorizontalSliderLayout: React.FC<HorizontalSliderLayoutProps> = ({
             deliveryAvailable={deliveryAvailable}
             className="mb-2"
           />
-          <h3 className="font-bold text-emerald-900 mb-2 text-lg md:text-xl lg:text-2xl">{title}</h3>
+          <h3 className={`font-bold text-emerald-900 mb-2 text-lg md:text-xl lg:text-2xl listing-title ${!showAnimations ? 'hidden-animation' : ''}`}>{title}</h3>
           <div 
-            className="text-emerald-700 text-sm md:text-base lg:text-lg leading-relaxed"
+            className={`text-emerald-700 text-sm md:text-base lg:text-lg leading-relaxed listing-description ${!showAnimations ? 'hidden-animation' : ''}`}
             dangerouslySetInnerHTML={{ __html: message }}
           />
         </div>
@@ -270,6 +371,23 @@ export const HorizontalSliderLayout: React.FC<HorizontalSliderLayoutProps> = ({
             </div>
           )}
         </div>
+
+        {/* WhatsApp Invite Link */}
+        {whatsappInviteLink && (
+          <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-[9px]">
+            <a 
+              href={whatsappInviteLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 text-green-700 hover:text-green-800 font-medium text-sm md:text-base transition-colors"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-4.255.949c-1.238.503-2.335 1.236-3.356 2.259-1.02 1.02-1.756 2.119-2.259 3.357-.504 1.238-.749 2.565-.949 4.255-.2 1.69-.2 3.38 0 5.07.2 1.69.445 2.965.949 4.203 1.02 2.04 2.56 3.58 4.6 4.6 1.238.504 2.515.749 4.205.949 1.69.2 3.38.2 5.07 0 1.69-.2 2.965-.445 4.203-.949 2.04-1.02 3.58-2.56 4.6-4.6.504-1.238.749-2.515.949-4.205.2-1.69.2-3.38 0-5.07-.2-1.69-.445-2.965-.949-4.203-1.02-2.04-2.56-3.58-4.6-4.6-1.238-.504-2.515-.749-4.205-.949-1.69-.2-3.38-.2-5.07 0z"/>
+              </svg>
+              Join WhatsApp Group
+            </a>
+          </div>
+        )}
 
         {/* CTA Button */}
         <div className="flex items-center justify-center">

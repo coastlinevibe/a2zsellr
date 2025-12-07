@@ -86,6 +86,7 @@ const ListingBuilder = ({ products, selectedPlatforms, businessProfile, editList
   const [selectedLayout, setSelectedLayout] = useState(editListing?.layout_type || 'gallery-mosaic')
   const [messageTemplate, setMessageTemplate] = useState(editListing?.message_template || 'Hey there! We just launched new services tailored for you. Tap to explore what\'s hot this week.')
   const [ctaLabel, setCtaLabel] = useState(editListing?.cta_label || 'View Offers')
+  const [whatsappInviteLink, setWhatsappInviteLink] = useState(editListing?.whatsapp_invite_link || '')
   const [scheduleDate, setScheduleDate] = useState(() => {
     if (editListing?.scheduled_for) {
       const date = new Date(editListing.scheduled_for)
@@ -688,6 +689,7 @@ const ListingBuilder = ({ products, selectedPlatforms, businessProfile, editList
       target_platforms: selectedPlatforms,
       cta_label: ctaLabel.trim() || 'Learn More',
       cta_url: ctaUrl,
+      whatsapp_invite_link: whatsappInviteLink.trim() || null,
       scheduled_for: scheduleDate ? new Date(scheduleDate).toISOString() : null,
       status: scheduleDate ? 'scheduled' : 'active',
       uploaded_media: uploadedMedia.map(m => ({
@@ -935,7 +937,8 @@ const ListingBuilder = ({ products, selectedPlatforms, businessProfile, editList
       businessCategory: businessProfile?.business_category ?? null,
       ratingAverage: businessProfile?.average_rating ?? null,
       ratingCount: businessProfile?.review_count ?? 0,
-      deliveryAvailable
+      deliveryAvailable,
+      whatsappInviteLink: whatsappInviteLink || null
     }
 
     switch (selectedLayout) {
@@ -1674,6 +1677,17 @@ const ListingBuilder = ({ products, selectedPlatforms, businessProfile, editList
                 {ctaUrl ? ctaUrl : 'https://example.com'}
               </div>
               <p className="text-xs text-blue-200 mt-1">✨ URL automatically generated from business name + listing title</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-blue-100 mb-2">WhatsApp Group Invite Link (optional)</label>
+              <input
+                type="url"
+                value={whatsappInviteLink}
+                onChange={(e) => setWhatsappInviteLink(e.target.value)}
+                className="w-full p-3 bg-blue-500 border border-blue-400 rounded-[9px] text-white placeholder-blue-200 focus:ring-2 focus:ring-blue-300 focus:border-blue-300"
+                placeholder="e.g., https://chat.whatsapp.com/..."
+              />
+              <p className="text-xs text-blue-200 mt-1">💬 Add a WhatsApp group invite link to let customers join your group directly from the listing</p>
             </div>
           </div>
 

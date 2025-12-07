@@ -1,4 +1,4 @@
- 'use client'
+﻿ 'use client'
 
 import { useState, useEffect } from 'react'
 import { MessageSquare, Send, History, Settings, ArrowLeft, Plus, CheckCircle2, Users, Phone, QrCode, Loader2 } from 'lucide-react'
@@ -663,6 +663,7 @@ export default function WhatsAppPage() {
       let pollAttempts = 0
       const maxAttempts = 30 // 30 attempts max
       let pollDelay = 2000 // Start with 2 seconds
+      let allContacts: any[] = []
 
       while (!contactsLoaded && pollAttempts < maxAttempts) {
         try {
@@ -677,6 +678,7 @@ export default function WhatsAppPage() {
           console.log(`📱 Contacts response (attempt ${pollAttempts}):`, contactsData)
           
           if (contactsData.contacts && contactsData.contacts.length > 0) {
+            allContacts = contactsData.contacts
             setWhatsappContacts(contactsData.contacts)
             contactsLoaded = true
             console.log(`✅ Contacts loaded after ${pollAttempts} attempts:`, contactsData.contacts.length)
@@ -707,6 +709,52 @@ export default function WhatsAppPage() {
       }
 
       setLoadingContacts(false)
+
+      // Save groups to Supabase after loading both groups and contacts
+      if (groupsList.length > 0 && allContacts.length > 0 && user?.id) {
+        console.log(`💾 Saving ${groupsList.length} groups to Supabase...`)
+        try {
+          let savedCount = 0
+          for (const group of groupsList) {
+            // Get members for this group from contacts
+            const groupMembers = allContacts.filter((contact: any) => 
+              contact.groups && contact.groups.includes(group.name)
+            )
+
+            console.log(`Group "${group.name}" has ${groupMembers.length} members`)
+
+            const saveResponse = await fetch('/api/whatsapp/save-group-members', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: user.id,
+                groupId: group.id,
+                groupName: group.name,
+                members: groupMembers.map((member: any) => ({
+                  id: member.id,
+                  name: member.name || member.pushname || 'Unknown',
+                  phone: member.number || member.phone,
+                  isAdmin: member.isAdmin || false
+                }))
+              })
+            })
+
+            if (saveResponse.ok) {
+              const result = await saveResponse.json()
+              console.log(`Saved group: ${group.name} - ${result.memberCount} members`)
+              savedCount++
+            } else {
+              const errorText = await saveResponse.text()
+              console.error(`Failed to save group ${group.name}:`, errorText)
+            }
+          }
+          console.log(`Successfully saved ${savedCount}/${groupsList.length} groups to Supabase!`)
+        } catch (error) {
+          console.error('Error saving groups to Supabase:', error)
+        }
+      } else {
+        console.log(`⚠️ Skipping Supabase save: groups=${groupsList.length}, contacts=${allContacts.length}, userId=${user?.id}`)
+      }
     } catch (error) {
       console.error('Error loading groups and contacts:', error)
       setLoadingContacts(false)
