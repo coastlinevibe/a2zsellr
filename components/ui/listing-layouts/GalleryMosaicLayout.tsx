@@ -295,6 +295,13 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
               href={whatsappInviteLink}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={(e) => {
+                // Ensure the link opens in a new tab
+                if (!whatsappInviteLink.startsWith('http')) {
+                  e.preventDefault()
+                  window.open(`https://${whatsappInviteLink}`, '_blank')
+                }
+              }}
               className="flex items-center justify-center gap-2 text-green-700 hover:text-green-800 font-medium text-sm md:text-base transition-colors"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -318,7 +325,7 @@ export const GalleryMosaicLayout: React.FC<GalleryMosaicLayoutProps> = ({
         </div>
         
         <div className="text-xs text-emerald-600 text-center mt-2 truncate">
-          {ctaUrl}
+          {ctaUrl ? new URL(ctaUrl).hostname : ''}
         </div>
       </div>
 

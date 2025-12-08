@@ -681,7 +681,15 @@ const ListingBuilder = ({ products, selectedPlatforms, businessProfile, editList
 
   // Prepare campaign data for saving
   const prepareCampaignData = () => {
-    return {
+    // Ensure WhatsApp link is a full URL (not relative)
+    let whatsappLink = whatsappInviteLink.trim()
+    if (whatsappLink && !whatsappLink.startsWith('http://') && !whatsappLink.startsWith('https://')) {
+      // If it doesn't start with http, assume it's a relative path and don't save it
+      console.warn('⚠️ WhatsApp link must be a full URL starting with http:// or https://')
+      whatsappLink = null
+    }
+    
+    const campaignData = {
       profile_id: businessProfile.id,
       title: campaignTitle.trim(),
       layout_type: selectedLayout,
@@ -689,7 +697,7 @@ const ListingBuilder = ({ products, selectedPlatforms, businessProfile, editList
       target_platforms: selectedPlatforms,
       cta_label: ctaLabel.trim() || 'Learn More',
       cta_url: ctaUrl,
-      whatsapp_invite_link: whatsappInviteLink.trim() || null,
+      whatsapp_invite_link: whatsappLink || null,
       scheduled_for: scheduleDate ? new Date(scheduleDate).toISOString() : null,
       status: scheduleDate ? 'scheduled' : 'active',
       uploaded_media: uploadedMedia.map(m => ({
@@ -711,11 +719,32 @@ const ListingBuilder = ({ products, selectedPlatforms, businessProfile, editList
       enable_message_consent: enableMessageConsent,
       is_template: saveAsTemplate
     }
+    
+    // Debug: Log the exact data being saved
+    console.log('📊 CAMPAIGN DATA BEING SAVED:', {
+      title: campaignData.title,
+      whatsapp_invite_link: campaignData.whatsapp_invite_link,
+      whatsappInviteLink_state: whatsappInviteLink,
+      campaignTitle_state: campaignTitle,
+      isFullUrl: whatsappLink ? whatsappLink.startsWith('http') : 'N/A'
+    })
+    
+    return campaignData
   }
 
   // Actually save the listing to database
   const performSave = async (campaignData: any) => {
     try {
+      // CRITICAL VALIDATION: Ensure WhatsApp link is not in title field
+      if (campaignData.title && campaignData.title.includes('chat.whatsapp.com')) {
+        console.error('❌ CRITICAL ERROR: WhatsApp link detected in title field!')
+        showError(
+          'Data validation error',
+          'WhatsApp link was detected in the title field. This should not happen. Please contact support.'
+        )
+        return
+      }
+      
       console.log('Saving listing with:', {
         title: campaignData.title,
         layout_type: campaignData.layout_type,
@@ -726,17 +755,19 @@ const ListingBuilder = ({ products, selectedPlatforms, businessProfile, editList
         selectedTemplate: selectedTemplate,
         isEditing: !!editListing,
         is_template: campaignData.is_template,
-        saveAsTemplate: saveAsTemplate
+        saveAsTemplate: saveAsTemplate,
+        whatsapp_invite_link: campaignData.whatsapp_invite_link
       })
 
       if (editListing) {
         // Update existing listing
+        console.log('🔄 UPDATING listing with data:', campaignData)
         const { data: listing, error: listingError } = await supabase
           .from('profile_listings')
           .update(campaignData)
           .eq('id', editListing.id)
           .eq('profile_id', businessProfile.id)
-          .select('id, title, selected_products, uploaded_media')
+          .select('id, title, selected_products, uploaded_media, whatsapp_invite_link')
           .single()
 
         if (listingError) {
@@ -744,7 +775,11 @@ const ListingBuilder = ({ products, selectedPlatforms, businessProfile, editList
           throw new Error(`Failed to update listing: ${listingError.message}`)
         }
 
-        console.log('Listing updated successfully:', listing)
+        console.log('✅ Listing updated successfully:', listing)
+        console.log('📊 Saved data verification:', {
+          title: listing?.title,
+          whatsapp_invite_link: listing?.whatsapp_invite_link
+        })
         
         showSuccess(
           `Listing "${campaignTitle}" updated successfully!`,
@@ -756,10 +791,11 @@ const ListingBuilder = ({ products, selectedPlatforms, businessProfile, editList
         }
       } else {
         // Create new listing
+        console.log('➕ CREATING new listing with data:', campaignData)
         const { data: listing, error: listingError } = await supabase
           .from('profile_listings')
           .insert(campaignData)
-          .select('id, title, selected_products, uploaded_media')
+          .select('id, title, selected_products, uploaded_media, whatsapp_invite_link')
           .single()
 
         if (listingError) {
@@ -767,7 +803,11 @@ const ListingBuilder = ({ products, selectedPlatforms, businessProfile, editList
           throw new Error(`Failed to save listing: ${listingError.message}`)
         }
 
-        console.log('Listing saved successfully:', listing)
+        console.log('✅ Listing saved successfully:', listing)
+        console.log('📊 Saved data verification:', {
+          title: listing?.title,
+          whatsapp_invite_link: listing?.whatsapp_invite_link
+        })
         
         if (saveAsTemplate) {
           showSuccess(
@@ -1734,6 +1774,16 @@ const ListingBuilder = ({ products, selectedPlatforms, businessProfile, editList
               />
             </div>
           )}
+
+          {/* Debug Info - Show what will be saved */}
+          <div className="bg-blue-500/40 border border-blue-300 rounded-[9px] p-3 mb-4">
+            <p className="text-xs font-bold text-blue-100 mb-2">📋 Data to be saved:</p>
+            <div className="text-xs text-blue-200 space-y-1 font-mono">
+              <div>Title: <span className="text-white">{campaignTitle || '(empty)'}</span></div>
+              <div>WhatsApp Link: <span className="text-white">{whatsappInviteLink || '(empty)'}</span></div>
+              <div>Layout: <span className="text-white">{selectedLayout}</span></div>
+            </div>
+          </div>
 
           {/* Action Buttons */}
           <div className="flex items-center gap-3 pt-4">

@@ -19,6 +19,9 @@ interface HorizontalSliderLayoutProps {
   ctaLabel: string
   ctaUrl: string
   businessName: string
+  businessCategory?: string | null
+  avatarUrl?: string | null
+  bannerImages?: Array<{ id: string; image_url: string; caption?: string }>
   ratingAverage?: number | null
   ratingCount?: number
   deliveryAvailable?: boolean
@@ -32,6 +35,9 @@ export const HorizontalSliderLayout: React.FC<HorizontalSliderLayoutProps> = ({
   ctaLabel,
   ctaUrl,
   businessName,
+  businessCategory,
+  avatarUrl,
+  bannerImages,
   ratingAverage,
   ratingCount,
   deliveryAvailable,
@@ -188,25 +194,43 @@ export const HorizontalSliderLayout: React.FC<HorizontalSliderLayoutProps> = ({
         }
       `}</style>
 
-      {/* Header */}
+      {/* Banner Image at Top */}
+      {bannerImages && bannerImages.length > 0 && (
+        <div className={`relative w-full h-48 md:h-64 overflow-hidden rounded-t-[9px] banner-image ${!showAnimations ? 'hidden-animation' : ''}`}>
+          <img 
+            src={bannerImages[0].image_url} 
+            alt="Business Banner" 
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
+      {/* Header with overlapping profile picture */}
       <div className="bg-green-50 border-b border-green-200 p-4 md:p-6 lg:p-8 relative">
-        <div className="flex items-center gap-3 mb-3">
-          <div className={`w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg md:text-xl lg:text-2xl profile-picture ${!showAnimations ? 'hidden-animation' : ''}`}>
-            {businessName.charAt(0).toUpperCase()}
-          </div>
-          <div className={`business-name ${!showAnimations ? 'hidden-animation' : ''}`}>
-            <div className="font-semibold text-emerald-900 text-base md:text-lg lg:text-xl">
-              {businessName.split('').map((char, i) => (
-                <span key={i} className={`business-name-char ${!showAnimations ? 'hidden-animation' : ''}`} style={{ animationDelay: `${0.8 + i * 0.05}s` }}>
-                  {char}
-                </span>
-              ))}
-            </div>
-            <div className="text-xs md:text-sm text-emerald-700" style={{ animation: 'letterByLetter 0.3s ease-out 1.2s forwards', opacity: 0 }}>Broadcast • horizontal slider</div>
+        {/* Profile Picture - positioned overlapping */}
+        <div className={`absolute -top-4 md:-top-6 lg:-top-8 left-4 md:left-6 lg:left-8 profile-picture ${!showAnimations ? 'hidden-animation' : ''}`}>
+          <div className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center text-white font-bold text-2xl md:text-3xl lg:text-4xl overflow-hidden border-4 border-white bg-emerald-600 shadow-lg">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={businessName} className="w-full h-full object-cover" />
+            ) : (
+              businessName.charAt(0).toUpperCase()
+            )}
           </div>
         </div>
         
-        <div className="mb-4">
+        {/* Business Info - positioned to the right of avatar */}
+        <div className={`absolute -top-6 md:-top-5 lg:-top-4 left-16 md:left-24 lg:left-32 flex flex-col justify-center h-16 md:h-20 lg:h-24 business-name ${!showAnimations ? 'hidden-animation' : ''}`}>
+          <div className="font-semibold text-gray-900 text-base md:text-lg lg:text-xl">
+            {businessName.split('').map((char, i) => (
+              <span key={i} className={`business-name-char ${!showAnimations ? 'hidden-animation' : ''}`} style={{ animationDelay: `${0.8 + i * 0.05}s` }}>
+                {char}
+              </span>
+            ))}
+          </div>
+          <div className="text-xs md:text-sm text-gray-500" style={{ animation: 'letterByLetter 0.3s ease-out 1.2s forwards', opacity: 0 }}>{businessCategory || 'Business'}</div>
+        </div>
+        
+        <div className="mb-4 pt-8 md:pt-10 lg:pt-12">
           <ListingMeta
             ratingAverage={ratingAverage}
             ratingCount={ratingCount}
@@ -379,6 +403,13 @@ export const HorizontalSliderLayout: React.FC<HorizontalSliderLayoutProps> = ({
               href={whatsappInviteLink}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={(e) => {
+                // Ensure the link opens in a new tab
+                if (!whatsappInviteLink.startsWith('http')) {
+                  e.preventDefault()
+                  window.open(`https://${whatsappInviteLink}`, '_blank')
+                }
+              }}
               className="flex items-center justify-center gap-2 text-green-700 hover:text-green-800 font-medium text-sm md:text-base transition-colors"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -402,7 +433,7 @@ export const HorizontalSliderLayout: React.FC<HorizontalSliderLayoutProps> = ({
         </div>
         
         <div className="text-xs text-emerald-600 text-center mt-2 truncate">
-          {ctaUrl}
+          {ctaUrl ? new URL(ctaUrl).hostname : ''}
         </div>
       </div>
 

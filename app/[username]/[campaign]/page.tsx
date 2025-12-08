@@ -71,6 +71,7 @@ interface Listing {
     }>
   }
   enable_message_consent?: boolean
+  whatsapp_invite_link?: string | null
 }
 
 interface Profile {
@@ -204,7 +205,8 @@ export default function CampaignPage({ params }: CampaignPageProps) {
       bannerImages: bannerImages,
       ratingAverage: reviewSummary && reviewSummary.count > 0 ? reviewSummary.average : null,
       ratingCount: reviewSummary?.count ?? 0,
-      deliveryAvailable: Boolean(listing.delivery_available)
+      deliveryAvailable: Boolean(listing.delivery_available),
+      whatsappInviteLink: listing.whatsapp_invite_link || null
     }
 
     switch (listing.layout_type) {
