@@ -63,6 +63,15 @@ export default function LoginPage() {
             router.push('/dashboard')
           }
         }
+        // If FREE tier (trial status), allow login
+        else if (profile && profile.subscription_tier === 'free') {
+          // If onboarding not completed, go to onboarding
+          if (!profile.onboarding_completed) {
+            router.push('/onboarding')
+          } else {
+            router.push('/dashboard')
+          }
+        }
         // For any other status, show payment modal
         else {
           setUserProfile(profile)

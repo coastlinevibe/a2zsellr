@@ -4,7 +4,51 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dcfgdlwhixdruyewywly.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjZmdkbHdoaXhkcnV5ZXd5d2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1MjU1NjYsImV4cCI6MjA3NjEwMTU2Nn0.wMGq2FpoVFMnLemUP13763iodoXNu-gx8I0rRpTubG4'
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Custom fetch with retry logic for 429 errors
+const customFetch = async (url: string, options?: RequestInit) => {
+  let retries = 0
+  const maxRetries = 3
+  
+  while (retries < maxRetries) {
+    try {
+      const response = await fetch(url, options)
+      
+      // If 429, wait and retry
+      if (response.status === 429) {
+        retries++
+        if (retries < maxRetries) {
+          // Exponential backoff: 1s, 2s, 4s
+          const delay = Math.pow(2, retries - 1) * 1000
+          await new Promise(resolve => setTimeout(resolve, delay))
+          continue
+        }
+      }
+      
+      return response
+    } catch (error) {
+      retries++
+      if (retries < maxRetries) {
+        const delay = Math.pow(2, retries - 1) * 1000
+        await new Promise(resolve => setTimeout(resolve, delay))
+        continue
+      }
+      throw error
+    }
+  }
+  
+  return fetch(url, options)
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false
+  },
+  global: {
+    fetch: customFetch
+  }
+})
 
 // Database types
 export interface UserProfile {

@@ -23,6 +23,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Clear any stored sessions to prevent token refresh attempts
+    if (typeof window !== 'undefined') {
+      try {
+        // Remove Supabase session from localStorage
+        const keys = Object.keys(localStorage)
+        keys.forEach(key => {
+          if (key.includes('supabase') || key.includes('auth')) {
+            localStorage.removeItem(key)
+          }
+        })
+      } catch (e) {
+        // Ignore errors
+      }
+    }
+
     // Get initial session
     const getInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -32,11 +47,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     getInitialSession()
 
-    // Listen for auth changes
+    // Listen for auth changes - ONLY listen to SIGNED_IN and SIGNED_OUT events
+    // Ignore TOKEN_REFRESHED to prevent rate limiting issues
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ?? null)
-        setLoading(false)
+        // Only update state on sign in/out events, ignore token refresh
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+          setUser(session?.user ?? null)
+          setLoading(false)
+        }
       }
     )
 

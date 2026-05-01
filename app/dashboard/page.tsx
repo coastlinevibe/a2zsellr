@@ -337,7 +337,6 @@ export default function DashboardPage() {
 
         if (error) throw error
         setBannerItems(data || [])
-        console.log('📸 Banner items loaded:', data?.length || 0)
       } catch (error) {
 
       } finally {
@@ -446,7 +445,7 @@ export default function DashboardPage() {
 
       }
     } catch (error) {
-      console.error('Error completing pending referrals:', error)
+      // Error completing pending referrals
     }
   }
 
