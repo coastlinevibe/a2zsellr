@@ -5,13 +5,13 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dcfgdlwhixd
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjZmdkbHdoaXhkcnV5ZXd5d2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA1MjU1NjYsImV4cCI6MjA3NjEwMTU2Nn0.wMGq2FpoVFMnLemUP13763iodoXNu-gx8I0rRpTubG4'
 
 // Custom fetch with retry logic for 429 errors
-const customFetch = async (url: string, options?: RequestInit) => {
+const customFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
   let retries = 0
   const maxRetries = 3
   
   while (retries < maxRetries) {
     try {
-      const response = await fetch(url, options)
+      const response = await fetch(input, init)
       
       // If 429, wait and retry
       if (response.status === 429) {
@@ -36,7 +36,7 @@ const customFetch = async (url: string, options?: RequestInit) => {
     }
   }
   
-  return fetch(url, options)
+  return fetch(input, init)
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
